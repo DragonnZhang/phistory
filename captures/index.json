@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, OpenClaw, Hermes, Kimi, opencode, and Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-07-01T22:07:58.161218Z",
+  "updated_at": "2026-07-01T23:54:55.284201Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -22,10 +22,10 @@
     {
       "agent_id": "antigravity",
       "agent": "Antigravity CLI",
-      "latest_version": "1.0.14",
-      "latest_published_at": "2026-06-30T02:28:33Z",
-      "latest_captured_at": "2026-06-30T04:50:03.892461+00:00",
-      "captures": 11
+      "latest_version": "1.0.15",
+      "latest_published_at": "2026-07-01T22:59:00Z",
+      "latest_captured_at": "2026-07-01T23:54:55.284201+00:00",
+      "captures": 12
     },
     {
       "agent_id": "openclaw",
@@ -6398,6 +6398,16 @@
       "prompt": "captures/claude-code/1.0.0/prompt.md",
       "trace": "captures/claude-code/1.0.0/trace.jsonl",
       "meta": "captures/claude-code/1.0.0/meta.json"
+    },
+    {
+      "agent_id": "antigravity",
+      "agent": "Antigravity CLI",
+      "version": "1.0.15",
+      "published_at": "2026-07-01T22:59:00Z",
+      "captured_at": "2026-07-01T23:54:55.284201+00:00",
+      "prompt": "captures/antigravity/1.0.15/prompt.md",
+      "trace": "captures/antigravity/1.0.15/trace.jsonl",
+      "meta": "captures/antigravity/1.0.15/meta.json"
     },
     {
       "agent_id": "antigravity",
