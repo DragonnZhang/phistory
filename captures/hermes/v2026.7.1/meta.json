@@ -6,11 +6,11 @@
   "published_at": "2026-07-01T20:08:06Z",
   "tarball_url": "https://github.com/NousResearch/hermes-agent/releases/tag/v2026.7.1",
   "binary_version": "Hermes Agent v0.18.0 (2026.7.1)\nProject: /home/runner/work/phistory/phistory/.phistory-cache/installs/hermes/v2026.7.1/lib/python3.12/site-packages\nPython: 3.12.3\nOpenAI SDK: 2.24.0\nUp to date",
-  "captured_at": "2026-07-02T03:06:06.424872+00:00",
+  "captured_at": "2026-07-01T20:28:53.331983+00:00",
   "tap_client": "hermes",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 7.42,
+  "duration_seconds": 6.783,
   "command": [
     "python",
     "-m",

@@ -6,11 +6,11 @@
   "published_at": "2026-06-30T16:04:00.916Z",
   "tarball_url": "https://registry.npmjs.org/openclaw/-/openclaw-2026.6.11.tgz",
   "binary_version": "OpenClaw 2026.6.11 (e085fa1)",
-  "captured_at": "2026-07-02T03:05:58.325919+00:00",
+  "captured_at": "2026-06-30T18:23:08.524343+00:00",
   "tap_client": "openclaw",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 29.255,
+  "duration_seconds": 29.998,
   "command": [
     "python",
     "-m",

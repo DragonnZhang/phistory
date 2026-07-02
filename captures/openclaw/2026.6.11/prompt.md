@@ -707,13 +707,13 @@ The following frequently-changing project context files are kept below the cache
 - No current/default source channel: include `channel` for proactive sends; valid ids: feishu|googlechat|nostr|msteams|mattermost|nextcloud-talk|matrix|raft|line|zalo|clickclack|zalouser|sms|synology-chat|tlon|discord|imessage|irc|qqbot|signal|slack|telegram|twitch|whatsapp.
 - If you use `message` (`action=send`) to deliver your user-visible reply, respond with ONLY: NO_REPLY (avoid duplicate replies).
 ### Runtime
-Runtime: agent=main | session=agent:main:main | sessionId=b540a696-0554-42c3-b4f9-51004e703d2d | host=runnervmmklqx | repo=$PHISTORY_HOME/.openclaw/workspace | os=Linux 6.17.0-1018-azure (x64) | node=v24.18.0 | model=phistory/phistory-dummy | default_model=phistory/phistory-dummy | shell=bash | thinking=off
+Runtime: agent=main | session=agent:main:main | sessionId=d25ca122-1ca9-468c-8d20-b72a6c84382a | host=runnervmmklqx | repo=$PHISTORY_HOME/.openclaw/workspace | os=Linux 6.17.0-1018-azure (x64) | node=v24.18.0 | model=phistory/phistory-dummy | default_model=phistory/phistory-dummy | shell=bash | thinking=off
 Current model identity: phistory/phistory-dummy. If asked what model you are, answer with this value for the current run.
 Reasoning: off (hidden unless on/stream). Toggle /reasoning; /status shows Reasoning when enabled.
 
 # User Message
 
-[Thu 2026-07-02 03:05 UTC] Reply with one short sentence.
+[Tue 2026-06-30 18:23 UTC] Reply with one short sentence.
 
 # Tools
 
