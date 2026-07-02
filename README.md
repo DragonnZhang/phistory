@@ -2,7 +2,7 @@
 
 [中文](README_zh.md)
 
-Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Kimi, opencode, OpenClaw, Hermes, and Pi.
+Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, and Pi.
 
 Open the web viewer to compare prompt snapshots across versions and see how agent design changes through prompts, tools, policies, and runtime instructions.
 
@@ -36,7 +36,7 @@ Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are
 uv sync --all-groups
 
 # Capture the latest supported CLI releases.
-uv run phistory capture --latest --agents claude-code,codex,antigravity,openclaw,hermes,kimi,opencode,pi
+uv run phistory capture --latest --agents claude-code,codex,antigravity,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi
 
 # Capture a historical version range for one agent.
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -56,6 +56,8 @@ uv run phistory render-site
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
+- Kimi Code (`@moonshot-ai/kimi-code`)
+- MiMo Code (`@mimo-ai/cli`)
 - OpenClaw (`openclaw`)
 - Hermes Agent (`hermes-agent`)
 - Kimi CLI (`MoonshotAI/kimi-cli`)
@@ -71,6 +73,8 @@ Last capture update: 2026-07-01 23:54 UTC
 | Claude Code | [2.1.198 - 2026-07-01](captures/claude-code/2.1.198/prompt.md) | 355 | 2026-07-01 22:07 UTC |
 | Codex CLI | [0.142.5 - 2026-07-01](captures/codex/0.142.5/prompt.md) | 62 | 2026-07-01 05:10 UTC |
 | Antigravity CLI | [1.0.15 - 2026-07-01](captures/antigravity/1.0.15/prompt.md) | 12 | 2026-07-01 23:54 UTC |
+| Kimi Code | [0.21.1 - 2026-07-01](captures/kimi-code/0.21.1/prompt.md) | 34 | 2026-07-01 12:39 UTC |
+| MiMo Code | [0.1.4 - 2026-06-29](captures/mimo/0.1.4/prompt.md) | 4 | 2026-07-01 12:40 UTC |
 | OpenClaw | [2026.6.11 - 2026-06-30](captures/openclaw/2026.6.11/prompt.md) | 67 | 2026-06-30 18:23 UTC |
 | Hermes Agent | [v2026.7.1 - 2026-07-01](captures/hermes/v2026.7.1/prompt.md) | 17 | 2026-07-01 20:28 UTC |
 | Kimi CLI | [1.48.0 - 2026-06-22](captures/kimi/1.48.0/prompt.md) | 20 | 2026-06-22 17:19 UTC |

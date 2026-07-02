@@ -74,6 +74,64 @@ ANTIGRAVITY = AgentSpec(
     ),
 )
 
+KIMI_CODE = AgentSpec(
+    id="kimi-code",
+    display_name="Kimi Code",
+    package="@moonshot-ai/kimi-code",
+    tap_client="kimi-code",
+    executable="kimi",
+    fake_env={
+        "KIMI_API_KEY": "phistory-fake-api-key",
+        "MOONSHOT_API_KEY": "phistory-fake-api-key",
+    },
+    extra_env={
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1",
+        "KIMI_TELEMETRY_DISABLED": "1",
+        "CI": "1",
+    },
+    home_profile="kimi-code",
+    run_args=(
+        "--no-yolo",
+        "--",
+        "--prompt",
+        "Reply with one short sentence.",
+        "--output-format",
+        "text",
+    ),
+)
+
+MIMO = AgentSpec(
+    id="mimo",
+    display_name="MiMo Code",
+    package="@mimo-ai/cli",
+    tap_client="mimo",
+    fake_env={
+        "OPENAI_API_KEY": "phistory-fake-api-key",
+        "ANTHROPIC_API_KEY": "phistory-fake-api-key",
+    },
+    extra_env={
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1",
+        "CI": "1",
+    },
+    home_profile="mimo",
+    tap_mode="reverse",
+    run_args=(
+        "--no-yolo",
+        "--",
+        "run",
+        "Reply with one short sentence.",
+        "--model",
+        "openai/gpt-4.1",
+        "--format",
+        "json",
+        "--dir",
+        ".",
+        "--dangerously-skip-permissions",
+    ),
+)
+
 OPENCLAW = AgentSpec(
     id="openclaw",
     display_name="OpenClaw",
@@ -219,7 +277,8 @@ PI = AgentSpec(
 )
 
 AGENTS: dict[str, AgentSpec] = {
-    agent.id: agent for agent in (CLAUDE_CODE, CODEX, ANTIGRAVITY, OPENCLAW, HERMES, KIMI, OPENCODE, PI)
+    agent.id: agent
+    for agent in (CLAUDE_CODE, CODEX, ANTIGRAVITY, KIMI_CODE, MIMO, OPENCLAW, HERMES, KIMI, OPENCODE, PI)
 }
 AGENT_ORDER = tuple(AGENTS)
 

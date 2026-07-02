@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset"]
-HomeProfile = Literal["none", "antigravity", "hermes", "kimi", "openclaw", "opencode", "pi"]
+HomeProfile = Literal["none", "antigravity", "hermes", "kimi", "kimi-code", "mimo", "openclaw", "opencode", "pi"]
 TapMode = Literal["auto", "reverse", "forward"]
 TapTargetProfile = Literal["none", "antigravity"]
 
@@ -18,6 +18,7 @@ class AgentSpec:
     tap_client: str
     fake_env: dict[str, str]
     run_args: tuple[str, ...]
+    executable: str | None = None
     source: PackageSource = "npm"
     install_command: tuple[str, ...] = ("npm", "install", "--no-audit", "--no-fund")
     node_runtime: str | None = None

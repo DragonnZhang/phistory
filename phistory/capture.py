@@ -15,6 +15,7 @@ from typing import Any, Iterator
 
 from phistory import packages
 from phistory.models import CaptureResult, CaptureTarget, TapTargetProfile
+from phistory.packages import agent_executable
 from phistory.static_prompts.extract import extract_static_prompts, static_prompts_meta
 from phistory.storage import copy_trace, is_captured, latest_trace, prepare_version_dir, remove_if_exists, write_meta
 from phistory.subprocesses import run
@@ -40,6 +41,10 @@ _VOLATILE_TEXT_PATTERNS = (
     (
         re.compile(r"\$PHISTORY_HOME/\.claude/projects/-tmp-phistory-work-[^/\s]+"),
         "$PHISTORY_HOME/.claude/projects/$PHISTORY_PROJECT",
+    ),
+    (
+        re.compile(r"\$PHISTORY_HOME/\.local/share/mimocode/memory/sessions/ses_[A-Za-z0-9_]+"),
+        "$PHISTORY_HOME/.local/share/mimocode/memory/sessions/$PHISTORY_SESSION",
     ),
     (re.compile(r"Bearer phistory-[A-Za-z0-9_-]+"), "Bearer <redacted>"),
 )
@@ -161,6 +166,10 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
         _write_hermes_config(home)
     if target.agent.home_profile == "kimi":
         _write_kimi_config(home)
+    if target.agent.home_profile == "kimi-code":
+        _write_kimi_code_config(home)
+    if target.agent.home_profile == "mimo":
+        _write_mimo_config(home)
     if target.agent.home_profile == "openclaw":
         _write_openclaw_config(home)
     if target.agent.home_profile == "opencode":
@@ -185,6 +194,15 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
         env["HERMES_HOME"] = str(home / ".hermes")
     if target.agent.home_profile == "kimi":
         env["KIMI_SHARE_DIR"] = str(home / ".kimi")
+    if target.agent.home_profile == "kimi-code":
+        env["KIMI_CODE_HOME"] = str(home / ".kimi-code")
+    if target.agent.home_profile == "mimo":
+        env.update(
+            {
+                "MIMOCODE_CONFIG": str(home / ".config" / "mimocode" / "mimocode.json"),
+                "MIMOCODE_MIMO_ONLY": "false",
+            }
+        )
     if target.agent.home_profile == "openclaw":
         env.update(
             {
@@ -393,6 +411,48 @@ def _write_kimi_config(home: Path) -> None:
     )
 
 
+def _write_kimi_code_config(home: Path) -> None:
+    kimi_home = home / ".kimi-code"
+    kimi_home.mkdir(parents=True, exist_ok=True)
+    (kimi_home / ".skip-migration-from-kimi-cli").write_text("", encoding="utf-8")
+    (kimi_home / "config.toml").write_text(
+        "\n".join(
+            [
+                'default_model = "kimi-code/kimi-for-coding"',
+                "",
+                '[providers."phistory"]',
+                'type = "kimi"',
+                'base_url = "https://api.kimi.com/coding/v1"',
+                'api_key = "phistory-fake-api-key"',
+                "",
+                '[models."kimi-code/kimi-for-coding"]',
+                'provider = "phistory"',
+                'model = "kimi-for-coding"',
+                "max_context_size = 262144",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+
+def _write_mimo_config(home: Path) -> None:
+    config_dir = home / ".config" / "mimocode"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config = {
+        "$schema": "https://mimo.xiaomi.com/mimocode/config.json",
+        "model": "openai/gpt-4.1",
+        "provider": {
+            "openai": {
+                "options": {
+                    "apiKey": "phistory-fake-api-key",
+                }
+            }
+        },
+    }
+    (config_dir / "mimocode.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
+
+
 def _write_opencode_config(home: Path) -> None:
     config_dir = home / ".config" / "opencode"
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -451,7 +511,7 @@ def _b64url_json(value: dict) -> str:
 
 
 def _binary_version(target: CaptureTarget, bin_dir: Path) -> str | None:
-    executable = bin_dir / target.agent.tap_client
+    executable = bin_dir / agent_executable(target.agent)
     if not executable.exists():
         return None
     with TemporaryDirectory(prefix="phistory-version-home-") as home_dir:
