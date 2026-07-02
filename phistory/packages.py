@@ -74,6 +74,10 @@ def install_agent(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     raise ValueError(f"unsupported package source: {agent.source}")
 
 
+def agent_executable(agent: AgentSpec) -> str:
+    return agent.executable or agent.tap_client
+
+
 def npm_view(package: str, *fields: str) -> object:
     args = ["npm", "view", package, *fields, "--json"]
     result = run(args, timeout=120)
@@ -114,7 +118,7 @@ def _install_npm(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     if not bin_dir.exists():
         raise RuntimeError(f"npm install did not create bin dir: {bin_dir}")
     if agent.node_runtime:
-        _wrap_node_bin(bin_dir / agent.tap_client, agent.node_runtime)
+        _wrap_node_bin(bin_dir / agent_executable(agent), agent.node_runtime)
     return bin_dir
 
 
@@ -142,7 +146,8 @@ def _pypi_versions(agent: AgentSpec, *, include_prerelease: bool) -> list[Versio
 
 def _install_pypi(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     bin_dir = install_dir / "bin"
-    if (bin_dir / agent.tap_client).exists():
+    executable = bin_dir / agent_executable(agent)
+    if executable.exists():
         return bin_dir
     if install_dir.exists():
         shutil.rmtree(install_dir)
@@ -152,8 +157,8 @@ def _install_pypi(agent: AgentSpec, version: str, install_dir: Path) -> Path:
         ["uv", "pip", "install", "--python", str(bin_dir / "python"), f"{agent.package}=={version}"],
         timeout=INSTALL_TIMEOUT_SECONDS,
     )
-    if not (bin_dir / agent.tap_client).exists():
-        raise RuntimeError(f"PyPI install did not create executable: {bin_dir / agent.tap_client}")
+    if not executable.exists():
+        raise RuntimeError(f"PyPI install did not create executable: {executable}")
     return bin_dir
 
 
@@ -193,7 +198,8 @@ def _github_release_asset_versions(agent: AgentSpec, *, include_prerelease: bool
 
 def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     bin_dir = install_dir / "bin"
-    if (bin_dir / agent.tap_client).exists():
+    executable = bin_dir / agent_executable(agent)
+    if executable.exists():
         return bin_dir
     if install_dir.exists():
         shutil.rmtree(install_dir)
@@ -201,14 +207,14 @@ def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -
     run(["uv", "venv", str(install_dir)], timeout=120)
     package_ref = f"https://github.com/{agent.package}/archive/refs/tags/{version}.tar.gz"
     run(["uv", "pip", "install", "--python", str(bin_dir / "python"), package_ref], timeout=INSTALL_TIMEOUT_SECONDS)
-    if not (bin_dir / agent.tap_client).exists():
-        raise RuntimeError(f"GitHub release install did not create executable: {bin_dir / agent.tap_client}")
+    if not executable.exists():
+        raise RuntimeError(f"GitHub release install did not create executable: {executable}")
     return bin_dir
 
 
 def _install_github_release_asset(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     bin_dir = install_dir / "bin"
-    executable = bin_dir / agent.tap_client
+    executable = bin_dir / agent_executable(agent)
     if executable.exists():
         return bin_dir
     if install_dir.exists():

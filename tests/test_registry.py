@@ -6,6 +6,8 @@ def test_parse_default_agents():
         "claude-code",
         "codex",
         "antigravity",
+        "kimi-code",
+        "mimo",
         "openclaw",
         "hermes",
         "kimi",
@@ -33,6 +35,8 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
 
 def test_new_agents_define_install_and_capture_profiles():
     antigravity = get_agent("antigravity")
+    kimi_code = get_agent("kimi-code")
+    mimo = get_agent("mimo")
     openclaw = get_agent("openclaw")
     hermes = get_agent("hermes")
     kimi = get_agent("kimi")
@@ -48,6 +52,21 @@ def test_new_agents_define_install_and_capture_profiles():
     assert antigravity.home_profile == "antigravity"
     assert antigravity.tap_target_profile == "antigravity"
     assert "--print" in antigravity.run_args
+
+    assert kimi_code.source == "npm"
+    assert kimi_code.package == "@moonshot-ai/kimi-code"
+    assert kimi_code.tap_client == "kimi-code"
+    assert kimi_code.executable == "kimi"
+    assert kimi_code.home_profile == "kimi-code"
+    assert "--prompt" in kimi_code.run_args
+
+    assert mimo.source == "npm"
+    assert mimo.package == "@mimo-ai/cli"
+    assert mimo.tap_client == "mimo"
+    assert mimo.home_profile == "mimo"
+    assert mimo.tap_mode == "reverse"
+    assert "run" in mimo.run_args
+    assert "--dangerously-skip-permissions" in mimo.run_args
 
     assert openclaw.source == "npm"
     assert openclaw.home_profile == "openclaw"

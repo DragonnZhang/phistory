@@ -13,6 +13,8 @@ AGENT_ICONS = {
     "codex": "docs/agent-icons/codex.png",
     "hermes": "docs/agent-icons/hermes.png",
     "kimi": "docs/agent-icons/kimi.png",
+    "kimi-code": "docs/agent-icons/kimi-code.png",
+    "mimo": "docs/agent-icons/mimo.png",
     "openclaw": "docs/agent-icons/openclaw.png",
     "opencode": "docs/agent-icons/opencode.png",
     "pi": "docs/agent-icons/pi.png",
@@ -198,21 +200,21 @@ _HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Phistory automatically archives versioned system prompt snapshots and diffs from agent CLIs like Claude Code, Codex, Antigravity, OpenClaw, Hermes, Kimi, opencode, and Pi.">
-<meta name="keywords" content="Phistory, system prompt history, system prompt diff, Claude Code prompt, Codex CLI prompt, Antigravity CLI prompt, OpenClaw prompt, Hermes prompt, Kimi CLI prompt, opencode prompt, Pi prompt, agent CLI, prompt archive">
+<meta name="description" content="Phistory automatically archives versioned system prompt snapshots and diffs from agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, and Pi.">
+<meta name="keywords" content="Phistory, system prompt history, system prompt diff, Claude Code prompt, Codex CLI prompt, Antigravity CLI prompt, Kimi Code prompt, MiMo Code prompt, OpenClaw prompt, Hermes prompt, Kimi CLI prompt, opencode prompt, Pi prompt, agent CLI, prompt archive">
 <meta name="application-name" content="Phistory">
 <meta name="robots" content="index,follow">
 <meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
 <meta property="og:title" content="Phistory">
-<meta property="og:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, Antigravity, OpenClaw, Hermes, Kimi, opencode, and Pi.">
+<meta property="og:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, and Pi.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://phistory.cc/">
 <meta property="og:image" content="https://phistory.cc/docs/screenshot.png">
 <meta property="og:site_name" content="Phistory">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Phistory">
-<meta name="twitter:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, Antigravity, OpenClaw, Hermes, Kimi, opencode, and Pi.">
+<meta name="twitter:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, and Pi.">
 <meta name="twitter:image" content="https://phistory.cc/docs/screenshot.png">
 <link rel="canonical" href="https://phistory.cc/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f1115'/%3E%3Cpath d='M8 10h16M8 16h10M8 22h14' stroke='%237cc7ff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -237,7 +239,7 @@ _HTML = r"""<!doctype html>
   "url": "https://phistory.cc/",
   "description": "Automatically archived system prompt snapshots and diffs for agent CLIs.",
   "sameAs": ["https://github.com/WEIFENG2333/phistory"],
-  "about": ["Claude Code", "Codex CLI", "Antigravity CLI", "OpenClaw", "Hermes", "Kimi CLI", "opencode", "Pi"]
+  "about": ["Claude Code", "Codex CLI", "Antigravity CLI", "Kimi Code", "MiMo Code", "OpenClaw", "Hermes", "Kimi CLI", "opencode", "Pi"]
 }
 </script>
 <style>
@@ -1398,6 +1400,10 @@ a:hover { text-decoration: none; }
 <script>
 const manifest = JSON.parse(document.getElementById('manifest').textContent);
 const agents = new Map(manifest.agents.map(agent => [agent.id, agent]));
+const STORAGE_KEYS = {
+  traceState: 'phistory-trace-state-v1',
+  staticPrefs: 'phistory-static-prefs-v1'
+};
 const els = {
   agent: document.getElementById('agent'),
   from: document.getElementById('from'),
@@ -1431,10 +1437,12 @@ const state = {
   traceCache: new Map(),
   staticCache: new Map(),
   staticOutline: [],
-  staticOutlineChangedOnly: false,
+  staticOutlineChangedOnly: storedStaticPrefs().changedOnly,
   traceScrollTop: 0,
+  traceHasStoredState: false,
   traceOpenSections: new Set(),
   traceOpenTools: new Set(),
+  traceRawSections: new Set(),
   editor: null,
   monaco: null
 };
@@ -1472,9 +1480,11 @@ function readQuery() {
     state.from = previousVersion(agent, state.to).version;
     state.followLatest = false;
     state.normalizeQuery = true;
+    ensureAvailableView();
     return;
   }
   readRangeQuery(params, agent);
+  ensureAvailableView();
 }
 
 function readRangeQuery(params, agent) {
@@ -1508,6 +1518,12 @@ function rangeQueryParams() {
   return params;
 }
 
+function ensureAvailableView() {
+  if (state.view !== 'static' || staticViewAvailable()) return;
+  state.view = 'diff';
+  state.normalizeQuery = true;
+}
+
 function bindEvents() {
   els.agent.addEventListener('click', () => togglePicker('agent', els.agent));
   els.from.addEventListener('click', () => togglePicker('from', els.from));
@@ -1519,6 +1535,7 @@ function bindEvents() {
     const filter = event.target.closest?.('.static-filter');
     if (filter) {
       state.staticOutlineChangedOnly = !state.staticOutlineChangedOnly;
+      saveStaticPrefs();
       renderStaticOutline();
       return;
     }
@@ -1537,6 +1554,7 @@ function bindEvents() {
       const section = mode.closest('.trace-section');
       section?.classList.toggle('is-raw');
       updateTraceModeLabel(section);
+      saveTraceState();
       return;
     }
     const summary = event.target.closest?.('.trace-summary');
@@ -1558,6 +1576,8 @@ function bindEvents() {
     closePicker();
     state.editor?.layout();
   }, 100));
+  els.trace.addEventListener('scroll', debounce(saveTraceState, 150));
+  addEventListener('beforeunload', saveTraceState);
 }
 
 function renderControls() {
@@ -1674,6 +1694,7 @@ function selectedValue() {
 }
 
 function selectOption(value) {
+  saveTraceState();
   if (state.picker === 'agent') {
     state.agent = value;
     const agent = currentAgent();
@@ -1698,6 +1719,7 @@ function selectOption(value) {
       normalizeVersionRange(currentAgent(), 'to');
     }
   }
+  ensureAvailableView();
   closePicker();
   refresh();
 }
@@ -1723,17 +1745,92 @@ function refreshView() {
 }
 
 function toggleView() {
+  saveTraceState();
   state.view = nextView();
   if (state.view === 'trace') {
     state.from = previousVersion(currentAgent(), state.to).version;
   }
+  ensureAvailableView();
   refresh();
 }
 
 function nextView() {
-  if (state.view === 'diff') return 'trace';
-  if (state.view === 'trace') return 'static';
-  return 'diff';
+  const views = staticViewAvailable() ? ['diff', 'trace', 'static'] : ['diff', 'trace'];
+  const index = views.indexOf(state.view);
+  if (index === -1) return views[0];
+  return views[(index + 1) % views.length];
+}
+
+function staticViewAvailable() {
+  const from = versionInfo(state.from);
+  const to = versionInfo(state.to);
+  return Boolean(from?.static_prompts && to?.static_prompts);
+}
+
+function storedStaticPrefs() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.staticPrefs) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function saveStaticPrefs() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.staticPrefs, JSON.stringify({
+      changedOnly: Boolean(state.staticOutlineChangedOnly)
+    }));
+  } catch {}
+}
+
+function traceStateKey() {
+  return `${state.agent}:${state.to}`;
+}
+
+function resetTraceState() {
+  state.traceScrollTop = 0;
+  state.traceHasStoredState = false;
+  state.traceOpenSections = new Set();
+  state.traceOpenTools = new Set();
+  state.traceRawSections = new Set();
+}
+
+function loadStoredTraceState() {
+  try {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.traceState) || '{}');
+    const saved = all[traceStateKey()];
+    if (!saved) {
+      resetTraceState();
+      return;
+    }
+    state.traceHasStoredState = true;
+    state.traceScrollTop = Math.max(0, Number(saved.scrollTop || 0));
+    state.traceOpenSections = new Set(Array.isArray(saved.openSections) ? saved.openSections.map(String) : []);
+    state.traceOpenTools = new Set(Array.isArray(saved.openTools) ? saved.openTools.map(String) : []);
+    state.traceRawSections = new Set(Array.isArray(saved.rawSections) ? saved.rawSections.map(String) : []);
+  } catch {
+    resetTraceState();
+  }
+}
+
+function saveTraceState() {
+  if (state.view !== 'trace' || !els.trace.querySelector('.trace-page')) return;
+  snapshotTraceState();
+  try {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.traceState) || '{}');
+    all[traceStateKey()] = {
+      scrollTop: state.traceScrollTop,
+      openSections: [...state.traceOpenSections],
+      openTools: [...state.traceOpenTools],
+      rawSections: [...state.traceRawSections]
+    };
+    localStorage.setItem(STORAGE_KEYS.traceState, JSON.stringify(pruneTraceStates(all)));
+  } catch {}
+}
+
+function pruneTraceStates(all) {
+  const entries = Object.entries(all).slice(-60);
+  return Object.fromEntries(entries);
 }
 
 function loadMonaco() {
@@ -1891,6 +1988,7 @@ async function renderTrace() {
     return;
   }
   const detail = normalizeTraceRecord(selected.record, selected.index, records.length);
+  loadStoredTraceState();
   els.trace.innerHTML = traceDetailHtml(item, detail);
   restoreTraceState();
 }
@@ -2128,17 +2226,24 @@ function snapshotTraceState() {
       .filter(tool => tool.classList.contains('is-open'))
       .map(tool => tool.dataset.tool)
   );
+  state.traceRawSections = new Set(
+    [...els.trace.querySelectorAll('.trace-section[data-section]')]
+      .filter(section => section.classList.contains('is-raw'))
+      .map(section => section.dataset.section)
+  );
 }
 
 function restoreTraceState() {
-  if (state.traceOpenSections.size) {
+  if (state.traceHasStoredState) {
     els.trace.querySelectorAll('.trace-section[data-section]').forEach(section => {
       setTracePanelOpen(section, state.traceOpenSections.has(section.dataset.section));
     });
-  }
-  if (state.traceOpenTools.size) {
     els.trace.querySelectorAll('.tool-card[data-tool]').forEach(tool => {
       setTracePanelOpen(tool, state.traceOpenTools.has(tool.dataset.tool));
+    });
+    els.trace.querySelectorAll('.trace-section[data-section]').forEach(section => {
+      section.classList.toggle('is-raw', state.traceRawSections.has(section.dataset.section));
+      updateTraceModeLabel(section);
     });
   }
   requestAnimationFrame(() => {
@@ -2151,12 +2256,14 @@ function scrollToTraceSection(section) {
   if (!target) return;
   setTracePanelOpen(target, true);
   target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  saveTraceState();
 }
 
 function toggleTracePanel(summary) {
   const panel = summary.closest('.trace-section, .tool-card');
   if (!panel) return;
   setTracePanelOpen(panel, !panel.classList.contains('is-open'));
+  saveTraceState();
 }
 
 function setTracePanelOpen(panel, open) {
@@ -2585,9 +2692,9 @@ function showError(error) {
 
 function debounce(fn, delay) {
   let handle = 0;
-  return () => {
+  return (...args) => {
     clearTimeout(handle);
-    handle = setTimeout(fn, delay);
+    handle = setTimeout(() => fn(...args), delay);
   };
 }
 

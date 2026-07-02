@@ -47,7 +47,7 @@ Phistory does not call the real model provider when exporting prompts. It relies
 Typical latest capture:
 
 ```bash
-uv run phistory capture --latest --agents claude-code,codex,openclaw,hermes,kimi,opencode,pi
+uv run phistory capture --latest --agents claude-code,codex,antigravity,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi
 ```
 
 For each agent/version, the flow is:
@@ -71,6 +71,9 @@ Current agents are defined in `phistory/registry.py`:
 
 - `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled.
+- `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and local tap target.
+- `kimi-code`: npm package `@moonshot-ai/kimi-code`, tap client `kimi-code`, executable `kimi`, isolated Kimi Code config.
+- `mimo`: npm package `@mimo-ai/cli`, tap client `mimo`, reverse tap mode with OpenAI-compatible provider config.
 - `openclaw`: npm package `openclaw`, tap client `openclaw`, Node 24 wrapper, isolated OpenClaw config.
 - `hermes`: GitHub release source `NousResearch/hermes-agent`, tap client `hermes`, OpenRouter provider path.
 - `kimi`: GitHub release source `MoonshotAI/kimi-cli`, tap client `kimi`, isolated Kimi TOML config.
@@ -108,7 +111,7 @@ uv run pytest
 For capture-affecting changes, also run a local latest smoke:
 
 ```bash
-uv run phistory --root /tmp/phistory-smoke --cache-dir /tmp/phistory-smoke-cache capture --latest --agents claude-code,codex,openclaw,hermes,kimi,opencode,pi --force
+uv run phistory --root /tmp/phistory-smoke --cache-dir /tmp/phistory-smoke-cache capture --latest --agents claude-code,codex,antigravity,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi --force
 ```
 
 For generated artifacts:

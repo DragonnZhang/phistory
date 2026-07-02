@@ -2,7 +2,14 @@ import io
 import tarfile
 
 from phistory.models import AgentSpec, VersionInfo
-from phistory.packages import _github_headers, all_versions, install_agent, latest_version, versions_between
+from phistory.packages import (
+    _github_headers,
+    agent_executable,
+    all_versions,
+    install_agent,
+    latest_version,
+    versions_between,
+)
 from phistory.workflow import iter_backfill
 
 
@@ -21,6 +28,29 @@ def test_versions_between_uses_registry_order(monkeypatch):
     )
 
     assert [item.version for item in versions_between(agent, "1.1.0", "latest")] == ["1.1.0", "2.0.0"]
+
+
+def test_agent_executable_defaults_to_tap_client_and_can_be_overridden():
+    default = AgentSpec(
+        id="x",
+        display_name="X",
+        package="x",
+        tap_client="x-tap",
+        fake_env={},
+        run_args=(),
+    )
+    overridden = AgentSpec(
+        id="kimi-code",
+        display_name="Kimi Code",
+        package="@moonshot-ai/kimi-code",
+        tap_client="kimi-code",
+        executable="kimi",
+        fake_env={},
+        run_args=(),
+    )
+
+    assert agent_executable(default) == "x-tap"
+    assert agent_executable(overridden) == "kimi"
 
 
 def test_all_versions_filters_platform_and_prerelease_versions(monkeypatch):

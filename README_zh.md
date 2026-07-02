@@ -2,13 +2,13 @@
 
 [English](README.md)
 
-Phistory 追踪 Claude Code、Codex、Antigravity、Kimi、opencode、OpenClaw、Hermes、Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
+Phistory 追踪 Claude Code、Codex、Antigravity、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
 
 打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 agent 设计如何变化。
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每小时自动检查新版本，归档最近更新于 **2026-06-27 06:44 UTC**。
+> 每小时自动检查新版本，归档最近更新于 **2026-07-01 12:47 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -36,7 +36,7 @@ GitHub Actions 每小时检查一次支持的 CLI 版本；发现新版本后，
 uv sync --all-groups
 
 # 抓取所有受支持 CLI 的最新版本。
-uv run phistory capture --latest --agents claude-code,codex,antigravity,openclaw,hermes,kimi,opencode,pi
+uv run phistory capture --latest --agents claude-code,codex,antigravity,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi
 
 # 回填某个 agent 的历史版本区间。
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -56,6 +56,8 @@ uv run phistory render-site
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
+- Kimi Code (`@moonshot-ai/kimi-code`)
+- MiMo Code (`@mimo-ai/cli`)
 - OpenClaw (`openclaw`)
 - Hermes Agent (`hermes-agent`)
 - Kimi CLI (`MoonshotAI/kimi-cli`)
@@ -64,13 +66,15 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-06-27 06:44 UTC
+最近抓取更新：2026-07-01 12:47 UTC
 
 | Agent | 最新版本 | 快照数 | 最近抓取 |
 | --- | --- | ---: | --- |
 | Claude Code | [2.1.195 - 2026-06-26](captures/claude-code/2.1.195/prompt.md) | 352 | 2026-06-26 21:51 UTC |
 | Codex CLI | [0.142.3 - 2026-06-26](captures/codex/0.142.3/prompt.md) | 60 | 2026-06-26 21:51 UTC |
 | Antigravity CLI | [1.0.13 - 2026-06-27](captures/antigravity/1.0.13/prompt.md) | 10 | 2026-06-27 06:41 UTC |
+| Kimi Code | [0.21.1 - 2026-07-01](captures/kimi-code/0.21.1/prompt.md) | 34 | 2026-07-01 12:39 UTC |
+| MiMo Code | [0.1.4 - 2026-06-29](captures/mimo/0.1.4/prompt.md) | 4 | 2026-07-01 12:40 UTC |
 | OpenClaw | [2026.6.10 - 2026-06-24](captures/openclaw/2026.6.10/prompt.md) | 66 | 2026-06-24 04:50 UTC |
 | Hermes Agent | [v2026.6.19 - 2026-06-19](captures/hermes/v2026.6.19/prompt.md) | 16 | 2026-06-19 19:52 UTC |
 | Kimi CLI | [1.48.0 - 2026-06-22](captures/kimi/1.48.0/prompt.md) | 20 | 2026-06-22 17:19 UTC |

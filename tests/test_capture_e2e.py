@@ -69,6 +69,7 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
         "<timezone>Etc/UTC</timezone>\n"
         "$PHISTORY_HOME/.gemini/antigravity-cli/brain/d6609428-853a-4f4d-80e5-229becf1fff5\n"
         "$PHISTORY_HOME/.claude/projects/-tmp-phistory-work-abc123/memory/\n"
+        "$PHISTORY_HOME/.local/share/mimocode/memory/sessions/ses_0e24f5112ffejtR0N23CyYMtYt/notes.md\n"
         "Authorization: Bearer phistory-fake-access-token\n"
         "\n"
         "\n"
@@ -87,6 +88,7 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
         "<timezone>$PHISTORY_TIMEZONE</timezone>\n"
         "$PHISTORY_HOME/.gemini/antigravity-cli/brain/$PHISTORY_CONVERSATION\n"
         "$PHISTORY_HOME/.claude/projects/$PHISTORY_PROJECT/memory/\n"
+        "$PHISTORY_HOME/.local/share/mimocode/memory/sessions/$PHISTORY_SESSION/notes.md\n"
         "Authorization: Bearer <redacted>\n"
         "\n"
         "```json"
@@ -153,6 +155,24 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         run_args=(),
         home_profile="kimi",
     )
+    kimi_code = AgentSpec(
+        id="kimi-code",
+        display_name="Kimi Code",
+        package="kimi-code",
+        tap_client="kimi-code",
+        fake_env={},
+        run_args=(),
+        home_profile="kimi-code",
+    )
+    mimo = AgentSpec(
+        id="mimo",
+        display_name="MiMo Code",
+        package="mimo",
+        tap_client="mimo",
+        fake_env={},
+        run_args=(),
+        home_profile="mimo",
+    )
     opencode = AgentSpec(
         id="opencode",
         display_name="opencode",
@@ -180,6 +200,10 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     )
     hermes_env = _capture_env(CaptureTarget(hermes, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "hm")
     kimi_env = _capture_env(CaptureTarget(kimi, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "km")
+    kimi_code_env = _capture_env(
+        CaptureTarget(kimi_code, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "kc"
+    )
+    mimo_env = _capture_env(CaptureTarget(mimo, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "mm")
     opencode_env = _capture_env(
         CaptureTarget(opencode, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "op"
     )
@@ -192,6 +216,8 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     )
     openclaw_config = json.loads(Path(openclaw_env["OPENCLAW_CONFIG_PATH"]).read_text(encoding="utf-8"))
     kimi_config = (Path(kimi_env["KIMI_SHARE_DIR"]) / "config.toml").read_text(encoding="utf-8")
+    kimi_code_config = (Path(kimi_code_env["KIMI_CODE_HOME"]) / "config.toml").read_text(encoding="utf-8")
+    mimo_config = json.loads(Path(mimo_env["MIMOCODE_CONFIG"]).read_text(encoding="utf-8"))
     opencode_config = json.loads(Path(opencode_env["OPENCODE_CONFIG"]).read_text(encoding="utf-8"))
     pi_models = json.loads((Path(pi_env["PI_CODING_AGENT_DIR"]) / "models.json").read_text(encoding="utf-8"))
     assert agy_token["auth_method"] == "consumer"
@@ -199,6 +225,10 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     assert openclaw_config["models"]["providers"]["phistory"]["api"] == "openai-responses"
     assert (Path(hermes_env["HERMES_HOME"]) / "config.yaml").read_text(encoding="utf-8").startswith("model:")
     assert 'type = "openai_responses"' in kimi_config
+    assert 'default_model = "kimi-code/kimi-for-coding"' in kimi_code_config
+    assert kimi_code_env["KIMI_CODE_HOME"].endswith(".kimi-code")
+    assert mimo_config["model"] == "openai/gpt-4.1"
+    assert mimo_env["MIMOCODE_MIMO_ONLY"] == "false"
     assert opencode_config["model"] == "openai/gpt-4.1"
     assert pi_models["providers"]["phistory"]["api"] == "openai-responses"
 
