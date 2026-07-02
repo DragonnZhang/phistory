@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, and Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-07-02T04:46:58.349529Z",
+  "updated_at": "2026-07-02T14:44:15.758061Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -30,10 +30,10 @@
     {
       "agent_id": "kimi-code",
       "agent": "Kimi Code",
-      "latest_version": "0.22.0",
-      "latest_published_at": "2026-07-02T03:14:33.068Z",
-      "latest_captured_at": "2026-07-02T04:46:58.349529+00:00",
-      "captures": 35
+      "latest_version": "0.22.1",
+      "latest_published_at": "2026-07-02T13:58:54.346Z",
+      "latest_captured_at": "2026-07-02T14:44:15.758061+00:00",
+      "captures": 36
     },
     {
       "agent_id": "mimo",
@@ -1854,6 +1854,16 @@
       "prompt": "captures/mimo/0.1.1/prompt.md",
       "trace": "captures/mimo/0.1.1/trace.jsonl",
       "meta": "captures/mimo/0.1.1/meta.json"
+    },
+    {
+      "agent_id": "kimi-code",
+      "agent": "Kimi Code",
+      "version": "0.22.1",
+      "published_at": "2026-07-02T13:58:54.346Z",
+      "captured_at": "2026-07-02T14:44:15.758061+00:00",
+      "prompt": "captures/kimi-code/0.22.1/prompt.md",
+      "trace": "captures/kimi-code/0.22.1/trace.jsonl",
+      "meta": "captures/kimi-code/0.22.1/meta.json"
     },
     {
       "agent_id": "kimi-code",
