@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-07-10T15:58:06.158888Z",
+  "updated_at": "2026-07-10T20:01:59.675096Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -86,10 +86,10 @@
     {
       "agent_id": "omp",
       "agent": "Oh My Pi",
-      "latest_version": "16.4.0",
-      "latest_published_at": "2026-07-10T12:43:57.129Z",
-      "latest_captured_at": "2026-07-10T13:30:41.579183+00:00",
-      "captures": 9
+      "latest_version": "16.4.1",
+      "latest_published_at": "2026-07-10T19:11:26.202Z",
+      "latest_captured_at": "2026-07-10T20:01:59.675096+00:00",
+      "captures": 10
     }
   ],
   "captures": [
@@ -1882,6 +1882,16 @@
       "prompt": "captures/openclaw/2026.1.29/prompt.md",
       "trace": "captures/openclaw/2026.1.29/trace.jsonl",
       "meta": "captures/openclaw/2026.1.29/meta.json"
+    },
+    {
+      "agent_id": "omp",
+      "agent": "Oh My Pi",
+      "version": "16.4.1",
+      "published_at": "2026-07-10T19:11:26.202Z",
+      "captured_at": "2026-07-10T20:01:59.675096+00:00",
+      "prompt": "captures/omp/16.4.1/prompt.md",
+      "trace": "captures/omp/16.4.1/trace.jsonl",
+      "meta": "captures/omp/16.4.1/meta.json"
     },
     {
       "agent_id": "omp",
