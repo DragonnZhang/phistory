@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-07-12 04:58 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-07-12 14:07 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -67,14 +67,14 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-07-12 04:58 UTC
+Last capture update: 2026-07-12 14:07 UTC
 
 | Agent | Latest | Captures | Last Captured |
 | --- | --- | ---: | --- |
 | Claude Code | [2.1.207 - 2026-07-10](captures/claude-code/2.1.207/prompt.md) | 364 | 2026-07-11 01:01 UTC |
 | Codex CLI | [0.144.1 - 2026-07-09](captures/codex/0.144.1/prompt.md) | 65 | 2026-07-10 06:23 UTC |
 | Antigravity CLI | [1.1.1 - 2026-07-10](captures/antigravity/1.1.1/prompt.md) | 15 | 2026-07-10 03:58 UTC |
-| Kimi Code | [0.23.5 - 2026-07-10](captures/kimi-code/0.23.5/prompt.md) | 41 | 2026-07-10 15:58 UTC |
+| Kimi Code | [0.23.6 - 2026-07-12](captures/kimi-code/0.23.6/prompt.md) | 42 | 2026-07-12 14:07 UTC |
 | MiMo Code | [0.1.5 - 2026-07-07](captures/mimo/0.1.5/prompt.md) | 5 | 2026-07-08 02:58 UTC |
 | OpenClaw | [2026.6.11 - 2026-06-30](captures/openclaw/2026.6.11/prompt.md) | 67 | 2026-06-30 18:23 UTC |
 | Hermes Agent | [v2026.7.7.2 - 2026-07-08](captures/hermes/v2026.7.7.2/prompt.md) | 19 | 2026-07-08 03:49 UTC |
