@@ -1,0 +1,43 @@
+{
+  "agent_id": "kimi",
+  "agent": "Kimi CLI",
+  "package": "MoonshotAI/kimi-cli",
+  "version": "1.49.0",
+  "published_at": "2026-07-16T10:23:29Z",
+  "tarball_url": "https://github.com/MoonshotAI/kimi-cli/releases/tag/1.49.0",
+  "binary_version": "kimi, version 1.49.0",
+  "captured_at": "2026-07-16T11:21:10.356726+00:00",
+  "tap_client": "kimi",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 9.059,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "kimi",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--print",
+    "--prompt",
+    "Reply with one short sentence.",
+    "--model",
+    "phistory-dummy",
+    "--output-format",
+    "text"
+  ],
+  "static_prompts": {
+    "supported": false,
+    "candidates_path": "static-candidates.json",
+    "prompt_path": "static-prompts.md",
+    "json_path": "static-prompts.json"
+  }
+}
