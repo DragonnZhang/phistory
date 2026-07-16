@@ -64,6 +64,7 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
         " - OS Version: Linux 6.17.0-1013-azure\n"
         "Line with trailing whitespace. \t\n"
         "Today's date is 2026-05-21.\n"
+        "Today's date: 2026-05-21\n"
         "The current date and time in ISO format is `2026-05-23T07:26:17.532901+00:00`.\n"
         "The current local time is: 2026-06-27T13:47:31+08:00.\n"
         "Conversation started: Friday, June 05, 2026 08:07 PM\n"
@@ -84,6 +85,7 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
         " - OS Version: $PHISTORY_OS_VERSION\n"
         "Line with trailing whitespace.\n"
         "Today's date is $PHISTORY_DATE.\n"
+        "Today's date: $PHISTORY_DATE\n"
         "The current date and time in ISO format is `$PHISTORY_DATETIME`.\n"
         "The current local time is: $PHISTORY_DATETIME.\n"
         "Conversation started: $PHISTORY_DATETIME\n"
@@ -150,6 +152,15 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         run_args=(),
         home_profile="hermes",
     )
+    grok = AgentSpec(
+        id="grok",
+        display_name="Grok Build",
+        package="@xai-official/grok",
+        tap_client="grok",
+        fake_env={"XAI_API_KEY": "fake"},
+        run_args=(),
+        home_profile="grok",
+    )
     kimi = AgentSpec(
         id="kimi",
         display_name="Kimi",
@@ -212,6 +223,7 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         CaptureTarget(openclaw, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "oc"
     )
     hermes_env = _capture_env(CaptureTarget(hermes, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "hm")
+    grok_env = _capture_env(CaptureTarget(grok, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "grok")
     kimi_env = _capture_env(CaptureTarget(kimi, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "km")
     kimi_code_env = _capture_env(
         CaptureTarget(kimi_code, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "kc"
@@ -239,6 +251,7 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     assert agy_token["token"]["access_token"] == "phistory-fake-access-token"
     assert openclaw_config["models"]["providers"]["phistory"]["api"] == "openai-responses"
     assert (Path(hermes_env["HERMES_HOME"]) / "config.yaml").read_text(encoding="utf-8").startswith("model:")
+    assert grok_env["GROK_HOME"].endswith(".grok")
     assert 'type = "openai_responses"' in kimi_config
     assert 'default_model = "kimi-code/kimi-for-coding"' in kimi_code_config
     assert kimi_code_env["KIMI_CODE_HOME"].endswith(".kimi-code")

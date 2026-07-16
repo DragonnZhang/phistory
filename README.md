@@ -2,7 +2,7 @@
 
 [中文](README_zh.md)
 
-Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
+Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
 
 Open the web viewer to compare prompt snapshots across versions and see how agent design changes through prompts, tools, policies, and runtime instructions.
 
@@ -21,7 +21,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 ## How It Works
 
-For each supported release, Phistory installs the exact CLI package, runs it once through [`claude-tap`](https://github.com/liaohch3/claude-tap), captures the prompt-bearing HTTP request without calling the real model provider, and stores the result under `captures/<agent>/<version>/` with `prompt.md`, `trace.jsonl`, and `meta.json`.
+For each supported release, Phistory installs the exact CLI package, runs it once through [`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP request without calling the real model provider, and stores the result under `captures/<agent>/<version>/` with `prompt.md`, `trace.jsonl`, and `meta.json`.
 
 For recent Claude Code releases, Phistory also extracts static prompt-like strings from the installed package and stores them as `static-prompts.md`, `static-prompts.json`, and `static-candidates.json`. The candidate archive keeps the raw extraction input so matching rules can be improved later without reinstalling every historical package.
 
@@ -36,7 +36,7 @@ Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are
 uv sync --all-groups
 
 # Capture the latest supported CLI releases.
-uv run phistory capture --latest --agents claude-code,codex,antigravity,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # Capture a historical version range for one agent.
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -56,6 +56,7 @@ uv run phistory render-site
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
+- Grok Build (`@xai-official/grok`)
 - Kimi Code (`@moonshot-ai/kimi-code`)
 - MiMo Code (`@mimo-ai/cli`)
 - OpenClaw (`openclaw`)
@@ -74,6 +75,7 @@ Last capture update: 2026-07-16 18:43 UTC
 | Claude Code | [2.1.211 - 2026-07-15](captures/claude-code/2.1.211/prompt.md) | 368 | 2026-07-15 23:33 UTC |
 | Codex CLI | [0.144.5 - 2026-07-16](captures/codex/0.144.5/prompt.md) | 69 | 2026-07-16 04:42 UTC |
 | Antigravity CLI | [1.1.3 - 2026-07-16](captures/antigravity/1.1.3/prompt.md) | 17 | 2026-07-16 04:43 UTC |
+| Grok Build | [0.2.101 - 2026-07-13](captures/grok/0.2.101/prompt.md) | 118 | 2026-07-16 18:39 UTC |
 | Kimi Code | [0.26.0 - 2026-07-16](captures/kimi-code/0.26.0/prompt.md) | 47 | 2026-07-16 11:20 UTC |
 | MiMo Code | [0.1.6 - 2026-07-15](captures/mimo/0.1.6/prompt.md) | 6 | 2026-07-15 12:54 UTC |
 | OpenClaw | [2026.7.1 - 2026-07-13](captures/openclaw/2026.7.1/prompt.md) | 68 | 2026-07-13 18:57 UTC |

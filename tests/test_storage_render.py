@@ -40,7 +40,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     zh_text = (tmp_path / "README_zh.md").read_text(encoding="utf-8")
     assert "Agent" in text
     assert "[中文](README_zh.md)" in text
-    assert "popular coding-agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code" in text
+    assert "popular coding-agent CLIs like Claude Code, Codex, Antigravity, Grok Build, Kimi Code, MiMo Code" in text
     assert "> Checks for new releases hourly. Archive last updated: **2026-05-22 01:00 UTC**." in text
     assert "## Why Use It" in text
     assert "Anthropic, OpenAI, and other agent builders" in text
@@ -61,7 +61,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "2026-05-22 01:00 UTC" in text
     assert "| Agent | Version | Published | Captured | Snapshot | Raw Trace |" not in text
     assert "[English](README.md)" in zh_text
-    assert "追踪 Claude Code、Codex、Antigravity、Kimi Code、MiMo Code" in zh_text
+    assert "追踪 Claude Code、Codex、Antigravity、Grok Build、Kimi Code、MiMo Code" in zh_text
     assert "> 每小时自动检查新版本，归档最近更新于 **2026-05-22 01:00 UTC**。" in zh_text
     assert "## 为什么看它" in zh_text
     assert "Anthropic、OpenAI 等团队" in zh_text
@@ -168,6 +168,7 @@ def test_render_site_writes_static_html_manifest(tmp_path: Path):
     assert "<!doctype html>" in text
     assert "Phistory" in text
     assert "OpenClaw" in text
+    assert "Grok Build" in text
     assert "application/ld+json" in text
     assert "document.documentElement.dataset.theme = theme" in text
     assert "document.documentElement.style.colorScheme = theme" in text

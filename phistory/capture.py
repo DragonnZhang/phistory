@@ -25,6 +25,7 @@ _VOLATILE_TEXT_PATTERNS = (
     (re.compile(r"(?m)^ - OS Version: .+$"), " - OS Version: $PHISTORY_OS_VERSION"),
     (re.compile(r" - OS Version: [^\\\n]*(?=\\n)"), " - OS Version: $PHISTORY_OS_VERSION"),
     (re.compile(r"Today's date is \d{4}[-/]\d{2}[-/]\d{2}\."), "Today's date is $PHISTORY_DATE."),
+    (re.compile(r"Today's date: \d{4}[-/]\d{2}[-/]\d{2}"), "Today's date: $PHISTORY_DATE"),
     (
         re.compile(r"The current date and time in ISO format is `[^`]+`\."),
         "The current date and time in ISO format is `$PHISTORY_DATETIME`.",
@@ -194,6 +195,10 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
     }
     if target.agent.home_profile == "hermes":
         env["HERMES_HOME"] = str(home / ".hermes")
+    if target.agent.home_profile == "grok":
+        grok_home = home / ".grok"
+        grok_home.mkdir(parents=True, exist_ok=True)
+        env["GROK_HOME"] = str(grok_home)
     if target.agent.home_profile == "kimi":
         env["KIMI_SHARE_DIR"] = str(home / ".kimi")
     if target.agent.home_profile == "kimi-code":

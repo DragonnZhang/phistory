@@ -13,7 +13,7 @@ _VERSION_PART_RE = re.compile(r"\d+|[A-Za-z]+")
 
 PROJECT_DESCRIPTION = (
     "Phistory automatically archives versioned system prompt snapshots from agent CLIs "
-    "like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi."
+    "like Claude Code, Codex, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi."
 )
 CAPTURE_DOC = Path("docs/captures.md")
 CAPTURE_JSON = Path("captures/index.json")
@@ -71,7 +71,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "[中文](README_zh.md)",
         "",
-        "Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
+        "Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
         "",
         (
             "Open the web viewer to compare prompt snapshots across versions and see how agent design "
@@ -105,7 +105,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             (
                 "For each supported release, Phistory installs the exact CLI package, runs it once through "
-                "[`claude-tap`](https://github.com/liaohch3/claude-tap), captures the prompt-bearing HTTP "
+                "[`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP "
                 "request without calling the real model provider, and stores the result under "
                 "`captures/<agent>/<version>/` with `prompt.md`, `trace.jsonl`, and `meta.json`."
             ),
@@ -128,7 +128,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "uv sync --all-groups",
             "",
             "# Capture the latest supported CLI releases.",
-            "uv run phistory capture --latest --agents claude-code,codex,antigravity,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
+            "uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -148,6 +148,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "- Claude Code (`@anthropic-ai/claude-code`)",
             "- Codex CLI (`@openai/codex`)",
             "- Antigravity CLI (`google-antigravity/antigravity-cli`)",
+            "- Grok Build (`@xai-official/grok`)",
             "- Kimi Code (`@moonshot-ai/kimi-code`)",
             "- MiMo Code (`@mimo-ai/cli`)",
             "- OpenClaw (`openclaw`)",
@@ -198,7 +199,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "[English](README.md)",
         "",
-        "Phistory 追踪 Claude Code、Codex、Antigravity、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。",
+        "Phistory 追踪 Claude Code、Codex、Antigravity、Grok Build、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。",
         "",
         (
             "打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 "
@@ -230,7 +231,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             (
                 "Phistory 会安装每个受支持的具体 CLI 版本，通过 "
-                "[`claude-tap`](https://github.com/liaohch3/claude-tap) 运行一次，抓取包含系统提示词的 "
+                "[`claude-tap`](https://github.com/WEIFENG2333/claude-tap) 运行一次，抓取包含系统提示词的 "
                 "HTTP 请求，不调用真实模型服务，然后把结果保存到 `captures/<agent>/<version>/`，"
                 "里面包含 `prompt.md`、`trace.jsonl` 和 `meta.json`。"
             ),
@@ -252,7 +253,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "uv sync --all-groups",
             "",
             "# 抓取所有受支持 CLI 的最新版本。",
-            "uv run phistory capture --latest --agents claude-code,codex,antigravity,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
+            "uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -272,6 +273,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "- Claude Code (`@anthropic-ai/claude-code`)",
             "- Codex CLI (`@openai/codex`)",
             "- Antigravity CLI (`google-antigravity/antigravity-cli`)",
+            "- Grok Build (`@xai-official/grok`)",
             "- Kimi Code (`@moonshot-ai/kimi-code`)",
             "- MiMo Code (`@mimo-ai/cli`)",
             "- OpenClaw (`openclaw`)",

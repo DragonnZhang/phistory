@@ -74,6 +74,33 @@ ANTIGRAVITY = AgentSpec(
     ),
 )
 
+GROK = AgentSpec(
+    id="grok",
+    display_name="Grok Build",
+    package="@xai-official/grok",
+    tap_client="grok",
+    fake_env={
+        "XAI_API_KEY": "phistory-fake-api-key",
+        "GROK_CODE_XAI_API_KEY": "phistory-fake-api-key",
+    },
+    extra_env={
+        "GROK_DISABLE_AUTOUPDATER": "1",
+        "GROK_TELEMETRY_ENABLED": "false",
+        "GROK_FEEDBACK_ENABLED": "false",
+        "GROK_TRACE_UPLOAD": "false",
+        "GROK_INSTRUMENTATION": "disabled",
+        "CI": "1",
+    },
+    home_profile="grok",
+    run_args=(
+        "--no-yolo",
+        "--",
+        "--no-auto-update",
+        "--single",
+        "Reply with one short sentence.",
+    ),
+)
+
 KIMI_CODE = AgentSpec(
     id="kimi-code",
     display_name="Kimi Code",
@@ -309,7 +336,7 @@ OMP = AgentSpec(
 
 AGENTS: dict[str, AgentSpec] = {
     agent.id: agent
-    for agent in (CLAUDE_CODE, CODEX, ANTIGRAVITY, KIMI_CODE, MIMO, OPENCLAW, HERMES, KIMI, OPENCODE, PI, OMP)
+    for agent in (CLAUDE_CODE, CODEX, ANTIGRAVITY, GROK, KIMI_CODE, MIMO, OPENCLAW, HERMES, KIMI, OPENCODE, PI, OMP)
 }
 AGENT_ORDER = tuple(AGENTS)
 
