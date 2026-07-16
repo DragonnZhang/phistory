@@ -6,6 +6,7 @@ def test_parse_default_agents():
         "claude-code",
         "codex",
         "antigravity",
+        "grok",
         "kimi-code",
         "mimo",
         "openclaw",
@@ -36,6 +37,7 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
 
 def test_new_agents_define_install_and_capture_profiles():
     antigravity = get_agent("antigravity")
+    grok = get_agent("grok")
     kimi_code = get_agent("kimi-code")
     mimo = get_agent("mimo")
     openclaw = get_agent("openclaw")
@@ -54,6 +56,17 @@ def test_new_agents_define_install_and_capture_profiles():
     assert antigravity.home_profile == "antigravity"
     assert antigravity.tap_target_profile == "antigravity"
     assert "--print" in antigravity.run_args
+
+    assert grok.source == "npm"
+    assert grok.package == "@xai-official/grok"
+    assert grok.tap_client == "grok"
+    assert grok.fake_env == {
+        "XAI_API_KEY": "phistory-fake-api-key",
+        "GROK_CODE_XAI_API_KEY": "phistory-fake-api-key",
+    }
+    assert grok.home_profile == "grok"
+    assert "--no-auto-update" in grok.run_args
+    assert "--single" in grok.run_args
 
     assert kimi_code.source == "npm"
     assert kimi_code.package == "@moonshot-ai/kimi-code"

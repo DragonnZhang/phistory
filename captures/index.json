@@ -1,5 +1,5 @@
 {
-  "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
+  "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
   "updated_at": "2026-07-16T18:43:33.397090Z",
   "agents": [
@@ -26,6 +26,14 @@
       "latest_published_at": "2026-07-16T01:01:57Z",
       "latest_captured_at": "2026-07-16T04:43:01.831520+00:00",
       "captures": 17
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "latest_version": "0.2.101",
+      "latest_published_at": "2026-07-13T23:07:17.691Z",
+      "latest_captured_at": "2026-07-16T18:39:55.433205+00:00",
+      "captures": 118
     },
     {
       "agent_id": "kimi-code",
@@ -3122,6 +3130,1186 @@
       "prompt": "captures/hermes/v2026.3.23/prompt.md",
       "trace": "captures/hermes/v2026.3.23/trace.jsonl",
       "meta": "captures/hermes/v2026.3.23/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.101",
+      "published_at": "2026-07-13T23:07:17.691Z",
+      "captured_at": "2026-07-16T18:39:55.433205+00:00",
+      "prompt": "captures/grok/0.2.101/prompt.md",
+      "trace": "captures/grok/0.2.101/trace.jsonl",
+      "meta": "captures/grok/0.2.101/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.100",
+      "published_at": "2026-07-13T15:40:44.812Z",
+      "captured_at": "2026-07-16T18:39:46.795487+00:00",
+      "prompt": "captures/grok/0.2.100/prompt.md",
+      "trace": "captures/grok/0.2.100/trace.jsonl",
+      "meta": "captures/grok/0.2.100/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.99",
+      "published_at": "2026-07-12T19:57:39.526Z",
+      "captured_at": "2026-07-16T18:39:40.238923+00:00",
+      "prompt": "captures/grok/0.2.99/prompt.md",
+      "trace": "captures/grok/0.2.99/trace.jsonl",
+      "meta": "captures/grok/0.2.99/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.98",
+      "published_at": "2026-07-12T03:08:48.731Z",
+      "captured_at": "2026-07-16T18:39:32.214261+00:00",
+      "prompt": "captures/grok/0.2.98/prompt.md",
+      "trace": "captures/grok/0.2.98/trace.jsonl",
+      "meta": "captures/grok/0.2.98/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.97",
+      "published_at": "2026-07-11T00:58:09.606Z",
+      "captured_at": "2026-07-16T18:39:26.167379+00:00",
+      "prompt": "captures/grok/0.2.97/prompt.md",
+      "trace": "captures/grok/0.2.97/trace.jsonl",
+      "meta": "captures/grok/0.2.97/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.96",
+      "published_at": "2026-07-10T17:24:02.250Z",
+      "captured_at": "2026-07-16T18:39:21.153921+00:00",
+      "prompt": "captures/grok/0.2.96/prompt.md",
+      "trace": "captures/grok/0.2.96/trace.jsonl",
+      "meta": "captures/grok/0.2.96/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.95",
+      "published_at": "2026-07-09T21:55:36.721Z",
+      "captured_at": "2026-07-16T18:39:09.915442+00:00",
+      "prompt": "captures/grok/0.2.95/prompt.md",
+      "trace": "captures/grok/0.2.95/trace.jsonl",
+      "meta": "captures/grok/0.2.95/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.94",
+      "published_at": "2026-07-09T05:45:15.801Z",
+      "captured_at": "2026-07-16T18:39:02.208492+00:00",
+      "prompt": "captures/grok/0.2.94/prompt.md",
+      "trace": "captures/grok/0.2.94/trace.jsonl",
+      "meta": "captures/grok/0.2.94/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.93",
+      "published_at": "2026-07-08T21:51:56.276Z",
+      "captured_at": "2026-07-16T18:38:55.255757+00:00",
+      "prompt": "captures/grok/0.2.93/prompt.md",
+      "trace": "captures/grok/0.2.93/trace.jsonl",
+      "meta": "captures/grok/0.2.93/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.92",
+      "published_at": "2026-07-08T05:48:10.962Z",
+      "captured_at": "2026-07-16T18:38:50.123175+00:00",
+      "prompt": "captures/grok/0.2.92/prompt.md",
+      "trace": "captures/grok/0.2.92/trace.jsonl",
+      "meta": "captures/grok/0.2.92/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.91",
+      "published_at": "2026-07-07T23:25:18.566Z",
+      "captured_at": "2026-07-16T18:38:45.116886+00:00",
+      "prompt": "captures/grok/0.2.91/prompt.md",
+      "trace": "captures/grok/0.2.91/trace.jsonl",
+      "meta": "captures/grok/0.2.91/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.90",
+      "published_at": "2026-07-07T20:35:51.071Z",
+      "captured_at": "2026-07-16T18:38:40.197406+00:00",
+      "prompt": "captures/grok/0.2.90/prompt.md",
+      "trace": "captures/grok/0.2.90/trace.jsonl",
+      "meta": "captures/grok/0.2.90/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.89",
+      "published_at": "2026-07-07T00:43:19.816Z",
+      "captured_at": "2026-07-16T18:38:35.102267+00:00",
+      "prompt": "captures/grok/0.2.89/prompt.md",
+      "trace": "captures/grok/0.2.89/trace.jsonl",
+      "meta": "captures/grok/0.2.89/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.88",
+      "published_at": "2026-07-06T21:04:17.578Z",
+      "captured_at": "2026-07-16T18:38:30.097319+00:00",
+      "prompt": "captures/grok/0.2.88/prompt.md",
+      "trace": "captures/grok/0.2.88/trace.jsonl",
+      "meta": "captures/grok/0.2.88/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.87",
+      "published_at": "2026-07-05T16:09:14.925Z",
+      "captured_at": "2026-07-16T18:38:25.346556+00:00",
+      "prompt": "captures/grok/0.2.87/prompt.md",
+      "trace": "captures/grok/0.2.87/trace.jsonl",
+      "meta": "captures/grok/0.2.87/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.86",
+      "published_at": "2026-07-04T03:40:54.628Z",
+      "captured_at": "2026-07-16T18:38:20.880681+00:00",
+      "prompt": "captures/grok/0.2.86/prompt.md",
+      "trace": "captures/grok/0.2.86/trace.jsonl",
+      "meta": "captures/grok/0.2.86/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.85",
+      "published_at": "2026-07-03T18:51:29.714Z",
+      "captured_at": "2026-07-16T18:38:14.793737+00:00",
+      "prompt": "captures/grok/0.2.85/prompt.md",
+      "trace": "captures/grok/0.2.85/trace.jsonl",
+      "meta": "captures/grok/0.2.85/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.84",
+      "published_at": "2026-07-03T03:43:10.385Z",
+      "captured_at": "2026-07-16T18:38:02.433180+00:00",
+      "prompt": "captures/grok/0.2.84/prompt.md",
+      "trace": "captures/grok/0.2.84/trace.jsonl",
+      "meta": "captures/grok/0.2.84/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.83",
+      "published_at": "2026-07-02T05:14:41.764Z",
+      "captured_at": "2026-07-16T18:37:58.225979+00:00",
+      "prompt": "captures/grok/0.2.83/prompt.md",
+      "trace": "captures/grok/0.2.83/trace.jsonl",
+      "meta": "captures/grok/0.2.83/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.82",
+      "published_at": "2026-07-02T02:58:10.814Z",
+      "captured_at": "2026-07-16T18:37:53.567426+00:00",
+      "prompt": "captures/grok/0.2.82/prompt.md",
+      "trace": "captures/grok/0.2.82/trace.jsonl",
+      "meta": "captures/grok/0.2.82/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.81",
+      "published_at": "2026-07-01T19:13:03.081Z",
+      "captured_at": "2026-07-16T18:37:49.127079+00:00",
+      "prompt": "captures/grok/0.2.81/prompt.md",
+      "trace": "captures/grok/0.2.81/trace.jsonl",
+      "meta": "captures/grok/0.2.81/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.80",
+      "published_at": "2026-07-01T03:48:30.229Z",
+      "captured_at": "2026-07-16T18:37:44.126133+00:00",
+      "prompt": "captures/grok/0.2.80/prompt.md",
+      "trace": "captures/grok/0.2.80/trace.jsonl",
+      "meta": "captures/grok/0.2.80/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.79",
+      "published_at": "2026-07-01T00:02:32.258Z",
+      "captured_at": "2026-07-16T18:37:39.717450+00:00",
+      "prompt": "captures/grok/0.2.79/prompt.md",
+      "trace": "captures/grok/0.2.79/trace.jsonl",
+      "meta": "captures/grok/0.2.79/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.78",
+      "published_at": "2026-06-30T20:59:29.105Z",
+      "captured_at": "2026-07-16T18:37:35.391002+00:00",
+      "prompt": "captures/grok/0.2.78/prompt.md",
+      "trace": "captures/grok/0.2.78/trace.jsonl",
+      "meta": "captures/grok/0.2.78/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.77",
+      "published_at": "2026-06-30T03:22:52.365Z",
+      "captured_at": "2026-07-16T18:37:30.123248+00:00",
+      "prompt": "captures/grok/0.2.77/prompt.md",
+      "trace": "captures/grok/0.2.77/trace.jsonl",
+      "meta": "captures/grok/0.2.77/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.76",
+      "published_at": "2026-06-30T01:19:10.808Z",
+      "captured_at": "2026-07-16T18:37:25.889741+00:00",
+      "prompt": "captures/grok/0.2.76/prompt.md",
+      "trace": "captures/grok/0.2.76/trace.jsonl",
+      "meta": "captures/grok/0.2.76/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.75",
+      "published_at": "2026-06-29T21:53:12.103Z",
+      "captured_at": "2026-07-16T18:37:21.171526+00:00",
+      "prompt": "captures/grok/0.2.75/prompt.md",
+      "trace": "captures/grok/0.2.75/trace.jsonl",
+      "meta": "captures/grok/0.2.75/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.74",
+      "published_at": "2026-06-29T19:44:28.253Z",
+      "captured_at": "2026-07-16T18:37:10.120810+00:00",
+      "prompt": "captures/grok/0.2.74/prompt.md",
+      "trace": "captures/grok/0.2.74/trace.jsonl",
+      "meta": "captures/grok/0.2.74/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.73",
+      "published_at": "2026-06-28T19:17:53.002Z",
+      "captured_at": "2026-07-16T18:37:05.099585+00:00",
+      "prompt": "captures/grok/0.2.73/prompt.md",
+      "trace": "captures/grok/0.2.73/trace.jsonl",
+      "meta": "captures/grok/0.2.73/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.72",
+      "published_at": "2026-06-28T01:17:28.832Z",
+      "captured_at": "2026-07-16T18:37:00.112194+00:00",
+      "prompt": "captures/grok/0.2.72/prompt.md",
+      "trace": "captures/grok/0.2.72/trace.jsonl",
+      "meta": "captures/grok/0.2.72/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.71",
+      "published_at": "2026-06-27T22:58:16.026Z",
+      "captured_at": "2026-07-16T18:36:55.165033+00:00",
+      "prompt": "captures/grok/0.2.71/prompt.md",
+      "trace": "captures/grok/0.2.71/trace.jsonl",
+      "meta": "captures/grok/0.2.71/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.70",
+      "published_at": "2026-06-27T16:47:12.320Z",
+      "captured_at": "2026-07-16T18:36:51.129190+00:00",
+      "prompt": "captures/grok/0.2.70/prompt.md",
+      "trace": "captures/grok/0.2.70/trace.jsonl",
+      "meta": "captures/grok/0.2.70/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.69",
+      "published_at": "2026-06-26T22:05:40.518Z",
+      "captured_at": "2026-07-16T18:36:46.213310+00:00",
+      "prompt": "captures/grok/0.2.69/prompt.md",
+      "trace": "captures/grok/0.2.69/trace.jsonl",
+      "meta": "captures/grok/0.2.69/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.68",
+      "published_at": "2026-06-26T03:11:03.824Z",
+      "captured_at": "2026-07-16T18:36:41.547466+00:00",
+      "prompt": "captures/grok/0.2.68/prompt.md",
+      "trace": "captures/grok/0.2.68/trace.jsonl",
+      "meta": "captures/grok/0.2.68/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.67",
+      "published_at": "2026-06-25T21:46:11.457Z",
+      "captured_at": "2026-07-16T18:36:37.511298+00:00",
+      "prompt": "captures/grok/0.2.67/prompt.md",
+      "trace": "captures/grok/0.2.67/trace.jsonl",
+      "meta": "captures/grok/0.2.67/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.66",
+      "published_at": "2026-06-25T19:14:58.333Z",
+      "captured_at": "2026-07-16T18:36:29.900173+00:00",
+      "prompt": "captures/grok/0.2.66/prompt.md",
+      "trace": "captures/grok/0.2.66/trace.jsonl",
+      "meta": "captures/grok/0.2.66/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.65",
+      "published_at": "2026-06-24T17:46:51.281Z",
+      "captured_at": "2026-07-16T18:36:24.455195+00:00",
+      "prompt": "captures/grok/0.2.65/prompt.md",
+      "trace": "captures/grok/0.2.65/trace.jsonl",
+      "meta": "captures/grok/0.2.65/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.64",
+      "published_at": "2026-06-24T02:53:00.928Z",
+      "captured_at": "2026-07-16T18:36:16.033378+00:00",
+      "prompt": "captures/grok/0.2.64/prompt.md",
+      "trace": "captures/grok/0.2.64/trace.jsonl",
+      "meta": "captures/grok/0.2.64/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.63",
+      "published_at": "2026-06-23T21:43:52.498Z",
+      "captured_at": "2026-07-16T18:36:11.145413+00:00",
+      "prompt": "captures/grok/0.2.63/prompt.md",
+      "trace": "captures/grok/0.2.63/trace.jsonl",
+      "meta": "captures/grok/0.2.63/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.62",
+      "published_at": "2026-06-23T19:08:23.318Z",
+      "captured_at": "2026-07-16T18:36:06.037709+00:00",
+      "prompt": "captures/grok/0.2.62/prompt.md",
+      "trace": "captures/grok/0.2.62/trace.jsonl",
+      "meta": "captures/grok/0.2.62/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.61",
+      "published_at": "2026-06-22T23:51:01.746Z",
+      "captured_at": "2026-07-16T18:36:01.574310+00:00",
+      "prompt": "captures/grok/0.2.61/prompt.md",
+      "trace": "captures/grok/0.2.61/trace.jsonl",
+      "meta": "captures/grok/0.2.61/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.60",
+      "published_at": "2026-06-21T05:34:47.815Z",
+      "captured_at": "2026-07-16T18:35:49.020394+00:00",
+      "prompt": "captures/grok/0.2.60/prompt.md",
+      "trace": "captures/grok/0.2.60/trace.jsonl",
+      "meta": "captures/grok/0.2.60/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.59",
+      "published_at": "2026-06-19T21:02:43.131Z",
+      "captured_at": "2026-07-16T18:35:44.083218+00:00",
+      "prompt": "captures/grok/0.2.59/prompt.md",
+      "trace": "captures/grok/0.2.59/trace.jsonl",
+      "meta": "captures/grok/0.2.59/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.58",
+      "published_at": "2026-06-19T00:35:57.185Z",
+      "captured_at": "2026-07-16T18:35:38.220110+00:00",
+      "prompt": "captures/grok/0.2.58/prompt.md",
+      "trace": "captures/grok/0.2.58/trace.jsonl",
+      "meta": "captures/grok/0.2.58/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.57",
+      "published_at": "2026-06-18T16:42:58.259Z",
+      "captured_at": "2026-07-16T18:35:32.830928+00:00",
+      "prompt": "captures/grok/0.2.57/prompt.md",
+      "trace": "captures/grok/0.2.57/trace.jsonl",
+      "meta": "captures/grok/0.2.57/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.56",
+      "published_at": "2026-06-18T00:20:20.335Z",
+      "captured_at": "2026-07-16T18:35:27.289696+00:00",
+      "prompt": "captures/grok/0.2.56/prompt.md",
+      "trace": "captures/grok/0.2.56/trace.jsonl",
+      "meta": "captures/grok/0.2.56/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.55",
+      "published_at": "2026-06-16T22:40:09.830Z",
+      "captured_at": "2026-07-16T18:35:23.247706+00:00",
+      "prompt": "captures/grok/0.2.55/prompt.md",
+      "trace": "captures/grok/0.2.55/trace.jsonl",
+      "meta": "captures/grok/0.2.55/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.54",
+      "published_at": "2026-06-16T01:51:51.002Z",
+      "captured_at": "2026-07-16T18:35:18.007611+00:00",
+      "prompt": "captures/grok/0.2.54/prompt.md",
+      "trace": "captures/grok/0.2.54/trace.jsonl",
+      "meta": "captures/grok/0.2.54/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.53",
+      "published_at": "2026-06-15T20:08:24.260Z",
+      "captured_at": "2026-07-16T18:35:13.289048+00:00",
+      "prompt": "captures/grok/0.2.53/prompt.md",
+      "trace": "captures/grok/0.2.53/trace.jsonl",
+      "meta": "captures/grok/0.2.53/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.52",
+      "published_at": "2026-06-15T03:34:11.465Z",
+      "captured_at": "2026-07-16T18:35:09.224352+00:00",
+      "prompt": "captures/grok/0.2.52/prompt.md",
+      "trace": "captures/grok/0.2.52/trace.jsonl",
+      "meta": "captures/grok/0.2.52/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.51",
+      "published_at": "2026-06-12T03:02:09.075Z",
+      "captured_at": "2026-07-16T18:35:05.151742+00:00",
+      "prompt": "captures/grok/0.2.51/prompt.md",
+      "trace": "captures/grok/0.2.51/trace.jsonl",
+      "meta": "captures/grok/0.2.51/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.50",
+      "published_at": "2026-06-11T19:39:25.693Z",
+      "captured_at": "2026-07-16T18:35:01.017479+00:00",
+      "prompt": "captures/grok/0.2.50/prompt.md",
+      "trace": "captures/grok/0.2.50/trace.jsonl",
+      "meta": "captures/grok/0.2.50/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.49",
+      "published_at": "2026-06-11T16:25:03.353Z",
+      "captured_at": "2026-07-16T18:34:56.744594+00:00",
+      "prompt": "captures/grok/0.2.49/prompt.md",
+      "trace": "captures/grok/0.2.49/trace.jsonl",
+      "meta": "captures/grok/0.2.49/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.47",
+      "published_at": "2026-06-11T06:35:54.863Z",
+      "captured_at": "2026-07-16T18:34:50.311228+00:00",
+      "prompt": "captures/grok/0.2.47/prompt.md",
+      "trace": "captures/grok/0.2.47/trace.jsonl",
+      "meta": "captures/grok/0.2.47/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.46",
+      "published_at": "2026-06-11T02:22:29.312Z",
+      "captured_at": "2026-07-16T18:34:46.235487+00:00",
+      "prompt": "captures/grok/0.2.46/prompt.md",
+      "trace": "captures/grok/0.2.46/trace.jsonl",
+      "meta": "captures/grok/0.2.46/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.45",
+      "published_at": "2026-06-10T20:43:39.536Z",
+      "captured_at": "2026-07-16T18:34:42.039420+00:00",
+      "prompt": "captures/grok/0.2.45/prompt.md",
+      "trace": "captures/grok/0.2.45/trace.jsonl",
+      "meta": "captures/grok/0.2.45/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.44",
+      "published_at": "2026-06-10T14:24:57.888Z",
+      "captured_at": "2026-07-16T18:34:35.589200+00:00",
+      "prompt": "captures/grok/0.2.44/prompt.md",
+      "trace": "captures/grok/0.2.44/trace.jsonl",
+      "meta": "captures/grok/0.2.44/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.43",
+      "published_at": "2026-06-10T05:12:14.765Z",
+      "captured_at": "2026-07-16T18:34:31.006367+00:00",
+      "prompt": "captures/grok/0.2.43/prompt.md",
+      "trace": "captures/grok/0.2.43/trace.jsonl",
+      "meta": "captures/grok/0.2.43/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.42",
+      "published_at": "2026-06-10T02:58:53.234Z",
+      "captured_at": "2026-07-16T18:34:18.435505+00:00",
+      "prompt": "captures/grok/0.2.42/prompt.md",
+      "trace": "captures/grok/0.2.42/trace.jsonl",
+      "meta": "captures/grok/0.2.42/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.41",
+      "published_at": "2026-06-10T00:44:16.363Z",
+      "captured_at": "2026-07-16T18:34:14.001395+00:00",
+      "prompt": "captures/grok/0.2.41/prompt.md",
+      "trace": "captures/grok/0.2.41/trace.jsonl",
+      "meta": "captures/grok/0.2.41/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.40",
+      "published_at": "2026-06-09T21:14:21.068Z",
+      "captured_at": "2026-07-16T18:34:08.996722+00:00",
+      "prompt": "captures/grok/0.2.40/prompt.md",
+      "trace": "captures/grok/0.2.40/trace.jsonl",
+      "meta": "captures/grok/0.2.40/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.39",
+      "published_at": "2026-06-09T19:20:06.324Z",
+      "captured_at": "2026-07-16T18:34:04.999694+00:00",
+      "prompt": "captures/grok/0.2.39/prompt.md",
+      "trace": "captures/grok/0.2.39/trace.jsonl",
+      "meta": "captures/grok/0.2.39/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.38",
+      "published_at": "2026-06-09T01:42:59.001Z",
+      "captured_at": "2026-07-16T18:34:01.333425+00:00",
+      "prompt": "captures/grok/0.2.38/prompt.md",
+      "trace": "captures/grok/0.2.38/trace.jsonl",
+      "meta": "captures/grok/0.2.38/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.37",
+      "published_at": "2026-06-08T23:58:00.341Z",
+      "captured_at": "2026-07-16T18:33:54.626531+00:00",
+      "prompt": "captures/grok/0.2.37/prompt.md",
+      "trace": "captures/grok/0.2.37/trace.jsonl",
+      "meta": "captures/grok/0.2.37/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.36",
+      "published_at": "2026-06-08T19:53:08.496Z",
+      "captured_at": "2026-07-16T18:33:50.175464+00:00",
+      "prompt": "captures/grok/0.2.36/prompt.md",
+      "trace": "captures/grok/0.2.36/trace.jsonl",
+      "meta": "captures/grok/0.2.36/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.35",
+      "published_at": "2026-06-08T01:54:49.678Z",
+      "captured_at": "2026-07-16T18:33:45.889591+00:00",
+      "prompt": "captures/grok/0.2.35/prompt.md",
+      "trace": "captures/grok/0.2.35/trace.jsonl",
+      "meta": "captures/grok/0.2.35/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.34",
+      "published_at": "2026-06-08T00:55:56.339Z",
+      "captured_at": "2026-07-16T18:33:42.070725+00:00",
+      "prompt": "captures/grok/0.2.34/prompt.md",
+      "trace": "captures/grok/0.2.34/trace.jsonl",
+      "meta": "captures/grok/0.2.34/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.33",
+      "published_at": "2026-06-07T19:39:15.944Z",
+      "captured_at": "2026-07-16T18:33:37.156449+00:00",
+      "prompt": "captures/grok/0.2.33/prompt.md",
+      "trace": "captures/grok/0.2.33/trace.jsonl",
+      "meta": "captures/grok/0.2.33/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.32",
+      "published_at": "2026-06-06T20:47:31.585Z",
+      "captured_at": "2026-07-16T18:33:31.442373+00:00",
+      "prompt": "captures/grok/0.2.32/prompt.md",
+      "trace": "captures/grok/0.2.32/trace.jsonl",
+      "meta": "captures/grok/0.2.32/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.31",
+      "published_at": "2026-06-06T17:08:02.589Z",
+      "captured_at": "2026-07-16T18:33:25.879977+00:00",
+      "prompt": "captures/grok/0.2.31/prompt.md",
+      "trace": "captures/grok/0.2.31/trace.jsonl",
+      "meta": "captures/grok/0.2.31/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.30",
+      "published_at": "2026-06-06T04:47:44.317Z",
+      "captured_at": "2026-07-16T18:33:20.985527+00:00",
+      "prompt": "captures/grok/0.2.30/prompt.md",
+      "trace": "captures/grok/0.2.30/trace.jsonl",
+      "meta": "captures/grok/0.2.30/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.29",
+      "published_at": "2026-06-05T23:14:46.844Z",
+      "captured_at": "2026-07-16T18:33:16.973019+00:00",
+      "prompt": "captures/grok/0.2.29/prompt.md",
+      "trace": "captures/grok/0.2.29/trace.jsonl",
+      "meta": "captures/grok/0.2.29/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.28",
+      "published_at": "2026-06-05T17:28:34.421Z",
+      "captured_at": "2026-07-16T18:33:12.015939+00:00",
+      "prompt": "captures/grok/0.2.28/prompt.md",
+      "trace": "captures/grok/0.2.28/trace.jsonl",
+      "meta": "captures/grok/0.2.28/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.27",
+      "published_at": "2026-06-05T06:36:56.988Z",
+      "captured_at": "2026-07-16T18:33:07.969357+00:00",
+      "prompt": "captures/grok/0.2.27/prompt.md",
+      "trace": "captures/grok/0.2.27/trace.jsonl",
+      "meta": "captures/grok/0.2.27/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.26",
+      "published_at": "2026-06-05T05:38:20.135Z",
+      "captured_at": "2026-07-16T18:33:01.249388+00:00",
+      "prompt": "captures/grok/0.2.26/prompt.md",
+      "trace": "captures/grok/0.2.26/trace.jsonl",
+      "meta": "captures/grok/0.2.26/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.25",
+      "published_at": "2026-06-04T22:09:08.986Z",
+      "captured_at": "2026-07-16T18:32:56.556901+00:00",
+      "prompt": "captures/grok/0.2.25/prompt.md",
+      "trace": "captures/grok/0.2.25/trace.jsonl",
+      "meta": "captures/grok/0.2.25/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.24",
+      "published_at": "2026-06-04T20:28:22.533Z",
+      "captured_at": "2026-07-16T18:32:52.036454+00:00",
+      "prompt": "captures/grok/0.2.24/prompt.md",
+      "trace": "captures/grok/0.2.24/trace.jsonl",
+      "meta": "captures/grok/0.2.24/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.23",
+      "published_at": "2026-06-04T15:31:26.045Z",
+      "captured_at": "2026-07-16T18:32:47.892017+00:00",
+      "prompt": "captures/grok/0.2.23/prompt.md",
+      "trace": "captures/grok/0.2.23/trace.jsonl",
+      "meta": "captures/grok/0.2.23/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.22",
+      "published_at": "2026-06-03T22:05:25.937Z",
+      "captured_at": "2026-07-16T18:32:43.433073+00:00",
+      "prompt": "captures/grok/0.2.22/prompt.md",
+      "trace": "captures/grok/0.2.22/trace.jsonl",
+      "meta": "captures/grok/0.2.22/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.21",
+      "published_at": "2026-06-03T19:07:52.250Z",
+      "captured_at": "2026-07-16T18:32:39.373087+00:00",
+      "prompt": "captures/grok/0.2.21/prompt.md",
+      "trace": "captures/grok/0.2.21/trace.jsonl",
+      "meta": "captures/grok/0.2.21/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.20",
+      "published_at": "2026-06-03T02:31:18.526Z",
+      "captured_at": "2026-07-16T18:32:34.013856+00:00",
+      "prompt": "captures/grok/0.2.20/prompt.md",
+      "trace": "captures/grok/0.2.20/trace.jsonl",
+      "meta": "captures/grok/0.2.20/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.19",
+      "published_at": "2026-06-02T22:15:17.088Z",
+      "captured_at": "2026-07-16T18:32:29.998123+00:00",
+      "prompt": "captures/grok/0.2.19/prompt.md",
+      "trace": "captures/grok/0.2.19/trace.jsonl",
+      "meta": "captures/grok/0.2.19/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.18",
+      "published_at": "2026-06-02T20:06:40.598Z",
+      "captured_at": "2026-07-16T18:32:25.875989+00:00",
+      "prompt": "captures/grok/0.2.18/prompt.md",
+      "trace": "captures/grok/0.2.18/trace.jsonl",
+      "meta": "captures/grok/0.2.18/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.17",
+      "published_at": "2026-06-02T02:22:47.803Z",
+      "captured_at": "2026-07-16T18:32:19.293354+00:00",
+      "prompt": "captures/grok/0.2.17/prompt.md",
+      "trace": "captures/grok/0.2.17/trace.jsonl",
+      "meta": "captures/grok/0.2.17/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.16",
+      "published_at": "2026-06-01T16:30:25.466Z",
+      "captured_at": "2026-07-16T18:32:13.384050+00:00",
+      "prompt": "captures/grok/0.2.16/prompt.md",
+      "trace": "captures/grok/0.2.16/trace.jsonl",
+      "meta": "captures/grok/0.2.16/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.15",
+      "published_at": "2026-05-31T18:39:06.122Z",
+      "captured_at": "2026-07-16T18:32:09.087077+00:00",
+      "prompt": "captures/grok/0.2.15/prompt.md",
+      "trace": "captures/grok/0.2.15/trace.jsonl",
+      "meta": "captures/grok/0.2.15/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.14",
+      "published_at": "2026-05-30T23:50:39.133Z",
+      "captured_at": "2026-07-16T18:32:05.409422+00:00",
+      "prompt": "captures/grok/0.2.14/prompt.md",
+      "trace": "captures/grok/0.2.14/trace.jsonl",
+      "meta": "captures/grok/0.2.14/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.13",
+      "published_at": "2026-05-30T03:27:53.399Z",
+      "captured_at": "2026-07-16T18:32:01.387048+00:00",
+      "prompt": "captures/grok/0.2.13/prompt.md",
+      "trace": "captures/grok/0.2.13/trace.jsonl",
+      "meta": "captures/grok/0.2.13/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.12",
+      "published_at": "2026-05-29T19:10:50.235Z",
+      "captured_at": "2026-07-16T18:31:57.687755+00:00",
+      "prompt": "captures/grok/0.2.12/prompt.md",
+      "trace": "captures/grok/0.2.12/trace.jsonl",
+      "meta": "captures/grok/0.2.12/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.11",
+      "published_at": "2026-05-29T02:01:51.516Z",
+      "captured_at": "2026-07-16T18:31:54.040397+00:00",
+      "prompt": "captures/grok/0.2.11/prompt.md",
+      "trace": "captures/grok/0.2.11/trace.jsonl",
+      "meta": "captures/grok/0.2.11/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.10",
+      "published_at": "2026-05-29T00:42:46.667Z",
+      "captured_at": "2026-07-16T18:31:50.522004+00:00",
+      "prompt": "captures/grok/0.2.10/prompt.md",
+      "trace": "captures/grok/0.2.10/trace.jsonl",
+      "meta": "captures/grok/0.2.10/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.9",
+      "published_at": "2026-05-28T21:42:46.970Z",
+      "captured_at": "2026-07-16T18:31:46.465214+00:00",
+      "prompt": "captures/grok/0.2.9/prompt.md",
+      "trace": "captures/grok/0.2.9/trace.jsonl",
+      "meta": "captures/grok/0.2.9/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.8",
+      "published_at": "2026-05-28T06:43:32.741Z",
+      "captured_at": "2026-07-16T18:31:42.990102+00:00",
+      "prompt": "captures/grok/0.2.8/prompt.md",
+      "trace": "captures/grok/0.2.8/trace.jsonl",
+      "meta": "captures/grok/0.2.8/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.7",
+      "published_at": "2026-05-27T23:03:43.730Z",
+      "captured_at": "2026-07-16T18:31:37.986704+00:00",
+      "prompt": "captures/grok/0.2.7/prompt.md",
+      "trace": "captures/grok/0.2.7/trace.jsonl",
+      "meta": "captures/grok/0.2.7/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.6",
+      "published_at": "2026-05-27T21:29:27.818Z",
+      "captured_at": "2026-07-16T18:31:34.229496+00:00",
+      "prompt": "captures/grok/0.2.6/prompt.md",
+      "trace": "captures/grok/0.2.6/trace.jsonl",
+      "meta": "captures/grok/0.2.6/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.5",
+      "published_at": "2026-05-27T18:41:25.940Z",
+      "captured_at": "2026-07-16T18:31:23.393613+00:00",
+      "prompt": "captures/grok/0.2.5/prompt.md",
+      "trace": "captures/grok/0.2.5/trace.jsonl",
+      "meta": "captures/grok/0.2.5/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.4",
+      "published_at": "2026-05-27T18:00:15.227Z",
+      "captured_at": "2026-07-16T18:31:19.624028+00:00",
+      "prompt": "captures/grok/0.2.4/prompt.md",
+      "trace": "captures/grok/0.2.4/trace.jsonl",
+      "meta": "captures/grok/0.2.4/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.3",
+      "published_at": "2026-05-26T21:22:46.262Z",
+      "captured_at": "2026-07-16T18:31:14.013135+00:00",
+      "prompt": "captures/grok/0.2.3/prompt.md",
+      "trace": "captures/grok/0.2.3/trace.jsonl",
+      "meta": "captures/grok/0.2.3/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.2",
+      "published_at": "2026-05-26T19:44:13.603Z",
+      "captured_at": "2026-07-16T18:31:10.100955+00:00",
+      "prompt": "captures/grok/0.2.2/prompt.md",
+      "trace": "captures/grok/0.2.2/trace.jsonl",
+      "meta": "captures/grok/0.2.2/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.1",
+      "published_at": "2026-05-26T18:16:27.268Z",
+      "captured_at": "2026-07-16T18:31:06.330185+00:00",
+      "prompt": "captures/grok/0.2.1/prompt.md",
+      "trace": "captures/grok/0.2.1/trace.jsonl",
+      "meta": "captures/grok/0.2.1/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.0",
+      "published_at": "2026-05-26T08:13:58.424Z",
+      "captured_at": "2026-07-16T18:31:01.699591+00:00",
+      "prompt": "captures/grok/0.2.0/prompt.md",
+      "trace": "captures/grok/0.2.0/trace.jsonl",
+      "meta": "captures/grok/0.2.0/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.220",
+      "published_at": "2026-05-26T06:28:14.164Z",
+      "captured_at": "2026-07-16T18:30:57.709364+00:00",
+      "prompt": "captures/grok/0.1.220/prompt.md",
+      "trace": "captures/grok/0.1.220/trace.jsonl",
+      "meta": "captures/grok/0.1.220/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.219",
+      "published_at": "2026-05-25T00:11:41.278Z",
+      "captured_at": "2026-07-16T18:30:54.401527+00:00",
+      "prompt": "captures/grok/0.1.219/prompt.md",
+      "trace": "captures/grok/0.1.219/trace.jsonl",
+      "meta": "captures/grok/0.1.219/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.218",
+      "published_at": "2026-05-24T00:59:35.588Z",
+      "captured_at": "2026-07-16T18:30:50.898903+00:00",
+      "prompt": "captures/grok/0.1.218/prompt.md",
+      "trace": "captures/grok/0.1.218/trace.jsonl",
+      "meta": "captures/grok/0.1.218/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.216",
+      "published_at": "2026-05-22T09:58:27.770Z",
+      "captured_at": "2026-07-16T18:30:45.940066+00:00",
+      "prompt": "captures/grok/0.1.216/prompt.md",
+      "trace": "captures/grok/0.1.216/trace.jsonl",
+      "meta": "captures/grok/0.1.216/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.215",
+      "published_at": "2026-05-22T04:28:45.382Z",
+      "captured_at": "2026-07-16T18:30:40.531576+00:00",
+      "prompt": "captures/grok/0.1.215/prompt.md",
+      "trace": "captures/grok/0.1.215/trace.jsonl",
+      "meta": "captures/grok/0.1.215/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.213",
+      "published_at": "2026-05-21T17:17:36.716Z",
+      "captured_at": "2026-07-16T18:30:35.353759+00:00",
+      "prompt": "captures/grok/0.1.213/prompt.md",
+      "trace": "captures/grok/0.1.213/trace.jsonl",
+      "meta": "captures/grok/0.1.213/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.212",
+      "published_at": "2026-05-18T19:21:57.627Z",
+      "captured_at": "2026-07-16T18:30:28.624898+00:00",
+      "prompt": "captures/grok/0.1.212/prompt.md",
+      "trace": "captures/grok/0.1.212/trace.jsonl",
+      "meta": "captures/grok/0.1.212/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.211",
+      "published_at": "2026-05-15T22:38:48.725Z",
+      "captured_at": "2026-07-16T18:30:14.883524+00:00",
+      "prompt": "captures/grok/0.1.211/prompt.md",
+      "trace": "captures/grok/0.1.211/trace.jsonl",
+      "meta": "captures/grok/0.1.211/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.210",
+      "published_at": "2026-05-14T01:37:08.333Z",
+      "captured_at": "2026-07-16T18:30:09.162149+00:00",
+      "prompt": "captures/grok/0.1.210/prompt.md",
+      "trace": "captures/grok/0.1.210/trace.jsonl",
+      "meta": "captures/grok/0.1.210/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.209",
+      "published_at": "2026-05-13T00:12:41.598Z",
+      "captured_at": "2026-07-16T18:29:59.733025+00:00",
+      "prompt": "captures/grok/0.1.209/prompt.md",
+      "trace": "captures/grok/0.1.209/trace.jsonl",
+      "meta": "captures/grok/0.1.209/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.208",
+      "published_at": "2026-05-11T23:19:29.964Z",
+      "captured_at": "2026-07-16T18:29:48.494755+00:00",
+      "prompt": "captures/grok/0.1.208/prompt.md",
+      "trace": "captures/grok/0.1.208/trace.jsonl",
+      "meta": "captures/grok/0.1.208/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.207",
+      "published_at": "2026-05-11T03:50:45.189Z",
+      "captured_at": "2026-07-16T18:29:42.966603+00:00",
+      "prompt": "captures/grok/0.1.207/prompt.md",
+      "trace": "captures/grok/0.1.207/trace.jsonl",
+      "meta": "captures/grok/0.1.207/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.206",
+      "published_at": "2026-05-10T20:02:10.805Z",
+      "captured_at": "2026-07-16T18:29:37.142448+00:00",
+      "prompt": "captures/grok/0.1.206/prompt.md",
+      "trace": "captures/grok/0.1.206/trace.jsonl",
+      "meta": "captures/grok/0.1.206/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.205",
+      "published_at": "2026-05-09T02:23:33.813Z",
+      "captured_at": "2026-07-16T18:29:32.501809+00:00",
+      "prompt": "captures/grok/0.1.205/prompt.md",
+      "trace": "captures/grok/0.1.205/trace.jsonl",
+      "meta": "captures/grok/0.1.205/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.204",
+      "published_at": "2026-05-09T00:14:08.206Z",
+      "captured_at": "2026-07-16T18:29:27.416304+00:00",
+      "prompt": "captures/grok/0.1.204/prompt.md",
+      "trace": "captures/grok/0.1.204/trace.jsonl",
+      "meta": "captures/grok/0.1.204/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.203",
+      "published_at": "2026-05-08T03:55:51.816Z",
+      "captured_at": "2026-07-16T18:29:22.881315+00:00",
+      "prompt": "captures/grok/0.1.203/prompt.md",
+      "trace": "captures/grok/0.1.203/trace.jsonl",
+      "meta": "captures/grok/0.1.203/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.1.202",
+      "published_at": "2026-05-07T19:30:43.181Z",
+      "captured_at": "2026-07-16T18:29:18.077150+00:00",
+      "prompt": "captures/grok/0.1.202/prompt.md",
+      "trace": "captures/grok/0.1.202/trace.jsonl",
+      "meta": "captures/grok/0.1.202/meta.json"
     },
     {
       "agent_id": "codex",

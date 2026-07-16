@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-Phistory 追踪 Claude Code、Codex、Antigravity、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
+Phistory 追踪 Claude Code、Codex、Antigravity、Grok Build、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
 
 打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 agent 设计如何变化。
 
@@ -21,7 +21,7 @@ Phistory 追踪 Claude Code、Codex、Antigravity、Kimi Code、MiMo Code、Open
 
 ## 工作原理
 
-Phistory 会安装每个受支持的具体 CLI 版本，通过 [`claude-tap`](https://github.com/liaohch3/claude-tap) 运行一次，抓取包含系统提示词的 HTTP 请求，不调用真实模型服务，然后把结果保存到 `captures/<agent>/<version>/`，里面包含 `prompt.md`、`trace.jsonl` 和 `meta.json`。
+Phistory 会安装每个受支持的具体 CLI 版本，通过 [`claude-tap`](https://github.com/WEIFENG2333/claude-tap) 运行一次，抓取包含系统提示词的 HTTP 请求，不调用真实模型服务，然后把结果保存到 `captures/<agent>/<version>/`，里面包含 `prompt.md`、`trace.jsonl` 和 `meta.json`。
 
 对于最近的 Claude Code 版本，Phistory 还会从安装包里提取疑似静态 prompt 的字符串，保存为 `static-prompts.md`、`static-prompts.json` 和 `static-candidates.json`。`static-candidates.json` 会保留原始候选内容，方便以后改进匹配规则时不用重新安装所有历史包。
 
@@ -36,7 +36,7 @@ GitHub Actions 每小时检查一次支持的 CLI 版本；发现新版本后，
 uv sync --all-groups
 
 # 抓取所有受支持 CLI 的最新版本。
-uv run phistory capture --latest --agents claude-code,codex,antigravity,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # 回填某个 agent 的历史版本区间。
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -56,6 +56,7 @@ uv run phistory render-site
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
+- Grok Build (`@xai-official/grok`)
 - Kimi Code (`@moonshot-ai/kimi-code`)
 - MiMo Code (`@mimo-ai/cli`)
 - OpenClaw (`openclaw`)
@@ -74,6 +75,7 @@ uv run phistory render-site
 | Claude Code | [2.1.211 - 2026-07-15](captures/claude-code/2.1.211/prompt.md) | 368 | 2026-07-15 23:33 UTC |
 | Codex CLI | [0.144.5 - 2026-07-16](captures/codex/0.144.5/prompt.md) | 69 | 2026-07-16 04:42 UTC |
 | Antigravity CLI | [1.1.3 - 2026-07-16](captures/antigravity/1.1.3/prompt.md) | 17 | 2026-07-16 04:43 UTC |
+| Grok Build | [0.2.101 - 2026-07-13](captures/grok/0.2.101/prompt.md) | 118 | 2026-07-16 18:39 UTC |
 | Kimi Code | [0.26.0 - 2026-07-16](captures/kimi-code/0.26.0/prompt.md) | 47 | 2026-07-16 11:20 UTC |
 | MiMo Code | [0.1.6 - 2026-07-15](captures/mimo/0.1.6/prompt.md) | 6 | 2026-07-15 12:54 UTC |
 | OpenClaw | [2026.7.1 - 2026-07-13](captures/openclaw/2026.7.1/prompt.md) | 68 | 2026-07-13 18:57 UTC |

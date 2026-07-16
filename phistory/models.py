@@ -5,7 +5,19 @@ from pathlib import Path
 from typing import Literal
 
 PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset"]
-HomeProfile = Literal["none", "antigravity", "hermes", "kimi", "kimi-code", "mimo", "omp", "openclaw", "opencode", "pi"]
+HomeProfile = Literal[
+    "none",
+    "antigravity",
+    "grok",
+    "hermes",
+    "kimi",
+    "kimi-code",
+    "mimo",
+    "omp",
+    "openclaw",
+    "opencode",
+    "pi",
+]
 TapMode = Literal["auto", "reverse", "forward"]
 TapTargetProfile = Literal["none", "antigravity"]
 

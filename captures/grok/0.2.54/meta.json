@@ -1,0 +1,39 @@
+{
+  "agent_id": "grok",
+  "agent": "Grok Build",
+  "package": "@xai-official/grok",
+  "version": "0.2.54",
+  "published_at": "2026-06-16T01:51:51.002Z",
+  "tarball_url": null,
+  "binary_version": "grok 0.2.54 (fee15ff8e)",
+  "captured_at": "2026-07-16T18:35:18.007611+00:00",
+  "tap_client": "grok",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 4.718,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "grok",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--no-auto-update",
+    "--single",
+    "Reply with one short sentence."
+  ],
+  "static_prompts": {
+    "supported": false,
+    "candidates_path": "static-candidates.json",
+    "prompt_path": "static-prompts.md",
+    "json_path": "static-prompts.json"
+  }
+}
