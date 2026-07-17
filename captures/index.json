@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-07-17T14:59:56.647856Z",
+  "updated_at": "2026-07-17T18:36:50.777128Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -30,10 +30,10 @@
     {
       "agent_id": "grok",
       "agent": "Grok Build",
-      "latest_version": "0.2.102",
-      "latest_published_at": "2026-07-16T21:49:12.605Z",
-      "latest_captured_at": "2026-07-17T01:05:24.050364+00:00",
-      "captures": 119
+      "latest_version": "0.2.103",
+      "latest_published_at": "2026-07-17T16:38:00.931Z",
+      "latest_captured_at": "2026-07-17T18:36:50.777128+00:00",
+      "captures": 120
     },
     {
       "agent_id": "kimi-code",
@@ -3160,6 +3160,16 @@
       "prompt": "captures/hermes/v2026.3.23/prompt.md",
       "trace": "captures/hermes/v2026.3.23/trace.jsonl",
       "meta": "captures/hermes/v2026.3.23/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
+      "version": "0.2.103",
+      "published_at": "2026-07-17T16:38:00.931Z",
+      "captured_at": "2026-07-17T18:36:50.777128+00:00",
+      "prompt": "captures/grok/0.2.103/prompt.md",
+      "trace": "captures/grok/0.2.103/trace.jsonl",
+      "meta": "captures/grok/0.2.103/meta.json"
     },
     {
       "agent_id": "grok",
