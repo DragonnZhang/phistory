@@ -226,6 +226,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 | Oh My Pi | `16.3.5` | 2026-07-04 03:43 UTC | 2026-07-04 11:48 UTC | [omp 16.3.5, published 2026-07-04 03:43 UTC](../captures/omp/16.3.5/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.5/trace.jsonl) |
 | Oh My Pi | `16.3.4` | 2026-07-03 04:57 UTC | 2026-07-04 11:43 UTC | [omp 16.3.4, published 2026-07-03 04:57 UTC](../captures/omp/16.3.4/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.4/trace.jsonl) |
 | Oh My Pi | `16.3.3` | 2026-07-02 23:17 UTC | 2026-07-04 11:42 UTC | [omp 16.3.3, published 2026-07-02 23:17 UTC](../captures/omp/16.3.3/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.3/trace.jsonl) |
+| MiMo Code | `0.1.8` | 2026-07-23 08:49 UTC | 2026-07-23 10:41 UTC | [mimo 0.1.8, published 2026-07-23 08:49 UTC](../captures/mimo/0.1.8/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.8/trace.jsonl) |
 | MiMo Code | `0.1.7` | 2026-07-20 13:36 UTC | 2026-07-20 15:31 UTC | [mimo 0.1.7, published 2026-07-20 13:36 UTC](../captures/mimo/0.1.7/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.7/trace.jsonl) |
 | MiMo Code | `0.1.6` | 2026-07-15 12:48 UTC | 2026-07-15 12:54 UTC | [mimo 0.1.6, published 2026-07-15 12:48 UTC](../captures/mimo/0.1.6/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.6/trace.jsonl) |
 | MiMo Code | `0.1.5` | 2026-07-07 10:07 UTC | 2026-07-08 02:58 UTC | [mimo 0.1.5, published 2026-07-07 10:07 UTC](../captures/mimo/0.1.5/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.5/trace.jsonl) |
