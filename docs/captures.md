@@ -4,6 +4,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 
 | Agent | Version | Published | Captured | Snapshot | Static | Candidates | Raw Trace |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| Pi | `0.82.0` | 2026-07-24 06:12 UTC | 2026-07-24 07:56 UTC | [pi 0.82.0, published 2026-07-24 06:12 UTC](../captures/pi/0.82.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.82.0/trace.jsonl) |
 | Pi | `0.81.1` | 2026-07-21 16:45 UTC | 2026-07-21 16:57 UTC | [pi 0.81.1, published 2026-07-21 16:45 UTC](../captures/pi/0.81.1/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.81.1/trace.jsonl) |
 | Pi | `0.81.0` | 2026-07-21 13:33 UTC | 2026-07-21 15:24 UTC | [pi 0.81.0, published 2026-07-21 13:33 UTC](../captures/pi/0.81.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.81.0/trace.jsonl) |
 | Pi | `0.80.10` | 2026-07-16 22:05 UTC | 2026-07-16 22:33 UTC | [pi 0.80.10, published 2026-07-16 22:05 UTC](../captures/pi/0.80.10/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.80.10/trace.jsonl) |
@@ -228,6 +229,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 | Oh My Pi | `16.3.5` | 2026-07-04 03:43 UTC | 2026-07-04 11:48 UTC | [omp 16.3.5, published 2026-07-04 03:43 UTC](../captures/omp/16.3.5/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.5/trace.jsonl) |
 | Oh My Pi | `16.3.4` | 2026-07-03 04:57 UTC | 2026-07-04 11:43 UTC | [omp 16.3.4, published 2026-07-03 04:57 UTC](../captures/omp/16.3.4/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.4/trace.jsonl) |
 | Oh My Pi | `16.3.3` | 2026-07-02 23:17 UTC | 2026-07-04 11:42 UTC | [omp 16.3.3, published 2026-07-02 23:17 UTC](../captures/omp/16.3.3/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.3/trace.jsonl) |
+| MiMo Code | `0.1.9` | 2026-07-24 06:18 UTC | 2026-07-24 07:56 UTC | [mimo 0.1.9, published 2026-07-24 06:18 UTC](../captures/mimo/0.1.9/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.9/trace.jsonl) |
 | MiMo Code | `0.1.8` | 2026-07-23 08:49 UTC | 2026-07-23 10:41 UTC | [mimo 0.1.8, published 2026-07-23 08:49 UTC](../captures/mimo/0.1.8/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.8/trace.jsonl) |
 | MiMo Code | `0.1.7` | 2026-07-20 13:36 UTC | 2026-07-20 15:31 UTC | [mimo 0.1.7, published 2026-07-20 13:36 UTC](../captures/mimo/0.1.7/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.7/trace.jsonl) |
 | MiMo Code | `0.1.6` | 2026-07-15 12:48 UTC | 2026-07-15 12:54 UTC | [mimo 0.1.6, published 2026-07-15 12:48 UTC](../captures/mimo/0.1.6/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.6/trace.jsonl) |
@@ -236,6 +238,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 | MiMo Code | `0.1.3` | 2026-06-24 14:53 UTC | 2026-07-01 12:40 UTC | [mimo 0.1.3, published 2026-06-24 14:53 UTC](../captures/mimo/0.1.3/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.3/trace.jsonl) |
 | MiMo Code | `0.1.2` | 2026-06-23 12:34 UTC | 2026-07-01 12:40 UTC | [mimo 0.1.2, published 2026-06-23 12:34 UTC](../captures/mimo/0.1.2/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.2/trace.jsonl) |
 | MiMo Code | `0.1.1` | 2026-06-15 04:48 UTC | 2026-07-01 12:41 UTC | [mimo 0.1.1, published 2026-06-15 04:48 UTC](../captures/mimo/0.1.1/prompt.md) |  |  | [trace.jsonl](../captures/mimo/0.1.1/trace.jsonl) |
+| Kimi Code | `0.29.1` | 2026-07-24 05:27 UTC | 2026-07-24 07:55 UTC | [kimi-code 0.29.1, published 2026-07-24 05:27 UTC](../captures/kimi-code/0.29.1/prompt.md) |  |  | [trace.jsonl](../captures/kimi-code/0.29.1/trace.jsonl) |
 | Kimi Code | `0.29.0` | 2026-07-22 09:27 UTC | 2026-07-22 10:40 UTC | [kimi-code 0.29.0, published 2026-07-22 09:27 UTC](../captures/kimi-code/0.29.0/prompt.md) |  |  | [trace.jsonl](../captures/kimi-code/0.29.0/trace.jsonl) |
 | Kimi Code | `0.28.1` | 2026-07-20 14:59 UTC | 2026-07-20 15:31 UTC | [kimi-code 0.28.1, published 2026-07-20 14:59 UTC](../captures/kimi-code/0.28.1/prompt.md) |  |  | [trace.jsonl](../captures/kimi-code/0.28.1/trace.jsonl) |
 | Kimi Code | `0.28.0` | 2026-07-20 05:58 UTC | 2026-07-20 08:26 UTC | [kimi-code 0.28.0, published 2026-07-20 05:58 UTC](../captures/kimi-code/0.28.0/prompt.md) |  |  | [trace.jsonl](../captures/kimi-code/0.28.0/trace.jsonl) |
