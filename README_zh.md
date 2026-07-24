@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、Antigravity、Grok Build、Kimi Code、MiM
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每小时自动检查新版本，归档最近更新于 **2026-07-24 18:01 UTC**。
+> 每小时自动检查新版本，归档最近更新于 **2026-07-24 23:36 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -68,20 +68,20 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-07-24 18:01 UTC
+最近抓取更新：2026-07-24 23:36 UTC
 
 | Agent | 最新版本 | 快照数 | 最近抓取 |
 | --- | --- | ---: | --- |
 | Claude Code | [2.1.219 - 2026-07-24](captures/claude-code/2.1.219/prompt.md) | 375 | 2026-07-24 18:01 UTC |
 | Codex CLI | [0.145.0 - 2026-07-21](captures/codex/0.145.0/prompt.md) | 71 | 2026-07-21 18:51 UTC |
 | Antigravity CLI | [1.1.5 - 2026-07-21](captures/antigravity/1.1.5/prompt.md) | 19 | 2026-07-21 04:50 UTC |
-| Grok Build | [0.2.111 - 2026-07-22](captures/grok/0.2.111/prompt.md) | 122 | 2026-07-22 22:37 UTC |
+| Grok Build | [0.2.112 - 2026-07-24](captures/grok/0.2.112/prompt.md) | 123 | 2026-07-24 23:36 UTC |
 | Kimi Code | [0.29.1 - 2026-07-24](captures/kimi-code/0.29.1/prompt.md) | 52 | 2026-07-24 07:55 UTC |
 | MiMo Code | [0.1.9 - 2026-07-24](captures/mimo/0.1.9/prompt.md) | 9 | 2026-07-24 07:56 UTC |
 | OpenClaw | [2026.7.1-2 - 2026-07-18](captures/openclaw/2026.7.1-2/prompt.md) | 69 | 2026-07-18 04:30 UTC |
 | Hermes Agent | [v2026.7.20 - 2026-07-20](captures/hermes/v2026.7.20/prompt.md) | 20 | 2026-07-20 19:15 UTC |
 | Kimi CLI | [1.49.0 - 2026-07-16](captures/kimi/1.49.0/prompt.md) | 21 | 2026-07-16 11:21 UTC |
-| opencode | [1.18.4 - 2026-07-20](captures/opencode/1.18.4/prompt.md) | 90 | 2026-07-20 15:31 UTC |
+| opencode | [1.18.5 - 2026-07-24](captures/opencode/1.18.5/prompt.md) | 91 | 2026-07-24 23:36 UTC |
 | Pi | [0.82.0 - 2026-07-24](captures/pi/0.82.0/prompt.md) | 36 | 2026-07-24 07:56 UTC |
 | Oh My Pi | [17.1.2 - 2026-07-24](captures/omp/17.1.2/prompt.md) | 32 | 2026-07-24 18:01 UTC |
 
