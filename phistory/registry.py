@@ -60,7 +60,7 @@ ANTIGRAVITY = AgentSpec(
         "CI": "1",
     },
     home_profile="antigravity",
-    tap_target_profile="antigravity",
+    tap_mode="forward",
     run_args=(
         "--no-yolo",
         "--",
@@ -192,6 +192,7 @@ HERMES = AgentSpec(
     display_name="Hermes Agent",
     package="NousResearch/hermes-agent",
     source="github-release",
+    github_release_install="editable",
     tap_client="hermes",
     fake_env={
         "OPENAI_API_KEY": "phistory-fake-api-key",

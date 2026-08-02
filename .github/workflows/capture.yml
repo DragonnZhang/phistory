@@ -61,5 +61,6 @@ jobs:
       - name: Report capture failures
         if: always() && steps.latest.outputs.status != '0'
         run: |
-          echo "One or more latest captures failed; successful captures were committed above."
+          echo "::error title=Some prompt captures failed::Successful captures were still committed and will be deployed. See the Latest capture summary for the failed agents."
+          echo "One or more latest captures failed. Successful captures were committed and the Pages workflow will still deploy them."
           exit 1

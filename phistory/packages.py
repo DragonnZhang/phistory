@@ -238,10 +238,33 @@ def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -
     install_dir.mkdir(parents=True, exist_ok=True)
     run(["uv", "venv", str(install_dir)], timeout=120)
     package_ref = f"https://github.com/{agent.package}/archive/refs/tags/{version}.tar.gz"
-    run(["uv", "pip", "install", "--python", str(bin_dir / "python"), package_ref], timeout=INSTALL_TIMEOUT_SECONDS)
+    if agent.github_release_install == "editable":
+        archive_path = install_dir / "source.tar.gz"
+        source_dir = install_dir / "source"
+        _download(package_ref, archive_path)
+        source_dir.mkdir()
+        _extract_archive(archive_path, source_dir)
+        source_root = _find_source_root(source_dir)
+        run(
+            ["uv", "pip", "install", "--python", str(bin_dir / "python"), "--editable", str(source_root)],
+            timeout=INSTALL_TIMEOUT_SECONDS,
+        )
+    else:
+        run(
+            ["uv", "pip", "install", "--python", str(bin_dir / "python"), package_ref],
+            timeout=INSTALL_TIMEOUT_SECONDS,
+        )
     if not executable.exists():
         raise RuntimeError(f"GitHub release install did not create executable: {executable}")
     return bin_dir
+
+
+def _find_source_root(extract_dir: Path) -> Path:
+    roots = [path.parent for path in extract_dir.rglob("pyproject.toml") if path.parent != extract_dir]
+    if len(roots) != 1:
+        found = ", ".join(str(path) for path in roots) or "none"
+        raise RuntimeError(f"expected one Python project in release archive, found: {found}")
+    return roots[0]
 
 
 def _install_github_release_asset(agent: AgentSpec, version: str, install_dir: Path) -> Path:

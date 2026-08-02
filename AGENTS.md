@@ -71,7 +71,7 @@ Current agents are defined in `phistory/registry.py`:
 
 - `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled.
-- `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and local tap target.
+- `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and forward capture mode.
 - `grok`: npm package `@xai-official/grok`, tap client `grok`, isolated Grok home and fake xAI API key.
 - `kimi-code`: npm package `@moonshot-ai/kimi-code`, tap client `kimi-code`, executable `kimi`, isolated Kimi Code config.
 - `mimo`: npm package `@mimo-ai/cli`, tap client `mimo`, reverse tap mode with OpenAI-compatible provider config.

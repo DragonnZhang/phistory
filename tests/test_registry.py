@@ -54,7 +54,7 @@ def test_new_agents_define_install_and_capture_profiles():
     assert antigravity.release_manifest_url
     assert antigravity.tap_client == "agy"
     assert antigravity.home_profile == "antigravity"
-    assert antigravity.tap_target_profile == "antigravity"
+    assert antigravity.tap_mode == "forward"
     assert "--print" in antigravity.run_args
 
     assert grok.source == "npm"
