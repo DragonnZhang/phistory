@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset"]
+GitHubReleaseInstall = Literal["wheel", "editable"]
 HomeProfile = Literal[
     "none",
     "antigravity",
@@ -19,7 +20,6 @@ HomeProfile = Literal[
     "pi",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
-TapTargetProfile = Literal["none", "antigravity"]
 
 
 @dataclass(frozen=True)
@@ -39,12 +39,12 @@ class AgentSpec:
     binary_release_tag: str = "{version}"
     home_profile: HomeProfile = "none"
     tap_mode: TapMode = "auto"
-    tap_target_profile: TapTargetProfile = "none"
     extra_env: dict[str, str] = field(default_factory=dict)
     fake_chatgpt_auth: bool = False
     release_asset: str | None = None
     release_asset_binary: str | None = None
     release_manifest_url: str | None = None
+    github_release_install: GitHubReleaseInstall = "wheel"
 
 
 @dataclass(frozen=True)

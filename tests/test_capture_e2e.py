@@ -3,9 +3,7 @@ import stat
 from pathlib import Path
 
 from phistory.capture import (
-    _antigravity_response,
     _binary_version,
-    _capture_command,
     _capture_env,
     _needs_antigravity_model_retry,
     _needs_antigravity_prompt_retry,
@@ -263,27 +261,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     assert pi_models["providers"]["phistory"]["api"] == "openai-responses"
 
 
-def test_capture_command_can_use_tap_target(tmp_path: Path):
-    agent = AgentSpec(
-        id="antigravity",
-        display_name="Antigravity",
-        package="antigravity",
-        tap_client="agy",
-        fake_env={},
-        run_args=("--no-yolo", "--", "--print", "hello"),
-        tap_target_profile="antigravity",
-    )
-    target = CaptureTarget(agent, VersionInfo("1.0.0"), tmp_path)
-
-    argv = _capture_command(target, tmp_path / "prompt.md", tmp_path / ".tap", tap_target="http://127.0.0.1:1234")
-
-    assert "run" in argv
-    assert "--no-yolo" in argv
-    assert "--target" in argv
-    assert argv[argv.index("--target") + 1] == "http://127.0.0.1:1234"
-    assert argv[-2:] == ["--print", "hello"]
-
-
 def test_binary_version_falls_back_to_package_version(tmp_path: Path, monkeypatch):
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -326,13 +303,6 @@ def test_antigravity_model_flag_retry_removes_model_value():
         "--print",
         "hello",
     ]
-
-
-def test_antigravity_fake_model_catalog_includes_executor_placeholder():
-    response = _antigravity_response("/v1internal:fetchAvailableModels")
-
-    assert "MODEL_PLACEHOLDER_M50" in response["models"]
-    assert "MODEL_PLACEHOLDER_M50" in response["agentModelSorts"][0]["groups"][0]["modelIds"]
 
 
 def test_antigravity_no_prompt_retry_only_when_prompt_missing(tmp_path: Path):

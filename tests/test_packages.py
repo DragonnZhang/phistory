@@ -1,5 +1,6 @@
 import io
 import tarfile
+from pathlib import Path
 
 from phistory.models import AgentSpec, VersionInfo
 from phistory.packages import (
@@ -240,6 +241,51 @@ def test_install_github_release_asset_extracts_binary(monkeypatch, tmp_path):
 
     assert (bin_dir / "x").exists()
     assert (bin_dir / "x").read_text(encoding="utf-8") == "#!/bin/sh\nprintf tool\n"
+
+
+def test_install_github_release_can_use_editable_source(monkeypatch, tmp_path):
+    agent = AgentSpec(
+        id="hermes",
+        display_name="Hermes",
+        package="owner/hermes",
+        source="github-release",
+        github_release_install="editable",
+        tap_client="hermes",
+        fake_env={},
+        run_args=(),
+    )
+
+    def fake_download(_url, output):
+        files = {
+            "hermes-v1/pyproject.toml": b"[project]\nname='hermes'\nversion='1.0.0'\n",
+            "hermes-v1/hermes.py": b"",
+        }
+        with tarfile.open(output, "w:gz") as archive:
+            for name, payload in files.items():
+                info = tarfile.TarInfo(name)
+                info.size = len(payload)
+                archive.addfile(info, io.BytesIO(payload))
+
+    commands = []
+
+    def fake_run(argv, **_kwargs):
+        commands.append(argv)
+        install_dir = Path(argv[2]) if argv[:2] == ["uv", "venv"] else None
+        if install_dir:
+            (install_dir / "bin").mkdir(parents=True)
+            (install_dir / "bin" / "python").touch()
+        elif "--editable" in argv:
+            python = Path(argv[argv.index("--python") + 1])
+            (python.parent / "hermes").touch()
+
+    monkeypatch.setattr("phistory.packages._download", fake_download)
+    monkeypatch.setattr("phistory.packages.run", fake_run)
+
+    bin_dir = install_agent(agent, "v1", tmp_path / "install")
+
+    editable = next(command for command in commands if "--editable" in command)
+    assert Path(editable[-1]).name == "hermes-v1"
+    assert (bin_dir / "hermes").exists()
 
 
 def test_github_headers_can_skip_auth(monkeypatch):
