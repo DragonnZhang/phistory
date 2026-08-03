@@ -2,13 +2,13 @@
 
 [中文](README_zh.md)
 
-Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
+Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
 
 Open the web viewer to compare prompt snapshots across versions and see how agent design changes through prompts, tools, policies, and runtime instructions.
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-03 16:05 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-08-03 16:12 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -36,7 +36,7 @@ Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are
 uv sync --all-groups
 
 # Capture the latest supported CLI releases.
-uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # Capture a historical version range for one agent.
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -57,6 +57,7 @@ uv run phistory render-site
 - Codex CLI (`@openai/codex`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
 - Grok Build (`@xai-official/grok`)
+- MiniMax Code desktop app ([official download](https://agent.minimax.io/download))
 - Kimi Code (`@moonshot-ai/kimi-code`)
 - MiMo Code (`@mimo-ai/cli`)
 - OpenClaw (`openclaw`)
@@ -68,7 +69,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-03 16:05 UTC
+Last capture update: 2026-08-03 16:12 UTC
 
 | Agent | Latest | Captures | Last Captured |
 | --- | --- | ---: | --- |
@@ -76,6 +77,7 @@ Last capture update: 2026-08-03 16:05 UTC
 | Codex CLI | [0.146.0 - 2026-07-29](captures/codex/0.146.0/prompt.md) | 72 | 2026-07-29 04:50 UTC |
 | Antigravity CLI | [1.1.10 - 2026-08-03](captures/antigravity/1.1.10/prompt.md) | 24 | 2026-08-03 16:04 UTC |
 | Grok Build | [0.2.118 - 2026-07-31](captures/grok/0.2.118/prompt.md) | 126 | 2026-08-01 01:07 UTC |
+| MiniMax Code | [3.0.57 - 2026-07-30](captures/minimax-code/3.0.57/prompt.md) | 23 | 2026-08-03 15:33 UTC |
 | Kimi Code | [0.31.1 - 2026-07-31](captures/kimi-code/0.31.1/prompt.md) | 56 | 2026-07-31 13:16 UTC |
 | MiMo Code | [0.1.9 - 2026-07-24](captures/mimo/0.1.9/prompt.md) | 9 | 2026-07-24 07:56 UTC |
 | OpenClaw | [2026.7.1-2 - 2026-07-18](captures/openclaw/2026.7.1-2/prompt.md) | 69 | 2026-07-18 04:30 UTC |

@@ -101,6 +101,23 @@ GROK = AgentSpec(
     ),
 )
 
+MINIMAX_CODE = AgentSpec(
+    id="minimax-code",
+    display_name="MiniMax Code",
+    package="MiniMax Code desktop app",
+    source="minimax-code",
+    tap_client="minimax-code",
+    fake_env={},
+    extra_env={
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1",
+        "LOG_LEVEL": "fatal",
+        "CI": "1",
+    },
+    tap_mode="reverse",
+    run_args=(),
+)
+
 KIMI_CODE = AgentSpec(
     id="kimi-code",
     display_name="Kimi Code",
@@ -337,7 +354,21 @@ OMP = AgentSpec(
 
 AGENTS: dict[str, AgentSpec] = {
     agent.id: agent
-    for agent in (CLAUDE_CODE, CODEX, ANTIGRAVITY, GROK, KIMI_CODE, MIMO, OPENCLAW, HERMES, KIMI, OPENCODE, PI, OMP)
+    for agent in (
+        CLAUDE_CODE,
+        CODEX,
+        ANTIGRAVITY,
+        GROK,
+        MINIMAX_CODE,
+        KIMI_CODE,
+        MIMO,
+        OPENCLAW,
+        HERMES,
+        KIMI,
+        OPENCODE,
+        PI,
+        OMP,
+    )
 }
 AGENT_ORDER = tuple(AGENTS)
 

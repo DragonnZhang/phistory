@@ -2,13 +2,13 @@
 
 [English](README.md)
 
-Phistory 追踪 Claude Code、Codex、Antigravity、Grok Build、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
+Phistory 追踪 Claude Code、Codex、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
 
 打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 agent 设计如何变化。
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每小时自动检查新版本，归档最近更新于 **2026-08-03 16:05 UTC**。
+> 每小时自动检查新版本，归档最近更新于 **2026-08-03 16:12 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -36,7 +36,7 @@ GitHub Actions 每小时检查一次支持的 CLI 版本；发现新版本后，
 uv sync --all-groups
 
 # 抓取所有受支持 CLI 的最新版本。
-uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # 回填某个 agent 的历史版本区间。
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -57,6 +57,7 @@ uv run phistory render-site
 - Codex CLI (`@openai/codex`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
 - Grok Build (`@xai-official/grok`)
+- MiniMax Code 桌面应用（[官方下载](https://agent.minimax.io/download)）
 - Kimi Code (`@moonshot-ai/kimi-code`)
 - MiMo Code (`@mimo-ai/cli`)
 - OpenClaw (`openclaw`)
@@ -68,7 +69,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-08-03 16:05 UTC
+最近抓取更新：2026-08-03 16:12 UTC
 
 | Agent | 最新版本 | 快照数 | 最近抓取 |
 | --- | --- | ---: | --- |
@@ -76,6 +77,7 @@ uv run phistory render-site
 | Codex CLI | [0.146.0 - 2026-07-29](captures/codex/0.146.0/prompt.md) | 72 | 2026-07-29 04:50 UTC |
 | Antigravity CLI | [1.1.10 - 2026-08-03](captures/antigravity/1.1.10/prompt.md) | 24 | 2026-08-03 16:04 UTC |
 | Grok Build | [0.2.118 - 2026-07-31](captures/grok/0.2.118/prompt.md) | 126 | 2026-08-01 01:07 UTC |
+| MiniMax Code | [3.0.57 - 2026-07-30](captures/minimax-code/3.0.57/prompt.md) | 23 | 2026-08-03 15:33 UTC |
 | Kimi Code | [0.31.1 - 2026-07-31](captures/kimi-code/0.31.1/prompt.md) | 56 | 2026-07-31 13:16 UTC |
 | MiMo Code | [0.1.9 - 2026-07-24](captures/mimo/0.1.9/prompt.md) | 9 | 2026-07-24 07:56 UTC |
 | OpenClaw | [2026.7.1-2 - 2026-07-18](captures/openclaw/2026.7.1-2/prompt.md) | 69 | 2026-07-18 04:30 UTC |

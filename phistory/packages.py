@@ -21,6 +21,10 @@ INSTALL_TIMEOUT_SECONDS = 1800
 
 
 def latest_version(agent: AgentSpec) -> VersionInfo:
+    if agent.source == "minimax-code":
+        from phistory.minimax_code import latest_version as minimax_code_latest_version
+
+        return minimax_code_latest_version()
     if agent.source == "npm":
         return _npm_latest(agent)
     if agent.source == "pypi":
@@ -33,6 +37,10 @@ def latest_version(agent: AgentSpec) -> VersionInfo:
 
 
 def all_versions(agent: AgentSpec, *, include_prerelease: bool = False) -> list[VersionInfo]:
+    if agent.source == "minimax-code":
+        from phistory.minimax_code import all_versions as minimax_code_versions
+
+        return minimax_code_versions()
     if agent.source == "npm":
         return _npm_versions(agent, include_prerelease=include_prerelease)
     if agent.source == "pypi":
@@ -63,6 +71,10 @@ def version_info(agent: AgentSpec, version: str) -> VersionInfo:
 
 
 def install_agent(agent: AgentSpec, version: str, install_dir: Path) -> Path:
+    if agent.source == "minimax-code":
+        from phistory.minimax_code import install as install_minimax_code
+
+        return install_minimax_code(version, install_dir)
     if agent.binary_release_repo:
         return _install_binary_release(agent, version, install_dir)
     if agent.source == "npm":
