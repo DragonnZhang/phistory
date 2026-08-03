@@ -6,7 +6,7 @@ from phistory.capture import (
     _binary_version,
     _capture_env,
     _needs_antigravity_model_retry,
-    _needs_antigravity_prompt_retry,
+    _needs_prompt_retry,
     _sanitize_text,
     _without_arg_and_value,
     capture_target,
@@ -67,6 +67,12 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
         "The current local time is: 2026-06-27T13:47:31+08:00.\n"
         "Conversation started: Friday, June 05, 2026 08:07 PM\n"
         "Conversation ID: d6609428-853a-4f4d-80e5-229becf1fff5\n"
+        "  YOUR SESSION ID: mvs_f929f84029b14d2f9d430ed7c07ec713\n"
+        "  YOUR SCRATCHPAD: $PHISTORY_HOME/.minimax-code/scratchpads/mvs_b8f1288efdef4a5ebf93877c7cb835a4/scratchpad.md\n"
+        "  daemonPort: 23425\n"
+        "  date: Mon Aug 03 2026 15:16:57 GMT+0000 (Coordinated Universal Time)\n"
+        "  date: 2026-08-03 15:39:33 (UTC, UTC+0)\n"
+        "  date: keep this documentation example\n"
         "<current_date>2026-05-21</current_date>\n"
         "<timezone>Etc/UTC</timezone>\n"
         "$PHISTORY_HOME/.gemini/antigravity-cli/brain/d6609428-853a-4f4d-80e5-229becf1fff5\n"
@@ -88,6 +94,12 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
         "The current local time is: $PHISTORY_DATETIME.\n"
         "Conversation started: $PHISTORY_DATETIME\n"
         "Conversation ID: $PHISTORY_CONVERSATION\n"
+        "  YOUR SESSION ID: $PHISTORY_SESSION\n"
+        "  YOUR SCRATCHPAD: $PHISTORY_HOME/.minimax-code/scratchpads/$PHISTORY_SESSION/scratchpad.md\n"
+        "  daemonPort: $PHISTORY_PORT\n"
+        "  date: $PHISTORY_DATETIME\n"
+        "  date: $PHISTORY_DATETIME\n"
+        "  date: keep this documentation example\n"
         "<current_date>$PHISTORY_DATE</current_date>\n"
         "<timezone>$PHISTORY_TIMEZONE</timezone>\n"
         "$PHISTORY_HOME/.gemini/antigravity-cli/brain/$PHISTORY_CONVERSATION\n"
@@ -305,24 +317,60 @@ def test_antigravity_model_flag_retry_removes_model_value():
     ]
 
 
-def test_antigravity_no_prompt_retry_only_when_prompt_missing(tmp_path: Path):
-    agent = AgentSpec(
-        id="antigravity",
-        display_name="Antigravity",
-        package="antigravity",
-        tap_client="agy",
-        fake_env={},
-        run_args=(),
-    )
-    target = CaptureTarget(agent, VersionInfo("1.0.13"), tmp_path)
+def test_no_prompt_retry_handles_claude_tap_export_failures(tmp_path: Path):
     result = type(
         "Result", (), {"returncode": 1, "stderr": "Error: no prompt-bearing request found in trace", "stdout": ""}
     )()
 
-    assert _needs_antigravity_prompt_retry(target, result, tmp_path / "missing.md")
+    assert _needs_prompt_retry(result, tmp_path / "missing.md")
+    invalid_trace = type(
+        "Result", (), {"returncode": 1, "stderr": "no valid records found in trace file", "stdout": ""}
+    )()
+    assert _needs_prompt_retry(invalid_trace, tmp_path / "missing.md")
     prompt = tmp_path / "prompt.md"
     prompt.write_text("# Prompt\n", encoding="utf-8")
-    assert not _needs_antigravity_prompt_retry(target, result, prompt)
+    assert not _needs_prompt_retry(result, prompt)
+
+
+def test_capture_target_retries_transient_empty_trace(tmp_path: Path, monkeypatch):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    executable = bin_dir / "agent"
+    executable.write_text("#!/bin/sh\n", encoding="utf-8")
+    executable.chmod(executable.stat().st_mode | stat.S_IXUSR)
+    monkeypatch.setattr("phistory.packages.install_agent", lambda *_args, **_kwargs: bin_dir)
+    monkeypatch.setattr("phistory.capture.time.sleep", lambda _seconds: None)
+
+    agent = AgentSpec(
+        id="agent",
+        display_name="Agent",
+        package="agent",
+        tap_client="agent",
+        fake_env={},
+        run_args=(),
+    )
+    target = CaptureTarget(agent, VersionInfo("1.0.0"), tmp_path / "captures")
+    capture_attempts = 0
+
+    def fake_run(argv, **_kwargs):
+        nonlocal capture_attempts
+        if argv == [str(executable), "--version"]:
+            return type("Result", (), {"returncode": 0, "stdout": "agent 1.0.0\n", "stderr": ""})()
+        capture_attempts += 1
+        if capture_attempts == 1:
+            return type(
+                "Result", (), {"returncode": 1, "stdout": "", "stderr": "no valid records found in trace file"}
+            )()
+        target.prompt_path.write_text("# Prompt\n", encoding="utf-8")
+        target.trace_path.write_text("{}\n", encoding="utf-8")
+        return type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+
+    monkeypatch.setattr("phistory.capture.run", fake_run)
+
+    result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
+
+    assert result.status == "captured"
+    assert capture_attempts == 2
 
 
 def test_capture_failure_removes_partial_version_dir(tmp_path: Path, monkeypatch):
