@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-05T11:02:11.084876Z",
+  "updated_at": "2026-08-05T13:13:46.112325Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -38,10 +38,10 @@
     {
       "agent_id": "minimax-code",
       "agent": "MiniMax Code",
-      "latest_version": "3.0.58",
-      "latest_published_at": "2026-08-04T13:17:49.030Z",
-      "latest_captured_at": "2026-08-04T15:05:15.300265+00:00",
-      "captures": 24
+      "latest_version": "3.0.59",
+      "latest_published_at": "2026-08-05T11:07:38.521Z",
+      "latest_captured_at": "2026-08-05T13:13:46.112325+00:00",
+      "captures": 25
     },
     {
       "agent_id": "kimi-code",
@@ -2648,6 +2648,16 @@
       "prompt": "captures/omp/16.3.3/prompt.md",
       "trace": "captures/omp/16.3.3/trace.jsonl",
       "meta": "captures/omp/16.3.3/meta.json"
+    },
+    {
+      "agent_id": "minimax-code",
+      "agent": "MiniMax Code",
+      "version": "3.0.59",
+      "published_at": "2026-08-05T11:07:38.521Z",
+      "captured_at": "2026-08-05T13:13:46.112325+00:00",
+      "prompt": "captures/minimax-code/3.0.59/prompt.md",
+      "trace": "captures/minimax-code/3.0.59/trace.jsonl",
+      "meta": "captures/minimax-code/3.0.59/meta.json"
     },
     {
       "agent_id": "minimax-code",
