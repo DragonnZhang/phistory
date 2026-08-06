@@ -4,6 +4,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 
 | Agent | Version | Published | Captured | Snapshot | Static | Candidates | Raw Trace |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| Pi | `0.84.0` | 2026-08-06 11:10 UTC | 2026-08-06 13:12 UTC | [pi 0.84.0, published 2026-08-06 11:10 UTC](../captures/pi/0.84.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.84.0/trace.jsonl) |
 | Pi | `0.83.0` | 2026-07-29 22:30 UTC | 2026-07-29 23:34 UTC | [pi 0.83.0, published 2026-07-29 22:30 UTC](../captures/pi/0.83.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.83.0/trace.jsonl) |
 | Pi | `0.82.1` | 2026-07-25 12:47 UTC | 2026-07-25 14:13 UTC | [pi 0.82.1, published 2026-07-25 12:47 UTC](../captures/pi/0.82.1/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.82.1/trace.jsonl) |
 | Pi | `0.82.0` | 2026-07-24 06:12 UTC | 2026-07-24 07:56 UTC | [pi 0.82.0, published 2026-07-24 06:12 UTC](../captures/pi/0.82.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.82.0/trace.jsonl) |
@@ -211,6 +212,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 | OpenClaw | `2026.2.1` | 2026-02-02 11:45 UTC | 2026-05-22 12:32 UTC | [openclaw 2026.2.1, published 2026-02-02 11:45 UTC](../captures/openclaw/2026.2.1/prompt.md) |  |  | [trace.jsonl](../captures/openclaw/2026.2.1/trace.jsonl) |
 | OpenClaw | `2026.1.30` | 2026-01-31 13:11 UTC | 2026-05-22 12:32 UTC | [openclaw 2026.1.30, published 2026-01-31 13:11 UTC](../captures/openclaw/2026.1.30/prompt.md) |  |  | [trace.jsonl](../captures/openclaw/2026.1.30/trace.jsonl) |
 | OpenClaw | `2026.1.29` | 2026-01-30 04:49 UTC | 2026-05-22 12:32 UTC | [openclaw 2026.1.29, published 2026-01-30 04:49 UTC](../captures/openclaw/2026.1.29/prompt.md) |  |  | [trace.jsonl](../captures/openclaw/2026.1.29/trace.jsonl) |
+| Oh My Pi | `17.2.10` | 2026-08-06 12:33 UTC | 2026-08-06 13:12 UTC | [omp 17.2.10, published 2026-08-06 12:33 UTC](../captures/omp/17.2.10/prompt.md) |  |  | [trace.jsonl](../captures/omp/17.2.10/trace.jsonl) |
 | Oh My Pi | `17.2.9` | 2026-08-05 01:35 UTC | 2026-08-05 04:47 UTC | [omp 17.2.9, published 2026-08-05 01:35 UTC](../captures/omp/17.2.9/prompt.md) |  |  | [trace.jsonl](../captures/omp/17.2.9/trace.jsonl) |
 | Oh My Pi | `17.2.8` | 2026-08-04 16:39 UTC | 2026-08-04 17:14 UTC | [omp 17.2.8, published 2026-08-04 16:39 UTC](../captures/omp/17.2.8/prompt.md) |  |  | [trace.jsonl](../captures/omp/17.2.8/trace.jsonl) |
 | Oh My Pi | `17.2.7` | 2026-08-03 23:45 UTC | 2026-08-04 03:51 UTC | [omp 17.2.7, published 2026-08-03 23:45 UTC](../captures/omp/17.2.7/prompt.md) |  |  | [trace.jsonl](../captures/omp/17.2.7/trace.jsonl) |
