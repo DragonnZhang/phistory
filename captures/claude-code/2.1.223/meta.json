@@ -1,0 +1,43 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.223",
+  "published_at": "2026-08-05T22:51:13.206Z",
+  "tarball_url": "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.223.tgz",
+  "binary_version": "2.1.223 (Claude Code)",
+  "captured_at": "2026-08-06T00:55:14.864554+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 22.939,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--no-session-persistence",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "static_prompts": {
+    "supported": true,
+    "candidates_path": "static-candidates.json",
+    "prompt_path": "static-prompts.md",
+    "json_path": "static-prompts.json",
+    "total": 1134,
+    "known": 480,
+    "unknown": 654,
+    "source": "node_modules/@anthropic-ai/claude-code/bin/claude.exe"
+  }
+}
