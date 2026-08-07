@@ -4,6 +4,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 
 | Agent | Version | Published | Captured | Snapshot | Static | Candidates | Raw Trace |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| Pi | `0.84.1` | 2026-08-07 06:01 UTC | 2026-08-07 06:50 UTC | [pi 0.84.1, published 2026-08-07 06:01 UTC](../captures/pi/0.84.1/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.84.1/trace.jsonl) |
 | Pi | `0.84.0` | 2026-08-06 11:10 UTC | 2026-08-06 13:12 UTC | [pi 0.84.0, published 2026-08-06 11:10 UTC](../captures/pi/0.84.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.84.0/trace.jsonl) |
 | Pi | `0.83.0` | 2026-07-29 22:30 UTC | 2026-07-29 23:34 UTC | [pi 0.83.0, published 2026-07-29 22:30 UTC](../captures/pi/0.83.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.83.0/trace.jsonl) |
 | Pi | `0.82.1` | 2026-07-25 12:47 UTC | 2026-07-25 14:13 UTC | [pi 0.82.1, published 2026-07-25 12:47 UTC](../captures/pi/0.82.1/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.82.1/trace.jsonl) |
@@ -261,6 +262,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 | Oh My Pi | `16.3.5` | 2026-07-04 03:43 UTC | 2026-07-04 11:48 UTC | [omp 16.3.5, published 2026-07-04 03:43 UTC](../captures/omp/16.3.5/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.5/trace.jsonl) |
 | Oh My Pi | `16.3.4` | 2026-07-03 04:57 UTC | 2026-07-04 11:43 UTC | [omp 16.3.4, published 2026-07-03 04:57 UTC](../captures/omp/16.3.4/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.4/trace.jsonl) |
 | Oh My Pi | `16.3.3` | 2026-07-02 23:17 UTC | 2026-07-04 11:42 UTC | [omp 16.3.3, published 2026-07-02 23:17 UTC](../captures/omp/16.3.3/prompt.md) |  |  | [trace.jsonl](../captures/omp/16.3.3/trace.jsonl) |
+| MiniMax Code | `3.0.60` | 2026-08-07 05:52 UTC | 2026-08-07 06:50 UTC | [minimax-code 3.0.60, published 2026-08-07 05:52 UTC](../captures/minimax-code/3.0.60/prompt.md) |  |  | [trace.jsonl](../captures/minimax-code/3.0.60/trace.jsonl) |
 | MiniMax Code | `3.0.59` | 2026-08-05 11:07 UTC | 2026-08-05 13:13 UTC | [minimax-code 3.0.59, published 2026-08-05 11:07 UTC](../captures/minimax-code/3.0.59/prompt.md) |  |  | [trace.jsonl](../captures/minimax-code/3.0.59/trace.jsonl) |
 | MiniMax Code | `3.0.58` | 2026-08-04 13:17 UTC | 2026-08-04 15:05 UTC | [minimax-code 3.0.58, published 2026-08-04 13:17 UTC](../captures/minimax-code/3.0.58/prompt.md) |  |  | [trace.jsonl](../captures/minimax-code/3.0.58/trace.jsonl) |
 | MiniMax Code | `3.0.57` | 2026-07-30 09:39 UTC | 2026-08-03 15:33 UTC | [minimax-code 3.0.57, published 2026-07-30 09:39 UTC](../captures/minimax-code/3.0.57/prompt.md) |  |  | [trace.jsonl](../captures/minimax-code/3.0.57/trace.jsonl) |

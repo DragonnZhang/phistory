@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-07 05:17 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-08-07 06:50 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -69,7 +69,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-07 05:17 UTC
+Last capture update: 2026-08-07 06:50 UTC
 
 | Agent | Latest | Captures | Last Captured |
 | --- | --- | ---: | --- |
@@ -77,14 +77,14 @@ Last capture update: 2026-08-07 05:17 UTC
 | Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/prompt.md) | 74 | 2026-08-07 03:32 UTC |
 | Antigravity CLI | [1.1.11 - 2026-08-07](captures/antigravity/1.1.11/prompt.md) | 25 | 2026-08-07 03:32 UTC |
 | Grok Build | [1.0.0 - 2026-08-07](captures/grok/1.0.0/prompt.md) | 127 | 2026-08-07 03:32 UTC |
-| MiniMax Code | [3.0.59 - 2026-08-05](captures/minimax-code/3.0.59/prompt.md) | 25 | 2026-08-05 13:13 UTC |
+| MiniMax Code | [3.0.60 - 2026-08-07](captures/minimax-code/3.0.60/prompt.md) | 26 | 2026-08-07 06:50 UTC |
 | Kimi Code | [0.34.0 - 2026-08-06](captures/kimi-code/0.34.0/prompt.md) | 59 | 2026-08-07 00:26 UTC |
 | MiMo Code | [0.1.10 - 2026-08-05](captures/mimo/0.1.10/prompt.md) | 10 | 2026-08-05 11:02 UTC |
 | OpenClaw | [2026.7.1-2 - 2026-07-18](captures/openclaw/2026.7.1-2/prompt.md) | 69 | 2026-07-18 04:30 UTC |
 | Hermes Agent | [v2026.8.3 - 2026-08-03](captures/hermes/v2026.8.3/prompt.md) | 22 | 2026-08-03 18:19 UTC |
 | Kimi CLI | [1.49.0 - 2026-07-16](captures/kimi/1.49.0/prompt.md) | 21 | 2026-07-16 11:21 UTC |
 | opencode | [1.18.14 - 2026-08-05](captures/opencode/1.18.14/prompt.md) | 100 | 2026-08-05 21:50 UTC |
-| Pi | [0.84.0 - 2026-08-06](captures/pi/0.84.0/prompt.md) | 39 | 2026-08-06 13:12 UTC |
+| Pi | [0.84.1 - 2026-08-07](captures/pi/0.84.1/prompt.md) | 40 | 2026-08-07 06:50 UTC |
 | Oh My Pi | [17.2.10 - 2026-08-06](captures/omp/17.2.10/prompt.md) | 49 | 2026-08-06 13:12 UTC |
 
 ## Project Trend
