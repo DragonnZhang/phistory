@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-09T02:36:40.178663Z",
+  "updated_at": "2026-08-10T06:53:32.420707Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -54,10 +54,10 @@
     {
       "agent_id": "mimo",
       "agent": "MiMo Code",
-      "latest_version": "0.1.10",
-      "latest_published_at": "2026-08-05T09:17:36.040Z",
-      "latest_captured_at": "2026-08-05T11:02:11.084876+00:00",
-      "captures": 10
+      "latest_version": "0.1.11",
+      "latest_published_at": "2026-08-10T06:50:38.159Z",
+      "latest_captured_at": "2026-08-10T06:53:18.835935+00:00",
+      "captures": 11
     },
     {
       "agent_id": "openclaw",
@@ -86,10 +86,10 @@
     {
       "agent_id": "opencode",
       "agent": "opencode",
-      "latest_version": "1.18.15",
-      "latest_published_at": "2026-08-07T06:51:43.689Z",
-      "latest_captured_at": "2026-08-07T08:35:54.253096+00:00",
-      "captures": 101
+      "latest_version": "1.18.16",
+      "latest_published_at": "2026-08-10T06:05:51.110Z",
+      "latest_captured_at": "2026-08-10T06:53:32.420707+00:00",
+      "captures": 102
     },
     {
       "agent_id": "pi",
@@ -508,6 +508,16 @@
       "prompt": "captures/pi/0.74.0/prompt.md",
       "trace": "captures/pi/0.74.0/trace.jsonl",
       "meta": "captures/pi/0.74.0/meta.json"
+    },
+    {
+      "agent_id": "opencode",
+      "agent": "opencode",
+      "version": "1.18.16",
+      "published_at": "2026-08-10T06:05:51.110Z",
+      "captured_at": "2026-08-10T06:53:32.420707+00:00",
+      "prompt": "captures/opencode/1.18.16/prompt.md",
+      "trace": "captures/opencode/1.18.16/trace.jsonl",
+      "meta": "captures/opencode/1.18.16/meta.json"
     },
     {
       "agent_id": "opencode",
@@ -2978,6 +2988,16 @@
       "prompt": "captures/minimax-code/3.0.33/prompt.md",
       "trace": "captures/minimax-code/3.0.33/trace.jsonl",
       "meta": "captures/minimax-code/3.0.33/meta.json"
+    },
+    {
+      "agent_id": "mimo",
+      "agent": "MiMo Code",
+      "version": "0.1.11",
+      "published_at": "2026-08-10T06:50:38.159Z",
+      "captured_at": "2026-08-10T06:53:18.835935+00:00",
+      "prompt": "captures/mimo/0.1.11/prompt.md",
+      "trace": "captures/mimo/0.1.11/trace.jsonl",
+      "meta": "captures/mimo/0.1.11/meta.json"
     },
     {
       "agent_id": "mimo",
