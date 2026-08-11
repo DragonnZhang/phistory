@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、Antigravity、Grok Build、MiniMax Code、
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每小时自动检查新版本，归档最近更新于 **2026-08-11 19:38 UTC**。
+> 每小时自动检查新版本，归档最近更新于 **2026-08-11 21:24 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -69,11 +69,11 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-08-11 19:38 UTC
+最近抓取更新：2026-08-11 21:24 UTC
 
 | Agent | 最新版本 | 快照数 | 最近抓取 |
 | --- | --- | ---: | --- |
-| Claude Code | [2.1.227 - 2026-08-10](captures/claude-code/2.1.227/prompt.md) | 383 | 2026-08-10 23:09 UTC |
+| Claude Code | [2.1.228 - 2026-08-11](captures/claude-code/2.1.228/prompt.md) | 384 | 2026-08-11 21:24 UTC |
 | Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/prompt.md) | 74 | 2026-08-07 03:32 UTC |
 | Antigravity CLI | [1.1.12 - 2026-08-11](captures/antigravity/1.1.12/prompt.md) | 26 | 2026-08-11 02:36 UTC |
 | Grok Build | [1.0.0 - 2026-08-07](captures/grok/1.0.0/prompt.md) | 127 | 2026-08-07 03:32 UTC |
