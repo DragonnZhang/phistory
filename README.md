@@ -2,13 +2,13 @@
 
 [中文](README_zh.md)
 
-Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
+Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
 
 Open the web viewer to compare prompt snapshots across versions and see how agent design changes through prompts, tools, policies, and runtime instructions.
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-13 09:09 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-08-13 14:06 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -36,10 +36,7 @@ Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are
 uv sync --all-groups
 
 # Capture the latest automatically tracked CLI releases.
-uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
-
-# Capture the locally installed DSH test build.
-uv run phistory capture --latest --agents dsh
+uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # Capture a historical version range for one agent.
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -58,7 +55,7 @@ uv run phistory render-site
 
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
-- DeepSeek Harness (`@deepseek-ai/dsh`, local test build until the public package is released)
+- DeepSeek Harness (`@deepseek-ai/dsh`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
 - Grok Build (`@xai-official/grok`)
 - MiniMax Code desktop app ([official download](https://agent.minimax.io/download))
@@ -73,13 +70,13 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-13 09:09 UTC
+Last capture update: 2026-08-13 14:06 UTC
 
 | Agent | Latest | Captures | Last Captured |
 | --- | --- | ---: | --- |
 | Claude Code | [2.1.231 - 2026-08-13](captures/claude-code/2.1.231/prompt.md) | 385 | 2026-08-13 09:08 UTC |
 | Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/prompt.md) | 74 | 2026-08-07 03:32 UTC |
-| DeepSeek Harness | [0.0.1-rc.2](captures/dsh/0.0.1-rc.2/prompt.md) | 1 | 2026-08-13 08:48 UTC |
+| DeepSeek Harness | [0.1.0-rc.6 - 2026-08-13](captures/dsh/0.1.0-rc.6/prompt.md) | 5 | 2026-08-13 14:06 UTC |
 | Antigravity CLI | [1.1.12 - 2026-08-11](captures/antigravity/1.1.12/prompt.md) | 26 | 2026-08-11 02:36 UTC |
 | Grok Build | [1.0.3 - 2026-08-12](captures/grok/1.0.3/prompt.md) | 128 | 2026-08-12 08:49 UTC |
 | MiniMax Code | [3.0.60 - 2026-08-07](captures/minimax-code/3.0.60/prompt.md) | 26 | 2026-08-07 06:50 UTC |

@@ -41,7 +41,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "Agent" in text
     assert "[中文](README_zh.md)" in text
     assert (
-        "popular coding-agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, MiniMax Code"
+        "popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code"
         in text
     )
     assert "> Checks for new releases hourly. Archive last updated: **2026-05-22 01:00 UTC**." in text
@@ -55,7 +55,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`prompt.md`, `trace.jsonl`, and `meta.json`" in text
     assert "## Local Development" in text
     assert "# Capture the latest automatically tracked CLI releases." in text
-    assert "# Capture the locally installed DSH test build." in text
+    assert "--agents claude-code,codex,dsh,antigravity" in text
     assert "## Web UI" not in text
     assert "## For AI Agents" not in text
     assert "## Capture Status" in text
@@ -65,8 +65,8 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "2026-05-22 01:00 UTC" in text
     assert "| Agent | Version | Published | Captured | Snapshot | Raw Trace |" not in text
     assert "[English](README.md)" in zh_text
-    assert "追踪 Claude Code、Codex、Antigravity、DeepSeek Harness、Grok Build、MiniMax Code" in zh_text
-    assert "# 抓取本机已安装的 DSH 测试版本。" in zh_text
+    assert "追踪 Claude Code、Codex、DeepSeek Harness、Antigravity、Grok Build、MiniMax Code" in zh_text
+    assert "--agents claude-code,codex,dsh,antigravity" in zh_text
     assert "> 每小时自动检查新版本，归档最近更新于 **2026-05-22 01:00 UTC**。" in zh_text
     assert "## 为什么看它" in zh_text
     assert "Anthropic、OpenAI 等团队" in zh_text

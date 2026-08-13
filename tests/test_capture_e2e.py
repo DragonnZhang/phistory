@@ -32,6 +32,10 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
         run_args=("--no-yolo", "--", "exec", "hello", "--json"),
     )
     target = CaptureTarget(agent, VersionInfo("1.0.0", "2026-05-22T00:00:00Z"), tmp_path / "captures")
+    target.version_dir.mkdir(parents=True)
+    target.prompt_path.write_text("old prompt\n", encoding="utf-8")
+    target.trace_path.write_text("old trace\n", encoding="utf-8")
+    target.meta_path.write_text("old meta\n", encoding="utf-8")
 
     result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
 
@@ -408,6 +412,36 @@ def test_capture_failure_removes_partial_version_dir(tmp_path: Path, monkeypatch
 
     assert result.status == "failed"
     assert not target.version_dir.exists()
+
+
+def test_forced_capture_failure_preserves_existing_archive(tmp_path: Path, monkeypatch):
+    agent = AgentSpec(
+        id="agent",
+        display_name="Agent",
+        package="agent",
+        tap_client="agent",
+        fake_env={},
+        run_args=(),
+    )
+    target = CaptureTarget(agent, VersionInfo("1.0.0"), tmp_path / "captures")
+    target.version_dir.mkdir(parents=True)
+    target.prompt_path.write_text("original prompt\n", encoding="utf-8")
+    target.trace_path.write_text("original trace\n", encoding="utf-8")
+    target.meta_path.write_text("original meta\n", encoding="utf-8")
+
+    def fail_install(*_args, **_kwargs):
+        raise RuntimeError("package install failed")
+
+    monkeypatch.setattr("phistory.packages.install_agent", fail_install)
+
+    result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
+
+    assert result.status == "failed"
+    assert result.error == "package install failed"
+    assert target.prompt_path.read_text(encoding="utf-8") == "original prompt\n"
+    assert target.trace_path.read_text(encoding="utf-8") == "original trace\n"
+    assert target.meta_path.read_text(encoding="utf-8") == "original meta\n"
+    assert not list(target.root.glob(".phistory-capture-*"))
 
 
 def test_capture_retries_old_claude_without_session_persistence(tmp_path: Path, monkeypatch):

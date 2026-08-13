@@ -13,7 +13,7 @@ _VERSION_PART_RE = re.compile(r"\d+|[A-Za-z]+")
 
 PROJECT_DESCRIPTION = (
     "Phistory automatically archives versioned system prompt snapshots from agent CLIs "
-    "like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi."
+    "like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi."
 )
 CAPTURE_DOC = Path("docs/captures.md")
 CAPTURE_JSON = Path("captures/index.json")
@@ -71,7 +71,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "[中文](README_zh.md)",
         "",
-        "Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
+        "Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
         "",
         (
             "Open the web viewer to compare prompt snapshots across versions and see how agent design "
@@ -128,10 +128,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "uv sync --all-groups",
             "",
             "# Capture the latest automatically tracked CLI releases.",
-            "uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
-            "",
-            "# Capture the locally installed DSH test build.",
-            "uv run phistory capture --latest --agents dsh",
+            "uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -150,7 +147,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             "- Claude Code (`@anthropic-ai/claude-code`)",
             "- Codex CLI (`@openai/codex`)",
-            "- DeepSeek Harness (`@deepseek-ai/dsh`, local test build until the public package is released)",
+            "- DeepSeek Harness (`@deepseek-ai/dsh`)",
             "- Antigravity CLI (`google-antigravity/antigravity-cli`)",
             "- Grok Build (`@xai-official/grok`)",
             "- MiniMax Code desktop app ([official download](https://agent.minimax.io/download))",
@@ -204,7 +201,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "[English](README.md)",
         "",
-        "Phistory 追踪 Claude Code、Codex、Antigravity、DeepSeek Harness、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。",
+        "Phistory 追踪 Claude Code、Codex、DeepSeek Harness、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。",
         "",
         (
             "打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 "
@@ -258,10 +255,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "uv sync --all-groups",
             "",
             "# 抓取所有已自动追踪 CLI 的最新版本。",
-            "uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
-            "",
-            "# 抓取本机已安装的 DSH 测试版本。",
-            "uv run phistory capture --latest --agents dsh",
+            "uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -280,7 +274,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             "- Claude Code (`@anthropic-ai/claude-code`)",
             "- Codex CLI (`@openai/codex`)",
-            "- DeepSeek Harness（`@deepseek-ai/dsh`；公开包发布前使用本机测试构建）",
+            "- DeepSeek Harness (`@deepseek-ai/dsh`)",
             "- Antigravity CLI (`google-antigravity/antigravity-cli`)",
             "- Grok Build (`@xai-official/grok`)",
             "- MiniMax Code 桌面应用（[官方下载](https://agent.minimax.io/download)）",

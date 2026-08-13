@@ -206,21 +206,21 @@ _HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Phistory automatically archives versioned system prompt snapshots and diffs from agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
-<meta name="keywords" content="Phistory, system prompt history, system prompt diff, Claude Code prompt, Codex CLI prompt, Antigravity CLI prompt, DeepSeek Harness prompt, DSH prompt, Grok Build prompt, Kimi Code prompt, MiMo Code prompt, OpenClaw prompt, Hermes prompt, Kimi CLI prompt, opencode prompt, Pi prompt, Oh My Pi prompt, agent CLI, prompt archive">
+<meta name="description" content="Phistory automatically archives versioned system prompt snapshots and diffs from agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
+<meta name="keywords" content="Phistory, system prompt history, system prompt diff, Claude Code prompt, Codex CLI prompt, DeepSeek Harness prompt, DSH prompt, Antigravity CLI prompt, Grok Build prompt, Kimi Code prompt, MiMo Code prompt, OpenClaw prompt, Hermes prompt, Kimi CLI prompt, opencode prompt, Pi prompt, Oh My Pi prompt, agent CLI, prompt archive">
 <meta name="application-name" content="Phistory">
 <meta name="robots" content="index,follow">
 <meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
 <meta property="og:title" content="Phistory">
-<meta property="og:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
+<meta property="og:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://phistory.cc/">
 <meta property="og:image" content="https://phistory.cc/docs/screenshot.png">
 <meta property="og:site_name" content="Phistory">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Phistory">
-<meta name="twitter:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
+<meta name="twitter:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
 <meta name="twitter:image" content="https://phistory.cc/docs/screenshot.png">
 <link rel="canonical" href="https://phistory.cc/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f1115'/%3E%3Cpath d='M8 10h16M8 16h10M8 22h14' stroke='%237cc7ff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -245,7 +245,7 @@ _HTML = r"""<!doctype html>
   "url": "https://phistory.cc/",
   "description": "Automatically archived system prompt snapshots and diffs for agent CLIs.",
   "sameAs": ["https://github.com/WEIFENG2333/phistory"],
-  "about": ["Claude Code", "Codex CLI", "Antigravity CLI", "DeepSeek Harness", "Grok Build", "Kimi Code", "MiMo Code", "OpenClaw", "Hermes", "Kimi CLI", "opencode", "Pi", "Oh My Pi"]
+  "about": ["Claude Code", "Codex CLI", "DeepSeek Harness", "Antigravity CLI", "Grok Build", "Kimi Code", "MiMo Code", "OpenClaw", "Hermes", "Kimi CLI", "opencode", "Pi", "Oh My Pi"]
 }
 </script>
 <style>

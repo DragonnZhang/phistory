@@ -1,7 +1,7 @@
 {
-  "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
+  "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-13T09:09:49.023900Z",
+  "updated_at": "2026-08-13T14:06:32.529482Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -22,10 +22,10 @@
     {
       "agent_id": "dsh",
       "agent": "DeepSeek Harness",
-      "latest_version": "0.0.1-rc.2",
-      "latest_published_at": "",
-      "latest_captured_at": "2026-08-13T08:48:49.892796+00:00",
-      "captures": 1
+      "latest_version": "0.1.0-rc.6",
+      "latest_published_at": "2026-08-13T12:35:03.812Z",
+      "latest_captured_at": "2026-08-13T14:06:32.529482+00:00",
+      "captures": 5
     },
     {
       "agent_id": "antigravity",
@@ -5486,6 +5486,46 @@
       "prompt": "captures/grok/0.1.202/prompt.md",
       "trace": "captures/grok/0.1.202/trace.jsonl",
       "meta": "captures/grok/0.1.202/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.1.0-rc.6",
+      "published_at": "2026-08-13T12:35:03.812Z",
+      "captured_at": "2026-08-13T14:06:32.529482+00:00",
+      "prompt": "captures/dsh/0.1.0-rc.6/prompt.md",
+      "trace": "captures/dsh/0.1.0-rc.6/trace.jsonl",
+      "meta": "captures/dsh/0.1.0-rc.6/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.1.0-rc.3",
+      "published_at": "2026-08-13T11:16:22.904Z",
+      "captured_at": "2026-08-13T13:54:22.876335+00:00",
+      "prompt": "captures/dsh/0.1.0-rc.3/prompt.md",
+      "trace": "captures/dsh/0.1.0-rc.3/trace.jsonl",
+      "meta": "captures/dsh/0.1.0-rc.3/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.1.0-rc.2",
+      "published_at": "2026-08-13T09:48:26.232Z",
+      "captured_at": "2026-08-13T13:57:05.670367+00:00",
+      "prompt": "captures/dsh/0.1.0-rc.2/prompt.md",
+      "trace": "captures/dsh/0.1.0-rc.2/trace.jsonl",
+      "meta": "captures/dsh/0.1.0-rc.2/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.0.1-rc.5",
+      "published_at": "2026-08-12T22:36:12.201Z",
+      "captured_at": "2026-08-13T14:00:23.263672+00:00",
+      "prompt": "captures/dsh/0.0.1-rc.5/prompt.md",
+      "trace": "captures/dsh/0.0.1-rc.5/trace.jsonl",
+      "meta": "captures/dsh/0.0.1-rc.5/meta.json"
     },
     {
       "agent_id": "dsh",

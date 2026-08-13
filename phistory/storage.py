@@ -12,9 +12,7 @@ def is_captured(target: CaptureTarget) -> bool:
     return target.prompt_path.exists() and target.trace_path.exists() and target.meta_path.exists()
 
 
-def prepare_version_dir(target: CaptureTarget, *, force: bool) -> None:
-    if force and target.version_dir.exists():
-        shutil.rmtree(target.version_dir)
+def prepare_version_dir(target: CaptureTarget) -> None:
     target.version_dir.mkdir(parents=True, exist_ok=True)
 
 

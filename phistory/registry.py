@@ -78,9 +78,7 @@ DSH = AgentSpec(
     id="dsh",
     display_name="DeepSeek Harness",
     package="@deepseek-ai/dsh",
-    source="installed",
     tap_client="dsh",
-    auto_capture=False,
     fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
     extra_env={
         "DISABLE_AUTOUPDATER": "1",
@@ -397,7 +395,6 @@ AGENTS: dict[str, AgentSpec] = {
     )
 }
 AGENT_ORDER = tuple(AGENTS)
-AUTO_CAPTURE_AGENTS = tuple(agent_id for agent_id in AGENT_ORDER if AGENTS[agent_id].auto_capture)
 
 
 def agent_sort_key(agent_id: str) -> tuple[int, str]:
@@ -417,7 +414,7 @@ def get_agent(agent_id: str) -> AgentSpec:
 
 def parse_agent_ids(value: str | None) -> list[str]:
     if not value:
-        return list(AUTO_CAPTURE_AGENTS)
+        return list(AGENT_ORDER)
     ids = [item.strip() for item in value.split(",") if item.strip()]
     for agent_id in ids:
         get_agent(agent_id)

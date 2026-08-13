@@ -1,4 +1,4 @@
-from phistory.registry import AGENT_ORDER, AUTO_CAPTURE_AGENTS, get_agent, parse_agent_ids
+from phistory.registry import AGENT_ORDER, get_agent, parse_agent_ids
 
 
 def test_display_order_starts_with_dsh_in_third_position():
@@ -9,6 +9,7 @@ def test_parse_default_agents():
     assert parse_agent_ids(None) == [
         "claude-code",
         "codex",
+        "dsh",
         "antigravity",
         "grok",
         "minimax-code",
@@ -21,11 +22,6 @@ def test_parse_default_agents():
         "pi",
         "omp",
     ]
-
-
-def test_local_test_agent_remains_explicitly_selectable():
-    assert "dsh" not in AUTO_CAPTURE_AGENTS
-    assert parse_agent_ids("dsh") == ["dsh"]
 
 
 def test_get_agent_has_capture_contract():
@@ -69,10 +65,9 @@ def test_new_agents_define_install_and_capture_profiles():
     assert antigravity.tap_mode == "forward"
     assert "--print" in antigravity.run_args
 
-    assert dsh.source == "installed"
+    assert dsh.source == "npm"
     assert dsh.package == "@deepseek-ai/dsh"
     assert dsh.tap_client == "dsh"
-    assert not dsh.auto_capture
     assert dsh.home_profile == "dsh"
     assert dsh.tap_mode == "forward"
     assert dsh.run_args[-2:] == ("headless", "Reply with one short sentence.")

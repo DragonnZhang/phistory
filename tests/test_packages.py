@@ -2,9 +2,7 @@ import io
 import tarfile
 from pathlib import Path
 
-import pytest
-
-from phistory.models import AgentSpec, CommandResult, VersionInfo
+from phistory.models import AgentSpec, VersionInfo
 from phistory.packages import (
     _github_headers,
     agent_executable,
@@ -54,57 +52,6 @@ def test_agent_executable_defaults_to_tap_client_and_can_be_overridden():
 
     assert agent_executable(default) == "x-tap"
     assert agent_executable(overridden) == "kimi"
-
-
-def test_installed_source_discovers_and_reuses_exact_cli_version(monkeypatch, tmp_path):
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    executable = bin_dir / "dsh"
-    executable.write_text("#!/bin/sh\n", encoding="utf-8")
-    executable.chmod(0o755)
-    monkeypatch.setenv("PATH", str(bin_dir))
-    monkeypatch.setattr(
-        "phistory.packages.run",
-        lambda argv, **_kwargs: CommandResult(tuple(argv), 0, "0.0.1-rc.2\n", ""),
-    )
-    agent = AgentSpec(
-        id="dsh",
-        display_name="DeepSeek Harness",
-        package="@deepseek-ai/dsh",
-        source="installed",
-        tap_client="dsh",
-        fake_env={},
-        run_args=(),
-    )
-
-    assert latest_version(agent) == VersionInfo("0.0.1-rc.2")
-    assert all_versions(agent) == [VersionInfo("0.0.1-rc.2")]
-    assert install_agent(agent, "0.0.1-rc.2", tmp_path / "unused") == bin_dir
-
-
-def test_installed_source_rejects_a_different_requested_version(monkeypatch, tmp_path):
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    executable = bin_dir / "dsh"
-    executable.write_text("#!/bin/sh\n", encoding="utf-8")
-    executable.chmod(0o755)
-    monkeypatch.setenv("PATH", str(bin_dir))
-    monkeypatch.setattr(
-        "phistory.packages.run",
-        lambda argv, **_kwargs: CommandResult(tuple(argv), 0, "dsh 0.0.1-rc.2\n", ""),
-    )
-    agent = AgentSpec(
-        id="dsh",
-        display_name="DeepSeek Harness",
-        package="@deepseek-ai/dsh",
-        source="installed",
-        tap_client="dsh",
-        fake_env={},
-        run_args=(),
-    )
-
-    with pytest.raises(RuntimeError, match="installed dsh version is 0.0.1-rc.2"):
-        install_agent(agent, "0.0.1-rc.1", tmp_path / "unused")
 
 
 def test_all_versions_filters_platform_and_prerelease_versions(monkeypatch):
