@@ -203,6 +203,8 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
     }
     if target.agent.home_profile == "hermes":
         env["HERMES_HOME"] = str(home / ".hermes")
+    if target.agent.home_profile == "dsh":
+        env["DSH_HOME"] = str(home / ".dsh")
     if target.agent.home_profile == "grok":
         grok_home = home / ".grok"
         grok_home.mkdir(parents=True, exist_ok=True)

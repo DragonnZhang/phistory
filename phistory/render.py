@@ -13,7 +13,7 @@ _VERSION_PART_RE = re.compile(r"\d+|[A-Za-z]+")
 
 PROJECT_DESCRIPTION = (
     "Phistory automatically archives versioned system prompt snapshots from agent CLIs "
-    "like Claude Code, Codex, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi."
+    "like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi."
 )
 CAPTURE_DOC = Path("docs/captures.md")
 CAPTURE_JSON = Path("captures/index.json")
@@ -71,7 +71,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "[中文](README_zh.md)",
         "",
-        "Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
+        "Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
         "",
         (
             "Open the web viewer to compare prompt snapshots across versions and see how agent design "
@@ -117,7 +117,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
                 "rules can be improved later without reinstalling every historical package."
             ),
             "",
-            "GitHub Actions checks supported CLI releases every hour and commits new snapshots when they appear.",
+            "GitHub Actions checks automatically tracked CLI releases every hour and commits new snapshots when they appear.",
             "",
             "## Local Development",
             "",
@@ -127,8 +127,11 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "# Install the locked development environment.",
             "uv sync --all-groups",
             "",
-            "# Capture the latest supported CLI releases.",
+            "# Capture the latest automatically tracked CLI releases.",
             "uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
+            "",
+            "# Capture the locally installed DSH test build.",
+            "uv run phistory capture --latest --agents dsh",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -148,6 +151,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "- Claude Code (`@anthropic-ai/claude-code`)",
             "- Codex CLI (`@openai/codex`)",
             "- Antigravity CLI (`google-antigravity/antigravity-cli`)",
+            "- DeepSeek Harness (`@deepseek-ai/dsh`, local test build until the public package is released)",
             "- Grok Build (`@xai-official/grok`)",
             "- MiniMax Code desktop app ([official download](https://agent.minimax.io/download))",
             "- Kimi Code (`@moonshot-ai/kimi-code`)",
@@ -200,7 +204,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "[English](README.md)",
         "",
-        "Phistory 追踪 Claude Code、Codex、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。",
+        "Phistory 追踪 Claude Code、Codex、Antigravity、DeepSeek Harness、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。",
         "",
         (
             "打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 "
@@ -243,7 +247,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
                 "`static-candidates.json` 会保留原始候选内容，方便以后改进匹配规则时不用重新安装所有历史包。"
             ),
             "",
-            "GitHub Actions 每小时检查一次支持的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。",
+            "GitHub Actions 每小时检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。",
             "",
             "## 本地开发",
             "",
@@ -253,8 +257,11 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "# 安装锁定的开发环境。",
             "uv sync --all-groups",
             "",
-            "# 抓取所有受支持 CLI 的最新版本。",
+            "# 抓取所有已自动追踪 CLI 的最新版本。",
             "uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
+            "",
+            "# 抓取本机已安装的 DSH 测试版本。",
+            "uv run phistory capture --latest --agents dsh",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -274,6 +281,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "- Claude Code (`@anthropic-ai/claude-code`)",
             "- Codex CLI (`@openai/codex`)",
             "- Antigravity CLI (`google-antigravity/antigravity-cli`)",
+            "- DeepSeek Harness（`@deepseek-ai/dsh`；公开包发布前使用本机测试构建）",
             "- Grok Build (`@xai-official/grok`)",
             "- MiniMax Code 桌面应用（[官方下载](https://agent.minimax.io/download)）",
             "- Kimi Code (`@moonshot-ai/kimi-code`)",

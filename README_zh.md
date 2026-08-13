@@ -2,13 +2,13 @@
 
 [English](README.md)
 
-Phistory 追踪 Claude Code、Codex、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
+Phistory 追踪 Claude Code、Codex、Antigravity、DeepSeek Harness、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
 
 打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 agent 设计如何变化。
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每小时自动检查新版本，归档最近更新于 **2026-08-12 08:49 UTC**。
+> 每小时自动检查新版本，归档最近更新于 **2026-08-13 08:48 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -25,7 +25,7 @@ Phistory 会安装每个受支持的具体 CLI 版本，通过 [`claude-tap`](ht
 
 对于最近的 Claude Code 版本，Phistory 还会从安装包里提取疑似静态 prompt 的字符串，保存为 `static-prompts.md`、`static-prompts.json` 和 `static-candidates.json`。`static-candidates.json` 会保留原始候选内容，方便以后改进匹配规则时不用重新安装所有历史包。
 
-GitHub Actions 每小时检查一次支持的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。
+GitHub Actions 每小时检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。
 
 ## 本地开发
 
@@ -35,8 +35,11 @@ GitHub Actions 每小时检查一次支持的 CLI 版本；发现新版本后，
 # 安装锁定的开发环境。
 uv sync --all-groups
 
-# 抓取所有受支持 CLI 的最新版本。
+# 抓取所有已自动追踪 CLI 的最新版本。
 uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+
+# 抓取本机已安装的 DSH 测试版本。
+uv run phistory capture --latest --agents dsh
 
 # 回填某个 agent 的历史版本区间。
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -56,6 +59,7 @@ uv run phistory render-site
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
+- DeepSeek Harness（`@deepseek-ai/dsh`；公开包发布前使用本机测试构建）
 - Grok Build (`@xai-official/grok`)
 - MiniMax Code 桌面应用（[官方下载](https://agent.minimax.io/download)）
 - Kimi Code (`@moonshot-ai/kimi-code`)
@@ -69,13 +73,14 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-08-12 08:49 UTC
+最近抓取更新：2026-08-13 08:48 UTC
 
 | Agent | 最新版本 | 快照数 | 最近抓取 |
 | --- | --- | ---: | --- |
 | Claude Code | [2.1.228 - 2026-08-11](captures/claude-code/2.1.228/prompt.md) | 384 | 2026-08-11 21:24 UTC |
 | Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/prompt.md) | 74 | 2026-08-07 03:32 UTC |
 | Antigravity CLI | [1.1.12 - 2026-08-11](captures/antigravity/1.1.12/prompt.md) | 26 | 2026-08-11 02:36 UTC |
+| DeepSeek Harness | [0.0.1-rc.2](captures/dsh/0.0.1-rc.2/prompt.md) | 1 | 2026-08-13 08:48 UTC |
 | Grok Build | [1.0.3 - 2026-08-12](captures/grok/1.0.3/prompt.md) | 128 | 2026-08-12 08:49 UTC |
 | MiniMax Code | [3.0.60 - 2026-08-07](captures/minimax-code/3.0.60/prompt.md) | 26 | 2026-08-07 06:50 UTC |
 | Kimi Code | [0.35.0 - 2026-08-12](captures/kimi-code/0.35.0/prompt.md) | 60 | 2026-08-12 05:16 UTC |

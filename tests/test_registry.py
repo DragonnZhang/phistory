@@ -1,4 +1,4 @@
-from phistory.registry import get_agent, parse_agent_ids
+from phistory.registry import AUTO_CAPTURE_AGENTS, get_agent, parse_agent_ids
 
 
 def test_parse_default_agents():
@@ -17,6 +17,11 @@ def test_parse_default_agents():
         "pi",
         "omp",
     ]
+
+
+def test_local_test_agent_remains_explicitly_selectable():
+    assert "dsh" not in AUTO_CAPTURE_AGENTS
+    assert parse_agent_ids("dsh") == ["dsh"]
 
 
 def test_get_agent_has_capture_contract():
@@ -38,6 +43,7 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
 
 def test_new_agents_define_install_and_capture_profiles():
     antigravity = get_agent("antigravity")
+    dsh = get_agent("dsh")
     grok = get_agent("grok")
     minimax_code = get_agent("minimax-code")
     kimi_code = get_agent("kimi-code")
@@ -58,6 +64,14 @@ def test_new_agents_define_install_and_capture_profiles():
     assert antigravity.home_profile == "antigravity"
     assert antigravity.tap_mode == "forward"
     assert "--print" in antigravity.run_args
+
+    assert dsh.source == "installed"
+    assert dsh.package == "@deepseek-ai/dsh"
+    assert dsh.tap_client == "dsh"
+    assert not dsh.auto_capture
+    assert dsh.home_profile == "dsh"
+    assert dsh.tap_mode == "forward"
+    assert dsh.run_args[-2:] == ("headless", "Reply with one short sentence.")
 
     assert grok.source == "npm"
     assert grok.package == "@xai-official/grok"

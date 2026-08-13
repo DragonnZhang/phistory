@@ -144,6 +144,15 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         run_args=(),
         home_profile="antigravity",
     )
+    dsh = AgentSpec(
+        id="dsh",
+        display_name="DeepSeek Harness",
+        package="@deepseek-ai/dsh",
+        tap_client="dsh",
+        fake_env={"DEEPSEEK_API_KEY": "fake"},
+        run_args=(),
+        home_profile="dsh",
+    )
     openclaw = AgentSpec(
         id="openclaw",
         display_name="OpenClaw",
@@ -229,6 +238,7 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     antigravity_env = _capture_env(
         CaptureTarget(antigravity, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "ag"
     )
+    dsh_env = _capture_env(CaptureTarget(dsh, VersionInfo("0.0.1-rc.2"), tmp_path), tmp_path / "bin", tmp_path / "dsh")
     openclaw_env = _capture_env(
         CaptureTarget(openclaw, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "oc"
     )
@@ -259,6 +269,8 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     pi_models = json.loads((Path(pi_env["PI_CODING_AGENT_DIR"]) / "models.json").read_text(encoding="utf-8"))
     assert agy_token["auth_method"] == "consumer"
     assert agy_token["token"]["access_token"] == "phistory-fake-access-token"
+    assert dsh_env["DSH_HOME"].endswith("/.dsh")
+    assert dsh_env["DEEPSEEK_API_KEY"] == "fake"
     assert openclaw_config["models"]["providers"]["phistory"]["api"] == "openai-responses"
     assert (Path(hermes_env["HERMES_HOME"]) / "config.yaml").read_text(encoding="utf-8").startswith("model:")
     assert grok_env["GROK_HOME"].endswith(".grok")
