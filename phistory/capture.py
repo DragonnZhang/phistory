@@ -7,7 +7,7 @@ import re
 import sys
 import time
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkdtemp
 
 from phistory import packages
 from phistory.models import CaptureResult, CaptureTarget
@@ -74,11 +74,18 @@ def capture_target(
             target.agent.id, target.version.version, "skipped", target.prompt_path, target.trace_path, target.meta_path
         )
 
+    staging_root: Path | None = None
+    working_target = target
+    if force and target.version_dir.exists():
+        target.root.mkdir(parents=True, exist_ok=True)
+        staging_root = Path(mkdtemp(prefix=".phistory-capture-", dir=target.root))
+        working_target = CaptureTarget(target.agent, target.version, staging_root)
+
     started = time.time()
-    prepare_version_dir(target, force=force)
+    prepare_version_dir(working_target)
     install_dir = (cache_dir / "installs" / target.agent.id / target.version.version).resolve()
-    version_dir = target.version_dir.resolve()
-    prompt_path = target.prompt_path.resolve()
+    version_dir = working_target.version_dir.resolve()
+    prompt_path = working_target.prompt_path.resolve()
     tap_output_dir = (version_dir / ".tap").resolve()
 
     try:
@@ -88,21 +95,21 @@ def capture_target(
             TemporaryDirectory(prefix="phistory-home-", ignore_cleanup_errors=True) as home_dir,
             TemporaryDirectory(prefix="phistory-work-", ignore_cleanup_errors=True) as work_dir,
         ):
-            env = _capture_env(target, bin_dir, Path(home_dir))
+            env = _capture_env(working_target, bin_dir, Path(home_dir))
             env["PWD"] = str(Path(work_dir))
-            argv = _capture_command(target, prompt_path, tap_output_dir)
+            argv = _capture_command(working_target, prompt_path, tap_output_dir)
             result = run(argv, cwd=Path(work_dir), env=env, timeout=CAPTURE_TIMEOUT_SECONDS, check=False)
-            if _needs_claude_session_persistence_retry(target, result):
+            if _needs_claude_session_persistence_retry(working_target, result):
                 remove_if_exists(tap_output_dir)
                 prompt_path.unlink(missing_ok=True)
                 argv = _without_arg(argv, "--no-session-persistence")
                 result = run(argv, cwd=Path(work_dir), env=env, timeout=CAPTURE_TIMEOUT_SECONDS, check=False)
-            if _needs_codex_api_key_retry(target, result):
+            if _needs_codex_api_key_retry(working_target, result):
                 remove_if_exists(tap_output_dir)
                 prompt_path.unlink(missing_ok=True)
                 env = {**env, "OPENAI_API_KEY": "phistory-fake-api-key"}
                 result = run(argv, cwd=Path(work_dir), env=env, timeout=CAPTURE_TIMEOUT_SECONDS, check=False)
-            if _needs_antigravity_model_retry(target, result):
+            if _needs_antigravity_model_retry(working_target, result):
                 remove_if_exists(tap_output_dir)
                 prompt_path.unlink(missing_ok=True)
                 argv = _without_arg_and_value(argv, "--model")
@@ -118,9 +125,9 @@ def capture_target(
             detail = (result.stderr or result.stdout).strip()[-4000:]
             raise RuntimeError(f"capture command failed ({result.returncode})\n{detail}")
 
-        if not target.trace_path.exists():
+        if not working_target.trace_path.exists():
             trace = latest_trace(tap_output_dir)
-            copy_trace(trace, target)
+            copy_trace(trace, working_target)
         replacements = {
             str(install_dir): "$PHISTORY_INSTALL",
             str(home_dir): "$PHISTORY_HOME",
@@ -130,11 +137,11 @@ def capture_target(
         static_prompts = None
         static_prompts_error = None
         try:
-            static_prompts = extract_static_prompts(target, install_dir)
+            static_prompts = extract_static_prompts(working_target, install_dir)
         except Exception as exc:
             static_prompts_error = str(exc)
         write_meta(
-            target,
+            working_target,
             {
                 "agent_id": target.agent.id,
                 "agent": target.agent.display_name,
@@ -149,18 +156,38 @@ def capture_target(
                 "client_exit_code": result.returncode,
                 "duration_seconds": round(time.time() - started, 3),
                 "command": [_replace_many(part, replacements) for part in _portable_command(argv, version_dir)],
-                "static_prompts": static_prompts_meta(target, static_prompts, static_prompts_error),
+                "static_prompts": static_prompts_meta(working_target, static_prompts, static_prompts_error),
             },
         )
         if not keep_tap:
             remove_if_exists(tap_output_dir)
+        if staging_root is not None:
+            _promote_staged_capture(working_target.version_dir, target.version_dir, staging_root)
         return CaptureResult(
             target.agent.id, target.version.version, "captured", target.prompt_path, target.trace_path, target.meta_path
         )
     except Exception as exc:
         if not keep_tap:
-            remove_if_exists(target.version_dir)
+            remove_if_exists(working_target.version_dir)
+            if staging_root is not None:
+                remove_if_exists(staging_root)
+        elif staging_root is not None:
+            exc = RuntimeError(f"{exc}\nfailed capture kept under {staging_root}")
         return CaptureResult(target.agent.id, target.version.version, "failed", error=str(exc))
+
+
+def _promote_staged_capture(staged: Path, destination: Path, staging_root: Path) -> None:
+    backup = staging_root / "previous"
+    if destination.exists():
+        destination.rename(backup)
+    try:
+        staged.rename(destination)
+    except Exception:
+        if backup.exists():
+            backup.rename(destination)
+        raise
+    remove_if_exists(backup)
+    remove_if_exists(staging_root)
 
 
 def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = None) -> dict[str, str]:
