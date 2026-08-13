@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-13 08:48 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-08-13 09:09 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -73,24 +73,24 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-13 08:48 UTC
+Last capture update: 2026-08-13 09:09 UTC
 
 | Agent | Latest | Captures | Last Captured |
 | --- | --- | ---: | --- |
-| Claude Code | [2.1.228 - 2026-08-11](captures/claude-code/2.1.228/prompt.md) | 384 | 2026-08-11 21:24 UTC |
+| Claude Code | [2.1.231 - 2026-08-13](captures/claude-code/2.1.231/prompt.md) | 385 | 2026-08-13 09:08 UTC |
 | Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/prompt.md) | 74 | 2026-08-07 03:32 UTC |
 | Antigravity CLI | [1.1.12 - 2026-08-11](captures/antigravity/1.1.12/prompt.md) | 26 | 2026-08-11 02:36 UTC |
 | DeepSeek Harness | [0.0.1-rc.2](captures/dsh/0.0.1-rc.2/prompt.md) | 1 | 2026-08-13 08:48 UTC |
 | Grok Build | [1.0.3 - 2026-08-12](captures/grok/1.0.3/prompt.md) | 128 | 2026-08-12 08:49 UTC |
 | MiniMax Code | [3.0.60 - 2026-08-07](captures/minimax-code/3.0.60/prompt.md) | 26 | 2026-08-07 06:50 UTC |
-| Kimi Code | [0.35.0 - 2026-08-12](captures/kimi-code/0.35.0/prompt.md) | 60 | 2026-08-12 05:16 UTC |
-| MiMo Code | [0.1.11 - 2026-08-10](captures/mimo/0.1.11/prompt.md) | 11 | 2026-08-10 06:53 UTC |
+| Kimi Code | [0.36.0 - 2026-08-13](captures/kimi-code/0.36.0/prompt.md) | 61 | 2026-08-13 09:09 UTC |
+| MiMo Code | [0.1.12 - 2026-08-13](captures/mimo/0.1.12/prompt.md) | 12 | 2026-08-13 09:09 UTC |
 | OpenClaw | [2026.7.1-2 - 2026-07-18](captures/openclaw/2026.7.1-2/prompt.md) | 69 | 2026-07-18 04:30 UTC |
 | Hermes Agent | [v2026.8.3 - 2026-08-03](captures/hermes/v2026.8.3/prompt.md) | 22 | 2026-08-03 18:19 UTC |
 | Kimi CLI | [1.49.0 - 2026-07-16](captures/kimi/1.49.0/prompt.md) | 21 | 2026-07-16 11:21 UTC |
-| opencode | [1.18.16 - 2026-08-10](captures/opencode/1.18.16/prompt.md) | 102 | 2026-08-10 06:53 UTC |
+| opencode | [1.18.18 - 2026-08-13](captures/opencode/1.18.18/prompt.md) | 103 | 2026-08-13 09:09 UTC |
 | Pi | [0.84.1 - 2026-08-07](captures/pi/0.84.1/prompt.md) | 40 | 2026-08-07 06:50 UTC |
-| Oh My Pi | [17.2.15 - 2026-08-12](captures/omp/17.2.15/prompt.md) | 54 | 2026-08-12 03:06 UTC |
+| Oh My Pi | [17.3.0 - 2026-08-13](captures/omp/17.3.0/prompt.md) | 55 | 2026-08-13 09:09 UTC |
 
 ## Project Trend
 
