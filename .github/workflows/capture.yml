@@ -35,7 +35,14 @@ jobs:
           status=$?
           echo "status=$status" >> "$GITHUB_OUTPUT"
           exit 0
-      - run: uv run phistory extract-static claude-code --latest-captured 10
+      - name: Extract Claude Code static prompts
+        id: static
+        run: |
+          set +e
+          uv run phistory extract-static claude-code --latest-captured 10
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
       - run: uv run phistory render-index
       - run: uv run phistory render-site
       - name: Commit capture updates
@@ -59,8 +66,8 @@ jobs:
           path: /tmp/phistory-smoke
           retention-days: 7
       - name: Report capture failures
-        if: always() && steps.latest.outputs.status != '0'
+        if: always() && (steps.latest.outputs.status != '0' || steps.static.outputs.status != '0')
         run: |
-          echo "::error title=Some prompt captures failed::Successful captures were still committed and will be deployed. See the Latest capture summary for the failed agents."
-          echo "One or more latest captures failed. Successful captures were committed and the Pages workflow will still deploy them."
+          echo "::error title=Some prompt archive steps failed::Successful artifacts were still committed and will be deployed. Check the capture and static extraction logs for details."
+          echo "One or more capture or static extraction steps failed. Successful artifacts were committed and the Pages workflow will still deploy them."
           exit 1
