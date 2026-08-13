@@ -2,13 +2,13 @@
 
 [English](README.md)
 
-Phistory 追踪 Claude Code、Codex、Antigravity、DeepSeek Harness、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
+Phistory 追踪 Claude Code、Codex、DeepSeek Harness、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
 
 打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 agent 设计如何变化。
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每小时自动检查新版本，归档最近更新于 **2026-08-13 09:09 UTC**。
+> 每小时自动检查新版本，归档最近更新于 **2026-08-13 14:06 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -36,10 +36,7 @@ GitHub Actions 每小时检查一次已自动追踪的 CLI 版本；发现新版
 uv sync --all-groups
 
 # 抓取所有已自动追踪 CLI 的最新版本。
-uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
-
-# 抓取本机已安装的 DSH 测试版本。
-uv run phistory capture --latest --agents dsh
+uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # 回填某个 agent 的历史版本区间。
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -58,7 +55,7 @@ uv run phistory render-site
 
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
-- DeepSeek Harness（`@deepseek-ai/dsh`；公开包发布前使用本机测试构建）
+- DeepSeek Harness (`@deepseek-ai/dsh`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
 - Grok Build (`@xai-official/grok`)
 - MiniMax Code 桌面应用（[官方下载](https://agent.minimax.io/download)）
@@ -73,13 +70,13 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-08-13 09:09 UTC
+最近抓取更新：2026-08-13 14:06 UTC
 
 | Agent | 最新版本 | 快照数 | 最近抓取 |
 | --- | --- | ---: | --- |
 | Claude Code | [2.1.231 - 2026-08-13](captures/claude-code/2.1.231/prompt.md) | 385 | 2026-08-13 09:08 UTC |
 | Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/prompt.md) | 74 | 2026-08-07 03:32 UTC |
-| DeepSeek Harness | [0.0.1-rc.2](captures/dsh/0.0.1-rc.2/prompt.md) | 1 | 2026-08-13 08:48 UTC |
+| DeepSeek Harness | [0.1.0-rc.6 - 2026-08-13](captures/dsh/0.1.0-rc.6/prompt.md) | 5 | 2026-08-13 14:06 UTC |
 | Antigravity CLI | [1.1.12 - 2026-08-11](captures/antigravity/1.1.12/prompt.md) | 26 | 2026-08-11 02:36 UTC |
 | Grok Build | [1.0.3 - 2026-08-12](captures/grok/1.0.3/prompt.md) | 128 | 2026-08-12 08:49 UTC |
 | MiniMax Code | [3.0.60 - 2026-08-07](captures/minimax-code/3.0.60/prompt.md) | 26 | 2026-08-07 06:50 UTC |

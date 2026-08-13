@@ -8,7 +8,7 @@ This file is for future coding agents. Read it before changing the project.
 
 - `phistory/registry.py`: supported agent definitions. Add or adjust CLI support here first.
 - `phistory/models.py`: shared dataclasses and type literals for package sources, tap modes, and capture results.
-- `phistory/packages.py`: version discovery and installation for public package/release sources plus explicitly local test builds.
+- `phistory/packages.py`: version discovery and installation for public package and release sources.
 - `phistory/capture.py`: installs an agent, creates an isolated HOME, runs `claude-tap`, exports `prompt.md`, copies `trace.jsonl`, writes `meta.json`, and normalizes volatile text in prompt Markdown only.
 - `phistory/workflow.py`: orchestration for latest captures and backfills.
 - `phistory/storage.py`: capture directory preparation, cleanup, trace copying, and metadata writing.
@@ -47,13 +47,7 @@ Phistory does not call the real model provider when exporting prompts. It relies
 Typical latest capture:
 
 ```bash
-uv run phistory capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
-```
-
-DSH is currently an unpublished test build and is captured separately from the locally installed executable:
-
-```bash
-uv run phistory capture --latest --agents dsh
+uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 ```
 
 For each agent/version, the flow is:
@@ -77,8 +71,8 @@ Current agents are defined in `phistory/registry.py`:
 
 - `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled.
+- `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode.
 - `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and forward capture mode.
-- `dsh`: locally installed unpublished test build of `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode. It has `auto_capture=False`; keep it out of the hourly agent list until an official public package or release is available.
 - `grok`: npm package `@xai-official/grok`, tap client `grok`, isolated Grok home and fake xAI API key.
 - `minimax-code`: official MiniMax Code desktop updater source, tap client `minimax-code`; Phistory extracts the bundled Mavis runtime, installs matching Linux native dependencies (plus the pinned OpenCode engine for legacy releases), and launches it headlessly through an isolated provider.
 - `kimi-code`: npm package `@moonshot-ai/kimi-code`, tap client `kimi-code`, executable `kimi`, isolated Kimi Code config.
@@ -121,7 +115,7 @@ uv run pytest
 For capture-affecting changes, also run a local latest smoke:
 
 ```bash
-uv run phistory --root /tmp/phistory-smoke --cache-dir /tmp/phistory-smoke-cache capture --latest --agents claude-code,codex,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp --force
+uv run phistory --root /tmp/phistory-smoke --cache-dir /tmp/phistory-smoke-cache capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp --force
 ```
 
 For generated artifacts:

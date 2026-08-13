@@ -8,7 +8,7 @@ from pathlib import Path
 
 from phistory import __version__, packages
 from phistory.models import CaptureTarget
-from phistory.registry import AGENTS, AUTO_CAPTURE_AGENTS, parse_agent_ids
+from phistory.registry import AGENT_ORDER, AGENTS, parse_agent_ids
 from phistory.render import render_index
 from phistory.site import render_site
 from phistory.static_prompts.extract import extract_static_prompts, static_prompts_meta
@@ -25,9 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     capture = sub.add_parser("capture", help="capture current versions")
     capture.add_argument("--latest", action="store_true", help="capture latest package version for each agent")
-    capture.add_argument(
-        "--agents", default=None, help=f"comma-separated agent ids (default: {','.join(AUTO_CAPTURE_AGENTS)})"
-    )
+    capture.add_argument("--agents", default=None, help=f"comma-separated agent ids (default: {','.join(AGENT_ORDER)})")
     capture.add_argument("--force", action="store_true", help="recapture existing versions")
     capture.add_argument("--keep-tap", action="store_true", help="keep raw claude-tap output directories")
     capture.add_argument("--summary-title", default="Capture results", help="GitHub Actions summary title")
