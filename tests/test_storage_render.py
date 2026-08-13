@@ -3,7 +3,7 @@ from pathlib import Path
 
 from phistory.models import AgentSpec, CaptureTarget, VersionInfo
 from phistory.render import render_index
-from phistory.site import _change_summary, render_site
+from phistory.site import AGENT_SHORT_NAMES, _change_summary, render_site
 from phistory.storage import is_captured, write_meta
 
 
@@ -41,7 +41,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "Agent" in text
     assert "[中文](README_zh.md)" in text
     assert (
-        "popular coding-agent CLIs like Claude Code, Codex, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code"
+        "popular coding-agent CLIs like Claude Code, Codex, Antigravity, DeepSeek Harness, Grok Build, MiniMax Code"
         in text
     )
     assert "> Checks for new releases hourly. Archive last updated: **2026-05-22 01:00 UTC**." in text
@@ -49,12 +49,13 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "Anthropic, OpenAI, and other agent builders" in text
     assert "new tools, permission checks, model defaults" in text
     assert "claude-tap" in text
-    assert "GitHub Actions checks supported CLI releases every hour" in text
+    assert "GitHub Actions checks automatically tracked CLI releases every hour" in text
     assert "## Data" not in text
     assert "`captures/<agent>/<version>/`" in text
     assert "`prompt.md`, `trace.jsonl`, and `meta.json`" in text
     assert "## Local Development" in text
-    assert "# Capture the latest supported CLI releases." in text
+    assert "# Capture the latest automatically tracked CLI releases." in text
+    assert "# Capture the locally installed DSH test build." in text
     assert "## Web UI" not in text
     assert "## For AI Agents" not in text
     assert "## Capture Status" in text
@@ -64,17 +65,18 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "2026-05-22 01:00 UTC" in text
     assert "| Agent | Version | Published | Captured | Snapshot | Raw Trace |" not in text
     assert "[English](README.md)" in zh_text
-    assert "追踪 Claude Code、Codex、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code" in zh_text
+    assert "追踪 Claude Code、Codex、Antigravity、DeepSeek Harness、Grok Build、MiniMax Code" in zh_text
+    assert "# 抓取本机已安装的 DSH 测试版本。" in zh_text
     assert "> 每小时自动检查新版本，归档最近更新于 **2026-05-22 01:00 UTC**。" in zh_text
     assert "## 为什么看它" in zh_text
     assert "Anthropic、OpenAI 等团队" in zh_text
     assert "新工具、权限检查、默认模型行为" in zh_text
-    assert "每小时检查一次支持的 CLI 版本" in zh_text
+    assert "每小时检查一次已自动追踪的 CLI 版本" in zh_text
     assert "## 数据" not in zh_text
     assert "`captures/<agent>/<version>/`" in zh_text
     assert "`prompt.md`、`trace.jsonl` 和 `meta.json`" in zh_text
     assert "## 本地开发" in zh_text
-    assert "# 抓取所有受支持 CLI 的最新版本。" in zh_text
+    assert "# 抓取所有已自动追踪 CLI 的最新版本。" in zh_text
     assert "## Web UI" not in zh_text
     assert "## 给 AI Agent" not in zh_text
     assert "## 抓取状态" in zh_text
@@ -136,6 +138,7 @@ def test_render_index_sorts_versions_numerically(tmp_path: Path):
 
 
 def test_render_site_writes_static_html_manifest(tmp_path: Path):
+    assert AGENT_SHORT_NAMES["dsh"] == "DSH"
     agent = AgentSpec(
         id="agent",
         display_name="Agent",

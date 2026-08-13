@@ -33,6 +33,8 @@ def latest_version(agent: AgentSpec) -> VersionInfo:
         return _github_release_latest(agent)
     if agent.source == "github-release-asset":
         return _github_release_asset_latest(agent)
+    if agent.source == "installed":
+        return _installed_latest(agent)
     raise ValueError(f"unsupported package source: {agent.source}")
 
 
@@ -49,6 +51,8 @@ def all_versions(agent: AgentSpec, *, include_prerelease: bool = False) -> list[
         return _github_release_versions(agent, include_prerelease=include_prerelease)
     if agent.source == "github-release-asset":
         return _github_release_asset_versions(agent, include_prerelease=include_prerelease)
+    if agent.source == "installed":
+        return [_installed_latest(agent)]
     raise ValueError(f"unsupported package source: {agent.source}")
 
 
@@ -85,11 +89,40 @@ def install_agent(agent: AgentSpec, version: str, install_dir: Path) -> Path:
         return _install_github_release(agent, version, install_dir)
     if agent.source == "github-release-asset":
         return _install_github_release_asset(agent, version, install_dir)
+    if agent.source == "installed":
+        return _use_installed(agent, version)
     raise ValueError(f"unsupported package source: {agent.source}")
 
 
 def agent_executable(agent: AgentSpec) -> str:
     return agent.executable or agent.tap_client
+
+
+def _installed_latest(agent: AgentSpec) -> VersionInfo:
+    executable = _installed_executable(agent)
+    result = run([str(executable), "--version"], timeout=30)
+    output = (result.stdout or result.stderr).strip()
+    match = re.search(r"(?<![\w.])v?(\d+(?:\.\d+)+(?:[-+][0-9A-Za-z.-]+)?)(?![\w.])", output)
+    if not match:
+        raise RuntimeError(f"could not parse version from {executable} --version: {output!r}")
+    return VersionInfo(version=match.group(1))
+
+
+def _use_installed(agent: AgentSpec, version: str) -> Path:
+    executable = _installed_executable(agent)
+    installed_version = _installed_latest(agent).version
+    if installed_version != version:
+        raise RuntimeError(f"installed {agent_executable(agent)} version is {installed_version}, requested {version}")
+    return executable.parent
+
+
+def _installed_executable(agent: AgentSpec) -> Path:
+    executable = shutil.which(agent_executable(agent))
+    if not executable:
+        raise RuntimeError(
+            f"{agent_executable(agent)} is not installed; {agent.display_name} currently requires a local test build"
+        )
+    return Path(executable)
 
 
 def npm_view(package: str, *fields: str) -> object:

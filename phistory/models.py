@@ -4,11 +4,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
-PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "minimax-code"]
+PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "minimax-code", "installed"]
 GitHubReleaseInstall = Literal["wheel", "editable"]
 HomeProfile = Literal[
     "none",
     "antigravity",
+    "dsh",
     "grok",
     "hermes",
     "kimi",
@@ -45,6 +46,7 @@ class AgentSpec:
     release_asset_binary: str | None = None
     release_manifest_url: str | None = None
     github_release_install: GitHubReleaseInstall = "wheel"
+    auto_capture: bool = True
 
 
 @dataclass(frozen=True)

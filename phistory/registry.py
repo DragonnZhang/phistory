@@ -74,6 +74,31 @@ ANTIGRAVITY = AgentSpec(
     ),
 )
 
+DSH = AgentSpec(
+    id="dsh",
+    display_name="DeepSeek Harness",
+    package="@deepseek-ai/dsh",
+    source="installed",
+    tap_client="dsh",
+    auto_capture=False,
+    fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
+    extra_env={
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1",
+        "DSH_TELEMETRY_DISABLED": "1",
+        "CI": "1",
+    },
+    home_profile="dsh",
+    tap_mode="forward",
+    run_args=(
+        "--no-yolo",
+        "--",
+        "--profile",
+        "headless",
+        "Reply with one short sentence.",
+    ),
+)
+
 GROK = AgentSpec(
     id="grok",
     display_name="Grok Build",
@@ -358,6 +383,7 @@ AGENTS: dict[str, AgentSpec] = {
         CLAUDE_CODE,
         CODEX,
         ANTIGRAVITY,
+        DSH,
         GROK,
         MINIMAX_CODE,
         KIMI_CODE,
@@ -371,6 +397,7 @@ AGENTS: dict[str, AgentSpec] = {
     )
 }
 AGENT_ORDER = tuple(AGENTS)
+AUTO_CAPTURE_AGENTS = tuple(agent_id for agent_id in AGENT_ORDER if AGENTS[agent_id].auto_capture)
 
 
 def agent_sort_key(agent_id: str) -> tuple[int, str]:
@@ -390,7 +417,7 @@ def get_agent(agent_id: str) -> AgentSpec:
 
 def parse_agent_ids(value: str | None) -> list[str]:
     if not value:
-        return list(AGENT_ORDER)
+        return list(AUTO_CAPTURE_AGENTS)
     ids = [item.strip() for item in value.split(",") if item.strip()]
     for agent_id in ids:
         get_agent(agent_id)
