@@ -382,8 +382,8 @@ AGENTS: dict[str, AgentSpec] = {
     for agent in (
         CLAUDE_CODE,
         CODEX,
-        ANTIGRAVITY,
         DSH,
+        ANTIGRAVITY,
         GROK,
         MINIMAX_CODE,
         KIMI_CODE,

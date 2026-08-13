@@ -1,4 +1,8 @@
-from phistory.registry import AUTO_CAPTURE_AGENTS, get_agent, parse_agent_ids
+from phistory.registry import AGENT_ORDER, AUTO_CAPTURE_AGENTS, get_agent, parse_agent_ids
+
+
+def test_display_order_starts_with_dsh_in_third_position():
+    assert AGENT_ORDER[:3] == ("claude-code", "codex", "dsh")
 
 
 def test_parse_default_agents():

@@ -20,20 +20,20 @@
       "captures": 74
     },
     {
-      "agent_id": "antigravity",
-      "agent": "Antigravity CLI",
-      "latest_version": "1.1.12",
-      "latest_published_at": "2026-08-11T01:26:58Z",
-      "latest_captured_at": "2026-08-11T02:36:30.824739+00:00",
-      "captures": 26
-    },
-    {
       "agent_id": "dsh",
       "agent": "DeepSeek Harness",
       "latest_version": "0.0.1-rc.2",
       "latest_published_at": "",
       "latest_captured_at": "2026-08-13T08:48:49.892796+00:00",
       "captures": 1
+    },
+    {
+      "agent_id": "antigravity",
+      "agent": "Antigravity CLI",
+      "latest_version": "1.1.12",
+      "latest_published_at": "2026-08-11T01:26:58Z",
+      "latest_captured_at": "2026-08-11T02:36:30.824739+00:00",
+      "captures": 26
     },
     {
       "agent_id": "grok",

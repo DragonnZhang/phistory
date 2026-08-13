@@ -58,8 +58,8 @@ uv run phistory render-site
 
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
-- Antigravity CLI (`google-antigravity/antigravity-cli`)
 - DeepSeek Harness（`@deepseek-ai/dsh`；公开包发布前使用本机测试构建）
+- Antigravity CLI (`google-antigravity/antigravity-cli`)
 - Grok Build (`@xai-official/grok`)
 - MiniMax Code 桌面应用（[官方下载](https://agent.minimax.io/download)）
 - Kimi Code (`@moonshot-ai/kimi-code`)
@@ -79,8 +79,8 @@ uv run phistory render-site
 | --- | --- | ---: | --- |
 | Claude Code | [2.1.231 - 2026-08-13](captures/claude-code/2.1.231/prompt.md) | 385 | 2026-08-13 09:08 UTC |
 | Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/prompt.md) | 74 | 2026-08-07 03:32 UTC |
-| Antigravity CLI | [1.1.12 - 2026-08-11](captures/antigravity/1.1.12/prompt.md) | 26 | 2026-08-11 02:36 UTC |
 | DeepSeek Harness | [0.0.1-rc.2](captures/dsh/0.0.1-rc.2/prompt.md) | 1 | 2026-08-13 08:48 UTC |
+| Antigravity CLI | [1.1.12 - 2026-08-11](captures/antigravity/1.1.12/prompt.md) | 26 | 2026-08-11 02:36 UTC |
 | Grok Build | [1.0.3 - 2026-08-12](captures/grok/1.0.3/prompt.md) | 128 | 2026-08-12 08:49 UTC |
 | MiniMax Code | [3.0.60 - 2026-08-07](captures/minimax-code/3.0.60/prompt.md) | 26 | 2026-08-07 06:50 UTC |
 | Kimi Code | [0.36.0 - 2026-08-13](captures/kimi-code/0.36.0/prompt.md) | 61 | 2026-08-13 09:09 UTC |
