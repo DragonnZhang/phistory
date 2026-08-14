@@ -4,15 +4,15 @@ import base64
 import json
 import os
 import re
-import sys
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
 
 from phistory import packages
+from phistory.drivers import CaptureRunContext, run_capture
 from phistory.models import CaptureResult, CaptureTarget
 from phistory.packages import agent_executable
-from phistory.static_prompts.extract import extract_static_prompts, static_prompts_meta
+from phistory.static_prompts.extract import extract_static_prompts
 from phistory.storage import copy_trace, is_captured, latest_trace, prepare_version_dir, remove_if_exists, write_meta
 from phistory.subprocesses import run
 
@@ -22,6 +22,7 @@ _VOLATILE_TEXT_PATTERNS = (
     (re.compile(r" - OS Version: [^\\\n]*(?=\\n)"), " - OS Version: $PHISTORY_OS_VERSION"),
     (re.compile(r"Today's date is \d{4}[-/]\d{2}[-/]\d{2}\."), "Today's date is $PHISTORY_DATE."),
     (re.compile(r"Today's date: \d{4}[-/]\d{2}[-/]\d{2}"), "Today's date: $PHISTORY_DATE"),
+    (re.compile(r"http://(?:127\.0\.0\.1|localhost):\d+"), "http://127.0.0.1:$PHISTORY_PORT"),
     (
         re.compile(r"The current date and time in ISO format is `[^`]+`\."),
         "The current date and time in ISO format is `$PHISTORY_DATETIME`.",
@@ -59,8 +60,6 @@ _VOLATILE_TEXT_PATTERNS = (
     (re.compile(r"Bearer phistory-[A-Za-z0-9_-]+"), "Bearer <redacted>"),
 )
 
-CAPTURE_TIMEOUT_SECONDS = 1800
-
 
 def capture_target(
     target: CaptureTarget,
@@ -71,22 +70,28 @@ def capture_target(
 ) -> CaptureResult:
     if is_captured(target) and not force:
         return CaptureResult(
-            target.agent.id, target.version.version, "skipped", target.prompt_path, target.trace_path, target.meta_path
+            target.agent.id,
+            target.version.version,
+            target.variant.id,
+            "skipped",
+            target.prompt_path,
+            target.trace_path,
+            target.meta_path,
         )
 
     staging_root: Path | None = None
     working_target = target
-    if force and target.version_dir.exists():
+    if force and target.variant_dir.exists():
         target.root.mkdir(parents=True, exist_ok=True)
         staging_root = Path(mkdtemp(prefix=".phistory-capture-", dir=target.root))
-        working_target = CaptureTarget(target.agent, target.version, staging_root)
+        working_target = CaptureTarget(target.agent, target.version, target.variant, staging_root)
 
     started = time.time()
     prepare_version_dir(working_target)
     install_dir = (cache_dir / "installs" / target.agent.id / target.version.version).resolve()
-    version_dir = working_target.version_dir.resolve()
+    variant_dir = working_target.variant_dir.resolve()
     prompt_path = working_target.prompt_path.resolve()
-    tap_output_dir = (version_dir / ".tap").resolve()
+    tap_output_dir = (variant_dir / ".tap").resolve()
 
     try:
         bin_dir = packages.install_agent(target.agent, target.version.version, install_dir)
@@ -97,30 +102,17 @@ def capture_target(
         ):
             env = _capture_env(working_target, bin_dir, Path(home_dir))
             env["PWD"] = str(Path(work_dir))
-            argv = _capture_command(working_target, prompt_path, tap_output_dir)
-            result = run(argv, cwd=Path(work_dir), env=env, timeout=CAPTURE_TIMEOUT_SECONDS, check=False)
-            if _needs_claude_session_persistence_retry(working_target, result):
-                remove_if_exists(tap_output_dir)
-                prompt_path.unlink(missing_ok=True)
-                argv = _without_arg(argv, "--no-session-persistence")
-                result = run(argv, cwd=Path(work_dir), env=env, timeout=CAPTURE_TIMEOUT_SECONDS, check=False)
-            if _needs_codex_api_key_retry(working_target, result):
-                remove_if_exists(tap_output_dir)
-                prompt_path.unlink(missing_ok=True)
-                env = {**env, "OPENAI_API_KEY": "phistory-fake-api-key"}
-                result = run(argv, cwd=Path(work_dir), env=env, timeout=CAPTURE_TIMEOUT_SECONDS, check=False)
-            if _needs_antigravity_model_retry(working_target, result):
-                remove_if_exists(tap_output_dir)
-                prompt_path.unlink(missing_ok=True)
-                argv = _without_arg_and_value(argv, "--model")
-                result = run(argv, cwd=Path(work_dir), env=env, timeout=CAPTURE_TIMEOUT_SECONDS, check=False)
-            for _ in range(2):
-                if not _needs_prompt_retry(result, prompt_path):
-                    break
-                remove_if_exists(tap_output_dir)
-                prompt_path.unlink(missing_ok=True)
-                time.sleep(1)
-                result = run(argv, cwd=Path(work_dir), env=env, timeout=CAPTURE_TIMEOUT_SECONDS, check=False)
+            execution = run_capture(
+                CaptureRunContext(
+                    target=working_target,
+                    prompt_path=prompt_path,
+                    tap_output_dir=tap_output_dir,
+                    work_dir=Path(work_dir),
+                    env=env,
+                )
+            )
+            argv = list(execution.command)
+            result = execution.result
         if not prompt_path.exists():
             detail = (result.stderr or result.stdout).strip()[-4000:]
             raise RuntimeError(f"capture command failed ({result.returncode})\n{detail}")
@@ -134,12 +126,6 @@ def capture_target(
             str(work_dir): "$PHISTORY_WORKSPACE",
         }
         _sanitize_file(prompt_path, replacements)
-        static_prompts = None
-        static_prompts_error = None
-        try:
-            static_prompts = extract_static_prompts(working_target, install_dir)
-        except Exception as exc:
-            static_prompts_error = str(exc)
         write_meta(
             working_target,
             {
@@ -147,6 +133,13 @@ def capture_target(
                 "agent": target.agent.display_name,
                 "package": target.agent.package,
                 "version": target.version.version,
+                "variant": {
+                    "id": target.variant.id,
+                    "label": target.variant.label,
+                    "dimensions": target.variant.dimensions,
+                },
+                "requested": target.variant.dimensions,
+                "observed": _trace_observation(working_target.trace_path),
                 "published_at": target.version.published_at,
                 "tarball_url": target.version.tarball_url,
                 "binary_version": binary_version,
@@ -155,29 +148,47 @@ def capture_target(
                 "target": "claude-tap capture-only",
                 "client_exit_code": result.returncode,
                 "duration_seconds": round(time.time() - started, 3),
-                "command": [_replace_many(part, replacements) for part in _portable_command(argv, version_dir)],
-                "static_prompts": static_prompts_meta(working_target, static_prompts, static_prompts_error),
+                "command": [_replace_many(part, replacements) for part in _portable_command(argv, variant_dir)],
             },
         )
         if not keep_tap:
             remove_if_exists(tap_output_dir)
         if staging_root is not None:
-            _promote_staged_capture(working_target.version_dir, target.version_dir, staging_root)
+            _promote_staged_capture(working_target.variant_dir, target.variant_dir, staging_root)
+        if target.variant.id == "default":
+            _extract_static_best_effort(target, install_dir)
         return CaptureResult(
-            target.agent.id, target.version.version, "captured", target.prompt_path, target.trace_path, target.meta_path
+            target.agent.id,
+            target.version.version,
+            target.variant.id,
+            "captured",
+            target.prompt_path,
+            target.trace_path,
+            target.meta_path,
         )
     except Exception as exc:
         if not keep_tap:
-            remove_if_exists(working_target.version_dir)
+            remove_if_exists(working_target.variant_dir)
             if staging_root is not None:
                 remove_if_exists(staging_root)
+            else:
+                _remove_empty_capture_parents(working_target)
         elif staging_root is not None:
             exc = RuntimeError(f"{exc}\nfailed capture kept under {staging_root}")
-        return CaptureResult(target.agent.id, target.version.version, "failed", error=str(exc))
+        return CaptureResult(target.agent.id, target.version.version, target.variant.id, "failed", error=str(exc))
+
+
+def _remove_empty_capture_parents(target: CaptureTarget) -> None:
+    for path in (target.variant_dir.parent, target.version_dir, target.version_dir.parent):
+        try:
+            path.rmdir()
+        except OSError:
+            break
 
 
 def _promote_staged_capture(staged: Path, destination: Path, staging_root: Path) -> None:
     backup = staging_root / "previous"
+    destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.exists():
         destination.rename(backup)
     try:
@@ -217,6 +228,7 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
     env = {
         **target.agent.fake_env,
         **target.agent.extra_env,
+        **target.variant.extra_env,
         "PATH": f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}",
         "HOME": str(home),
         "XDG_CONFIG_HOME": str(home / ".config"),
@@ -265,102 +277,79 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
     return env
 
 
-def _needs_claude_session_persistence_retry(target: CaptureTarget, result) -> bool:
-    if target.agent.id != "claude-code" or result.returncode == 0:
-        return False
-    output = f"{result.stderr}\n{result.stdout}"
-    return "unknown option '--no-session-persistence'" in output
+def _extract_static_best_effort(target: CaptureTarget, install_dir: Path) -> None:
+    if target.agent.id != "claude-code":
+        return
+    target.static_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        extract_static_prompts(target, install_dir)
+    except Exception:
+        return
 
 
-def _needs_codex_api_key_retry(target: CaptureTarget, result) -> bool:
-    if target.agent.id != "codex" or result.returncode == 0:
-        return False
-    output = f"{result.stderr}\n{result.stdout}"
-    return "Missing OpenAI API key" in output
-
-
-def _needs_antigravity_model_retry(target: CaptureTarget, result) -> bool:
-    if target.agent.id != "antigravity" or result.returncode == 0:
-        return False
-    output = f"{result.stderr}\n{result.stdout}"
-    return "flags provided but not defined: -model" in output
-
-
-def _needs_prompt_retry(result, prompt_path: Path) -> bool:
-    if prompt_path.exists():
-        return False
-    output = f"{result.stderr}\n{result.stdout}"
-    return any(
-        message in output
-        for message in (
-            "no prompt-bearing request found in trace",
-            "no valid records found in trace file",
-        )
-    )
-
-
-def _tap_mode_args(target: CaptureTarget) -> list[str]:
-    if target.agent.tap_mode == "auto":
-        return []
-    return ["--mode", target.agent.tap_mode]
-
-
-def _tap_yolo_args(target: CaptureTarget) -> list[str]:
-    if target.agent.run_args[:1] == ("--no-yolo",):
-        return ["--no-yolo"]
-    return []
-
-
-def _capture_command(
-    target: CaptureTarget,
-    prompt_path: Path,
-    tap_output_dir: Path,
-) -> list[str]:
-    return [
-        sys.executable,
-        "-m",
-        "claude_tap",
-        "run",
-        target.agent.tap_client,
-        *_tap_yolo_args(target),
-        "--export-prompt",
-        str(prompt_path),
-        "--no-live",
-        "--no-open",
-        "--no-update-check",
-        "--output-dir",
-        str(tap_output_dir),
-        *_tap_mode_args(target),
-        "--",
-        *_upstream_client_args(target.agent.run_args),
-    ]
-
-
-def _upstream_client_args(run_args: tuple[str, ...]) -> list[str]:
-    args = list(run_args)
-    if args and args[0] == "--no-yolo":
-        args.pop(0)
-    if args and args[0] == "--":
-        args.pop(0)
-    return args
-
-
-def _without_arg(argv: list[str], value: str) -> list[str]:
-    return [arg for arg in argv if arg != value]
-
-
-def _without_arg_and_value(argv: list[str], value: str) -> list[str]:
-    out = []
-    skip_next = False
-    for arg in argv:
-        if skip_next:
-            skip_next = False
+def _trace_observation(trace_path: Path) -> dict[str, object]:
+    best: tuple[int, dict] | None = None
+    try:
+        lines = trace_path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return {}
+    for line in lines:
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
             continue
-        if arg == value:
-            skip_next = True
+        body = (record.get("request") or {}).get("body")
+        if isinstance(body, str):
+            try:
+                body = json.loads(body)
+            except json.JSONDecodeError:
+                continue
+        if not isinstance(body, dict):
             continue
-        out.append(arg)
-    return out
+        score = _prompt_request_score(body)
+        if best is None or score > best[0]:
+            best = (score, body)
+    if best is None:
+        return {}
+    body = best[1]
+    observed: dict[str, object] = {}
+    if isinstance(body.get("model"), str):
+        observed["model"] = body["model"]
+    tool_count = _observed_tool_count(body)
+    if tool_count:
+        observed["tool_count"] = tool_count
+    return observed
+
+
+def _observed_tool_count(body: dict) -> int:
+    count = len(body["tools"]) if isinstance(body.get("tools"), list) else 0
+    inputs = body.get("input")
+    if not isinstance(inputs, list):
+        return count
+    for item in inputs:
+        if not isinstance(item, dict) or item.get("type") != "additional_tools":
+            continue
+        tools = item.get("tools")
+        if isinstance(tools, list):
+            count += len(tools)
+    return count
+
+
+def _prompt_request_score(body: dict) -> int:
+    score = 0
+    if body.get("system"):
+        score += 4
+    if body.get("instructions"):
+        score += 4
+    if body.get("tools"):
+        score += 4
+    if _observed_tool_count(body):
+        score += 4
+    if body.get("messages"):
+        score += 1
+    if body.get("input"):
+        score += 1
+    return score
 
 
 def _write_fake_chatgpt_auth(home: Path) -> None:

@@ -31,17 +31,19 @@ def render_index(root: Path, output: Path) -> None:
 
 def read_capture_rows(root: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for meta_path in sorted(root.glob("*/*/meta.json")):
+    for meta_path in sorted(root.glob("*/*/variants/*/meta.json")):
         try:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        version_dir = meta_path.parent
-        prompt = version_dir / "prompt.md"
-        trace = version_dir / "trace.jsonl"
-        static_prompts = version_dir / "static-prompts.md"
-        static_prompts_json = version_dir / "static-prompts.json"
-        static_candidates_json = version_dir / "static-candidates.json"
+        variant_dir = meta_path.parent
+        version_dir = variant_dir.parent.parent
+        variant_meta = meta.get("variant") if isinstance(meta.get("variant"), dict) else {}
+        prompt = variant_dir / "prompt.md"
+        trace = variant_dir / "trace.jsonl"
+        static_prompts = version_dir / "static" / "prompts.md"
+        static_prompts_json = version_dir / "static" / "prompts.json"
+        static_candidates_json = version_dir / "static" / "candidates.json"
         if not prompt.exists() or not trace.exists():
             continue
         rows.append(
@@ -49,6 +51,10 @@ def read_capture_rows(root: Path) -> list[dict[str, Any]]:
                 "agent": meta.get("agent") or meta.get("agent_id") or version_dir.parent.name,
                 "agent_id": meta.get("agent_id") or version_dir.parent.name,
                 "version": meta.get("version") or version_dir.name,
+                "variant_id": variant_meta.get("id") or variant_dir.name,
+                "variant_label": variant_meta.get("label") or variant_dir.name,
+                "variant_dimensions": variant_meta.get("dimensions") or {},
+                "observed": meta.get("observed") or {},
                 "published_at": meta.get("published_at") or "",
                 "captured_at": meta.get("captured_at") or "",
                 "prompt": prompt,
@@ -104,16 +110,17 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "## How It Works",
             "",
             (
-                "For each supported release, Phistory installs the exact CLI package, runs it once through "
+                "For each supported release, Phistory installs the exact CLI package and runs each configured snapshot through "
                 "[`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP "
                 "request without calling the real model provider, and stores the result under "
-                "`captures/<agent>/<version>/` with `prompt.md`, `trace.jsonl`, and `meta.json`."
+                "`captures/<agent>/<version>/variants/<variant>/` with `prompt.md`, `trace.jsonl`, and `meta.json`. "
+                "Capture configurations use a `default` snapshot as their baseline; selected models or modes are stored as additional variants."
             ),
             "",
             (
                 "For recent Claude Code releases, Phistory also extracts static prompt-like strings from the "
-                "installed package and stores them as `static-prompts.md`, `static-prompts.json`, and "
-                "`static-candidates.json`. The candidate archive keeps the raw extraction input so matching "
+                "installed package and stores them under `captures/<agent>/<version>/static/`. "
+                "The candidate archive keeps the raw extraction input so matching "
                 "rules can be improved later without reinstalling every historical package."
             ),
             "",
@@ -127,8 +134,11 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "# Install the locked development environment.",
             "uv sync --all-groups",
             "",
-            "# Capture the latest automatically tracked CLI releases.",
+            "# Capture the latest release and every configured snapshot for each CLI.",
             "uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
+            "",
+            "# Capture only selected Codex snapshots.",
+            "uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -167,13 +177,13 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
     if last_update:
         lines.extend([f"Last capture update: {last_update}", ""])
     if status_rows:
-        lines.extend(["| Agent | Latest | Captures | Last Captured |", "| --- | --- | ---: | --- |"])
+        lines.extend(["| Agent | Latest | Versions | Snapshots | Last Captured |", "| --- | --- | ---: | ---: | --- |"])
         for row in status_rows:
             latest = row["latest"]
             prompt = _rel(latest["prompt"], base)
             latest_label = _latest_label(latest)
             lines.append(
-                f"| {latest['agent']} | [{latest_label}]({prompt}) | {row['count']} | "
+                f"| {latest['agent']} | [{latest_label}]({prompt}) | {row['version_count']} | {row['count']} | "
                 f"{_human_time(latest['captured_at'])} |"
             )
         lines.append("")
@@ -232,16 +242,17 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "## 工作原理",
             "",
             (
-                "Phistory 会安装每个受支持的具体 CLI 版本，通过 "
-                "[`claude-tap`](https://github.com/WEIFENG2333/claude-tap) 运行一次，抓取包含系统提示词的 "
-                "HTTP 请求，不调用真实模型服务，然后把结果保存到 `captures/<agent>/<version>/`，"
-                "里面包含 `prompt.md`、`trace.jsonl` 和 `meta.json`。"
+                "Phistory 会安装每个受支持的具体 CLI 版本，再通过 "
+                "[`claude-tap`](https://github.com/WEIFENG2333/claude-tap) 分别运行每个已配置快照，抓取包含系统提示词的 "
+                "HTTP 请求，不调用真实模型服务，然后把结果保存到 "
+                "`captures/<agent>/<version>/variants/<variant>/`，里面包含 `prompt.md`、`trace.jsonl` 和 "
+                "`meta.json`。抓取配置以 `default` 快照为基线，显式选择的模型或模式会作为额外变体保存。"
             ),
             "",
             (
                 "对于最近的 Claude Code 版本，Phistory 还会从安装包里提取疑似静态 prompt 的字符串，"
-                "保存为 `static-prompts.md`、`static-prompts.json` 和 `static-candidates.json`。"
-                "`static-candidates.json` 会保留原始候选内容，方便以后改进匹配规则时不用重新安装所有历史包。"
+                "保存在 `captures/<agent>/<version>/static/`。候选文件会保留原始内容，"
+                "方便以后改进匹配规则时不用重新安装所有历史包。"
             ),
             "",
             "GitHub Actions 每小时检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。",
@@ -254,8 +265,11 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "# 安装锁定的开发环境。",
             "uv sync --all-groups",
             "",
-            "# 抓取所有已自动追踪 CLI 的最新版本。",
+            "# 抓取每个 CLI 的最新版本及其全部已配置快照。",
             "uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
+            "",
+            "# 只抓取 Codex 的指定快照。",
+            "uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -294,13 +308,13 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
     if last_update:
         lines.extend([f"最近抓取更新：{last_update}", ""])
     if status_rows:
-        lines.extend(["| Agent | 最新版本 | 快照数 | 最近抓取 |", "| --- | --- | ---: | --- |"])
+        lines.extend(["| Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |", "| --- | --- | ---: | ---: | --- |"])
         for row in status_rows:
             latest = row["latest"]
             prompt = _rel(latest["prompt"], base)
             latest_label = _latest_label(latest)
             lines.append(
-                f"| {latest['agent']} | [{latest_label}]({prompt}) | {row['count']} | "
+                f"| {latest['agent']} | [{latest_label}]({prompt}) | {row['version_count']} | {row['count']} | "
                 f"{_human_time(latest['captured_at'])} |"
             )
         lines.append("")
@@ -334,18 +348,20 @@ def _write_capture_doc(rows: list[dict[str, Any]], base: Path) -> None:
     if not rows:
         lines.extend(["No captures yet.", ""])
     else:
-        lines.append("| Agent | Version | Published | Captured | Snapshot | Static | Candidates | Raw Trace |")
-        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
+        lines.append(
+            "| Agent | Version | Variant | Published | Captured | Snapshot | Static | Candidates | Raw Trace |"
+        )
+        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
         for row in _sorted_capture_rows(rows):
             prompt = _rel(row["prompt"], output.parent)
             trace = _rel(row["trace"], output.parent)
-            static = _optional_link(row.get("static_prompts"), output.parent, "static-prompts.md")
-            candidates = _optional_link(row.get("static_candidates_json"), output.parent, "static-candidates.json")
+            static = _optional_link(row.get("static_prompts"), output.parent, "prompts.md")
+            candidates = _optional_link(row.get("static_candidates_json"), output.parent, "candidates.json")
             published = _human_time(row["published_at"])
             captured = _human_time(row["captured_at"])
-            prompt_label = _snapshot_label(row["agent_id"], row["version"], published)
+            prompt_label = _snapshot_label(row["agent_id"], row["version"], row["variant_id"], published)
             lines.append(
-                f"| {row['agent']} | `{row['version']}` | {published} | {captured} | "
+                f"| {row['agent']} | `{row['version']}` | `{row['variant_id']}` | {published} | {captured} | "
                 f"[{prompt_label}]({prompt}) | {static} | {candidates} | [trace.jsonl]({trace}) |"
             )
         lines.append("")
@@ -366,7 +382,8 @@ def _write_capture_json(rows: list[dict[str, Any]], base: Path) -> None:
                 "latest_version": item["latest"]["version"],
                 "latest_published_at": item["latest"]["published_at"],
                 "latest_captured_at": item["latest"]["captured_at"],
-                "captures": item["count"],
+                "versions": item["version_count"],
+                "snapshots": item["count"],
             }
             for item in _agent_status_rows(rows)
         ],
@@ -375,11 +392,15 @@ def _write_capture_json(rows: list[dict[str, Any]], base: Path) -> None:
     output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def _capture_json_row(row: dict[str, Any], base: Path) -> dict[str, str]:
+def _capture_json_row(row: dict[str, Any], base: Path) -> dict[str, Any]:
     payload = {
         "agent_id": row["agent_id"],
         "agent": row["agent"],
         "version": row["version"],
+        "variant_id": row["variant_id"],
+        "variant_label": row["variant_label"],
+        "variant_dimensions": row["variant_dimensions"],
+        "observed": row["observed"],
         "published_at": row["published_at"],
         "captured_at": row["captured_at"],
         "prompt": _rel(row["prompt"], base),
@@ -425,9 +446,9 @@ def _human_time(value: str) -> str:
     return dt.strftime("%Y-%m-%d %H:%M UTC")
 
 
-def _snapshot_label(agent_id: str, version: str, published: str) -> str:
+def _snapshot_label(agent_id: str, version: str, variant_id: str, published: str) -> str:
     published_part = f", published {published}" if published else ""
-    return f"{agent_id} {version}{published_part}"
+    return f"{agent_id} {version} [{variant_id}]{published_part}"
 
 
 def _latest_label(row: dict[str, Any]) -> str:
@@ -482,10 +503,32 @@ def _agent_status_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         by_agent.setdefault(row["agent_id"], []).append(row)
     status = []
     for agent_id, agent_rows in by_agent.items():
-        latest = max(agent_rows, key=lambda item: _version_key(item["version"]))
-        status.append({"agent_id": agent_id, "latest": latest, "count": len(agent_rows)})
+        latest_version = max(agent_rows, key=lambda item: _version_key(item["version"]))["version"]
+        latest_rows = [row for row in agent_rows if row["version"] == latest_version]
+        latest = next((row for row in latest_rows if row["variant_id"] == "default"), latest_rows[0])
+        status.append(
+            {
+                "agent_id": agent_id,
+                "latest": latest,
+                "version_count": len({row["version"] for row in agent_rows}),
+                "count": len(agent_rows),
+            }
+        )
     return sorted(status, key=lambda item: agent_sort_key(item["agent_id"]))
 
 
 def _sorted_capture_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return sorted(rows, key=lambda item: (item["agent_id"], _version_key(item["version"])), reverse=True)
+    ordered = []
+    for agent_id in sorted({row["agent_id"] for row in rows}, key=agent_sort_key):
+        ordered.extend(
+            sorted(
+                (row for row in rows if row["agent_id"] == agent_id),
+                key=lambda item: (
+                    _version_key(item["version"]),
+                    item["variant_id"] == "default",
+                    item["variant_id"],
+                ),
+                reverse=True,
+            )
+        )
+    return ordered

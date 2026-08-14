@@ -10,7 +10,8 @@ const installRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const appRoot = join(installRoot, "app");
 const nativeRoot = join(installRoot, "linux-native");
 const legacyDaemon = join(installRoot, "resources/resources/daemon/daemon.js");
-const modernRuntimePath = join(appRoot, "node_modules/@mavis/local-runtime/dist/index.js");
+const modernRuntimeV1Path = join(appRoot, "node_modules/@mavis/local-runtime/dist/index.js");
+const modernRuntimeV2Path = join(appRoot, "node_modules/@mavis/local-runtime-v2/dist/index.js");
 const appPackage = JSON.parse(await readFile(join(appRoot, "package.json"), "utf8"));
 const appVersion = String(appPackage.version ?? "unknown");
 
@@ -23,7 +24,11 @@ const baseURL = process.env.MINIMAX_CODE_BASE_URL;
 if (!baseURL) {
   throw new Error("MINIMAX_CODE_BASE_URL is required; launch MiniMax Code through claude-tap");
 }
+const modernRuntimePath = (await fileExists(modernRuntimeV2Path))
+  ? modernRuntimeV2Path
+  : modernRuntimeV1Path;
 const hasModernRuntime = await fileExists(modernRuntimePath);
+const usesModernRuntimeV2 = modernRuntimePath === modernRuntimeV2Path;
 const providerBaseURL = hasModernRuntime ? baseURL : `${baseURL.replace(/\/$/, "")}/v1`;
 
 const dataDir = resolve(
@@ -77,7 +82,7 @@ async function captureWithModernRuntime() {
     import(runtimeUrl),
   ]);
   const config = getConfig();
-  const host = createLocalRuntimeHost({
+  const host = await createLocalRuntimeHost({
     dataDir,
     runtimeOwnerKind: "cli",
     runtimeMode: "clean",
@@ -89,7 +94,11 @@ async function captureWithModernRuntime() {
 
   await host.ready;
   await host.apiHost.ensureBuiltinAgents();
-  await sendCaptureRequest((request) => host.apiHost.handleRequest(request), "http://local-runtime");
+  await sendCaptureRequest(
+    (request) => host.apiHost.handleRequest(request),
+    "http://local-runtime",
+    usesModernRuntimeV2,
+  );
 }
 
 async function captureWithLegacyDaemon() {
@@ -122,7 +131,7 @@ async function captureWithLegacyDaemon() {
   try {
     const origin = `http://127.0.0.1:${port}`;
     await waitForHealth(origin, daemon, () => stderr);
-    await sendCaptureRequest((request) => fetch(request), origin);
+    await sendCaptureRequest((request) => fetch(request), origin, false);
   } finally {
     const exited = new Promise((finish) => {
       if (daemon.exitCode !== null) finish();
@@ -140,9 +149,12 @@ async function captureWithLegacyDaemon() {
   }
 }
 
-async function sendCaptureRequest(handleRequest, origin) {
+async function sendCaptureRequest(handleRequest, origin, desktopService) {
+  const rootPath = desktopService
+    ? "/minimax-desktop/api/v1/agent/mavis/session/root"
+    : "/mavis/api/agent/mavis/session/root";
   const rootResponse = await handleRequest(
-    new Request(`${origin}/mavis/api/agent/mavis/session/root`),
+    new Request(`${origin}${rootPath}`),
   );
   if (!rootResponse.ok) {
     throw new Error(
@@ -155,8 +167,11 @@ async function sendCaptureRequest(handleRequest, origin) {
     throw new Error(`MiniMax Code root session response has no id: ${JSON.stringify(root)}`);
   }
 
+  const messagePath = desktopService
+    ? `/minimax-desktop/api/v1/session/${sessionId}/message`
+    : `/mavis/api/session/${sessionId}/message`;
   const turnResponse = await handleRequest(
-    new Request(`${origin}/mavis/api/session/${sessionId}/message`, {
+    new Request(`${origin}${messagePath}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ content: "Reply with one short sentence." }),

@@ -21,7 +21,6 @@ def test_versions_between_uses_registry_order(monkeypatch):
         package="x",
         tap_client="x",
         fake_env={},
-        run_args=(),
     )
     monkeypatch.setattr(
         "phistory.packages.all_versions",
@@ -38,7 +37,6 @@ def test_agent_executable_defaults_to_tap_client_and_can_be_overridden():
         package="x",
         tap_client="x-tap",
         fake_env={},
-        run_args=(),
     )
     overridden = AgentSpec(
         id="kimi-code",
@@ -47,7 +45,6 @@ def test_agent_executable_defaults_to_tap_client_and_can_be_overridden():
         tap_client="kimi-code",
         executable="kimi",
         fake_env={},
-        run_args=(),
     )
 
     assert agent_executable(default) == "x-tap"
@@ -61,7 +58,6 @@ def test_all_versions_filters_platform_and_prerelease_versions(monkeypatch):
         package="x",
         tap_client="x",
         fake_env={},
-        run_args=(),
     )
     monkeypatch.setattr(
         "phistory.packages.npm_view",
@@ -87,7 +83,6 @@ def test_pypi_versions_are_sorted_by_upload_time(monkeypatch):
         source="pypi",
         tap_client="x",
         fake_env={},
-        run_args=(),
     )
     monkeypatch.setattr(
         "phistory.packages._pypi_json",
@@ -132,7 +127,6 @@ def test_github_release_versions_are_sorted_by_publish_time(monkeypatch):
         source="github-release",
         tap_client="x",
         fake_env={},
-        run_args=(),
     )
     monkeypatch.setattr(
         "phistory.packages._github_releases",
@@ -176,7 +170,6 @@ def test_github_release_asset_versions_use_matching_asset(monkeypatch):
         release_asset_binary="tool",
         tap_client="x",
         fake_env={},
-        run_args=(),
     )
     monkeypatch.setattr(
         "phistory.packages._github_releases",
@@ -220,7 +213,6 @@ def test_install_github_release_asset_extracts_binary(monkeypatch, tmp_path):
         release_asset_binary="tool",
         tap_client="x",
         fake_env={},
-        run_args=(),
     )
 
     def fake_download(_url, output):
@@ -252,7 +244,6 @@ def test_install_github_release_can_use_editable_source(monkeypatch, tmp_path):
         github_release_install="editable",
         tap_client="hermes",
         fake_env={},
-        run_args=(),
     )
 
     def fake_download(_url, output):
@@ -303,7 +294,6 @@ def test_npm_agent_can_install_from_binary_release(monkeypatch, tmp_path):
         tap_client="omp",
         executable="omp",
         fake_env={},
-        run_args=(),
         binary_release_repo="can1357/oh-my-pi",
         binary_release_asset="omp-linux-x64",
         binary_release_tag="v{version}",
@@ -333,7 +323,6 @@ def test_iter_backfill_can_walk_newest_first(monkeypatch, tmp_path):
         package="x",
         tap_client="x",
         fake_env={},
-        run_args=(),
     )
     monkeypatch.setattr("phistory.workflow.get_agent", lambda _agent_id: agent)
     monkeypatch.setattr(

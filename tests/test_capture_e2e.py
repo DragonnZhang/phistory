@@ -5,13 +5,16 @@ from pathlib import Path
 from phistory.capture import (
     _binary_version,
     _capture_env,
-    _needs_antigravity_model_retry,
-    _needs_prompt_retry,
     _sanitize_text,
-    _without_arg_and_value,
     capture_target,
 )
-from phistory.models import AgentSpec, CaptureTarget, VersionInfo
+from phistory.drivers import CaptureRunContext
+from phistory.drivers.oneshot import _needs_antigravity_model_retry, _needs_prompt_retry, _without_arg_and_value
+from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo
+
+
+def _target(agent: AgentSpec, version: VersionInfo, root: Path) -> CaptureTarget:
+    return CaptureTarget(agent, version, agent.default_variant, root)
 
 
 def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
@@ -29,10 +32,10 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
         package="fake-codex",
         tap_client="codex",
         fake_env={"OPENAI_API_KEY": "fake"},
-        run_args=("--no-yolo", "--", "exec", "hello", "--json"),
+        default_variant=CaptureVariant("default", "Default", ("--no-yolo", "--", "exec", "hello", "--json")),
     )
-    target = CaptureTarget(agent, VersionInfo("1.0.0", "2026-05-22T00:00:00Z"), tmp_path / "captures")
-    target.version_dir.mkdir(parents=True)
+    target = _target(agent, VersionInfo("1.0.0", "2026-05-22T00:00:00Z"), tmp_path / "captures")
+    target.variant_dir.mkdir(parents=True)
     target.prompt_path.write_text("old prompt\n", encoding="utf-8")
     target.trace_path.write_text("old trace\n", encoding="utf-8")
     target.meta_path.write_text("old meta\n", encoding="utf-8")
@@ -48,6 +51,7 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
     meta = json.loads(target.meta_path.read_text(encoding="utf-8"))
     assert meta["binary_version"] == "fake-codex 1.0.0"
     assert meta["target"] == "claude-tap capture-only"
+    assert meta["observed"] == {"model": "fake-model", "tool_count": 1}
     assert "-t" not in meta["command"]
 
     trace_records = [json.loads(line) for line in target.trace_path.read_text(encoding="utf-8").splitlines()]
@@ -67,6 +71,7 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
         "Line with trailing whitespace. \t\n"
         "Today's date is 2026-05-21.\n"
         "Today's date: 2026-05-21\n"
+        "Web UI: http://127.0.0.1:23013\n"
         "The current date and time in ISO format is `2026-05-23T07:26:17.532901+00:00`.\n"
         "The current local time is: 2026-06-27T13:47:31+08:00.\n"
         "Conversation started: Friday, June 05, 2026 08:07 PM\n"
@@ -94,6 +99,7 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
         "Line with trailing whitespace.\n"
         "Today's date is $PHISTORY_DATE.\n"
         "Today's date: $PHISTORY_DATE\n"
+        "Web UI: http://127.0.0.1:$PHISTORY_PORT\n"
         "The current date and time in ISO format is `$PHISTORY_DATETIME`.\n"
         "The current local time is: $PHISTORY_DATETIME.\n"
         "Conversation started: $PHISTORY_DATETIME\n"
@@ -122,10 +128,9 @@ def test_capture_env_writes_fake_chatgpt_auth(tmp_path: Path):
         package="@openai/codex",
         tap_client="codex",
         fake_env={},
-        run_args=(),
         fake_chatgpt_auth=True,
     )
-    target = CaptureTarget(agent, VersionInfo("1.0.0"), tmp_path / "captures")
+    target = _target(agent, VersionInfo("1.0.0"), tmp_path / "captures")
 
     env = _capture_env(target, tmp_path / "bin", tmp_path / "home")
 
@@ -145,7 +150,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="antigravity",
         tap_client="agy",
         fake_env={},
-        run_args=(),
         home_profile="antigravity",
     )
     dsh = AgentSpec(
@@ -154,7 +158,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="@deepseek-ai/dsh",
         tap_client="dsh",
         fake_env={"DEEPSEEK_API_KEY": "fake"},
-        run_args=(),
         home_profile="dsh",
     )
     openclaw = AgentSpec(
@@ -163,7 +166,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="openclaw",
         tap_client="openclaw",
         fake_env={},
-        run_args=(),
         home_profile="openclaw",
     )
     hermes = AgentSpec(
@@ -172,7 +174,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="hermes-agent",
         tap_client="hermes",
         fake_env={},
-        run_args=(),
         home_profile="hermes",
     )
     grok = AgentSpec(
@@ -181,7 +182,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="@xai-official/grok",
         tap_client="grok",
         fake_env={"XAI_API_KEY": "fake"},
-        run_args=(),
         home_profile="grok",
     )
     kimi = AgentSpec(
@@ -190,7 +190,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="kimi-cli",
         tap_client="kimi",
         fake_env={},
-        run_args=(),
         home_profile="kimi",
     )
     kimi_code = AgentSpec(
@@ -199,7 +198,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="kimi-code",
         tap_client="kimi-code",
         fake_env={},
-        run_args=(),
         home_profile="kimi-code",
     )
     mimo = AgentSpec(
@@ -208,7 +206,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="mimo",
         tap_client="mimo",
         fake_env={},
-        run_args=(),
         home_profile="mimo",
     )
     opencode = AgentSpec(
@@ -217,7 +214,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="opencode-ai",
         tap_client="opencode",
         fake_env={},
-        run_args=(),
         home_profile="opencode",
     )
     omp = AgentSpec(
@@ -226,7 +222,6 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="omp",
         tap_client="omp",
         fake_env={},
-        run_args=(),
         home_profile="omp",
     )
     pi = AgentSpec(
@@ -235,29 +230,22 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         package="pi",
         tap_client="pi",
         fake_env={},
-        run_args=(),
         home_profile="pi",
     )
 
     antigravity_env = _capture_env(
-        CaptureTarget(antigravity, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "ag"
+        _target(antigravity, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "ag"
     )
-    dsh_env = _capture_env(CaptureTarget(dsh, VersionInfo("0.0.1-rc.2"), tmp_path), tmp_path / "bin", tmp_path / "dsh")
-    openclaw_env = _capture_env(
-        CaptureTarget(openclaw, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "oc"
-    )
-    hermes_env = _capture_env(CaptureTarget(hermes, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "hm")
-    grok_env = _capture_env(CaptureTarget(grok, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "grok")
-    kimi_env = _capture_env(CaptureTarget(kimi, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "km")
-    kimi_code_env = _capture_env(
-        CaptureTarget(kimi_code, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "kc"
-    )
-    mimo_env = _capture_env(CaptureTarget(mimo, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "mm")
-    opencode_env = _capture_env(
-        CaptureTarget(opencode, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "op"
-    )
-    omp_env = _capture_env(CaptureTarget(omp, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "omp")
-    pi_env = _capture_env(CaptureTarget(pi, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "pi")
+    dsh_env = _capture_env(_target(dsh, VersionInfo("0.0.1-rc.2"), tmp_path), tmp_path / "bin", tmp_path / "dsh")
+    openclaw_env = _capture_env(_target(openclaw, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "oc")
+    hermes_env = _capture_env(_target(hermes, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "hm")
+    grok_env = _capture_env(_target(grok, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "grok")
+    kimi_env = _capture_env(_target(kimi, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "km")
+    kimi_code_env = _capture_env(_target(kimi_code, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "kc")
+    mimo_env = _capture_env(_target(mimo, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "mm")
+    opencode_env = _capture_env(_target(opencode, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "op")
+    omp_env = _capture_env(_target(omp, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "omp")
+    pi_env = _capture_env(_target(pi, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "pi")
 
     agy_token = json.loads(
         (Path(antigravity_env["HOME"]) / ".gemini" / "antigravity-cli" / "antigravity-oauth-token").read_text(
@@ -306,9 +294,8 @@ def test_binary_version_falls_back_to_package_version(tmp_path: Path, monkeypatc
         package="openclaw",
         tap_client="openclaw",
         fake_env={},
-        run_args=(),
     )
-    target = CaptureTarget(agent, VersionInfo("2026.6.11"), tmp_path)
+    target = _target(agent, VersionInfo("2026.6.11"), tmp_path)
 
     assert _binary_version(target, bin_dir) == "2026.6.11"
 
@@ -320,12 +307,12 @@ def test_antigravity_model_flag_retry_removes_model_value():
         package="antigravity",
         tap_client="agy",
         fake_env={},
-        run_args=(),
     )
-    target = CaptureTarget(agent, VersionInfo("1.0.4"), Path("captures"))
+    target = _target(agent, VersionInfo("1.0.4"), Path("captures"))
     result = type("Result", (), {"returncode": 1, "stderr": "flags provided but not defined: -model", "stdout": ""})()
 
-    assert _needs_antigravity_model_retry(target, result)
+    context = CaptureRunContext(target, target.prompt_path, target.variant_dir / ".tap", Path("workspace"), {})
+    assert _needs_antigravity_model_retry(context, result)
     assert _without_arg_and_value(["agy", "--print", "hello", "--model", "flash"], "--model") == [
         "agy",
         "--print",
@@ -355,7 +342,7 @@ def test_capture_target_retries_transient_empty_trace(tmp_path: Path, monkeypatc
     executable.write_text("#!/bin/sh\n", encoding="utf-8")
     executable.chmod(executable.stat().st_mode | stat.S_IXUSR)
     monkeypatch.setattr("phistory.packages.install_agent", lambda *_args, **_kwargs: bin_dir)
-    monkeypatch.setattr("phistory.capture.time.sleep", lambda _seconds: None)
+    monkeypatch.setattr("phistory.drivers.oneshot.time.sleep", lambda _seconds: None)
 
     agent = AgentSpec(
         id="agent",
@@ -363,9 +350,8 @@ def test_capture_target_retries_transient_empty_trace(tmp_path: Path, monkeypatc
         package="agent",
         tap_client="agent",
         fake_env={},
-        run_args=(),
     )
-    target = CaptureTarget(agent, VersionInfo("1.0.0"), tmp_path / "captures")
+    target = _target(agent, VersionInfo("1.0.0"), tmp_path / "captures")
     capture_attempts = 0
 
     def fake_run(argv, **_kwargs):
@@ -382,6 +368,7 @@ def test_capture_target_retries_transient_empty_trace(tmp_path: Path, monkeypatc
         return type("Result", (), {"returncode": 0, "stdout": "", "stderr": ""})()
 
     monkeypatch.setattr("phistory.capture.run", fake_run)
+    monkeypatch.setattr("phistory.drivers.oneshot.run", fake_run)
 
     result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
 
@@ -404,9 +391,9 @@ def test_capture_failure_removes_partial_version_dir(tmp_path: Path, monkeypatch
         package="broken-codex",
         tap_client="codex",
         fake_env={"OPENAI_API_KEY": "fake"},
-        run_args=("--no-yolo", "--", "exec", "hello", "--json"),
+        default_variant=CaptureVariant("default", "Default", ("--no-yolo", "--", "exec", "hello", "--json")),
     )
-    target = CaptureTarget(agent, VersionInfo("1.0.0"), tmp_path / "captures")
+    target = _target(agent, VersionInfo("1.0.0"), tmp_path / "captures")
 
     result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
 
@@ -421,10 +408,9 @@ def test_forced_capture_failure_preserves_existing_archive(tmp_path: Path, monke
         package="agent",
         tap_client="agent",
         fake_env={},
-        run_args=(),
     )
-    target = CaptureTarget(agent, VersionInfo("1.0.0"), tmp_path / "captures")
-    target.version_dir.mkdir(parents=True)
+    target = _target(agent, VersionInfo("1.0.0"), tmp_path / "captures")
+    target.variant_dir.mkdir(parents=True)
     target.prompt_path.write_text("original prompt\n", encoding="utf-8")
     target.trace_path.write_text("original trace\n", encoding="utf-8")
     target.meta_path.write_text("original meta\n", encoding="utf-8")
@@ -459,9 +445,11 @@ def test_capture_retries_old_claude_without_session_persistence(tmp_path: Path, 
         package="@anthropic-ai/claude-code",
         tap_client="claude",
         fake_env={"ANTHROPIC_API_KEY": "fake"},
-        run_args=("--no-yolo", "--", "--no-session-persistence", "-p", "hello"),
+        default_variant=CaptureVariant(
+            "default", "Default", ("--no-yolo", "--", "--no-session-persistence", "-p", "hello")
+        ),
     )
-    target = CaptureTarget(agent, VersionInfo("0.2.9"), tmp_path / "captures")
+    target = _target(agent, VersionInfo("0.2.9"), tmp_path / "captures")
 
     result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
 
@@ -485,10 +473,10 @@ def test_capture_retries_old_codex_with_api_key(tmp_path: Path, monkeypatch):
         package="@openai/codex",
         tap_client="codex",
         fake_env={},
-        run_args=("--no-yolo", "--", "exec", "hello", "--json"),
+        default_variant=CaptureVariant("default", "Default", ("--no-yolo", "--", "exec", "hello", "--json")),
         fake_chatgpt_auth=True,
     )
-    target = CaptureTarget(agent, VersionInfo("0.1.0"), tmp_path / "captures")
+    target = _target(agent, VersionInfo("0.1.0"), tmp_path / "captures")
 
     result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
 

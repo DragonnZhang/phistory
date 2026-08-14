@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from phistory.registry import agent_sort_key
+from phistory.registry import AGENTS, agent_sort_key
 from phistory.render import _version_key, read_capture_rows
 
 AGENT_ICONS = {
@@ -38,13 +38,32 @@ def _build_manifest(root: Path) -> dict:
     rows = read_capture_rows(root)
     agents = []
     for agent_id in sorted({row["agent_id"] for row in rows}, key=agent_sort_key):
-        agent_rows = sorted(
-            [row for row in rows if row["agent_id"] == agent_id],
-            key=lambda row: _version_key(row["version"]),
-            reverse=True,
+        agent_rows = [row for row in rows if row["agent_id"] == agent_id]
+        variant_ids = sorted(
+            {row["variant_id"] for row in agent_rows},
+            key=lambda variant_id: _variant_sort_key(agent_id, variant_id),
         )
-        versions = _site_versions(agent_rows)
-        latest = versions[0] if versions else None
+        variants = []
+        for variant_id in variant_ids:
+            variant_rows = sorted(
+                [row for row in agent_rows if row["variant_id"] == variant_id],
+                key=lambda row: _version_key(row["version"]),
+                reverse=True,
+            )
+            versions = _site_versions(variant_rows)
+            first = variant_rows[0]
+            variants.append(
+                {
+                    "id": variant_id,
+                    "label": first["variant_label"],
+                    "dimensions": first["variant_dimensions"],
+                    "latest": versions[0] if versions else None,
+                    "versions": versions,
+                }
+            )
+        default_variant = "default" if "default" in variant_ids else variant_ids[0]
+        default_lane = next(variant for variant in variants if variant["id"] == default_variant)
+        latest = default_lane["latest"]
         agents.append(
             {
                 "id": agent_id,
@@ -52,10 +71,19 @@ def _build_manifest(root: Path) -> dict:
                 "short_name": AGENT_SHORT_NAMES.get(agent_id),
                 "icon": AGENT_ICONS.get(agent_id),
                 "latest": latest,
-                "versions": versions,
+                "default_variant": default_variant,
+                "variants": variants,
             }
         )
     return {"agents": agents, "count": len(rows)}
+
+
+def _variant_sort_key(agent_id: str, variant_id: str) -> tuple[int, str]:
+    agent = AGENTS.get(agent_id)
+    if agent is None:
+        return (0 if variant_id == "default" else 1, variant_id)
+    positions = {variant.id: index for index, variant in enumerate(agent.capture_variants)}
+    return (positions.get(variant_id, len(positions)), variant_id)
 
 
 def _site_versions(rows: list[dict]) -> list[dict]:
@@ -74,6 +102,10 @@ def _site_row(row: dict) -> dict:
         "agent_id": row["agent_id"],
         "agent": row["agent"],
         "version": row["version"],
+        "variant_id": row["variant_id"],
+        "variant_label": row["variant_label"],
+        "variant_dimensions": row["variant_dimensions"],
+        "observed": row["observed"],
         "published_compact": _compact_date(row["published_at"]),
         "published_display": _display_time(row["published_at"]),
         "captured_display": _display_time(row.get("captured_at") or ""),
@@ -433,7 +465,8 @@ a:hover { text-decoration: none; }
 }
 .control:focus-visible,
 .icon-button:focus-visible,
-.option:focus-visible {
+.option:focus-visible,
+.variant-chip:focus-visible {
   outline: 1px solid var(--focus-line);
   outline-offset: 2px;
 }
@@ -1165,6 +1198,47 @@ a:hover { text-decoration: none; }
 .options::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
+.variant-picker {
+  position: sticky;
+  top: -4px;
+  z-index: 2;
+  padding: 8px 7px 7px;
+  margin-bottom: 3px;
+  background: var(--popover);
+  border-bottom: 1px solid var(--line);
+}
+.variant-picker small {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+}
+.variant-chips {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.variant-chips::-webkit-scrollbar { display: none; }
+.variant-chip {
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--control-bg);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.variant-chip:hover { color: var(--text); background: var(--control-hover); }
+.variant-chip.active {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: var(--menu-active);
+}
 .option {
   width: 100%;
   border: 0;
@@ -1493,7 +1567,7 @@ a:hover { text-decoration: none; }
   </main>
 </div>
 <div id="popover" class="popover">
-  <div id="options" class="options" role="listbox"></div>
+  <div id="options" class="options"></div>
 </div>
 <script id="manifest" type="application/json">__PHISTORY_MANIFEST__</script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.7/dist/purify.min.js"></script>
@@ -1533,6 +1607,8 @@ function storedTheme() {
 const state = {
   view: 'diff',
   agent: manifest.agents[0]?.id || '',
+  fromVariant: '',
+  toVariant: '',
   from: '',
   to: '',
   followLatest: true,
@@ -1577,15 +1653,21 @@ function readQuery() {
   if (agentId && agents.has(agentId)) state.agent = agentId;
   const agent = currentAgent();
   if (state.view === 'trace') {
+    state.toVariant = validVariantId(agent, params.get('variant'));
+    state.fromVariant = state.toVariant;
+    const lane = variantInfo(agent, state.toVariant);
     const version = params.get('version') || params.get('to');
-    state.to = hasVersion(agent, version) ? version : agent.latest.version;
-    state.from = previousVersion(agent, state.to).version;
+    state.to = hasVersion(agent, state.toVariant, version) ? version : lane.latest.version;
+    state.from = previousVersion(agent, state.toVariant, state.to).version;
     state.followLatest = !params.has('version') && !params.has('to');
     return;
   }
   if (state.view === 'static' && params.has('version') && !params.has('from') && !params.has('to')) {
-    state.to = hasVersion(agent, params.get('version')) ? params.get('version') : agent.latest.version;
-    state.from = previousVersion(agent, state.to).version;
+    state.toVariant = validVariantId(agent, params.get('variant'));
+    state.fromVariant = state.toVariant;
+    const lane = variantInfo(agent, state.toVariant);
+    state.to = hasVersion(agent, state.toVariant, params.get('version')) ? params.get('version') : lane.latest.version;
+    state.from = previousVersion(agent, state.toVariant, state.to).version;
     state.followLatest = false;
     state.normalizeQuery = true;
     ensureAvailableView();
@@ -1598,23 +1680,32 @@ function readQuery() {
 function readRangeQuery(params, agent) {
   const to = params.get('to');
   const from = params.get('from');
-  const hasPinnedVersions = params.has('from') || params.has('to');
-  state.followLatest = !hasPinnedVersions && params.get('range') === 'latest';
-  state.normalizeQuery = hasPinnedVersions && params.has('range');
-  if (!hasPinnedVersions && !params.has('range')) state.followLatest = true;
+  state.toVariant = validVariantId(agent, params.get('to_variant'));
+  state.fromVariant = validVariantId(agent, params.get('from_variant'));
+  const hasPinnedSnapshots = params.has('from') || params.has('to') || params.has('from_variant') || params.has('to_variant');
+  state.followLatest = !hasPinnedSnapshots && params.get('range') === 'latest';
+  state.normalizeQuery = hasPinnedSnapshots && params.has('range');
+  if (!hasPinnedSnapshots && !params.has('range')) state.followLatest = true;
   if (state.followLatest) {
     useLatestRange(agent);
     return;
   }
-  state.to = hasVersion(agent, to) ? to : agent.latest.version;
-  state.from = hasVersion(agent, from) ? from : previousVersion(agent, state.to).version;
+  const toLane = variantInfo(agent, state.toVariant);
+  state.to = hasVersion(agent, state.toVariant, to) ? to : toLane.latest.version;
+  state.from = hasVersion(agent, state.fromVariant, from)
+    ? from
+    : previousVersion(agent, state.fromVariant, state.to).version;
   state.normalizeQuery = normalizeVersionRange(agent, 'to') || state.normalizeQuery;
 }
 
 function writeQuery() {
-  const params = state.view === 'trace'
-    ? new URLSearchParams({ view: state.view, agent: state.agent, version: state.to })
-    : rangeQueryParams();
+  let params;
+  if (state.view === 'trace') {
+    params = new URLSearchParams({ view: state.view, agent: state.agent, version: state.to });
+    if (state.toVariant !== currentAgent().default_variant) params.set('variant', state.toVariant);
+  } else {
+    params = rangeQueryParams();
+  }
   history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
 }
 
@@ -1622,6 +1713,9 @@ function rangeQueryParams() {
   const params = state.followLatest
     ? new URLSearchParams({ agent: state.agent, range: 'latest' })
     : new URLSearchParams({ agent: state.agent, from: state.from, to: state.to });
+  const defaultVariant = currentAgent().default_variant;
+  if (state.fromVariant !== defaultVariant) params.set('from_variant', state.fromVariant);
+  if (state.toVariant !== defaultVariant) params.set('to_variant', state.toVariant);
   if (state.view === 'static') params.set('view', 'static');
   return params;
 }
@@ -1690,14 +1784,23 @@ function bindEvents() {
 
 function renderControls() {
   const agent = currentAgent();
-  const from = versionInfo(state.from);
-  const to = versionInfo(state.to);
+  const fromVariant = variantInfo(agent, state.fromVariant);
+  const toVariant = variantInfo(agent, state.toVariant);
+  const from = snapshotInfo('from');
+  const to = snapshotInfo('to');
   document.querySelector('.shell')?.setAttribute('data-view', state.view);
   els.agent.innerHTML = `${agentIconHtml(agent)}<strong>${agentControlNameHtml(agent)}</strong>`;
   els.agent.title = agent.name;
   els.agent.setAttribute('aria-label', `Select agent: ${agent.name}`);
-  els.from.innerHTML = versionLabel(from);
-  els.to.innerHTML = versionLabel(to, isLatestVersion(agent, to.version));
+  els.from.innerHTML = versionLabel(from, fromVariant, false, agent.variants.length > 1);
+  els.to.innerHTML = versionLabel(
+    to,
+    toVariant,
+    isLatestVersion(agent, state.toVariant, to.version),
+    agent.variants.length > 1
+  );
+  els.from.title = snapshotLabel(from, fromVariant);
+  els.to.title = snapshotLabel(to, toVariant);
   const next = nextView();
   els.viewToggle.textContent = next === 'diff' ? 'Diff' : (next === 'trace' ? 'Trace' : 'Static');
   els.viewToggle.title = next === 'diff' ? 'Open prompt diff' : (next === 'trace' ? 'Open trace detail' : 'Open static prompts');
@@ -1713,9 +1816,14 @@ function agentIconHtml(agent) {
   return `<span class="agent-icon" aria-hidden="true"><img src="${escapeHtml(agent.icon)}" alt="" loading="lazy" decoding="async"></span>`;
 }
 
-function versionLabel(item, latest = false) {
+function versionLabel(item, variant, latest = false, showVariant = false) {
   const marker = latest ? '<em class="latest-mark">Latest</em>' : '';
-  return `<strong>${escapeHtml(item.version)}</strong><span class="version-sub"><small>${escapeHtml(item.published_compact)}</small>${marker}</span>`;
+  const secondary = showVariant ? variant.label : item.published_compact;
+  return `<strong>${escapeHtml(item.version)}</strong><span class="version-sub"><small>${escapeHtml(secondary)}</small>${marker}</span>`;
+}
+
+function snapshotLabel(item, variant) {
+  return `${item.version} · ${variant.label} · ${item.published_compact}`;
 }
 
 function togglePicker(kind, anchor) {
@@ -1749,7 +1857,8 @@ function positionPopover(anchor) {
   const rect = anchor.getBoundingClientRect();
   const margin = 12;
   const isMobile = matchMedia('(max-width: 880px)').matches;
-  const minWidth = state.picker === 'agent' ? 260 : rect.width;
+  const hasVariants = state.picker !== 'agent' && currentAgent().variants.length > 1;
+  const minWidth = state.picker === 'agent' ? 260 : (hasVariants ? 320 : rect.width);
   const width = isMobile && state.picker !== 'agent'
     ? innerWidth - margin * 2
     : Math.min(Math.max(rect.width, minWidth, state.picker === 'agent' ? 0 : 250), innerWidth - margin * 2);
@@ -1768,14 +1877,26 @@ function positionPopover(anchor) {
 
 function renderPickerOptions() {
   if (!state.picker) return;
-  const items = state.picker === 'agent' ? manifest.agents : currentAgent().versions;
-  els.options.innerHTML = items.map(optionHtml).join('');
+  const isAgent = state.picker === 'agent';
+  const agent = currentAgent();
+  const items = isAgent ? manifest.agents : currentVariant().versions;
+  const variants = !isAgent && agent.variants.length > 1 ? variantPickerHtml(agent) : '';
+  els.options.innerHTML = `${variants}<div class="option-list" role="listbox">${items.map(optionHtml).join('')}</div>`;
   els.options.querySelectorAll('.option').forEach(button => {
     button.addEventListener('click', () => selectOption(button.dataset.value));
+  });
+  els.options.querySelectorAll('.variant-chip').forEach(button => {
+    button.addEventListener('click', () => selectVariant(button.dataset.variant));
   });
   requestAnimationFrame(() => {
     els.options.querySelector('.option.active')?.scrollIntoView({ block: 'nearest' });
   });
+}
+
+function variantPickerHtml(agent) {
+  const selected = currentVariant().id;
+  const chips = agent.variants.map(variant => `<button class="variant-chip${variant.id === selected ? ' active' : ''}" type="button" data-variant="${escapeHtml(variant.id)}" aria-pressed="${variant.id === selected}">${escapeHtml(variant.label)}</button>`).join('');
+  return `<div class="variant-picker"><small>Snapshot</small><div class="variant-chips">${chips}</div></div>`;
 }
 
 function optionHtml(item) {
@@ -1808,14 +1929,41 @@ function selectedValue() {
   return state.to;
 }
 
+function selectVariant(variantId) {
+  if (!['from', 'to'].includes(state.picker)) return;
+  saveTraceState();
+  const side = state.picker;
+  const agent = currentAgent();
+  const lane = variantInfo(agent, variantId);
+  const versionKey = side === 'from' ? 'from' : 'to';
+  const variantKey = side === 'from' ? 'fromVariant' : 'toVariant';
+  const currentVersion = state[versionKey];
+  state[variantKey] = lane.id;
+  state[versionKey] = hasVersion(agent, lane.id, currentVersion) ? currentVersion : lane.latest.version;
+  state.followLatest = false;
+  if (state.view === 'trace') {
+    state.fromVariant = state.toVariant;
+    state.from = previousVersion(agent, state.toVariant, state.to).version;
+  } else {
+    normalizeVersionRange(agent, side);
+  }
+  ensureAvailableView();
+  writeQuery();
+  renderControls();
+  renderPickerOptions();
+  refreshView();
+}
+
 function selectOption(value) {
   saveTraceState();
   if (state.picker === 'agent') {
     state.agent = value;
     const agent = currentAgent();
     if (state.view === 'trace') {
+      state.toVariant = agent.default_variant;
+      state.fromVariant = agent.default_variant;
       state.to = agent.latest.version;
-      state.from = previousVersion(agent, state.to).version;
+      state.from = previousVersion(agent, state.toVariant, state.to).version;
       state.followLatest = true;
     } else {
       state.followLatest = true;
@@ -1829,7 +1977,8 @@ function selectOption(value) {
     state.followLatest = false;
     state.to = value;
     if (state.view === 'trace') {
-      state.from = previousVersion(currentAgent(), state.to).version;
+      state.fromVariant = state.toVariant;
+      state.from = previousVersion(currentAgent(), state.toVariant, state.to).version;
     } else {
       normalizeVersionRange(currentAgent(), 'to');
     }
@@ -1879,7 +2028,11 @@ function isCurrentRender(sequence) {
 
 function showLoading() {
   const agent = currentAgent();
-  const range = state.view === 'trace' ? state.to : `${state.from} → ${state.to}`;
+  const from = snapshotInfo('from');
+  const to = snapshotInfo('to');
+  const fromLabel = compactSnapshotLabel(from, variantInfo(agent, state.fromVariant));
+  const toLabel = compactSnapshotLabel(to, variantInfo(agent, state.toVariant));
+  const range = state.view === 'trace' ? toLabel : `${fromLabel} → ${toLabel}`;
   const titles = {
     diff: 'Loading comparison...',
     trace: 'Loading trace...',
@@ -1902,7 +2055,8 @@ function toggleView() {
   saveTraceState();
   state.view = nextView();
   if (state.view === 'trace') {
-    state.from = previousVersion(currentAgent(), state.to).version;
+    state.fromVariant = state.toVariant;
+    state.from = previousVersion(currentAgent(), state.toVariant, state.to).version;
   }
   ensureAvailableView();
   refresh();
@@ -1916,8 +2070,8 @@ function nextView() {
 }
 
 function staticViewAvailable() {
-  const from = versionInfo(state.from);
-  const to = versionInfo(state.to);
+  const from = snapshotInfo('from');
+  const to = snapshotInfo('to');
   return Boolean(from?.static_prompts && to?.static_prompts);
 }
 
@@ -1938,7 +2092,7 @@ function saveStaticPrefs() {
 }
 
 function traceStateKey() {
-  return `${state.agent}:${state.to}`;
+  return `${state.agent}:${state.toVariant}:${state.to}`;
 }
 
 function resetTraceState() {
@@ -2011,7 +2165,7 @@ function loadMonaco() {
 
 async function renderDiff(sequence) {
   if (!state.monaco) return;
-  const [from, to] = [versionInfo(state.from), versionInfo(state.to)];
+  const [from, to] = [snapshotInfo('from'), snapshotInfo('to')];
   const [original, modified] = await Promise.all([loadPrompt(from), loadPrompt(to)]);
   if (!isCurrentRender(sequence)) return;
   renderMonacoDiff(original, modified);
@@ -2138,11 +2292,11 @@ function captureAssetVersion(item, path) {
 }
 
 function fallbackAssetVersion(item) {
-  return [item.agent_id, item.version, item.published_compact, item.captured_display].filter(Boolean).join('-');
+  return [item.agent_id, item.variant_id, item.version, item.published_compact, item.captured_display].filter(Boolean).join('-');
 }
 
 async function renderTrace(sequence) {
-  const item = versionInfo(state.to);
+  const item = snapshotInfo('to');
   const records = await loadTrace(item);
   if (!isCurrentRender(sequence)) return;
   const selected = selectMainTraceRecord(records);
@@ -2157,12 +2311,12 @@ async function renderTrace(sequence) {
 }
 
 async function renderStatic(sequence) {
-  const [from, to] = [versionInfo(state.from), versionInfo(state.to)];
+  const [from, to] = [snapshotInfo('from'), snapshotInfo('to')];
   if (!from.static_prompts || !to.static_prompts) {
     disposeEditor();
     state.staticOutline = [];
     renderStaticOutline();
-    els.diff.innerHTML = `<div class="empty">Static prompts are only available for captures with <code>static-prompts.md</code>.</div>`;
+    els.diff.innerHTML = '<div class="empty">This snapshot has no static prompt archive.</div>';
     return;
   }
   const [original, modified] = await Promise.all([loadStaticPrompts(from), loadStaticPrompts(to)]);
@@ -2590,7 +2744,10 @@ function jumpToStaticSection(line) {
 }
 
 function traceDetailHtml(item, detail) {
-  const title = `${currentAgent().name} ${item.version}`;
+  const agent = currentAgent();
+  const variant = variantInfo(agent, item.variant_id);
+  const suffix = agent.variants.length > 1 ? ` · ${variant.label}` : '';
+  const title = `${agent.name} ${item.version}${suffix}`;
   return `<article class="trace-page">
     <header class="trace-hero">
       <div class="trace-eyebrow">Trace detail · request ${detail.index + 1} of ${detail.total}</div>
@@ -2816,47 +2973,75 @@ function currentAgent() {
   return agents.get(state.agent) || manifest.agents[0];
 }
 
-function versionInfo(version) {
-  return currentAgent().versions.find(item => item.version === version) || currentAgent().latest;
+function validVariantId(agent, variantId) {
+  return agent.variants.some(variant => variant.id === variantId) ? variantId : agent.default_variant;
 }
 
-function previousVersion(agent, version) {
-  const index = agent.versions.findIndex(item => item.version === version);
-  return agent.versions[index + 1] || agent.versions[index] || agent.latest;
+function variantInfo(agent, variantId) {
+  return agent.variants.find(variant => variant.id === variantId)
+    || agent.variants.find(variant => variant.id === agent.default_variant)
+    || agent.variants[0];
 }
 
-function nextVersion(agent, version) {
-  const index = agent.versions.findIndex(item => item.version === version);
-  return agent.versions[index - 1] || agent.versions[index] || agent.latest;
+function currentVariant(side = state.picker === 'from' ? 'from' : 'to') {
+  const variantId = side === 'from' ? state.fromVariant : state.toVariant;
+  return variantInfo(currentAgent(), variantId);
 }
 
-function versionIndex(agent, version) {
-  return agent.versions.findIndex(item => item.version === version);
+function snapshotInfo(side) {
+  const lane = currentVariant(side);
+  const version = side === 'from' ? state.from : state.to;
+  return lane.versions.find(item => item.version === version) || lane.latest;
+}
+
+function previousVersion(agent, variantId, version) {
+  const lane = variantInfo(agent, variantId);
+  const index = lane.versions.findIndex(item => item.version === version);
+  return lane.versions[index + 1] || lane.versions[index] || lane.latest;
+}
+
+function nextVersion(agent, variantId, version) {
+  const lane = variantInfo(agent, variantId);
+  const index = lane.versions.findIndex(item => item.version === version);
+  return lane.versions[index - 1] || lane.versions[index] || lane.latest;
+}
+
+function versionIndex(agent, variantId, version) {
+  return variantInfo(agent, variantId).versions.findIndex(item => item.version === version);
 }
 
 function normalizeVersionRange(agent, anchor) {
-  const fromIndex = versionIndex(agent, state.from);
-  const toIndex = versionIndex(agent, state.to);
+  if (state.fromVariant !== state.toVariant) return false;
+  const variantId = state.fromVariant;
+  const fromIndex = versionIndex(agent, variantId, state.from);
+  const toIndex = versionIndex(agent, variantId, state.to);
   if (fromIndex < 0 || toIndex < 0 || fromIndex > toIndex) return false;
   if (anchor === 'from') {
-    state.to = nextVersion(agent, state.from).version;
+    state.to = nextVersion(agent, variantId, state.from).version;
   } else {
-    state.from = previousVersion(agent, state.to).version;
+    state.from = previousVersion(agent, variantId, state.to).version;
   }
   return true;
 }
 
 function useLatestRange(agent) {
-  state.to = agent.latest.version;
-  state.from = previousVersion(agent, state.to).version;
+  state.fromVariant = agent.default_variant;
+  state.toVariant = agent.default_variant;
+  const lane = variantInfo(agent, agent.default_variant);
+  state.to = lane.latest.version;
+  state.from = previousVersion(agent, lane.id, state.to).version;
 }
 
-function hasVersion(agent, version) {
-  return Boolean(version && agent.versions.some(item => item.version === version));
+function hasVersion(agent, variantId, version) {
+  return Boolean(version && variantInfo(agent, variantId).versions.some(item => item.version === version));
 }
 
-function isLatestVersion(agent, version) {
-  return version === agent.latest.version;
+function isLatestVersion(agent, variantId, version) {
+  return version === variantInfo(agent, variantId).latest.version;
+}
+
+function compactSnapshotLabel(item, variant) {
+  return currentAgent().variants.length > 1 ? `${item.version} · ${variant.label}` : item.version;
 }
 
 function showError(error) {

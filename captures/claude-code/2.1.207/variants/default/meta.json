@@ -1,0 +1,43 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.207",
+  "published_at": "2026-07-10T22:25:09.430Z",
+  "tarball_url": "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.207.tgz",
+  "binary_version": "2.1.207 (Claude Code)",
+  "captured_at": "2026-07-11T01:01:58.735972+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 21.748,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--no-session-persistence",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "claude-opus-4-8",
+    "tool_count": 27
+  }
+}

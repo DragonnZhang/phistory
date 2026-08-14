@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
 PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "minimax-code"]
 GitHubReleaseInstall = Literal["wheel", "editable"]
+CaptureDriver = Literal["oneshot", "dsh-web"]
 HomeProfile = Literal[
     "none",
     "antigravity",
@@ -21,6 +23,17 @@ HomeProfile = Literal[
     "pi",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
+_VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
+
+
+@dataclass(frozen=True)
+class CaptureVariant:
+    id: str
+    label: str
+    run_args: tuple[str, ...] = ()
+    dimensions: dict[str, str] = field(default_factory=dict)
+    driver: CaptureDriver = "oneshot"
+    extra_env: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -30,7 +43,8 @@ class AgentSpec:
     package: str
     tap_client: str
     fake_env: dict[str, str]
-    run_args: tuple[str, ...]
+    default_variant: CaptureVariant = field(default_factory=lambda: CaptureVariant("default", "Default"))
+    variants: tuple[CaptureVariant, ...] = ()
     executable: str | None = None
     source: PackageSource = "npm"
     install_command: tuple[str, ...] = ("npm", "install", "--no-audit", "--no-fund")
@@ -47,6 +61,28 @@ class AgentSpec:
     release_manifest_url: str | None = None
     github_release_install: GitHubReleaseInstall = "wheel"
 
+    def __post_init__(self) -> None:
+        all_variants = self.capture_variants
+        ids = [variant.id for variant in all_variants]
+        if self.default_variant.id != "default":
+            raise ValueError(f"{self.id}: default variant id must be 'default'")
+        if len(ids) != len(set(ids)):
+            raise ValueError(f"{self.id}: capture variant ids must be unique")
+        for variant_id in ids:
+            if _VARIANT_ID_RE.fullmatch(variant_id) is None:
+                raise ValueError(f"{self.id}: invalid capture variant id {variant_id!r}")
+
+    @property
+    def capture_variants(self) -> tuple[CaptureVariant, ...]:
+        return (self.default_variant, *self.variants)
+
+    def variant(self, variant_id: str) -> CaptureVariant:
+        for variant in self.capture_variants:
+            if variant.id == variant_id:
+                return variant
+        known = ", ".join(item.id for item in self.capture_variants)
+        raise ValueError(f"{self.id}: unknown capture variant {variant_id!r}; known variants: {known}")
+
 
 @dataclass(frozen=True)
 class VersionInfo:
@@ -59,6 +95,7 @@ class VersionInfo:
 class CaptureTarget:
     agent: AgentSpec
     version: VersionInfo
+    variant: CaptureVariant
     root: Path
 
     @property
@@ -66,28 +103,36 @@ class CaptureTarget:
         return self.root / self.agent.id / self.version.version
 
     @property
+    def variant_dir(self) -> Path:
+        return self.version_dir / "variants" / self.variant.id
+
+    @property
     def prompt_path(self) -> Path:
-        return self.version_dir / "prompt.md"
+        return self.variant_dir / "prompt.md"
 
     @property
     def trace_path(self) -> Path:
-        return self.version_dir / "trace.jsonl"
+        return self.variant_dir / "trace.jsonl"
 
     @property
     def meta_path(self) -> Path:
-        return self.version_dir / "meta.json"
+        return self.variant_dir / "meta.json"
+
+    @property
+    def static_dir(self) -> Path:
+        return self.version_dir / "static"
 
     @property
     def static_prompts_path(self) -> Path:
-        return self.version_dir / "static-prompts.md"
+        return self.static_dir / "prompts.md"
 
     @property
     def static_prompts_json_path(self) -> Path:
-        return self.version_dir / "static-prompts.json"
+        return self.static_dir / "prompts.json"
 
     @property
     def static_candidates_json_path(self) -> Path:
-        return self.version_dir / "static-candidates.json"
+        return self.static_dir / "candidates.json"
 
 
 @dataclass(frozen=True)
@@ -105,6 +150,7 @@ CaptureStatus = Literal["captured", "skipped", "failed"]
 class CaptureResult:
     agent_id: str
     version: str
+    variant_id: str
     status: CaptureStatus
     prompt_path: Path | None = None
     trace_path: Path | None = None

@@ -38,6 +38,7 @@ STATIC_PROMPT_SINGLE_TERNARY_RE = re.compile(r"\$\{\}\?'(?P<branch>(?:[^'\\\n]|\
 def extract_static_prompts(target: CaptureTarget, install_dir: Path) -> StaticPromptResult | None:
     if target.agent.id != "claude-code":
         return None
+    target.static_dir.mkdir(parents=True, exist_ok=True)
     candidates = load_or_extract_static_candidates(target, install_dir)
     result = match_static_candidates(target, candidates)
     _write_json(target.static_prompts_json_path, result)
@@ -120,29 +121,6 @@ def write_static_candidates(path: Path, result: StaticCandidatesResult) -> None:
 def _keep_known_or_prompt_like(matches: tuple[StaticPromptMatch, ...]) -> tuple[StaticPromptMatch, ...]:
     kept = [match for match in matches if match.entry is not None or is_prompt_like(match.candidate.content)]
     return tuple(sorted(kept, key=lambda match: (-match.candidate.score, match.candidate.order)))
-
-
-def static_prompts_meta(
-    target: CaptureTarget, result: StaticPromptResult | None, error: str | None = None
-) -> dict[str, object]:
-    payload: dict[str, object] = {
-        "supported": target.agent.id == "claude-code",
-        "candidates_path": target.static_candidates_json_path.name,
-        "prompt_path": target.static_prompts_path.name,
-        "json_path": target.static_prompts_json_path.name,
-    }
-    if result is not None:
-        payload.update(
-            {
-                "total": len(result.matches),
-                "known": result.known_count,
-                "unknown": result.unknown_count,
-                "source": result.source,
-            }
-        )
-    if error:
-        payload["error"] = error
-    return payload
 
 
 def render_static_prompts_markdown(result: StaticPromptResult) -> str:

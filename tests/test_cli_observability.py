@@ -12,8 +12,8 @@ def test_print_results_writes_github_summary_and_annotations(tmp_path: Path, mon
 
     code = _print_results(
         [
-            CaptureResult("codex", "1.0.0", "captured", tmp_path / "prompt.md", tmp_path / "trace.jsonl"),
-            CaptureResult("claude-code", "unknown", "failed", error="first line\nsecond line"),
+            CaptureResult("codex", "1.0.0", "default", "captured", tmp_path / "prompt.md", tmp_path / "trace.jsonl"),
+            CaptureResult("claude-code", "unknown", "default", "failed", error="first line\nsecond line"),
         ],
         "Observed capture",
     )
@@ -25,7 +25,7 @@ def test_print_results_writes_github_summary_and_annotations(tmp_path: Path, mon
     assert "`codex`" in text
     assert "`claude-code`" in text
     assert "first line second line" in text
-    assert "::error title=claude-code unknown capture failed::first line second line" in capsys.readouterr().err
+    assert "::error title=claude-code unknown default capture failed::first line second line" in capsys.readouterr().err
 
 
 def test_capture_latest_reports_version_lookup_failure(monkeypatch, tmp_path: Path):
@@ -35,7 +35,6 @@ def test_capture_latest_reports_version_lookup_failure(monkeypatch, tmp_path: Pa
         package="broken",
         tap_client="broken",
         fake_env={},
-        run_args=(),
     )
     monkeypatch.setattr("phistory.workflow.get_agent", lambda _agent_id: agent)
     monkeypatch.setattr(
@@ -47,5 +46,6 @@ def test_capture_latest_reports_version_lookup_failure(monkeypatch, tmp_path: Pa
     assert len(results) == 1
     assert results[0].agent_id == "broken"
     assert results[0].version == "unknown"
+    assert results[0].variant_id == "default"
     assert results[0].status == "failed"
     assert results[0].error == "registry down"

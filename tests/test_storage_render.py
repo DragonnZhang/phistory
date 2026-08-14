@@ -1,10 +1,14 @@
 import json
 from pathlib import Path
 
-from phistory.models import AgentSpec, CaptureTarget, VersionInfo
+from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo
 from phistory.render import render_index
 from phistory.site import AGENT_SHORT_NAMES, _change_summary, render_site
 from phistory.storage import is_captured, write_meta
+
+
+def _target(agent: AgentSpec, version: VersionInfo, root: Path, variant: CaptureVariant | None = None) -> CaptureTarget:
+    return CaptureTarget(agent, version, variant or agent.default_variant, root)
 
 
 def test_capture_paths_and_index(tmp_path: Path):
@@ -14,10 +18,9 @@ def test_capture_paths_and_index(tmp_path: Path):
         package="pkg",
         tap_client="agent",
         fake_env={},
-        run_args=(),
     )
-    target = CaptureTarget(agent, VersionInfo("1.0.0", "2026-05-22T00:00:00Z"), tmp_path / "captures")
-    target.version_dir.mkdir(parents=True)
+    target = _target(agent, VersionInfo("1.0.0", "2026-05-22T00:00:00Z"), tmp_path / "captures")
+    target.variant_dir.mkdir(parents=True)
     target.prompt_path.write_text("# Prompt\n", encoding="utf-8")
     target.trace_path.write_text("{}\n", encoding="utf-8")
     write_meta(
@@ -51,16 +54,17 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "claude-tap" in text
     assert "GitHub Actions checks automatically tracked CLI releases every hour" in text
     assert "## Data" not in text
-    assert "`captures/<agent>/<version>/`" in text
+    assert "`captures/<agent>/<version>/variants/<variant>/`" in text
     assert "`prompt.md`, `trace.jsonl`, and `meta.json`" in text
     assert "## Local Development" in text
-    assert "# Capture the latest automatically tracked CLI releases." in text
+    assert "# Capture the latest release and every configured snapshot for each CLI." in text
+    assert "--variants default,gpt-5.5,gpt-5.6" in text
     assert "--agents claude-code,codex,dsh,antigravity" in text
     assert "## Web UI" not in text
     assert "## For AI Agents" not in text
     assert "## Capture Status" in text
-    assert "| Agent | Latest | Captures | Last Captured |" in text
-    assert "captures/agent/1.0.0/prompt.md" in text
+    assert "| Agent | Latest | Versions | Snapshots | Last Captured |" in text
+    assert "captures/agent/1.0.0/variants/default/prompt.md" in text
     assert "[1.0.0 - 2026-05-22]" in text
     assert "2026-05-22 01:00 UTC" in text
     assert "| Agent | Version | Published | Captured | Snapshot | Raw Trace |" not in text
@@ -73,14 +77,14 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "新工具、权限检查、默认模型行为" in zh_text
     assert "每小时检查一次已自动追踪的 CLI 版本" in zh_text
     assert "## 数据" not in zh_text
-    assert "`captures/<agent>/<version>/`" in zh_text
+    assert "`captures/<agent>/<version>/variants/<variant>/`" in zh_text
     assert "`prompt.md`、`trace.jsonl` 和 `meta.json`" in zh_text
     assert "## 本地开发" in zh_text
-    assert "# 抓取所有已自动追踪 CLI 的最新版本。" in zh_text
+    assert "# 抓取每个 CLI 的最新版本及其全部已配置快照。" in zh_text
     assert "## Web UI" not in zh_text
     assert "## 给 AI Agent" not in zh_text
     assert "## 抓取状态" in zh_text
-    assert "| Agent | 最新版本 | 快照数 | 最近抓取 |" in zh_text
+    assert "| Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |" in zh_text
     assert "[1.0.0 - 2026-05-22]" in zh_text
     assert "## License" not in zh_text
 
@@ -88,10 +92,15 @@ def test_capture_paths_and_index(tmp_path: Path):
     capture_index = tmp_path / "captures/index.json"
     capture_doc_text = capture_doc.read_text(encoding="utf-8")
     capture_index_json = json.loads(capture_index.read_text(encoding="utf-8"))
-    assert "| Agent | Version | Published | Captured | Snapshot | Static | Candidates | Raw Trace |" in capture_doc_text
-    assert "[agent 1.0.0, published 2026-05-22 00:00 UTC]" in capture_doc_text
+    assert (
+        "| Agent | Version | Variant | Published | Captured | Snapshot | Static | Candidates | Raw Trace |"
+        in capture_doc_text
+    )
+    assert "[agent 1.0.0 [default], published 2026-05-22 00:00 UTC]" in capture_doc_text
     assert capture_index_json["agents"][0]["latest_version"] == "1.0.0"
-    assert capture_index_json["captures"][0]["prompt"] == "captures/agent/1.0.0/prompt.md"
+    assert capture_index_json["captures"][0]["variant_id"] == "default"
+    assert capture_index_json["captures"][0]["observed"] == {}
+    assert capture_index_json["captures"][0]["prompt"] == "captures/agent/1.0.0/variants/default/prompt.md"
 
 
 def test_capture_is_incomplete_without_trace(tmp_path: Path):
@@ -101,10 +110,9 @@ def test_capture_is_incomplete_without_trace(tmp_path: Path):
         package="pkg",
         tap_client="agent",
         fake_env={},
-        run_args=(),
     )
-    target = CaptureTarget(agent, VersionInfo("1.0.0"), tmp_path / "captures")
-    target.version_dir.mkdir(parents=True)
+    target = _target(agent, VersionInfo("1.0.0"), tmp_path / "captures")
+    target.variant_dir.mkdir(parents=True)
     target.prompt_path.write_text("# Prompt\n", encoding="utf-8")
     write_meta(target, {"version": "1.0.0"})
 
@@ -118,11 +126,10 @@ def test_render_index_sorts_versions_numerically(tmp_path: Path):
         package="pkg",
         tap_client="agent",
         fake_env={},
-        run_args=(),
     )
     for version in ("2.1.99", "2.1.146"):
-        target = CaptureTarget(agent, VersionInfo(version), tmp_path / "captures")
-        target.version_dir.mkdir(parents=True)
+        target = _target(agent, VersionInfo(version), tmp_path / "captures")
+        target.variant_dir.mkdir(parents=True)
         target.prompt_path.write_text("# Prompt\n", encoding="utf-8")
         target.trace_path.write_text("{}\n", encoding="utf-8")
         write_meta(target, {"agent_id": "agent", "agent": "Agent", "version": version})
@@ -145,14 +152,14 @@ def test_render_site_writes_static_html_manifest(tmp_path: Path):
         package="pkg",
         tap_client="agent",
         fake_env={},
-        run_args=(),
     )
     for version in ("1.0.0", "1.1.0"):
-        target = CaptureTarget(agent, VersionInfo(version, "2026-05-22T00:00:00Z"), tmp_path / "captures")
-        target.version_dir.mkdir(parents=True)
+        target = _target(agent, VersionInfo(version, "2026-05-22T00:00:00Z"), tmp_path / "captures")
+        target.variant_dir.mkdir(parents=True)
         target.prompt_path.write_text(f"# Prompt {version}\n", encoding="utf-8")
         target.trace_path.write_text("{}\n", encoding="utf-8")
         if version == "1.1.0":
+            target.static_dir.mkdir(parents=True)
             target.static_prompts_path.write_text("# Static Prompts\n", encoding="utf-8")
             target.static_prompts_json_path.write_text('{"schema_version":1}\n', encoding="utf-8")
         write_meta(
@@ -178,17 +185,20 @@ def test_render_site_writes_static_html_manifest(tmp_path: Path):
     assert "application/ld+json" in text
     assert "document.documentElement.dataset.theme = theme" in text
     assert "document.documentElement.style.colorScheme = theme" in text
-    assert "captures/agent/1.1.0/prompt.md" in text
+    assert "captures/agent/1.1.0/variants/default/prompt.md" in text
     assert "2026-05-22" in text
     assert "monaco-editor" in text
     assert "dompurify" in text
     assert "marked@12.0.2" in text
     assert "createDiffEditor" in text
     assert "range: 'latest'" in text
+    assert "from_variant" in text
+    assert "variant-chip" in text
+    assert '"default_variant":"default"' in text
     assert "mini-diffstat" in text
     assert '"trace":"' in text
-    assert "captures/agent/1.1.0/trace.jsonl" in text
-    assert "captures/agent/1.1.0/static-prompts.md" in text
+    assert "captures/agent/1.1.0/variants/default/trace.jsonl" in text
+    assert "captures/agent/1.1.0/static/prompts.md" in text
     assert "Open static prompts" in text
     assert "renderStatic" in text
     assert "static-outline" in text

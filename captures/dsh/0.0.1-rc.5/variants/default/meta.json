@@ -1,0 +1,51 @@
+{
+  "agent_id": "dsh",
+  "agent": "DeepSeek Harness",
+  "package": "@deepseek-ai/dsh",
+  "version": "0.0.1-rc.5",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {
+      "surface": "web"
+    }
+  },
+  "requested": {
+    "surface": "web"
+  },
+  "observed": {
+    "model": "deepseek-v4-flash",
+    "tool_count": 25
+  },
+  "published_at": "2026-08-12T22:36:12.201Z",
+  "tarball_url": null,
+  "binary_version": "0.0.1-rc.5",
+  "captured_at": "2026-08-14T18:27:29.594960+00:00",
+  "tap_client": "dsh",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 159.574,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "dsh",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "web",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "59723"
+  ]
+}
