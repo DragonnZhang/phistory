@@ -72,7 +72,6 @@ def test_package_dispatches_minimax_code_source(monkeypatch, tmp_path):
         source="minimax-code",
         tap_client="minimax-code",
         fake_env={},
-        run_args=(),
     )
     version = VersionInfo("3.0.57")
     monkeypatch.setattr(minimax_code, "latest_version", lambda: version)
@@ -135,6 +134,9 @@ def test_install_builds_headless_launcher_and_linux_native_module(monkeypatch, t
     assert executable.is_file()
     assert executable.stat().st_mode & 0o111
     assert "createLocalRuntimeHost" in executable.read_text(encoding="utf-8")
+    assert "modernRuntimeV2Path" in executable.read_text(encoding="utf-8")
+    assert "await createLocalRuntimeHost" in executable.read_text(encoding="utf-8")
+    assert "/minimax-desktop/api/v1/session/" in executable.read_text(encoding="utf-8")
     assert "process.env.MAVIS_DATA_DIR = dataDir" in executable.read_text(encoding="utf-8")
     assert 'npm: "@ai-sdk/anthropic"' in executable.read_text(encoding="utf-8")
     assert not (install_dir / f"MiniMax-Code-{version}-arm64-mac.zip").exists()

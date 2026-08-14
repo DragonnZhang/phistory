@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
@@ -11,7 +10,7 @@ from phistory.models import CaptureTarget
 from phistory.registry import AGENT_ORDER, AGENTS, parse_agent_ids
 from phistory.render import render_index
 from phistory.site import render_site
-from phistory.static_prompts.extract import extract_static_prompts, static_prompts_meta
+from phistory.static_prompts.extract import extract_static_prompts
 from phistory.workflow import capture_latest, iter_backfill
 
 
@@ -26,6 +25,9 @@ def build_parser() -> argparse.ArgumentParser:
     capture = sub.add_parser("capture", help="capture current versions")
     capture.add_argument("--latest", action="store_true", help="capture latest package version for each agent")
     capture.add_argument("--agents", default=None, help=f"comma-separated agent ids (default: {','.join(AGENT_ORDER)})")
+    capture.add_argument(
+        "--variants", default=None, help="comma-separated variant ids (default: every configured variant)"
+    )
     capture.add_argument("--force", action="store_true", help="recapture existing versions")
     capture.add_argument("--keep-tap", action="store_true", help="keep raw claude-tap output directories")
     capture.add_argument("--summary-title", default="Capture results", help="GitHub Actions summary title")
@@ -37,6 +39,9 @@ def build_parser() -> argparse.ArgumentParser:
     fill.add_argument("--limit", type=int, default=None, help="capture at most N versions from the range")
     fill.add_argument("--newest-first", action="store_true", help="capture the selected range from newest to oldest")
     fill.add_argument("--include-prerelease", action="store_true", help="include prerelease package versions")
+    fill.add_argument(
+        "--variants", default=None, help="comma-separated variant ids (default: every configured variant)"
+    )
     fill.add_argument("--force", action="store_true", help="recapture existing versions")
     fill.add_argument("--keep-tap", action="store_true", help="keep raw claude-tap output directories")
     fill.add_argument("--summary-title", default="Backfill results", help="GitHub Actions summary title")
@@ -60,7 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
     static.add_argument(
         "--refresh-candidates",
         action="store_true",
-        help="reinstall packages and regenerate static-candidates.json instead of replaying the archived candidates",
+        help="reinstall packages and regenerate the static candidate archive instead of replaying it",
     )
 
     return parser
@@ -78,6 +83,7 @@ def main(argv: list[str] | None = None) -> int:
             parse_agent_ids(args.agents),
             root=root,
             cache_dir=cache_dir,
+            variant_ids=_parse_csv(args.variants),
             force=args.force,
             keep_tap=args.keep_tap,
         )
@@ -91,6 +97,7 @@ def main(argv: list[str] | None = None) -> int:
             end=args.end,
             root=root,
             cache_dir=cache_dir,
+            variant_ids=_parse_csv(args.variants),
             force=args.force,
             keep_tap=args.keep_tap,
             limit=args.limit,
@@ -145,7 +152,9 @@ def _latest_captured_versions(root: Path, agent_id: str, limit: int) -> list[str
     versions = [
         path.name
         for path in agent_dir.iterdir()
-        if path.is_dir() and (path / "prompt.md").exists() and (path / "trace.jsonl").exists()
+        if path.is_dir()
+        and (path / "variants" / "default" / "prompt.md").exists()
+        and (path / "variants" / "default" / "trace.jsonl").exists()
     ]
     versions.sort(key=_version_sort_key, reverse=True)
     if not versions:
@@ -172,8 +181,13 @@ def _extract_static(
     failed = False
     for version in versions:
         install_dir = (cache_dir / "installs" / agent.id / version).resolve()
-        target = CaptureTarget(agent=agent, version=packages.version_info(agent, version), root=root)
-        target.version_dir.mkdir(parents=True, exist_ok=True)
+        target = CaptureTarget(
+            agent=agent,
+            version=packages.version_info(agent, version),
+            variant=agent.default_variant,
+            root=root,
+        )
+        target.static_dir.mkdir(parents=True, exist_ok=True)
         if refresh_candidates and target.static_candidates_json_path.exists():
             target.static_candidates_json_path.unlink()
         if not target.static_candidates_json_path.exists():
@@ -187,25 +201,11 @@ def _extract_static(
         if result is None:
             print(f"{agent_id} {version}: static extraction unsupported", flush=True)
             continue
-        _update_meta_static_prompts(target, static_prompts_meta(target, result))
         print(
             f"{agent_id} {version}: {len(result.matches)} static prompts ({result.known_count} known, {result.unknown_count} unknown)",
             flush=True,
         )
     return 1 if failed else 0
-
-
-def _update_meta_static_prompts(target: CaptureTarget, payload: dict[str, object]) -> None:
-    if not target.meta_path.exists():
-        return
-    try:
-        meta = json.loads(target.meta_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return
-    if not isinstance(meta, dict):
-        return
-    meta["static_prompts"] = payload
-    target.meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def _print_results(results, summary_title: str = "Capture results") -> int:
@@ -217,7 +217,7 @@ def _print_results(results, summary_title: str = "Capture results") -> int:
 
 
 def _print_result(result) -> bool:
-    print(f"{result.agent_id} {result.version}: {result.status}", flush=True)
+    print(f"{result.agent_id} {result.version} [{result.variant_id}]: {result.status}", flush=True)
     if result.prompt_path:
         print(f"  prompt: {result.prompt_path}", flush=True)
     if result.trace_path:
@@ -241,13 +241,14 @@ def _write_github_summary(results, title: str) -> None:
         "",
         f"Captured: **{counts['captured']}** · Skipped: **{counts['skipped']}** · Failed: **{counts['failed']}**",
         "",
-        "| Agent | Version | Status | Prompt | Trace | Error |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Agent | Version | Variant | Status | Prompt | Trace | Error |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for result in results:
         cells = [
             f"`{_md_escape(result.agent_id)}`",
             f"`{_md_escape(result.version)}`",
+            f"`{_md_escape(result.variant_id)}`",
             _status_label(result.status),
             _path_link(result.prompt_path),
             _path_link(result.trace_path),
@@ -263,7 +264,7 @@ def _write_github_summary(results, title: str) -> None:
 def _print_github_error(result) -> None:
     if not os.environ.get("GITHUB_ACTIONS"):
         return
-    title = f"{result.agent_id} {result.version} capture failed"
+    title = f"{result.agent_id} {result.version} {result.variant_id} capture failed"
     print(
         f"::error title={_annotation_escape(title)}::{_annotation_escape(_error_summary(result.error))}",
         file=sys.stderr,
@@ -294,6 +295,15 @@ def _md_escape(value: str) -> str:
 
 def _annotation_escape(value: str) -> str:
     return value.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def _parse_csv(value: str | None) -> tuple[str, ...] | None:
+    if value is None:
+        return None
+    items = tuple(item.strip() for item in value.split(",") if item.strip())
+    if not items:
+        raise SystemExit("--variants requires at least one variant id")
+    return items
 
 
 if __name__ == "__main__":

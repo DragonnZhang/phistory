@@ -1,6 +1,39 @@
 from __future__ import annotations
 
-from phistory.models import AgentSpec
+from phistory.models import AgentSpec, CaptureDriver, CaptureVariant
+
+
+def _default(
+    run_args: tuple[str, ...] = (),
+    *,
+    driver: CaptureDriver = "oneshot",
+    dimensions: dict[str, str] | None = None,
+) -> CaptureVariant:
+    return CaptureVariant(
+        id="default",
+        label="Default",
+        run_args=run_args,
+        driver=driver,
+        dimensions=dimensions or {},
+    )
+
+
+def _variant(
+    variant_id: str,
+    label: str,
+    run_args: tuple[str, ...],
+    *,
+    driver: CaptureDriver = "oneshot",
+    dimensions: dict[str, str] | None = None,
+) -> CaptureVariant:
+    return CaptureVariant(
+        id=variant_id,
+        label=label,
+        run_args=run_args,
+        driver=driver,
+        dimensions=dimensions or {},
+    )
+
 
 CLAUDE_CODE = AgentSpec(
     id="claude-code",
@@ -13,12 +46,14 @@ CLAUDE_CODE = AgentSpec(
         "DISABLE_UPDATES": "1",
         "CI": "1",
     },
-    run_args=(
-        "--no-yolo",
-        "--",
-        "--no-session-persistence",
-        "-p",
-        "Reply with one short sentence.",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--no-session-persistence",
+            "-p",
+            "Reply with one short sentence.",
+        )
     ),
 )
 
@@ -34,13 +69,47 @@ CODEX = AgentSpec(
         "CI": "1",
     },
     fake_chatgpt_auth=True,
-    run_args=(
-        "--no-yolo",
-        "--",
-        "exec",
-        "Reply with one short sentence.",
-        "--skip-git-repo-check",
-        "--json",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "exec",
+            "Reply with one short sentence.",
+            "--skip-git-repo-check",
+            "--json",
+        )
+    ),
+    variants=(
+        _variant(
+            "gpt-5.5",
+            "GPT-5.5",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-5.5",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-5.5"},
+        ),
+        _variant(
+            "gpt-5.6",
+            "GPT-5.6",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-5.6",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-5.6"},
+        ),
     ),
 )
 
@@ -61,16 +130,18 @@ ANTIGRAVITY = AgentSpec(
     },
     home_profile="antigravity",
     tap_mode="forward",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "--print",
-        "Reply with one short sentence.",
-        "--print-timeout",
-        "1s",
-        "--dangerously-skip-permissions",
-        "--model",
-        "MODEL_GOOGLE_GEMINI_2_5_FLASH",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--print",
+            "Reply with one short sentence.",
+            "--print-timeout",
+            "1s",
+            "--dangerously-skip-permissions",
+            "--model",
+            "MODEL_GOOGLE_GEMINI_2_5_FLASH",
+        )
     ),
 )
 
@@ -88,12 +159,46 @@ DSH = AgentSpec(
     },
     home_profile="dsh",
     tap_mode="forward",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "--profile",
-        "headless",
-        "Reply with one short sentence.",
+    default_variant=_default(
+        ("--no-yolo", "--", "web"),
+        driver="dsh-web",
+        dimensions={"surface": "web"},
+    ),
+    variants=(
+        _variant(
+            "headless",
+            "Headless",
+            ("--no-yolo", "--", "--profile", "headless", "Reply with one short sentence."),
+            dimensions={"surface": "headless"},
+        ),
+        _variant(
+            "standard",
+            "Standard",
+            ("--no-yolo", "--", "web"),
+            driver="dsh-web",
+            dimensions={"surface": "web", "mode": "standard"},
+        ),
+        _variant(
+            "code",
+            "PTC",
+            ("--no-yolo", "--", "web"),
+            driver="dsh-web",
+            dimensions={"surface": "web", "mode": "code"},
+        ),
+        _variant(
+            "minimal",
+            "Minimal",
+            ("--no-yolo", "--", "web"),
+            driver="dsh-web",
+            dimensions={"surface": "web", "mode": "minimal"},
+        ),
+        _variant(
+            "cordis",
+            "Creator",
+            ("--no-yolo", "--", "web"),
+            driver="dsh-web",
+            dimensions={"surface": "web", "mode": "cordis"},
+        ),
     ),
 )
 
@@ -115,12 +220,14 @@ GROK = AgentSpec(
         "CI": "1",
     },
     home_profile="grok",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "--no-auto-update",
-        "--single",
-        "Reply with one short sentence.",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--no-auto-update",
+            "--single",
+            "Reply with one short sentence.",
+        )
     ),
 )
 
@@ -138,7 +245,7 @@ MINIMAX_CODE = AgentSpec(
         "CI": "1",
     },
     tap_mode="reverse",
-    run_args=(),
+    default_variant=_default(),
 )
 
 KIMI_CODE = AgentSpec(
@@ -158,13 +265,15 @@ KIMI_CODE = AgentSpec(
         "CI": "1",
     },
     home_profile="kimi-code",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "--prompt",
-        "Reply with one short sentence.",
-        "--output-format",
-        "text",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--prompt",
+            "Reply with one short sentence.",
+            "--output-format",
+            "text",
+        )
     ),
 )
 
@@ -184,18 +293,20 @@ MIMO = AgentSpec(
     },
     home_profile="mimo",
     tap_mode="reverse",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "run",
-        "Reply with one short sentence.",
-        "--model",
-        "openai/gpt-4.1",
-        "--format",
-        "json",
-        "--dir",
-        ".",
-        "--dangerously-skip-permissions",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "run",
+            "Reply with one short sentence.",
+            "--model",
+            "openai/gpt-4.1",
+            "--format",
+            "json",
+            "--dir",
+            ".",
+            "--dangerously-skip-permissions",
+        )
     ),
 )
 
@@ -212,18 +323,20 @@ OPENCLAW = AgentSpec(
     },
     node_runtime="node@24",
     home_profile="openclaw",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "agent",
-        "--local",
-        "--agent",
-        "main",
-        "--message",
-        "Reply with one short sentence.",
-        "--json",
-        "--timeout",
-        "20",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "agent",
+            "--local",
+            "--agent",
+            "main",
+            "--message",
+            "Reply with one short sentence.",
+            "--json",
+            "--timeout",
+            "20",
+        )
     ),
 )
 
@@ -245,18 +358,20 @@ HERMES = AgentSpec(
     },
     home_profile="hermes",
     tap_mode="reverse",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "chat",
-        "-q",
-        "Reply with one short sentence.",
-        "--yolo",
-        "-Q",
-        "--provider",
-        "openrouter",
-        "--model",
-        "phistory-dummy",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "chat",
+            "-q",
+            "Reply with one short sentence.",
+            "--yolo",
+            "-Q",
+            "--provider",
+            "openrouter",
+            "--model",
+            "phistory-dummy",
+        )
     ),
 )
 
@@ -277,16 +392,18 @@ KIMI = AgentSpec(
         "KIMI_TELEMETRY_DISABLED": "1",
     },
     home_profile="kimi",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "--print",
-        "--prompt",
-        "Reply with one short sentence.",
-        "--model",
-        "phistory-dummy",
-        "--output-format",
-        "text",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--print",
+            "--prompt",
+            "Reply with one short sentence.",
+            "--model",
+            "phistory-dummy",
+            "--output-format",
+            "text",
+        )
     ),
 )
 
@@ -303,17 +420,19 @@ OPENCODE = AgentSpec(
     },
     home_profile="opencode",
     tap_mode="reverse",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "run",
-        "Reply with one short sentence.",
-        "--model",
-        "openai/gpt-4.1",
-        "--format",
-        "json",
-        "--dir",
-        ".",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "run",
+            "Reply with one short sentence.",
+            "--model",
+            "openai/gpt-4.1",
+            "--format",
+            "json",
+            "--dir",
+            ".",
+        )
     ),
 )
 
@@ -329,18 +448,20 @@ PI = AgentSpec(
         "CI": "1",
     },
     home_profile="pi",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "--provider",
-        "phistory",
-        "--model",
-        "gpt-4.1",
-        "--print",
-        "--mode",
-        "text",
-        "--no-session",
-        "Reply with one short sentence.",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--provider",
+            "phistory",
+            "--model",
+            "gpt-4.1",
+            "--print",
+            "--mode",
+            "text",
+            "--no-session",
+            "Reply with one short sentence.",
+        )
     ),
 )
 
@@ -360,18 +481,20 @@ OMP = AgentSpec(
     binary_release_asset="omp-linux-x64",
     binary_release_tag="v{version}",
     home_profile="omp",
-    run_args=(
-        "--no-yolo",
-        "--",
-        "--print",
-        "--mode",
-        "text",
-        "--no-session",
-        "--approval-mode",
-        "yolo",
-        "--model",
-        "phistory/gpt-4.1",
-        "Reply with one short sentence.",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--print",
+            "--mode",
+            "text",
+            "--no-session",
+            "--approval-mode",
+            "yolo",
+            "--model",
+            "phistory/gpt-4.1",
+            "Reply with one short sentence.",
+        )
     ),
 )
 

@@ -30,15 +30,19 @@ def test_get_agent_has_capture_contract():
     assert agent.package == "@openai/codex"
     assert agent.tap_client == "codex"
     assert agent.fake_chatgpt_auth
-    assert "--" in agent.run_args
+    assert "--" in agent.default_variant.run_args
+    assert [(variant.id, variant.dimensions) for variant in agent.variants] == [
+        ("gpt-5.5", {"model": "gpt-5.5"}),
+        ("gpt-5.6", {"model": "gpt-5.6"}),
+    ]
 
 
 def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
     agent = get_agent("claude-code")
 
-    assert "--no-session-persistence" in agent.run_args
-    assert "--bare" not in agent.run_args
-    assert "--exclude-dynamic-system-prompt-sections" not in agent.run_args
+    assert "--no-session-persistence" in agent.default_variant.run_args
+    assert "--bare" not in agent.default_variant.run_args
+    assert "--exclude-dynamic-system-prompt-sections" not in agent.default_variant.run_args
 
 
 def test_new_agents_define_install_and_capture_profiles():
@@ -63,14 +67,17 @@ def test_new_agents_define_install_and_capture_profiles():
     assert antigravity.tap_client == "agy"
     assert antigravity.home_profile == "antigravity"
     assert antigravity.tap_mode == "forward"
-    assert "--print" in antigravity.run_args
+    assert "--print" in antigravity.default_variant.run_args
 
     assert dsh.source == "npm"
     assert dsh.package == "@deepseek-ai/dsh"
     assert dsh.tap_client == "dsh"
     assert dsh.home_profile == "dsh"
     assert dsh.tap_mode == "forward"
-    assert dsh.run_args[-2:] == ("headless", "Reply with one short sentence.")
+    assert dsh.default_variant.id == "default"
+    assert dsh.default_variant.driver == "dsh-web"
+    assert dsh.default_variant.dimensions == {"surface": "web"}
+    assert [variant.id for variant in dsh.variants] == ["headless", "standard", "code", "minimal", "cordis"]
 
     assert grok.source == "npm"
     assert grok.package == "@xai-official/grok"
@@ -80,53 +87,53 @@ def test_new_agents_define_install_and_capture_profiles():
         "GROK_CODE_XAI_API_KEY": "phistory-fake-api-key",
     }
     assert grok.home_profile == "grok"
-    assert "--no-auto-update" in grok.run_args
-    assert "--single" in grok.run_args
+    assert "--no-auto-update" in grok.default_variant.run_args
+    assert "--single" in grok.default_variant.run_args
 
     assert minimax_code.source == "minimax-code"
     assert minimax_code.package == "MiniMax Code desktop app"
     assert minimax_code.tap_client == "minimax-code"
     assert minimax_code.tap_mode == "reverse"
-    assert minimax_code.run_args == ()
+    assert minimax_code.default_variant.run_args == ()
 
     assert kimi_code.source == "npm"
     assert kimi_code.package == "@moonshot-ai/kimi-code"
     assert kimi_code.tap_client == "kimi-code"
     assert kimi_code.executable == "kimi"
     assert kimi_code.home_profile == "kimi-code"
-    assert "--prompt" in kimi_code.run_args
+    assert "--prompt" in kimi_code.default_variant.run_args
 
     assert mimo.source == "npm"
     assert mimo.package == "@mimo-ai/cli"
     assert mimo.tap_client == "mimo"
     assert mimo.home_profile == "mimo"
     assert mimo.tap_mode == "reverse"
-    assert "run" in mimo.run_args
-    assert "--dangerously-skip-permissions" in mimo.run_args
+    assert "run" in mimo.default_variant.run_args
+    assert "--dangerously-skip-permissions" in mimo.default_variant.run_args
 
     assert openclaw.source == "npm"
     assert openclaw.home_profile == "openclaw"
     assert openclaw.node_runtime == "node@24"
-    assert "agent" in openclaw.run_args
+    assert "agent" in openclaw.default_variant.run_args
 
     assert hermes.source == "github-release"
     assert hermes.package == "NousResearch/hermes-agent"
     assert hermes.home_profile == "hermes"
-    assert "chat" in hermes.run_args
-    assert "-q" in hermes.run_args
-    assert "openrouter" in hermes.run_args
+    assert "chat" in hermes.default_variant.run_args
+    assert "-q" in hermes.default_variant.run_args
+    assert "openrouter" in hermes.default_variant.run_args
 
     assert kimi.source == "github-release"
     assert kimi.package == "MoonshotAI/kimi-cli"
     assert kimi.home_profile == "kimi"
-    assert "--print" in kimi.run_args
+    assert "--print" in kimi.default_variant.run_args
 
     assert opencode.source == "npm"
     assert opencode.package == "opencode-ai"
     assert opencode.home_profile == "opencode"
     assert opencode.tap_mode == "reverse"
-    assert "run" in opencode.run_args
-    assert "--dir" in opencode.run_args
+    assert "run" in opencode.default_variant.run_args
+    assert "--dir" in opencode.default_variant.run_args
 
     assert pi.source == "npm"
     assert pi.package == "@earendil-works/pi-coding-agent"
@@ -141,4 +148,4 @@ def test_new_agents_define_install_and_capture_profiles():
     assert omp.binary_release_repo == "can1357/oh-my-pi"
     assert omp.binary_release_asset == "omp-linux-x64"
     assert omp.binary_release_tag == "v{version}"
-    assert "--print" in omp.run_args
+    assert "--print" in omp.default_variant.run_args

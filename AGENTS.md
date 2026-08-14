@@ -23,9 +23,9 @@ This file is for future coding agents. Read it before changing the project.
 Generated capture artifacts live in:
 
 ```text
-captures/<agent>/<version>/prompt.md
-captures/<agent>/<version>/trace.jsonl
-captures/<agent>/<version>/meta.json
+captures/<agent>/<version>/variants/<variant>/prompt.md
+captures/<agent>/<version>/variants/<variant>/trace.jsonl
+captures/<agent>/<version>/variants/<variant>/meta.json
 ```
 
 `prompt.md` is normalized for human reading and diffs. `trace.jsonl` is raw evidence and should not be rewritten for presentation-only cleanup.
@@ -33,12 +33,12 @@ captures/<agent>/<version>/meta.json
 Claude Code captures may also include:
 
 ```text
-captures/claude-code/<version>/static-candidates.json
-captures/claude-code/<version>/static-prompts.json
-captures/claude-code/<version>/static-prompts.md
+captures/claude-code/<version>/static/candidates.json
+captures/claude-code/<version>/static/prompts.json
+captures/claude-code/<version>/static/prompts.md
 ```
 
-`static-candidates.json` is the archived raw candidate set after broad resource filtering. Keep it deterministic and useful for future rematching. `static-prompts.*` is the matched/readable output derived from those candidates and the local catalog in `phistory/static_prompts/catalogs/`.
+`static/candidates.json` is the archived raw candidate set after broad resource filtering. Keep it deterministic and useful for future rematching. `static/prompts.*` is the matched/readable output derived from those candidates and the local catalog in `phistory/static_prompts/catalogs/`.
 
 ## Capture Principle
 
@@ -50,13 +50,13 @@ Typical latest capture:
 uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 ```
 
-For each agent/version, the flow is:
+For each agent/version/variant, the flow is:
 
 1. Discover versions through `phistory.packages`.
 2. Install the exact release into `.phistory-cache/installs/<agent>/<version>/`.
 3. Create a temporary isolated HOME and XDG directories.
 4. Write only the minimal fake auth/config needed for the CLI to emit a prompt-bearing request.
-5. Launch `python -m claude_tap run <tap_client> --export-prompt ... -- <agent command>`.
+5. Dispatch the variant's capture driver. Most variants launch `python -m claude_tap run <tap_client> --export-prompt ... -- <agent command>`; interactive surfaces can use a focused driver such as `dsh-web`.
 6. Save `prompt.md`, raw `trace.jsonl`, and `meta.json`.
 7. For Claude Code, also extract package-embedded static prompt candidates and matched static prompts.
 8. Remove temporary tap output unless `--keep-tap` is used.
@@ -70,8 +70,8 @@ Static prompt extraction is separate from request capture. It parses installed p
 Current agents are defined in `phistory/registry.py`:
 
 - `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`.
-- `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled.
-- `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode.
+- `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives default, GPT-5.5, and GPT-5.6 variants.
+- `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode; uses a Web RPC driver for default, Standard, PTC, Minimal, and Creator snapshots, plus the headless snapshot.
 - `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and forward capture mode.
 - `grok`: npm package `@xai-official/grok`, tap client `grok`, isolated Grok home and fake xAI API key.
 - `minimax-code`: official MiniMax Code desktop updater source, tap client `minimax-code`; Phistory extracts the bundled Mavis runtime, installs matching Linux native dependencies (plus the pinned OpenCode engine for legacy releases), and launches it headlessly through an isolated provider.
@@ -89,7 +89,8 @@ When adding another CLI, prefer extending the existing abstractions:
 - Add a `PackageSource` only if `npm`, `pypi`, or `github-release` cannot model the release channel.
 - Add a `HomeProfile` only when the CLI needs isolated config files. Keep config minimal and deterministic.
 - Add a `TapMode` only when the existing `auto`, `reverse`, or `forward` modes are insufficient.
-- Keep `AgentSpec.run_args` as the normal user-facing CLI command that makes the tool send one prompt-bearing request.
+- Keep each `CaptureVariant.run_args` as the normal user-facing CLI command that makes the tool send one prompt-bearing request.
+- Every agent must keep a real `default` variant with no explicit model or mode override. Add named variants only for stable, meaningful prompt surfaces.
 
 ## Design Rules
 

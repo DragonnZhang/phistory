@@ -1,0 +1,48 @@
+{
+  "agent_id": "pi",
+  "agent": "Pi",
+  "package": "@earendil-works/pi-coding-agent",
+  "version": "0.79.6",
+  "published_at": "2026-06-16T22:03:33.475Z",
+  "tarball_url": "https://registry.npmjs.org/@earendil-works/pi-coding-agent/-/pi-coding-agent-0.79.6.tgz",
+  "binary_version": "0.79.6",
+  "captured_at": "2026-06-17T00:01:04.082681+00:00",
+  "tap_client": "pi",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 8.559,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "--tap-client",
+    "pi",
+    "--tap-export-prompt",
+    "prompt.md",
+    "--tap-no-live",
+    "--tap-no-open",
+    "--tap-no-update-check",
+    "--tap-output-dir",
+    ".tap",
+    "--",
+    "--provider",
+    "phistory",
+    "--model",
+    "gpt-4.1",
+    "--print",
+    "--mode",
+    "text",
+    "--no-session",
+    "Reply with one short sentence."
+  ],
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 4
+  }
+}

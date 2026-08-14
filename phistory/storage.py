@@ -13,7 +13,7 @@ def is_captured(target: CaptureTarget) -> bool:
 
 
 def prepare_version_dir(target: CaptureTarget) -> None:
-    target.version_dir.mkdir(parents=True, exist_ok=True)
+    target.variant_dir.mkdir(parents=True, exist_ok=True)
 
 
 def latest_trace(tap_output_dir: Path) -> Path:
