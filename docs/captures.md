@@ -4,6 +4,7 @@ Full generated index of archived prompt snapshots. The short project overview li
 
 | Agent | Version | Published | Captured | Snapshot | Static | Candidates | Raw Trace |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| Pi | `0.84.2` | 2026-08-14 10:09 UTC | 2026-08-14 10:35 UTC | [pi 0.84.2, published 2026-08-14 10:09 UTC](../captures/pi/0.84.2/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.84.2/trace.jsonl) |
 | Pi | `0.84.1` | 2026-08-07 06:01 UTC | 2026-08-07 06:50 UTC | [pi 0.84.1, published 2026-08-07 06:01 UTC](../captures/pi/0.84.1/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.84.1/trace.jsonl) |
 | Pi | `0.84.0` | 2026-08-06 11:10 UTC | 2026-08-06 13:12 UTC | [pi 0.84.0, published 2026-08-06 11:10 UTC](../captures/pi/0.84.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.84.0/trace.jsonl) |
 | Pi | `0.83.0` | 2026-07-29 22:30 UTC | 2026-07-29 23:34 UTC | [pi 0.83.0, published 2026-07-29 22:30 UTC](../captures/pi/0.83.0/prompt.md) |  |  | [trace.jsonl](../captures/pi/0.83.0/trace.jsonl) |
