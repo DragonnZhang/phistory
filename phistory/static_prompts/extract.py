@@ -35,6 +35,10 @@ STATIC_PROMPT_DOUBLE_TERNARY_RE = re.compile(r'\$\{\}\?"(?P<branch>(?:[^"\\\n]|\
 STATIC_PROMPT_SINGLE_TERNARY_RE = re.compile(r"\$\{\}\?'(?P<branch>(?:[^'\\\n]|\\.)*)':'(?P=branch)'")
 
 
+class StaticSourceUnavailable(RuntimeError):
+    """The installed package does not expose source that can be statically inspected."""
+
+
 def extract_static_prompts(target: CaptureTarget, install_dir: Path) -> StaticPromptResult | None:
     if target.agent.id != "claude-code":
         return None
@@ -159,7 +163,7 @@ def _claude_code_source(install_dir: Path) -> tuple[str, str]:
         js = extract_bun_entrypoint_js(candidate)
         if js:
             return _relative_source(install_dir, candidate), js
-    raise RuntimeError(f"could not find extractable Claude Code source under {package_dir}")
+    raise StaticSourceUnavailable(f"package does not include extractable source under {package_dir}")
 
 
 def _package_bin_path(package_dir: Path, bin_field: object) -> Path:
