@@ -1,0 +1,40 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.232",
+  "published_at": "2026-08-13T21:30:53.194Z",
+  "tarball_url": "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.232.tgz",
+  "binary_version": "2.1.232 (Claude Code)",
+  "captured_at": "2026-08-14T00:10:02.992048+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 5.173,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--no-session-persistence",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "static_prompts": {
+    "supported": true,
+    "candidates_path": "static-candidates.json",
+    "prompt_path": "static-prompts.md",
+    "json_path": "static-prompts.json",
+    "error": "could not find extractable Claude Code source under /home/runner/work/phistory/phistory/.phistory-cache/installs/claude-code/2.1.232/node_modules/@anthropic-ai/claude-code"
+  }
+}
