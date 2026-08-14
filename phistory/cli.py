@@ -10,7 +10,7 @@ from phistory.models import CaptureTarget
 from phistory.registry import AGENT_ORDER, AGENTS, parse_agent_ids
 from phistory.render import render_index
 from phistory.site import render_site
-from phistory.static_prompts.extract import extract_static_prompts
+from phistory.static_prompts.extract import StaticSourceUnavailable, extract_static_prompts
 from phistory.workflow import capture_latest, iter_backfill
 
 
@@ -194,6 +194,9 @@ def _extract_static(
             packages.install_agent(agent, version, install_dir)
         try:
             result = extract_static_prompts(target, install_dir)
+        except StaticSourceUnavailable as exc:
+            print(f"{agent_id} {version}: skipped static extraction: {exc}", flush=True)
+            continue
         except Exception as exc:
             failed = True
             print(f"{agent_id} {version}: failed static extraction: {exc}", file=sys.stderr, flush=True)

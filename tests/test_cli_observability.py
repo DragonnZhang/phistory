@@ -1,7 +1,10 @@
 from pathlib import Path
+from types import SimpleNamespace
 
+from phistory import cli
 from phistory.cli import _print_results
 from phistory.models import AgentSpec, CaptureResult
+from phistory.static_prompts.extract import StaticSourceUnavailable
 from phistory.workflow import capture_latest
 
 
@@ -49,3 +52,23 @@ def test_capture_latest_reports_version_lookup_failure(monkeypatch, tmp_path: Pa
     assert results[0].variant_id == "default"
     assert results[0].status == "failed"
     assert results[0].error == "registry down"
+
+
+def test_extract_static_treats_unavailable_packaged_source_as_skip(monkeypatch, tmp_path: Path, capsys):
+    monkeypatch.setattr(cli.packages, "version_info", lambda agent, version: SimpleNamespace(version=version))
+    monkeypatch.setattr(cli.packages, "install_agent", lambda agent, version, install_dir: None)
+    monkeypatch.setattr(
+        cli,
+        "extract_static_prompts",
+        lambda target, install_dir: (_ for _ in ()).throw(StaticSourceUnavailable("binary-only package")),
+    )
+
+    status = cli._extract_static(
+        "claude-code",
+        ["1.2.3"],
+        root=tmp_path / "captures",
+        cache_dir=tmp_path / "cache",
+    )
+
+    assert status == 0
+    assert "skipped static extraction: binary-only package" in capsys.readouterr().out

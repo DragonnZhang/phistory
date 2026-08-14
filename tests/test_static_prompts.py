@@ -1,5 +1,11 @@
+import json
+
+import pytest
+
 from phistory.static_prompts.catalog import load_catalog, match_candidates, normalize_for_match
 from phistory.static_prompts.extract import (
+    StaticSourceUnavailable,
+    _claude_code_source,
     _keep_known_or_prompt_like,
     normalize_static_prompt_markdown_content,
     read_static_candidates,
@@ -8,6 +14,18 @@ from phistory.static_prompts.extract import (
 )
 from phistory.static_prompts.javascript import extract_prompt_candidates, extract_string_candidates
 from phistory.static_prompts.models import StaticCandidatesResult, StaticPromptMatch, StaticPromptResult
+
+
+def test_claude_code_binary_only_package_marks_static_source_unavailable(tmp_path):
+    package_dir = tmp_path / "node_modules/@anthropic-ai/claude-code"
+    package_dir.mkdir(parents=True)
+    (package_dir / "package.json").write_text(json.dumps({"bin": {"claude": "bin/claude"}}), encoding="utf-8")
+    binary = package_dir / "bin/claude"
+    binary.parent.mkdir()
+    binary.write_bytes(b"\x00native executable")
+
+    with pytest.raises(StaticSourceUnavailable, match="does not include extractable source"):
+        _claude_code_source(tmp_path)
 
 
 def test_javascript_prompt_extraction_skips_comments_and_matches_known_catalog():
