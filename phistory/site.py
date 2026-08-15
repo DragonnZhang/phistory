@@ -1050,6 +1050,45 @@ a:hover { text-decoration: none; }
 }
 .tool-list {
   display: grid;
+  gap: 15px;
+}
+.tool-namespace {
+  display: grid;
+  gap: 8px;
+}
+.tool-namespace + .tool-namespace {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.tool-namespace-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 2px;
+}
+.tool-namespace-name {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 720;
+}
+.tool-namespace-description {
+  flex: 1 1 260px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.tool-namespace-count {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+.tool-namespace-tools {
+  display: grid;
   gap: 9px;
 }
 .tool-card {
@@ -1079,11 +1118,38 @@ a:hover { text-decoration: none; }
 .tool-card .trace-body {
   padding: 10px 16px 16px 35px;
 }
+.tool-detail-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 2px 0 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.tool-detail-label small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.tool-description-shell {
+  max-height: min(460px, 55vh);
+  margin: 0 0 16px;
+  padding: 0 9px 0 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
 .tool-description {
-  margin: 0 0 14px;
+  margin: 0;
   color: var(--text);
   font-size: 13px;
   line-height: 1.56;
+}
+.tool-description-shell:focus-visible,
+.tool-format .raw-json:focus-visible,
+.tool-raw .raw-json:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .tool-params {
   display: grid;
@@ -1102,11 +1168,15 @@ a:hover { text-decoration: none; }
 }
 .tool-param-name {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   font-weight: 650;
   font-size: 13px;
+}
+.tool-param-name.is-nested {
+  --tool-indent: 14px;
+  padding-left: calc(var(--tool-depth, 1) * var(--tool-indent));
+  color: color-mix(in srgb, var(--text) 82%, var(--muted));
+  font-weight: 580;
 }
 .tool-param-type {
   color: var(--muted);
@@ -1122,6 +1192,33 @@ a:hover { text-decoration: none; }
   font-size: 12px;
   line-height: 1.45;
 }
+.tool-input-empty,
+.tool-input-value {
+  margin: 0 0 11px;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--bg) 82%, var(--control-bg));
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.tool-input-value strong {
+  color: var(--text);
+}
+.tool-format {
+  margin: 0 0 11px;
+}
+.tool-format-note {
+  margin: 0 0 7px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.tool-format .raw-json {
+  max-height: min(380px, 48vh);
+  white-space: pre;
+}
 .tool-raw .trace-summary {
   min-height: 28px;
   width: auto;
@@ -1131,7 +1228,7 @@ a:hover { text-decoration: none; }
 }
 .tool-raw {
   border-bottom: 0;
-  margin-top: 8px;
+  margin-top: 9px;
 }
 .tool-raw .trace-summary strong {
   font-size: 12px;
@@ -1494,10 +1591,24 @@ a:hover { text-decoration: none; }
   .tool-card .trace-summary small {
     display: none;
   }
+  .tool-namespace-header {
+    align-items: center;
+  }
+  .tool-namespace-description {
+    flex-basis: 100%;
+    order: 3;
+  }
+  .tool-description-shell {
+    max-height: min(420px, 52vh);
+    padding-right: 5px;
+  }
   .tool-param {
     grid-template-columns: minmax(0, 1fr);
     gap: 3px;
     padding: 10px;
+  }
+  .tool-param-name.is-nested {
+    --tool-indent: 10px;
   }
   .tool-raw .trace-body {
     padding: 6px 0 0;
@@ -2454,18 +2565,25 @@ function normalizeMessages(provider, body) {
 
 function normalizeTools(body) {
   const tools = [];
-  for (const tool of traceToolItems(body)) {
+  for (const entry of traceToolItems(body)) {
+    const tool = entry.tool;
     if (!tool || typeof tool !== 'object') continue;
     const declarations = tool.functionDeclarations || tool.function_declarations;
     if (Array.isArray(declarations)) {
-      tools.push(...toolDeclarations(declarations));
+      tools.push(...toolDeclarations(declarations, entry));
       continue;
     }
     const fn = tool.function && typeof tool.function === 'object' ? tool.function : null;
+    const name = String(tool.name || fn?.name || tool.type || 'tool');
     tools.push({
-      name: String(tool.name || fn?.name || tool.type || 'tool'),
+      name,
+      key: [entry.namespace, name].filter(Boolean).join('/'),
+      namespace: entry.namespace,
+      namespaceDescription: entry.namespaceDescription,
+      kind: String(tool.type || fn?.type || 'function'),
       description: String(tool.description || fn?.description || ''),
       schema: tool.parameters || tool.input_schema || fn?.parameters || tool.schema || null,
+      format: tool.format || fn?.format || null,
       raw: tool
     });
   }
@@ -2476,8 +2594,13 @@ function normalizeTools(body) {
       if (!spec) continue;
       tools.push({
         name: String(spec.name || 'tool'),
+        key: String(spec.name || 'tool'),
+        namespace: '',
+        namespaceDescription: '',
+        kind: 'function',
         description: String(spec.description || ''),
         schema: spec.inputSchema?.json || null,
+        format: null,
         raw: item
       });
     }
@@ -2490,24 +2613,53 @@ function normalizeTools(body) {
 }
 
 function traceToolItems(body) {
-  const tools = Array.isArray(body.tools) ? [...body.tools] : [];
+  const tools = [];
+  for (const tool of Array.isArray(body.tools) ? body.tools : []) {
+    flattenTraceTool(tool, [], [], tools);
+  }
   for (const item of messageItems(body.input)) {
     if (item.type === 'additional_tools' && Array.isArray(item.tools)) {
-      tools.push(...item.tools);
+      for (const tool of item.tools) flattenTraceTool(tool, [], [], tools);
     }
   }
   return tools;
 }
 
-function toolDeclarations(declarations) {
+function flattenTraceTool(tool, namespace, namespaceDescriptions, output) {
+  if (!tool || typeof tool !== 'object') return;
+  const nested = Array.isArray(tool.tools) ? tool.tools.filter(item => item && typeof item === 'object') : [];
+  if (nested.length) {
+    const name = String(tool.name || '').trim();
+    const description = String(tool.description || '').trim();
+    const nextNamespace = name ? [...namespace, name] : namespace;
+    const nextDescriptions = description ? [...namespaceDescriptions, description] : namespaceDescriptions;
+    for (const child of nested) flattenTraceTool(child, nextNamespace, nextDescriptions, output);
+    return;
+  }
+  output.push({
+    tool,
+    namespace: namespace.join(' / '),
+    namespaceDescription: namespaceDescriptions.at(-1) || ''
+  });
+}
+
+function toolDeclarations(declarations, context = {}) {
   return declarations
     .filter(fn => fn && typeof fn === 'object')
-    .map(fn => ({
-      name: String(fn.name || 'tool'),
-      description: String(fn.description || ''),
-      schema: fn.parameters || null,
-      raw: fn
-    }));
+    .map(fn => {
+      const name = String(fn.name || 'tool');
+      return {
+        name,
+        key: [context.namespace, name].filter(Boolean).join('/'),
+        namespace: context.namespace || '',
+        namespaceDescription: context.namespaceDescription || '',
+        kind: 'function',
+        description: String(fn.description || ''),
+        schema: fn.parameters || null,
+        format: null,
+        raw: fn
+      };
+    });
 }
 
 function contentBlocks(value, title) {
@@ -2809,34 +2961,173 @@ function messagesSectionHtml(messages) {
 
 function toolsSectionHtml(tools) {
   if (!tools.length) return '';
-  const body = `<div class="tool-list">${tools.map(toolHtml).join('')}</div>`;
+  const body = `<div class="tool-list">${groupToolsByNamespace(tools).map(toolNamespaceHtml).join('')}</div>`;
   return `<section class="trace-section is-open" data-section="tools">${traceSummaryHtml('Tools', true, `<small>${tools.length}</small>`)}<div class="trace-content"><div class="trace-body">${body}</div></div></section>`;
+}
+
+function groupToolsByNamespace(tools) {
+  const groups = new Map();
+  for (const tool of tools) {
+    const namespace = tool.namespace || '';
+    if (!groups.has(namespace)) {
+      groups.set(namespace, {
+        namespace,
+        description: tool.namespaceDescription || '',
+        tools: []
+      });
+    }
+    const group = groups.get(namespace);
+    if (!group.description && tool.namespaceDescription) group.description = tool.namespaceDescription;
+    group.tools.push(tool);
+  }
+  return [...groups.values()];
+}
+
+function toolNamespaceHtml(group) {
+  const tools = `<div class="tool-namespace-tools">${group.tools.map(toolHtml).join('')}</div>`;
+  if (!group.namespace) return `<div class="tool-namespace">${tools}</div>`;
+  const count = `${group.tools.length} tool${group.tools.length === 1 ? '' : 's'}`;
+  return `<section class="tool-namespace"><header class="tool-namespace-header"><strong class="tool-namespace-name">${escapeHtml(namespaceLabel(group.namespace))}</strong>${group.description ? `<span class="tool-namespace-description">${escapeHtml(group.description)}</span>` : ''}<span class="tool-namespace-count">${count}</span></header>${tools}</section>`;
+}
+
+function namespaceLabel(namespace) {
+  return String(namespace || '').split(' / ').map(label => label ? label.charAt(0).toUpperCase() + label.slice(1) : '').join(' / ');
 }
 
 function toolHtml(tool) {
   const params = schemaParameters(tool.schema);
-  const paramsHtml = params.length
-    ? `<div class="tool-params">${params.map(param => `<div class="tool-param"><div class="tool-param-name" title="${escapeHtml(param.name)}">${escapeHtml(param.name)}</div><div class="tool-param-type">${escapeHtml(param.type)}${param.required ? ' <span class="tool-param-required">required</span>' : ''}</div><div class="tool-param-desc">${escapeHtml(param.description)}</div></div>`).join('')}</div>`
-    : '<div class="tool-param-desc">No structured parameters.</div>';
-  const raw = tool.schema || tool.raw;
-  return `<section class="tool-card" data-tool="${escapeHtml(tool.name)}">${traceSummaryHtml(tool.name, false, `<small>${escapeHtml(tool.description || `${params.length} parameter${params.length === 1 ? '' : 's'}`)}</small>`)}<div class="trace-content"><div class="trace-body">${tool.description ? `<div class="tool-description trace-rendered">${markdownHtml(tool.description)}</div>` : ''}${paramsHtml}<section class="trace-section tool-raw">${traceSummaryHtml('Raw schema', false)}<div class="trace-content"><div class="trace-body"><pre class="raw-json">${escapeHtml(JSON.stringify(raw, null, 2))}</pre></div></div></section></div></div></section>`;
+  const description = tool.description
+    ? `<div class="tool-detail-label">Description</div><div class="tool-description-shell" tabindex="0" aria-label="${escapeHtml(`${tool.name} description`)}"><div class="tool-description trace-rendered">${markdownHtml(tool.description)}</div></div>`
+    : '';
+  const raw = tool.raw || tool.schema || tool.format || {};
+  return `<section class="tool-card" data-tool="${escapeHtml(tool.key || tool.name)}">${traceSummaryHtml(tool.name, false, `<small>${escapeHtml(toolSummary(tool, params))}</small>`)}<div class="trace-content"><div class="trace-body">${description}${toolInputHtml(tool, params)}<section class="trace-section tool-raw">${traceSummaryHtml('Raw definition', false)}<div class="trace-content"><div class="trace-body"><pre class="raw-json" tabindex="0" aria-label="${escapeHtml(`${tool.name} raw definition`)}">${escapeHtml(JSON.stringify(raw, null, 2))}</pre></div></div></section></div></div></section>`;
+}
+
+function toolSummary(tool, params) {
+  const kind = toolKindLabel(tool.kind);
+  if (tool.format) return `${kind} · ${toolFormatLabel(tool.format)}`;
+  if (params.length) return `${kind} · ${params.length} parameter${params.length === 1 ? '' : 's'}`;
+  const root = schemaRoot(tool.schema);
+  if (root) return `${kind} · ${schemaType(root)} input`;
+  return kind;
+}
+
+function toolKindLabel(kind) {
+  const value = String(kind || 'tool').replace(/[_-]+/g, ' ');
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function toolInputHtml(tool, params) {
+  if (tool.format) {
+    const definition = toolFormatDefinition(tool.format);
+    const format = definition
+      ? `<div class="tool-format"><p class="tool-format-note">Accepts raw text matching this format.</p><pre class="raw-json" tabindex="0" aria-label="${escapeHtml(`${tool.name} input format`)}">${escapeHtml(definition)}</pre></div>`
+      : `<div class="tool-input-value"><strong>${escapeHtml(toolFormatLabel(tool.format))}</strong></div>`;
+    return `<div class="tool-detail-label">Input <small>${escapeHtml(toolFormatLabel(tool.format))}</small></div>${format}`;
+  }
+  if (params.length) {
+    const rows = params.map(param => {
+      const nestedClass = param.depth ? ' is-nested' : '';
+      const nestedStyle = param.depth ? ` style="--tool-depth:${Math.min(param.depth, 4)}"` : '';
+      return `<div class="tool-param"><div class="tool-param-name${nestedClass}"${nestedStyle} title="${escapeHtml(param.name)}">${escapeHtml(param.name)}</div><div class="tool-param-type">${escapeHtml(param.type)}${param.required ? ' <span class="tool-param-required">required</span>' : ''}</div><div class="tool-param-desc">${escapeHtml(param.description)}</div></div>`;
+    }).join('');
+    return `<div class="tool-detail-label">Parameters <small>${params.length}</small></div><div class="tool-params">${rows}</div>`;
+  }
+  const root = schemaRoot(tool.schema);
+  if (root) {
+    const description = schemaDescription(root);
+    return `<div class="tool-detail-label">Input</div><div class="tool-input-value"><strong>${escapeHtml(schemaType(root))}</strong>${description ? ` · ${escapeHtml(description)}` : ''}</div>`;
+  }
+  return '<div class="tool-detail-label">Input</div><div class="tool-input-empty">No input definition provided.</div>';
+}
+
+function toolFormatLabel(format) {
+  if (format && typeof format === 'object') {
+    if (format.type === 'grammar') {
+      const syntax = String(format.syntax || '').trim();
+      return syntax ? `${syntax.charAt(0).toUpperCase() + syntax.slice(1)} grammar` : 'Grammar';
+    }
+    if (format.type === 'text') return 'Freeform text';
+    if (format.type) return `${toolKindLabel(format.type)} input`;
+  }
+  return 'Freeform input';
+}
+
+function toolFormatDefinition(format) {
+  if (typeof format === 'string') return format;
+  if (!format || typeof format !== 'object') return '';
+  if (typeof format.definition === 'string') return format.definition;
+  return JSON.stringify(format, null, 2);
 }
 
 function schemaParameters(schema) {
-  if (!schema || typeof schema !== 'object') return [];
-  const root = schema.json && typeof schema.json === 'object' ? schema.json : schema;
-  const properties = root.properties && typeof root.properties === 'object' ? root.properties : {};
-  const required = new Set(Array.isArray(root.required) ? root.required.map(String) : []);
-  return Object.entries(properties).map(([name, spec]) => {
-    const item = spec && typeof spec === 'object' ? spec : {};
-    const enumText = Array.isArray(item.enum) && item.enum.length ? ` Values: ${item.enum.map(String).join(', ')}.` : '';
-    return {
-      name,
+  const root = schemaRoot(schema);
+  if (!root) return [];
+  const output = [];
+  appendSchemaParameters(root, '', 0, output, new Set());
+  return output;
+}
+
+function schemaRoot(schema) {
+  if (!schema || typeof schema !== 'object') return null;
+  return schema.json && typeof schema.json === 'object' ? schema.json : schema;
+}
+
+function appendSchemaParameters(schema, prefix, depth, output, visited) {
+  if (!schema || typeof schema !== 'object' || visited.has(schema)) return;
+  visited.add(schema);
+  const properties = schema.properties && typeof schema.properties === 'object' ? schema.properties : {};
+  const required = new Set(Array.isArray(schema.required) ? schema.required.map(String) : []);
+  for (const [name, value] of Object.entries(properties)) {
+    const spec = value && typeof value === 'object' ? value : {};
+    const path = prefix ? `${prefix}.${name}` : name;
+    output.push({
+      name: path,
+      depth,
       required: required.has(name),
-      type: schemaType(item),
-      description: `${item.description || ''}${enumText}`.trim()
-    };
-  });
+      type: schemaType(spec),
+      description: schemaDescription(spec)
+    });
+    for (const child of nestedSchemaTargets(spec, path)) {
+      appendSchemaParameters(child.schema, child.prefix, depth + 1, output, visited);
+    }
+  }
+}
+
+function nestedSchemaTargets(spec, prefix) {
+  const targets = [];
+  if (!spec || typeof spec !== 'object') return targets;
+  if (spec.properties) targets.push({ schema: spec, prefix });
+  if (spec.items && typeof spec.items === 'object') {
+    if (spec.items.properties) targets.push({ schema: spec.items, prefix: `${prefix}[]` });
+    for (const child of schemaBranches(spec.items)) {
+      if (child.properties) targets.push({ schema: child, prefix: `${prefix}[]` });
+    }
+  }
+  for (const child of schemaBranches(spec)) {
+    if (child.properties) targets.push({ schema: child, prefix });
+    if (child.items?.properties) targets.push({ schema: child.items, prefix: `${prefix}[]` });
+  }
+  return targets;
+}
+
+function schemaBranches(spec) {
+  return ['anyOf', 'oneOf', 'allOf'].flatMap(key => Array.isArray(spec?.[key]) ? spec[key].filter(item => item && typeof item === 'object') : []);
+}
+
+function schemaDescription(spec) {
+  if (!spec || typeof spec !== 'object') return '';
+  const details = [];
+  if (spec.description) details.push(String(spec.description).trim());
+  if (Array.isArray(spec.enum) && spec.enum.length) details.push(`Values: ${spec.enum.map(schemaValue).join(', ')}.`);
+  if (Object.prototype.hasOwnProperty.call(spec, 'const')) details.push(`Value: ${schemaValue(spec.const)}.`);
+  if (Object.prototype.hasOwnProperty.call(spec, 'default')) details.push(`Default: ${schemaValue(spec.default)}.`);
+  return details.filter(Boolean).join(' ');
+}
+
+function schemaValue(value) {
+  if (typeof value === 'string') return value;
+  try { return JSON.stringify(value); } catch { return String(value); }
 }
 
 function schemaType(spec) {
