@@ -209,7 +209,13 @@ def test_render_site_writes_static_html_manifest(tmp_path: Path):
     assert "Raw Request Body" in text
     assert "toolDeclarations" in text
     assert "traceToolItems" in text
+    assert "flattenTraceTool" in text
     assert "item.type === 'additional_tools'" in text
+    assert "groupToolsByNamespace" in text
+    assert "Raw definition" in text
+    assert "format.type === 'grammar'" in text
+    assert "toolFormatDefinition" in text
+    assert "No structured parameters." not in text
     assert "schemaParameters" in text
     assert "trace-jumpbar" in text
     assert 'id="loading-state"' in text
