@@ -2,13 +2,13 @@
 
 [中文](README_zh.md)
 
-Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
+Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, Oh My Pi, and Qwen Code.
 
 Open the web viewer to compare prompt snapshots across versions and see how agent design changes through prompts, tools, policies, and runtime instructions.
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-18 15:03 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-08-18 17:11 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -36,7 +36,7 @@ Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are
 uv sync --all-groups
 
 # Capture the latest release and every configured snapshot for each CLI.
-uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp,qwen-code
 
 # Capture only selected Codex snapshots.
 uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6
@@ -70,10 +70,11 @@ uv run phistory render-site
 - opencode (`opencode-ai`)
 - Pi (`@earendil-works/pi-coding-agent`)
 - Oh My Pi (`@oh-my-pi/pi-coding-agent`)
+- Qwen Code (`@qwen-code/qwen-code`)
 
 ## Capture Status
 
-Last capture update: 2026-08-18 15:03 UTC
+Last capture update: 2026-08-18 17:11 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -91,6 +92,7 @@ Last capture update: 2026-08-18 15:03 UTC
 | opencode | [1.18.18 - 2026-08-13](captures/opencode/1.18.18/variants/default/prompt.md) | 103 | 103 | 2026-08-13 09:09 UTC |
 | Pi | [0.84.2 - 2026-08-14](captures/pi/0.84.2/variants/default/prompt.md) | 41 | 41 | 2026-08-14 10:35 UTC |
 | Oh My Pi | [17.3.7 - 2026-08-18](captures/omp/17.3.7/variants/default/prompt.md) | 61 | 61 | 2026-08-18 09:05 UTC |
+| Qwen Code | [0.21.13 - 2026-08-17](captures/qwen-code/0.21.13/variants/default/prompt.md) | 1 | 1 | 2026-08-18 17:11 UTC |
 
 ## Project Trend
 
