@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-18 17:56 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-08-18 20:52 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -73,11 +73,11 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-18 17:56 UTC
+Last capture update: 2026-08-18 20:52 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.234 - 2026-08-17](captures/claude-code/2.1.234/variants/default/prompt.md) | 388 | 388 | 2026-08-17 20:56 UTC |
+| Claude Code | [2.1.235 - 2026-08-18](captures/claude-code/2.1.235/variants/default/prompt.md) | 389 | 389 | 2026-08-18 20:52 UTC |
 | Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/variants/default/prompt.md) | 74 | 80 | 2026-08-14 18:18 UTC |
 | DeepSeek Harness | [0.1.0-rc.7 - 2026-08-17](captures/dsh/0.1.0-rc.7/variants/default/prompt.md) | 6 | 27 | 2026-08-17 13:25 UTC |
 | Antigravity CLI | [1.1.14 - 2026-08-18](captures/antigravity/1.1.14/variants/default/prompt.md) | 28 | 28 | 2026-08-18 05:03 UTC |
