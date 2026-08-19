@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, Oh My Pi, and Qwen Code.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-19T05:04:34.240640Z",
+  "updated_at": "2026-08-19T11:53:17.056190Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -69,11 +69,11 @@
     {
       "agent_id": "mimo",
       "agent": "MiMo Code",
-      "latest_version": "0.1.12",
-      "latest_published_at": "2026-08-13T07:16:00.313Z",
-      "latest_captured_at": "2026-08-13T09:09:30.694415+00:00",
-      "versions": 12,
-      "snapshots": 12
+      "latest_version": "0.1.13",
+      "latest_published_at": "2026-08-19T11:05:49.762Z",
+      "latest_captured_at": "2026-08-19T11:53:07.993627+00:00",
+      "versions": 13,
+      "snapshots": 13
     },
     {
       "agent_id": "openclaw",
@@ -123,11 +123,11 @@
     {
       "agent_id": "omp",
       "agent": "Oh My Pi",
-      "latest_version": "17.3.7",
-      "latest_published_at": "2026-08-18T08:51:09.945Z",
-      "latest_captured_at": "2026-08-18T09:05:29.503770+00:00",
-      "versions": 61,
-      "snapshots": 61
+      "latest_version": "17.3.8",
+      "latest_published_at": "2026-08-19T11:23:31.769Z",
+      "latest_captured_at": "2026-08-19T11:53:17.056190+00:00",
+      "versions": 62,
+      "snapshots": 62
     },
     {
       "agent_id": "qwen-code",
@@ -13097,6 +13097,23 @@
     {
       "agent_id": "mimo",
       "agent": "MiMo Code",
+      "version": "0.1.13",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 16
+      },
+      "published_at": "2026-08-19T11:05:49.762Z",
+      "captured_at": "2026-08-19T11:53:07.993627+00:00",
+      "prompt": "captures/mimo/0.1.13/variants/default/prompt.md",
+      "trace": "captures/mimo/0.1.13/variants/default/trace.jsonl",
+      "meta": "captures/mimo/0.1.13/variants/default/meta.json"
+    },
+    {
+      "agent_id": "mimo",
+      "agent": "MiMo Code",
       "version": "0.1.12",
       "variant_id": "default",
       "variant_label": "Default",
@@ -17717,6 +17734,23 @@
       "prompt": "captures/pi/0.74.0/variants/default/prompt.md",
       "trace": "captures/pi/0.74.0/variants/default/trace.jsonl",
       "meta": "captures/pi/0.74.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "omp",
+      "agent": "Oh My Pi",
+      "version": "17.3.8",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-19T11:23:31.769Z",
+      "captured_at": "2026-08-19T11:53:17.056190+00:00",
+      "prompt": "captures/omp/17.3.8/variants/default/prompt.md",
+      "trace": "captures/omp/17.3.8/variants/default/trace.jsonl",
+      "meta": "captures/omp/17.3.8/variants/default/meta.json"
     },
     {
       "agent_id": "omp",
