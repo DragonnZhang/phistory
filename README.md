@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-18 17:11 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-08-18 22:53 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -74,17 +74,17 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-18 17:11 UTC
+Last capture update: 2026-08-18 22:53 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.234 - 2026-08-17](captures/claude-code/2.1.234/variants/default/prompt.md) | 388 | 388 | 2026-08-17 20:56 UTC |
-| Codex CLI | [0.147.0 - 2026-08-07](captures/codex/0.147.0/variants/default/prompt.md) | 74 | 80 | 2026-08-14 18:18 UTC |
+| Claude Code | [2.1.235 - 2026-08-18](captures/claude-code/2.1.235/variants/default/prompt.md) | 389 | 389 | 2026-08-18 20:52 UTC |
+| Codex CLI | [0.148.0 - 2026-08-18](captures/codex/0.148.0/variants/default/prompt.md) | 75 | 83 | 2026-08-18 22:53 UTC |
 | DeepSeek Harness | [0.1.0-rc.7 - 2026-08-17](captures/dsh/0.1.0-rc.7/variants/default/prompt.md) | 6 | 27 | 2026-08-17 13:25 UTC |
 | Antigravity CLI | [1.1.14 - 2026-08-18](captures/antigravity/1.1.14/variants/default/prompt.md) | 28 | 28 | 2026-08-18 05:03 UTC |
 | Grok Build | [1.0.5 - 2026-08-16](captures/grok/1.0.5/variants/default/prompt.md) | 130 | 130 | 2026-08-18 02:00 UTC |
 | MiniMax Code | [3.0.65 - 2026-08-13](captures/minimax-code/3.0.65/variants/default/prompt.md) | 29 | 29 | 2026-08-14 18:52 UTC |
-| Kimi Code | [0.37.1 - 2026-08-18](captures/kimi-code/0.37.1/variants/default/prompt.md) | 64 | 64 | 2026-08-18 15:03 UTC |
+| Kimi Code | [0.37.2 - 2026-08-18](captures/kimi-code/0.37.2/variants/default/prompt.md) | 65 | 65 | 2026-08-18 17:56 UTC |
 | MiMo Code | [0.1.12 - 2026-08-13](captures/mimo/0.1.12/variants/default/prompt.md) | 12 | 12 | 2026-08-13 09:09 UTC |
 | OpenClaw | [2026.7.1-2 - 2026-07-18](captures/openclaw/2026.7.1-2/variants/default/prompt.md) | 69 | 69 | 2026-07-18 04:30 UTC |
 | Hermes Agent | [v2026.8.18 - 2026-08-18](captures/hermes/v2026.8.18/variants/default/prompt.md) | 26 | 26 | 2026-08-18 08:04 UTC |
