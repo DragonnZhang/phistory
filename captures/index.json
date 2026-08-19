@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, Oh My Pi, and Qwen Code.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-18T22:53:36.653170Z",
+  "updated_at": "2026-08-19T05:04:34.240640Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -33,11 +33,11 @@
     {
       "agent_id": "antigravity",
       "agent": "Antigravity CLI",
-      "latest_version": "1.1.14",
-      "latest_published_at": "2026-08-18T04:10:43Z",
-      "latest_captured_at": "2026-08-18T05:03:51.948890+00:00",
-      "versions": 28,
-      "snapshots": 28
+      "latest_version": "1.1.15",
+      "latest_published_at": "2026-08-19T04:11:33Z",
+      "latest_captured_at": "2026-08-19T05:04:34.240640+00:00",
+      "versions": 29,
+      "snapshots": 29
     },
     {
       "agent_id": "grok",
@@ -8845,6 +8845,22 @@
       "prompt": "captures/dsh/0.0.1-rc.2/variants/headless/prompt.md",
       "trace": "captures/dsh/0.0.1-rc.2/variants/headless/trace.jsonl",
       "meta": "captures/dsh/0.0.1-rc.2/variants/headless/meta.json"
+    },
+    {
+      "agent_id": "antigravity",
+      "agent": "Antigravity CLI",
+      "version": "1.1.15",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "MODEL_GOOGLE_GEMINI_2_5_FLASH"
+      },
+      "published_at": "2026-08-19T04:11:33Z",
+      "captured_at": "2026-08-19T05:04:34.240640+00:00",
+      "prompt": "captures/antigravity/1.1.15/variants/default/prompt.md",
+      "trace": "captures/antigravity/1.1.15/variants/default/trace.jsonl",
+      "meta": "captures/antigravity/1.1.15/variants/default/meta.json"
     },
     {
       "agent_id": "antigravity",
