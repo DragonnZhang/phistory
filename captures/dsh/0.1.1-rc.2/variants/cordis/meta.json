@@ -1,0 +1,53 @@
+{
+  "agent_id": "dsh",
+  "agent": "DeepSeek Harness",
+  "package": "@deepseek-ai/dsh",
+  "version": "0.1.1-rc.2",
+  "variant": {
+    "id": "cordis",
+    "label": "Creator",
+    "dimensions": {
+      "surface": "web",
+      "mode": "cordis"
+    }
+  },
+  "requested": {
+    "surface": "web",
+    "mode": "cordis"
+  },
+  "observed": {
+    "model": "deepseek-v4-flash",
+    "tool_count": 32
+  },
+  "published_at": "2026-08-21T12:42:19.422Z",
+  "tarball_url": "https://registry.npmjs.org/@deepseek-ai/dsh/-/dsh-0.1.1-rc.2.tgz",
+  "binary_version": "0.1.1-rc.2",
+  "captured_at": "2026-08-21T13:44:01.354052+00:00",
+  "tap_client": "dsh",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 3.185,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "dsh",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "web",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "47941"
+  ]
+}
