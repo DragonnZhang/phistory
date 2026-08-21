@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, Oh My Pi, and Qwen Code.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-20T22:56:51.897551Z",
+  "updated_at": "2026-08-21T09:31:24.428716Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -24,11 +24,11 @@
     {
       "agent_id": "dsh",
       "agent": "DeepSeek Harness",
-      "latest_version": "0.1.0-rc.7",
-      "latest_published_at": "2026-08-17T11:50:59.194Z",
-      "latest_captured_at": "2026-08-17T13:25:15.547226+00:00",
-      "versions": 6,
-      "snapshots": 27
+      "latest_version": "0.1.1-rc.1",
+      "latest_published_at": "2026-08-21T06:49:18.639Z",
+      "latest_captured_at": "2026-08-21T09:30:35.270908+00:00",
+      "versions": 7,
+      "snapshots": 33
     },
     {
       "agent_id": "antigravity",
@@ -51,11 +51,11 @@
     {
       "agent_id": "minimax-code",
       "agent": "MiniMax Code",
-      "latest_version": "3.0.66",
-      "latest_published_at": "2026-08-20T05:57:58.006Z",
-      "latest_captured_at": "2026-08-20T07:24:49.774590+00:00",
-      "versions": 30,
-      "snapshots": 30
+      "latest_version": "3.0.67",
+      "latest_published_at": "2026-08-21T09:06:37.728Z",
+      "latest_captured_at": "2026-08-21T09:31:10.048921+00:00",
+      "versions": 31,
+      "snapshots": 31
     },
     {
       "agent_id": "kimi-code",
@@ -105,11 +105,11 @@
     {
       "agent_id": "opencode",
       "agent": "opencode",
-      "latest_version": "1.18.19",
-      "latest_published_at": "2026-08-20T06:21:26.028Z",
-      "latest_captured_at": "2026-08-20T07:25:05.181041+00:00",
-      "versions": 104,
-      "snapshots": 104
+      "latest_version": "1.18.20",
+      "latest_published_at": "2026-08-21T08:09:54.390Z",
+      "latest_captured_at": "2026-08-21T09:31:24.428716+00:00",
+      "versions": 105,
+      "snapshots": 105
     },
     {
       "agent_id": "pi",
@@ -8426,6 +8426,124 @@
     {
       "agent_id": "dsh",
       "agent": "DeepSeek Harness",
+      "version": "0.1.1-rc.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {
+        "surface": "web"
+      },
+      "observed": {
+        "model": "deepseek-v4-flash",
+        "tool_count": 25
+      },
+      "published_at": "2026-08-21T06:49:18.639Z",
+      "captured_at": "2026-08-21T09:30:35.270908+00:00",
+      "prompt": "captures/dsh/0.1.1-rc.1/variants/default/prompt.md",
+      "trace": "captures/dsh/0.1.1-rc.1/variants/default/trace.jsonl",
+      "meta": "captures/dsh/0.1.1-rc.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.1.1-rc.1",
+      "variant_id": "standard",
+      "variant_label": "Standard",
+      "variant_dimensions": {
+        "surface": "web",
+        "mode": "standard"
+      },
+      "observed": {
+        "model": "deepseek-v4-flash",
+        "tool_count": 25
+      },
+      "published_at": "2026-08-21T06:49:18.639Z",
+      "captured_at": "2026-08-21T09:30:40.606886+00:00",
+      "prompt": "captures/dsh/0.1.1-rc.1/variants/standard/prompt.md",
+      "trace": "captures/dsh/0.1.1-rc.1/variants/standard/trace.jsonl",
+      "meta": "captures/dsh/0.1.1-rc.1/variants/standard/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.1.1-rc.1",
+      "variant_id": "minimal",
+      "variant_label": "Minimal",
+      "variant_dimensions": {
+        "surface": "web",
+        "mode": "minimal"
+      },
+      "observed": {
+        "model": "deepseek-v4-flash",
+        "tool_count": 2
+      },
+      "published_at": "2026-08-21T06:49:18.639Z",
+      "captured_at": "2026-08-21T09:30:46.427709+00:00",
+      "prompt": "captures/dsh/0.1.1-rc.1/variants/minimal/prompt.md",
+      "trace": "captures/dsh/0.1.1-rc.1/variants/minimal/trace.jsonl",
+      "meta": "captures/dsh/0.1.1-rc.1/variants/minimal/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.1.1-rc.1",
+      "variant_id": "headless",
+      "variant_label": "Headless",
+      "variant_dimensions": {
+        "surface": "headless"
+      },
+      "observed": {
+        "model": "deepseek-v4-flash",
+        "tool_count": 25
+      },
+      "published_at": "2026-08-21T06:49:18.639Z",
+      "captured_at": "2026-08-21T09:30:37.758047+00:00",
+      "prompt": "captures/dsh/0.1.1-rc.1/variants/headless/prompt.md",
+      "trace": "captures/dsh/0.1.1-rc.1/variants/headless/trace.jsonl",
+      "meta": "captures/dsh/0.1.1-rc.1/variants/headless/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.1.1-rc.1",
+      "variant_id": "cordis",
+      "variant_label": "Creator",
+      "variant_dimensions": {
+        "surface": "web",
+        "mode": "cordis"
+      },
+      "observed": {
+        "model": "deepseek-v4-flash",
+        "tool_count": 32
+      },
+      "published_at": "2026-08-21T06:49:18.639Z",
+      "captured_at": "2026-08-21T09:30:49.527994+00:00",
+      "prompt": "captures/dsh/0.1.1-rc.1/variants/cordis/prompt.md",
+      "trace": "captures/dsh/0.1.1-rc.1/variants/cordis/trace.jsonl",
+      "meta": "captures/dsh/0.1.1-rc.1/variants/cordis/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
+      "version": "0.1.1-rc.1",
+      "variant_id": "code",
+      "variant_label": "PTC",
+      "variant_dimensions": {
+        "surface": "web",
+        "mode": "code"
+      },
+      "observed": {
+        "model": "deepseek-v4-flash",
+        "tool_count": 1
+      },
+      "published_at": "2026-08-21T06:49:18.639Z",
+      "captured_at": "2026-08-21T09:30:43.448896+00:00",
+      "prompt": "captures/dsh/0.1.1-rc.1/variants/code/prompt.md",
+      "trace": "captures/dsh/0.1.1-rc.1/variants/code/trace.jsonl",
+      "meta": "captures/dsh/0.1.1-rc.1/variants/code/meta.json"
+    },
+    {
+      "agent_id": "dsh",
+      "agent": "DeepSeek Harness",
       "version": "0.1.0-rc.7",
       "variant_id": "default",
       "variant_label": "Default",
@@ -11633,6 +11751,23 @@
       "prompt": "captures/grok/0.1.202/variants/default/prompt.md",
       "trace": "captures/grok/0.1.202/variants/default/trace.jsonl",
       "meta": "captures/grok/0.1.202/variants/default/meta.json"
+    },
+    {
+      "agent_id": "minimax-code",
+      "agent": "MiniMax Code",
+      "version": "3.0.67",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "minimax-code-capture",
+        "tool_count": 20
+      },
+      "published_at": "2026-08-21T09:06:37.728Z",
+      "captured_at": "2026-08-21T09:31:10.048921+00:00",
+      "prompt": "captures/minimax-code/3.0.67/variants/default/prompt.md",
+      "trace": "captures/minimax-code/3.0.67/variants/default/trace.jsonl",
+      "meta": "captures/minimax-code/3.0.67/variants/default/meta.json"
     },
     {
       "agent_id": "minimax-code",
@@ -15458,6 +15593,23 @@
       "prompt": "captures/kimi/1.0/variants/default/prompt.md",
       "trace": "captures/kimi/1.0/variants/default/trace.jsonl",
       "meta": "captures/kimi/1.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "opencode",
+      "agent": "opencode",
+      "version": "1.18.20",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-08-21T08:09:54.390Z",
+      "captured_at": "2026-08-21T09:31:24.428716+00:00",
+      "prompt": "captures/opencode/1.18.20/variants/default/prompt.md",
+      "trace": "captures/opencode/1.18.20/variants/default/trace.jsonl",
+      "meta": "captures/opencode/1.18.20/variants/default/meta.json"
     },
     {
       "agent_id": "opencode",
