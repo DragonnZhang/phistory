@@ -15,11 +15,11 @@
   "published_at": "2026-08-24T12:16:04.107Z",
   "tarball_url": null,
   "binary_version": "1.1.29",
-  "captured_at": "2026-08-24T17:24:10.541148+00:00",
+  "captured_at": "2026-08-24T17:27:23.205002+00:00",
   "tap_client": "qoder",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 23.227,
+  "duration_seconds": 19.131,
   "command": [
     "python",
     "-m",
