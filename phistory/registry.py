@@ -277,6 +277,63 @@ KIMI_CODE = AgentSpec(
     ),
 )
 
+QWEN_CODE = AgentSpec(
+    id="qwen-code",
+    display_name="Qwen Code",
+    package="@qwen-code/qwen-code",
+    tap_client="qwen",
+    node_runtime="node@22",
+    home_profile="qwen",
+    fake_env={
+        "OPENAI_API_KEY": "phistory-fake-api-key",
+        "OPENAI_BASE_URL": "https://api.openai.com/v1",
+        "OPENAI_MODEL": "gpt-4.1",
+    },
+    extra_env={
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1",
+        "QWEN_CODE_SKIP_UPDATE_CHECK_ONCE": "true",
+        "CI": "1",
+    },
+    tap_mode="reverse",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--prompt",
+            "Reply with one short sentence.",
+            "--output-format",
+            "text",
+        )
+    ),
+)
+
+QODER = AgentSpec(
+    id="qoder",
+    display_name="Qoder CLI",
+    package="@qoder-ai/qodercli",
+    tap_client="qoder",
+    fake_env={},
+    inherited_env={
+        "QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+        "QODER_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+    },
+    extra_env={
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1",
+        "CI": "1",
+    },
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--print",
+            "--no-session-persistence",
+            "Reply with one short sentence.",
+        )
+    ),
+)
+
 MIMO = AgentSpec(
     id="mimo",
     display_name="MiMo Code",
@@ -508,6 +565,8 @@ AGENTS: dict[str, AgentSpec] = {
         GROK,
         MINIMAX_CODE,
         KIMI_CODE,
+        QWEN_CODE,
+        QODER,
         MIMO,
         OPENCLAW,
         HERMES,

@@ -3,7 +3,7 @@ name: Capture prompts
 on:
   workflow_dispatch:
   schedule:
-    - cron: "37 * * * *"
+    - cron: "37 2 * * *"
 
 permissions:
   contents: write
@@ -15,7 +15,7 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   GH_TOKEN: ${{ github.token }}
-  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 jobs:
   capture:
@@ -39,6 +39,30 @@ jobs:
           status=$?
           echo "status=$status" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Capture latest Qoder prompt
+        id: qoder
+        env:
+          QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          set +e
+          uv run phistory capture --latest --agents qoder --summary-title "Latest Qoder capture"
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Verify Qoder secret is not archived
+        env:
+          QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          if [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ]; then
+            exit 0
+          fi
+          if [ ! -d captures/qoder ]; then
+            exit 0
+          fi
+          if rg --files-with-matches --fixed-strings -- "$QODER_PERSONAL_ACCESS_TOKEN" captures/qoder; then
+            echo "::error title=Qoder credential leak detected::Refusing to render or commit capture artifacts."
+            exit 1
+          fi
       - name: Extract Claude Code static prompts
         id: static
         run: |
@@ -70,7 +94,7 @@ jobs:
           path: /tmp/phistory-smoke
           retention-days: 7
       - name: Report capture failures
-        if: always() && (steps.latest.outputs.status != '0' || steps.static.outputs.status != '0')
+        if: always() && (steps.latest.outputs.status != '0' || steps.qoder.outputs.status != '0' || steps.static.outputs.status != '0')
         run: |
           echo "::error title=Some prompt archive steps failed::Successful artifacts were still committed and will be deployed. Check the capture and static extraction logs for details."
           echo "One or more capture or static extraction steps failed. Successful artifacts were committed and the Pages workflow will still deploy them."

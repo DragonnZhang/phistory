@@ -15,8 +15,9 @@ def run(
     env: Mapping[str, str] | None = None,
     timeout: int = 120,
     check: bool = True,
+    inherit_env: bool = True,
 ) -> CommandResult:
-    merged_env = os.environ.copy()
+    merged_env = os.environ.copy() if inherit_env else {}
     if env:
         merged_env.update(env)
 

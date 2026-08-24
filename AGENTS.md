@@ -17,7 +17,8 @@ This file is for future coding agents. Read it before changing the project.
 - `phistory/static_prompts/`: static prompt extraction for package-embedded prompt strings. It currently targets Claude Code and is structured so other agents can be added later.
 - `phistory/cli.py`: CLI entrypoint for `capture`, `backfill`, `extract-static`, `render-index`, and `render-site`.
 - `tests/`: focused unit and local integration tests for package sources, registry contracts, capture behavior, and rendering.
-- `.github/workflows/capture.yml`: hourly capture workflow. It runs lint, tests, build, latest smoke capture for all agents, real latest capture, Claude Code static prompt extraction for the latest captured versions, renders artifacts, and commits updates.
+- `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest smoke capture for all agents, real latest capture, Claude Code static prompt extraction for the latest captured versions, renders artifacts, and commits updates.
+- `.github/workflows/backfill.yml`: manually triggered stable-history backfill for Qwen Code and Qoder CLI with explicit version ranges.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
 
 Generated capture artifacts live in:
@@ -76,6 +77,8 @@ Current agents are defined in `phistory/registry.py`:
 - `grok`: npm package `@xai-official/grok`, tap client `grok`, isolated Grok home and fake xAI API key.
 - `minimax-code`: official MiniMax Code desktop updater source, tap client `minimax-code`; Phistory extracts the bundled Mavis runtime, installs matching Linux native dependencies (plus the pinned OpenCode engine for legacy releases), and launches it headlessly through an isolated provider.
 - `kimi-code`: npm package `@moonshot-ai/kimi-code`, tap client `kimi-code`, executable `kimi`, isolated Kimi Code config.
+- `qwen-code`: npm package `@qwen-code/qwen-code`, first-class tap client `qwen`, Node 22 wrapper, isolated OpenAI-compatible fake provider.
+- `qoder`: npm package `@qoder-ai/qodercli`, tap client `qoder`; requires `QODER_PERSONAL_ACCESS_TOKEN` through the repository secret of the same name.
 - `mimo`: npm package `@mimo-ai/cli`, tap client `mimo`, reverse tap mode with OpenAI-compatible provider config.
 - `openclaw`: npm package `openclaw`, tap client `openclaw`, Node 24 wrapper, isolated OpenClaw config.
 - `hermes`: GitHub release source `NousResearch/hermes-agent`, tap client `hermes`, OpenRouter provider path.

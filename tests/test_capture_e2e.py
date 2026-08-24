@@ -1,16 +1,26 @@
 import json
+import os
 import stat
+import sys
 from pathlib import Path
 
 from phistory.capture import (
     _binary_version,
     _capture_env,
     _sanitize_text,
+    _sanitize_trace,
+    _without_parent_env,
     capture_target,
 )
 from phistory.drivers import CaptureRunContext
-from phistory.drivers.oneshot import _needs_antigravity_model_retry, _needs_prompt_retry, _without_arg_and_value
+from phistory.drivers.oneshot import (
+    _needs_antigravity_model_retry,
+    _needs_prompt_retry,
+    _needs_qwen_output_format_retry,
+    _without_arg_and_value,
+)
 from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo
+from phistory.subprocesses import run as run_subprocess
 
 
 def _target(agent: AgentSpec, version: VersionInfo, root: Path) -> CaptureTarget:
@@ -143,6 +153,151 @@ def test_capture_env_writes_fake_chatgpt_auth(tmp_path: Path):
     assert env["TZ"] == "Etc/UTC"
 
 
+def test_capture_env_only_inherits_explicitly_mapped_values(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("QODER_PERSONAL_ACCESS_TOKEN", "qoder-secret-value")
+    monkeypatch.setenv("UNRELATED_SECRET", "must-not-leak")
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+        inherited_env={
+            "QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+            "QODER_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+        },
+    )
+
+    env = _capture_env(_target(agent, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "home")
+
+    assert env["QODER_PERSONAL_ACCESS_TOKEN"] == "qoder-secret-value"
+    assert env["QODER_ACCESS_TOKEN"] == "qoder-secret-value"
+    assert "UNRELATED_SECRET" not in env
+
+
+def test_capture_env_reports_missing_required_value_without_exposing_secrets(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv("QODER_PERSONAL_ACCESS_TOKEN", raising=False)
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+        inherited_env={"QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN"},
+    )
+
+    try:
+        _capture_env(_target(agent, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "home")
+    except RuntimeError as exc:
+        assert str(exc) == "qoder: missing required environment variable(s): QODER_PERSONAL_ACCESS_TOKEN"
+    else:
+        raise AssertionError("missing required environment variable was accepted")
+
+
+def test_capture_failure_redacts_inherited_secret_from_error(tmp_path: Path, monkeypatch):
+    secret = "qoder-secret-value"
+    monkeypatch.setenv("QODER_PERSONAL_ACCESS_TOKEN", secret)
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+        inherited_env={"QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN"},
+    )
+
+    def fail_install(*_args, **_kwargs):
+        raise RuntimeError(f"server rejected {secret}")
+
+    monkeypatch.setattr("phistory.packages.install_agent", fail_install)
+
+    result = capture_target(
+        _target(agent, VersionInfo("1.0.0"), tmp_path / "captures"),
+        cache_dir=tmp_path / "cache",
+    )
+
+    assert result.status == "failed"
+    assert secret not in (result.error or "")
+    assert result.error == "server rejected <redacted>"
+
+
+def test_subprocess_can_run_without_inheriting_parent_environment(monkeypatch):
+    monkeypatch.setenv("UNRELATED_SECRET", "must-not-leak")
+
+    result = run_subprocess(
+        [
+            sys.executable,
+            "-c",
+            "import os; print(os.environ.get('UNRELATED_SECRET', 'missing')); print(os.environ['SAFE_VALUE'])",
+        ],
+        env={"SAFE_VALUE": "present"},
+        inherit_env=False,
+    )
+
+    assert result.stdout.splitlines() == ["missing", "present"]
+
+
+def test_capture_env_shares_npx_runtime_cache_across_versions(tmp_path: Path):
+    agent = AgentSpec(
+        id="runtime-agent",
+        display_name="Runtime Agent",
+        package="runtime-agent",
+        tap_client="runtime-agent",
+        fake_env={},
+        node_runtime="node@22",
+    )
+    bin_dir = tmp_path / "cache" / "installs" / agent.id / "1.0.0" / "node_modules" / ".bin"
+
+    env = _capture_env(_target(agent, VersionInfo("1.0.0"), tmp_path), bin_dir, tmp_path / "home")
+
+    assert env["NPM_CONFIG_CACHE"] == str(tmp_path / "cache" / "installs" / agent.id / ".npm-runtime-cache")
+
+
+def test_without_parent_env_restores_the_original_environment(monkeypatch):
+    monkeypatch.setenv("QODER_PERSONAL_ACCESS_TOKEN", "original-secret")
+
+    with _without_parent_env(("QODER_PERSONAL_ACCESS_TOKEN",)):
+        assert "QODER_PERSONAL_ACCESS_TOKEN" not in os.environ
+        os.environ["QODER_PERSONAL_ACCESS_TOKEN"] = "changed-inside-context"
+
+    assert os.environ["QODER_PERSONAL_ACCESS_TOKEN"] == "original-secret"
+
+
+def test_sanitize_trace_fully_redacts_headers_and_secret_values(tmp_path: Path):
+    secret = "qoder-secret-value"
+    trace = tmp_path / "trace.jsonl"
+    trace.write_text(
+        json.dumps(
+            {
+                "request": {
+                    "headers": {
+                        "authorization": "Bearer qoder...",
+                        "x-api-key": "qoder...",
+                        "content-type": "application/json",
+                    },
+                    "body": {"credential": secret},
+                },
+                "response": {"headers": {"Authorization": "Bearer response-secret"}},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    _sanitize_trace(trace, (secret,))
+
+    text = trace.read_text(encoding="utf-8")
+    record = json.loads(text)
+    assert secret not in text
+    assert record["request"]["headers"] == {
+        "authorization": "***",
+        "x-api-key": "***",
+        "content-type": "application/json",
+    }
+    assert record["request"]["body"]["credential"] == "<redacted>"
+    assert record["response"]["headers"]["Authorization"] == "***"
+
+
 def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     antigravity = AgentSpec(
         id="antigravity",
@@ -232,6 +387,14 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
         fake_env={},
         home_profile="pi",
     )
+    qwen = AgentSpec(
+        id="qwen-code",
+        display_name="Qwen Code",
+        package="@qwen-code/qwen-code",
+        tap_client="qwen",
+        fake_env={},
+        home_profile="qwen",
+    )
 
     antigravity_env = _capture_env(
         _target(antigravity, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "ag"
@@ -246,6 +409,7 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     opencode_env = _capture_env(_target(opencode, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "op")
     omp_env = _capture_env(_target(omp, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "omp")
     pi_env = _capture_env(_target(pi, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "pi")
+    qwen_env = _capture_env(_target(qwen, VersionInfo("1.0.0"), tmp_path), tmp_path / "bin", tmp_path / "qwen")
 
     agy_token = json.loads(
         (Path(antigravity_env["HOME"]) / ".gemini" / "antigravity-cli" / "antigravity-oauth-token").read_text(
@@ -259,7 +423,12 @@ def test_capture_env_writes_agent_profile_configs(tmp_path: Path):
     opencode_config = json.loads(Path(opencode_env["OPENCODE_CONFIG"]).read_text(encoding="utf-8"))
     omp_models = json.loads((Path(omp_env["PI_CODING_AGENT_DIR"]) / "models.json").read_text(encoding="utf-8"))
     pi_models = json.loads((Path(pi_env["PI_CODING_AGENT_DIR"]) / "models.json").read_text(encoding="utf-8"))
+    qwen_settings = json.loads((Path(qwen_env["HOME"]) / ".qwen" / "settings.json").read_text(encoding="utf-8"))
     assert agy_token["auth_method"] == "consumer"
+    assert qwen_settings == {
+        "selectedAuthType": "openai",
+        "security": {"auth": {"selectedType": "openai"}},
+    }
     assert agy_token["token"]["access_token"] == "phistory-fake-access-token"
     assert dsh_env["DSH_HOME"].endswith("/.dsh")
     assert dsh_env["DEEPSEEK_API_KEY"] == "fake"
@@ -300,6 +469,24 @@ def test_binary_version_falls_back_to_package_version(tmp_path: Path, monkeypatc
     assert _binary_version(target, bin_dir) == "2026.6.11"
 
 
+def test_binary_version_rejects_unrelated_success_output(tmp_path: Path, monkeypatch):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    executable = bin_dir / "qwen"
+    executable.write_text("#!/bin/sh\nprintf 'OpenAI Log Viewer\\n0.0.1\\n'\n", encoding="utf-8")
+    executable.chmod(executable.stat().st_mode | stat.S_IXUSR)
+    agent = AgentSpec(
+        id="qwen-code",
+        display_name="Qwen Code",
+        package="@qwen-code/qwen-code",
+        tap_client="qwen",
+        fake_env={},
+    )
+    target = _target(agent, VersionInfo("0.0.1"), tmp_path)
+
+    assert _binary_version(target, bin_dir) == "0.0.1"
+
+
 def test_antigravity_model_flag_retry_removes_model_value():
     agent = AgentSpec(
         id="antigravity",
@@ -316,6 +503,30 @@ def test_antigravity_model_flag_retry_removes_model_value():
     assert _without_arg_and_value(["agy", "--print", "hello", "--model", "flash"], "--model") == [
         "agy",
         "--print",
+        "hello",
+    ]
+
+
+def test_qwen_output_format_retry_removes_unsupported_flag():
+    agent = AgentSpec(
+        id="qwen-code",
+        display_name="Qwen Code",
+        package="@qwen-code/qwen-code",
+        tap_client="qwen",
+        fake_env={},
+    )
+    target = _target(agent, VersionInfo("0.0.1"), Path("captures"))
+    result = type(
+        "Result",
+        (),
+        {"returncode": 1, "stderr": "Unknown arguments: output-format, outputFormat", "stdout": ""},
+    )()
+    context = CaptureRunContext(target, target.prompt_path, target.variant_dir / ".tap", Path("workspace"), {})
+
+    assert _needs_qwen_output_format_retry(context, result)
+    assert _without_arg_and_value(["qwen", "--prompt", "hello", "--output-format", "text"], "--output-format") == [
+        "qwen",
+        "--prompt",
         "hello",
     ]
 

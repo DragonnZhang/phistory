@@ -14,6 +14,8 @@ def test_parse_default_agents():
         "grok",
         "minimax-code",
         "kimi-code",
+        "qwen-code",
+        "qoder",
         "mimo",
         "openclaw",
         "hermes",
@@ -51,6 +53,8 @@ def test_new_agents_define_install_and_capture_profiles():
     grok = get_agent("grok")
     minimax_code = get_agent("minimax-code")
     kimi_code = get_agent("kimi-code")
+    qwen_code = get_agent("qwen-code")
+    qoder = get_agent("qoder")
     mimo = get_agent("mimo")
     openclaw = get_agent("openclaw")
     hermes = get_agent("hermes")
@@ -102,6 +106,25 @@ def test_new_agents_define_install_and_capture_profiles():
     assert kimi_code.executable == "kimi"
     assert kimi_code.home_profile == "kimi-code"
     assert "--prompt" in kimi_code.default_variant.run_args
+
+    assert qwen_code.source == "npm"
+    assert qwen_code.node_runtime == "node@22"
+    assert qwen_code.home_profile == "qwen"
+    assert qwen_code.package == "@qwen-code/qwen-code"
+    assert qwen_code.tap_client == "qwen"
+    assert qwen_code.tap_mode == "reverse"
+    assert qwen_code.fake_env["OPENAI_BASE_URL"] == "https://api.openai.com/v1"
+    assert "--prompt" in qwen_code.default_variant.run_args
+
+    assert qoder.source == "npm"
+    assert qoder.package == "@qoder-ai/qodercli"
+    assert qoder.tap_client == "qoder"
+    assert qoder.inherited_env == {
+        "QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+        "QODER_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+    }
+    assert "--print" in qoder.default_variant.run_args
+    assert "--no-session-persistence" in qoder.default_variant.run_args
 
     assert mimo.source == "npm"
     assert mimo.package == "@mimo-ai/cli"

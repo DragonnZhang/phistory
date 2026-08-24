@@ -21,6 +21,7 @@ HomeProfile = Literal[
     "openclaw",
     "opencode",
     "pi",
+    "qwen",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -55,6 +56,7 @@ class AgentSpec:
     home_profile: HomeProfile = "none"
     tap_mode: TapMode = "auto"
     extra_env: dict[str, str] = field(default_factory=dict)
+    inherited_env: dict[str, str] = field(default_factory=dict)
     fake_chatgpt_auth: bool = False
     release_asset: str | None = None
     release_asset_binary: str | None = None
