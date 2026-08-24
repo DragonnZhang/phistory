@@ -18,6 +18,10 @@ def run_oneshot(context: CaptureRunContext) -> CaptureExecution:
         _reset_output(context)
         argv = _without_arg(argv, "--no-session-persistence")
         result = _run(argv, context, env)
+    if _needs_qoder_session_persistence_retry(context, result):
+        _reset_output(context)
+        argv = _without_arg(argv, "--no-session-persistence")
+        result = _run(argv, context, env)
     if _needs_codex_api_key_retry(context, result):
         _reset_output(context)
         env = {**env, "OPENAI_API_KEY": "phistory-fake-api-key"}
@@ -60,6 +64,12 @@ def _needs_claude_session_persistence_retry(context: CaptureRunContext, result) 
         return False
     output = f"{result.stderr}\n{result.stdout}"
     return "unknown option '--no-session-persistence'" in output
+
+
+def _needs_qoder_session_persistence_retry(context: CaptureRunContext, result) -> bool:
+    if context.target.agent.id != "qoder" or result.returncode == 0:
+        return False
+    return _needs_prompt_retry(result, context.prompt_path)
 
 
 def _needs_codex_api_key_retry(context: CaptureRunContext, result) -> bool:
