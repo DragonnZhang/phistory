@@ -1,0 +1,123 @@
+name: Backfill prompt history
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: Agent to backfill
+        required: true
+        type: choice
+        options:
+          - qwen-code
+          - qoder
+      from:
+        description: First stable package version to capture
+        required: true
+        type: string
+      to:
+        description: Last package version to capture
+        required: true
+        default: latest
+        type: string
+      force:
+        description: Recapture versions that already have complete artifacts
+        required: false
+        default: false
+        type: boolean
+      include_prerelease:
+        description: Include prerelease versions in the selected range
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: capture-prompts-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - run: uv run ruff format --check phistory tests
+      - run: uv run ruff check phistory tests
+      - run: uv run pytest
+      - name: Capture selected history
+        id: backfill
+        env:
+          AGENT: ${{ inputs.agent }}
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+          FORCE: ${{ inputs.force }}
+          INCLUDE_PRERELEASE: ${{ inputs.include_prerelease }}
+          QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          status=0
+          args=("$AGENT" --from "$BACKFILL_FROM" --to "$BACKFILL_TO")
+          if [ "$FORCE" = "true" ]; then
+            args+=(--force)
+          fi
+          if [ "$INCLUDE_PRERELEASE" = "true" ]; then
+            args+=(--include-prerelease)
+          fi
+          if [ "$AGENT" != "qoder" ]; then
+            unset QODER_PERSONAL_ACCESS_TOKEN
+          fi
+          if [ "$AGENT" = "qoder" ] && [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ]; then
+            echo "::error title=Missing Qoder credential::Configure the QODER_PERSONAL_ACCESS_TOKEN repository secret."
+            status=1
+          else
+            set +e
+            uv run phistory backfill "${args[@]}" --summary-title "$AGENT history backfill"
+            status=$?
+            set -e
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+      - name: Verify Qoder secret is not archived
+        env:
+          QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          if [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ]; then
+            exit 0
+          fi
+          if [ ! -d captures/qoder ]; then
+            exit 0
+          fi
+          if rg --files-with-matches --fixed-strings -- "$QODER_PERSONAL_ACCESS_TOKEN" captures/qoder; then
+            echo "::error title=Qoder credential leak detected::Refusing to render or commit capture artifacts."
+            exit 1
+          fi
+      - run: uv run phistory render-index
+      - run: uv run phistory render-site
+      - name: Commit backfill updates
+        env:
+          AGENT: ${{ inputs.agent }}
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+        run: |
+          git add README.md README_zh.md index.html docs captures
+          if git diff --cached --quiet; then
+            echo "No backfill changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Backfill $AGENT prompts from $BACKFILL_FROM to $BACKFILL_TO"
+          git push
+      - name: Report backfill failures
+        if: always() && steps.backfill.outputs.status != '0'
+        run: |
+          echo "::error title=Some historical captures failed::Successful artifacts were committed. Check the job summary for failed versions."
+          exit 1

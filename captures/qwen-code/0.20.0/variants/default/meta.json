@@ -1,0 +1,46 @@
+{
+  "agent_id": "qwen-code",
+  "agent": "Qwen Code",
+  "package": "@qwen-code/qwen-code",
+  "version": "0.20.0",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 11
+  },
+  "published_at": "2026-07-19T07:27:15.501Z",
+  "tarball_url": null,
+  "binary_version": "0.20.0",
+  "captured_at": "2026-08-24T15:34:57.955369+00:00",
+  "tap_client": "qwen",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 14.687,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "qwen",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--prompt",
+    "Reply with one short sentence.",
+    "--output-format",
+    "text"
+  ]
+}

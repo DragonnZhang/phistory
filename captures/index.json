@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-24T11:57:04.414491Z",
+  "updated_at": "2026-08-24T16:20:15.209807Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -65,6 +65,15 @@
       "latest_captured_at": "2026-08-20T13:28:57.849570+00:00",
       "versions": 66,
       "snapshots": 66
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "latest_version": "0.22.0",
+      "latest_published_at": "2026-08-22T14:56:59.352Z",
+      "latest_captured_at": "2026-08-24T15:38:53.090109+00:00",
+      "versions": 120,
+      "snapshots": 120
     },
     {
       "agent_id": "mimo",
@@ -13647,6 +13656,2046 @@
       "prompt": "captures/kimi-code/0.1.1/variants/default/prompt.md",
       "trace": "captures/kimi-code/0.1.1/variants/default/trace.jsonl",
       "meta": "captures/kimi-code/0.1.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.22.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-08-22T14:56:59.352Z",
+      "captured_at": "2026-08-24T15:38:53.090109+00:00",
+      "prompt": "captures/qwen-code/0.22.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.22.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.22.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.15",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-20T17:36:46.233Z",
+      "captured_at": "2026-08-24T15:38:48.581708+00:00",
+      "prompt": "captures/qwen-code/0.21.15/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.15/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.15/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.14",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-19T02:45:12.309Z",
+      "captured_at": "2026-08-24T15:38:40.535982+00:00",
+      "prompt": "captures/qwen-code/0.21.14/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.14/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.14/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.13",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-17T02:10:18.724Z",
+      "captured_at": "2026-08-24T15:38:32.877755+00:00",
+      "prompt": "captures/qwen-code/0.21.13/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.13/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.13/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.12",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-14T16:38:10.799Z",
+      "captured_at": "2026-08-24T15:38:23.397057+00:00",
+      "prompt": "captures/qwen-code/0.21.12/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.12/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.12/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.11",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-13T05:23:44.256Z",
+      "captured_at": "2026-08-24T15:38:14.993572+00:00",
+      "prompt": "captures/qwen-code/0.21.11/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.11/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.11/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.10",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-11T14:20:34.242Z",
+      "captured_at": "2026-08-24T15:38:06.478161+00:00",
+      "prompt": "captures/qwen-code/0.21.10/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.10/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.10/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.9",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-10T15:12:48.554Z",
+      "captured_at": "2026-08-24T15:37:55.251931+00:00",
+      "prompt": "captures/qwen-code/0.21.9/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.9/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.9/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.8",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-08T17:06:05.223Z",
+      "captured_at": "2026-08-24T15:37:44.388683+00:00",
+      "prompt": "captures/qwen-code/0.21.8/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.8/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.8/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.7",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-06T23:18:17.888Z",
+      "captured_at": "2026-08-24T15:37:31.305225+00:00",
+      "prompt": "captures/qwen-code/0.21.7/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.7/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.7/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.6",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-05T15:56:13.739Z",
+      "captured_at": "2026-08-24T15:37:19.187400+00:00",
+      "prompt": "captures/qwen-code/0.21.6/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.6/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.6/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-04T02:16:51.746Z",
+      "captured_at": "2026-08-24T15:37:08.037916+00:00",
+      "prompt": "captures/qwen-code/0.21.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-03T04:18:04.154Z",
+      "captured_at": "2026-08-24T15:36:57.869300+00:00",
+      "prompt": "captures/qwen-code/0.21.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-08-01T17:22:52.768Z",
+      "captured_at": "2026-08-24T15:36:46.688096+00:00",
+      "prompt": "captures/qwen-code/0.21.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-31T03:11:51.419Z",
+      "captured_at": "2026-08-24T15:36:34.930013+00:00",
+      "prompt": "captures/qwen-code/0.21.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2026-07-28T17:49:23.802Z",
+      "captured_at": "2026-08-24T15:36:19.337684+00:00",
+      "prompt": "captures/qwen-code/0.21.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.21.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2026-07-24T13:29:57.986Z",
+      "captured_at": "2026-08-24T15:35:48.905072+00:00",
+      "prompt": "captures/qwen-code/0.21.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.21.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.21.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.20.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 8
+      },
+      "published_at": "2026-07-21T16:49:57.960Z",
+      "captured_at": "2026-08-24T15:35:14.560632+00:00",
+      "prompt": "captures/qwen-code/0.20.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.20.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.20.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.20.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-19T07:27:15.501Z",
+      "captured_at": "2026-08-24T15:34:57.955369+00:00",
+      "prompt": "captures/qwen-code/0.20.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.20.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.20.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.12",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-18T14:36:53.296Z",
+      "captured_at": "2026-08-24T15:34:43.265816+00:00",
+      "prompt": "captures/qwen-code/0.19.12/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.12/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.12/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.11",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-16T14:22:10.878Z",
+      "captured_at": "2026-08-24T15:34:14.494826+00:00",
+      "prompt": "captures/qwen-code/0.19.11/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.11/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.11/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.10",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-14T05:03:54.633Z",
+      "captured_at": "2026-08-24T15:34:01.641848+00:00",
+      "prompt": "captures/qwen-code/0.19.10/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.10/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.10/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.9",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-10T19:39:36.569Z",
+      "captured_at": "2026-08-24T15:33:40.624399+00:00",
+      "prompt": "captures/qwen-code/0.19.9/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.9/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.9/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.8",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-08T15:29:36.872Z",
+      "captured_at": "2026-08-24T15:33:28.103624+00:00",
+      "prompt": "captures/qwen-code/0.19.8/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.8/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.8/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.7",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-07T17:21:52.490Z",
+      "captured_at": "2026-08-24T15:33:10.431515+00:00",
+      "prompt": "captures/qwen-code/0.19.7/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.7/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.7/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.6",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-03T16:36:49.305Z",
+      "captured_at": "2026-08-24T15:32:54.095517+00:00",
+      "prompt": "captures/qwen-code/0.19.6/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.6/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.6/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-02T13:35:55.255Z",
+      "captured_at": "2026-08-24T15:32:35.047880+00:00",
+      "prompt": "captures/qwen-code/0.19.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-07-01T13:08:25.554Z",
+      "captured_at": "2026-08-24T15:32:12.557360+00:00",
+      "prompt": "captures/qwen-code/0.19.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-06-28T06:12:23.182Z",
+      "captured_at": "2026-08-24T15:31:45.212311+00:00",
+      "prompt": "captures/qwen-code/0.19.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-06-24T13:54:46.722Z",
+      "captured_at": "2026-08-24T15:31:30.076743+00:00",
+      "prompt": "captures/qwen-code/0.19.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-06-23T09:22:00.652Z",
+      "captured_at": "2026-08-24T16:07:12.769169+00:00",
+      "prompt": "captures/qwen-code/0.19.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.19.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-06-23T03:26:58.848Z",
+      "captured_at": "2026-08-24T16:06:21.469953+00:00",
+      "prompt": "captures/qwen-code/0.19.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.19.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.19.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.18.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-06-21T13:06:03.959Z",
+      "captured_at": "2026-08-24T16:05:49.701040+00:00",
+      "prompt": "captures/qwen-code/0.18.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.18.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.18.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.18.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-06-20T09:37:30.853Z",
+      "captured_at": "2026-08-24T16:05:32.316678+00:00",
+      "prompt": "captures/qwen-code/0.18.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.18.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.18.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.18.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-06-17T16:27:48.570Z",
+      "captured_at": "2026-08-24T16:05:12.587027+00:00",
+      "prompt": "captures/qwen-code/0.18.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.18.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.18.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.18.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-06-17T11:34:10.962Z",
+      "captured_at": "2026-08-24T16:04:41.505935+00:00",
+      "prompt": "captures/qwen-code/0.18.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.18.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.18.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.18.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-06-15T11:26:00.237Z",
+      "captured_at": "2026-08-24T16:04:14.489471+00:00",
+      "prompt": "captures/qwen-code/0.18.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.18.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.18.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.18.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-06-12T14:41:21.102Z",
+      "captured_at": "2026-08-24T16:03:46.154929+00:00",
+      "prompt": "captures/qwen-code/0.18.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.18.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.18.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.17.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2026-06-03T11:58:05.299Z",
+      "captured_at": "2026-08-24T16:02:26.959066+00:00",
+      "prompt": "captures/qwen-code/0.17.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.17.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.17.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.17.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2026-05-29T09:58:40.432Z",
+      "captured_at": "2026-08-24T16:02:12.608411+00:00",
+      "prompt": "captures/qwen-code/0.17.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.17.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.17.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.16.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2026-05-27T09:30:48.774Z",
+      "captured_at": "2026-08-24T16:01:58.760736+00:00",
+      "prompt": "captures/qwen-code/0.16.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.16.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.16.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.16.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2026-05-23T14:52:55.155Z",
+      "captured_at": "2026-08-24T16:01:42.495176+00:00",
+      "prompt": "captures/qwen-code/0.16.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.16.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.16.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.16.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2026-05-21T09:48:24.849Z",
+      "captured_at": "2026-08-24T16:01:32.535978+00:00",
+      "prompt": "captures/qwen-code/0.16.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.16.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.16.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.11",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2026-05-13T03:37:48.334Z",
+      "captured_at": "2026-08-24T16:01:20.475965+00:00",
+      "prompt": "captures/qwen-code/0.15.11/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.11/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.11/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.10",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-05-10T06:48:22.718Z",
+      "captured_at": "2026-08-24T16:01:06.034757+00:00",
+      "prompt": "captures/qwen-code/0.15.10/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.10/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.10/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.9",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 12
+      },
+      "published_at": "2026-05-08T14:44:51.701Z",
+      "captured_at": "2026-08-24T16:00:53.385072+00:00",
+      "prompt": "captures/qwen-code/0.15.9/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.9/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.9/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.8",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 12
+      },
+      "published_at": "2026-05-07T16:24:19.776Z",
+      "captured_at": "2026-08-24T16:00:42.215450+00:00",
+      "prompt": "captures/qwen-code/0.15.8/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.8/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.8/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.7",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 12
+      },
+      "published_at": "2026-05-07T09:22:05.502Z",
+      "captured_at": "2026-08-24T16:00:31.298946+00:00",
+      "prompt": "captures/qwen-code/0.15.7/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.7/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.7/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.6",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 12
+      },
+      "published_at": "2026-04-30T07:58:52.249Z",
+      "captured_at": "2026-08-24T16:00:14.828065+00:00",
+      "prompt": "captures/qwen-code/0.15.6/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.6/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.6/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 12
+      },
+      "published_at": "2026-04-29T09:54:13.560Z",
+      "captured_at": "2026-08-24T16:00:00.810308+00:00",
+      "prompt": "captures/qwen-code/0.15.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 12
+      },
+      "published_at": "2026-04-28T13:22:24.160Z",
+      "captured_at": "2026-08-24T15:59:49.963363+00:00",
+      "prompt": "captures/qwen-code/0.15.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-04-26T06:49:49.396Z",
+      "captured_at": "2026-08-24T15:59:36.131934+00:00",
+      "prompt": "captures/qwen-code/0.15.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-04-24T12:11:38.951Z",
+      "captured_at": "2026-08-24T15:59:25.435549+00:00",
+      "prompt": "captures/qwen-code/0.15.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-04-23T03:57:33.027Z",
+      "captured_at": "2026-08-24T15:59:18.484232+00:00",
+      "prompt": "captures/qwen-code/0.15.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.15.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-04-22T11:45:28.390Z",
+      "captured_at": "2026-08-24T15:59:10.636814+00:00",
+      "prompt": "captures/qwen-code/0.15.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.15.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.15.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.14.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-04-15T15:32:59.673Z",
+      "captured_at": "2026-08-24T15:59:01.869453+00:00",
+      "prompt": "captures/qwen-code/0.14.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.14.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.14.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.14.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-04-13T14:26:18.353Z",
+      "captured_at": "2026-08-24T15:58:55.941329+00:00",
+      "prompt": "captures/qwen-code/0.14.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.14.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.14.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.14.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-04-10T14:21:36.237Z",
+      "captured_at": "2026-08-24T15:58:48.832689+00:00",
+      "prompt": "captures/qwen-code/0.14.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.14.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.14.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.14.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-04-08T13:59:45.787Z",
+      "captured_at": "2026-08-24T15:58:42.020080+00:00",
+      "prompt": "captures/qwen-code/0.14.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.14.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.14.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.14.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-04-07T13:06:53.985Z",
+      "captured_at": "2026-08-24T15:57:58.887702+00:00",
+      "prompt": "captures/qwen-code/0.14.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.14.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.14.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.14.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-04-03T00:41:34.972Z",
+      "captured_at": "2026-08-24T16:05:12.322804+00:00",
+      "prompt": "captures/qwen-code/0.14.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.14.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.14.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.13.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-30T11:43:39.831Z",
+      "captured_at": "2026-08-24T16:04:40.668910+00:00",
+      "prompt": "captures/qwen-code/0.13.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.13.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.13.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.13.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-27T10:17:28.030Z",
+      "captured_at": "2026-08-24T16:04:13.640767+00:00",
+      "prompt": "captures/qwen-code/0.13.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.13.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.13.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.13.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-23T14:31:59.874Z",
+      "captured_at": "2026-08-24T16:03:45.664623+00:00",
+      "prompt": "captures/qwen-code/0.13.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.13.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.13.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.12.6",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-17T11:55:23.297Z",
+      "captured_at": "2026-08-24T16:02:27.263807+00:00",
+      "prompt": "captures/qwen-code/0.12.6/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.12.6/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.12.6/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.12.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-16T15:38:54.438Z",
+      "captured_at": "2026-08-24T16:02:12.451073+00:00",
+      "prompt": "captures/qwen-code/0.12.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.12.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.12.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.12.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-16T10:04:55.946Z",
+      "captured_at": "2026-08-24T16:01:58.611820+00:00",
+      "prompt": "captures/qwen-code/0.12.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.12.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.12.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.12.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-13T12:49:39.303Z",
+      "captured_at": "2026-08-24T16:01:42.858810+00:00",
+      "prompt": "captures/qwen-code/0.12.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.12.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.12.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.12.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-12T14:37:44.133Z",
+      "captured_at": "2026-08-24T16:01:32.533866+00:00",
+      "prompt": "captures/qwen-code/0.12.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.12.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.12.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.12.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-11T13:42:01.101Z",
+      "captured_at": "2026-08-24T16:01:20.449581+00:00",
+      "prompt": "captures/qwen-code/0.12.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.12.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.12.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.12.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "published_at": "2026-03-09T13:06:04.321Z",
+      "captured_at": "2026-08-24T16:01:06.041441+00:00",
+      "prompt": "captures/qwen-code/0.12.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.12.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.12.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.11.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-03-03T13:08:40.098Z",
+      "captured_at": "2026-08-24T16:00:53.442357+00:00",
+      "prompt": "captures/qwen-code/0.11.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.11.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.11.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.11.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-28T10:43:39.127Z",
+      "captured_at": "2026-08-24T16:00:42.374424+00:00",
+      "prompt": "captures/qwen-code/0.11.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.11.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.11.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.10.6",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-24T16:21:12.546Z",
+      "captured_at": "2026-08-24T16:00:30.870835+00:00",
+      "prompt": "captures/qwen-code/0.10.6/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.10.6/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.10.6/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.10.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-18T13:05:52.390Z",
+      "captured_at": "2026-08-24T16:00:14.492951+00:00",
+      "prompt": "captures/qwen-code/0.10.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.10.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.10.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.10.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-18T04:45:34.793Z",
+      "captured_at": "2026-08-24T16:00:00.959957+00:00",
+      "prompt": "captures/qwen-code/0.10.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.10.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.10.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.10.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-16T09:46:56.404Z",
+      "captured_at": "2026-08-24T15:59:48.409187+00:00",
+      "prompt": "captures/qwen-code/0.10.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.10.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.10.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.10.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-14T11:14:46.325Z",
+      "captured_at": "2026-08-24T15:59:36.429844+00:00",
+      "prompt": "captures/qwen-code/0.10.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.10.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.10.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.10.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-11T09:41:12.794Z",
+      "captured_at": "2026-08-24T15:59:26.447049+00:00",
+      "prompt": "captures/qwen-code/0.10.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.10.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.10.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.10.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-09T04:09:48.478Z",
+      "captured_at": "2026-08-24T15:59:16.688292+00:00",
+      "prompt": "captures/qwen-code/0.10.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.10.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.10.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.9.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-05T03:43:14.162Z",
+      "captured_at": "2026-08-24T15:59:08.655857+00:00",
+      "prompt": "captures/qwen-code/0.9.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.9.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.9.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.9.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-02-03T07:06:50.336Z",
+      "captured_at": "2026-08-24T15:59:00.444347+00:00",
+      "prompt": "captures/qwen-code/0.9.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.9.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.9.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.8.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-01-30T02:31:54.772Z",
+      "captured_at": "2026-08-24T15:58:55.030469+00:00",
+      "prompt": "captures/qwen-code/0.8.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.8.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.8.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.8.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-01-27T13:36:30.125Z",
+      "captured_at": "2026-08-24T15:58:48.761499+00:00",
+      "prompt": "captures/qwen-code/0.8.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.8.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.8.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.8.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-01-27T12:15:21.262Z",
+      "captured_at": "2026-08-24T15:58:42.079208+00:00",
+      "prompt": "captures/qwen-code/0.8.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.8.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.8.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.7.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-01-20T09:10:52.719Z",
+      "captured_at": "2026-08-24T15:32:26.919640+00:00",
+      "prompt": "captures/qwen-code/0.7.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.7.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.7.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.7.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-01-14T11:12:20.299Z",
+      "captured_at": "2026-08-24T15:32:08.890243+00:00",
+      "prompt": "captures/qwen-code/0.7.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.7.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.7.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.7.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-01-14T01:39:45.865Z",
+      "captured_at": "2026-08-24T15:31:54.940256+00:00",
+      "prompt": "captures/qwen-code/0.7.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.7.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.7.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.6.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-01-12T04:28:02.801Z",
+      "captured_at": "2026-08-24T15:31:42.310222+00:00",
+      "prompt": "captures/qwen-code/0.6.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.6.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.6.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.6.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2026-01-07T10:15:19.815Z",
+      "captured_at": "2026-08-24T15:31:28.036055+00:00",
+      "prompt": "captures/qwen-code/0.6.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.6.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.6.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.6.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-12-26T10:43:41.485Z",
+      "captured_at": "2026-08-24T16:10:34.715016+00:00",
+      "prompt": "captures/qwen-code/0.6.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.6.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.6.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.5.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-12-22T07:43:08.527Z",
+      "captured_at": "2026-08-24T16:10:14.824472+00:00",
+      "prompt": "captures/qwen-code/0.5.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.5.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.5.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.5.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-12-19T11:10:03.580Z",
+      "captured_at": "2026-08-24T16:09:56.002659+00:00",
+      "prompt": "captures/qwen-code/0.5.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.5.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.5.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.5.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-12-13T17:00:16.565Z",
+      "captured_at": "2026-08-24T16:09:27.060659+00:00",
+      "prompt": "captures/qwen-code/0.5.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.5.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.5.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.4.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-12-12T09:56:26.952Z",
+      "captured_at": "2026-08-24T16:09:12.499064+00:00",
+      "prompt": "captures/qwen-code/0.4.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.4.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.4.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.4.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-12-06T12:08:15.976Z",
+      "captured_at": "2026-08-24T16:08:54.071181+00:00",
+      "prompt": "captures/qwen-code/0.4.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.4.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.4.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.3.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-11-28T08:59:11.259Z",
+      "captured_at": "2026-08-24T16:08:34.100335+00:00",
+      "prompt": "captures/qwen-code/0.3.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.3.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.3.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.2.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-11-20T07:28:20.094Z",
+      "captured_at": "2026-08-24T16:08:17.153898+00:00",
+      "prompt": "captures/qwen-code/0.2.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.2.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.2.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.2.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-11-19T06:40:47.038Z",
+      "captured_at": "2026-08-24T16:08:01.621178+00:00",
+      "prompt": "captures/qwen-code/0.2.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.2.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.2.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.2.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-11-13T11:27:11.711Z",
+      "captured_at": "2026-08-24T16:07:49.772446+00:00",
+      "prompt": "captures/qwen-code/0.2.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.2.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.2.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.2.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-11-07T11:00:33.607Z",
+      "captured_at": "2026-08-24T16:07:38.420896+00:00",
+      "prompt": "captures/qwen-code/0.2.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.2.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.2.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.1.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-11-07T10:01:54.416Z",
+      "captured_at": "2026-08-24T16:07:19.796903+00:00",
+      "prompt": "captures/qwen-code/0.1.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.1.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.1.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.1.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-11-05T12:18:58.325Z",
+      "captured_at": "2026-08-24T16:06:46.354317+00:00",
+      "prompt": "captures/qwen-code/0.1.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.1.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.1.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.1.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-11-04T09:48:27.858Z",
+      "captured_at": "2026-08-24T16:06:17.861275+00:00",
+      "prompt": "captures/qwen-code/0.1.3/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.1.3/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.1.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.1.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-10-31T10:24:08.119Z",
+      "captured_at": "2026-08-24T16:05:52.940163+00:00",
+      "prompt": "captures/qwen-code/0.1.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.1.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.1.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.1.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-10-29T06:54:52.627Z",
+      "captured_at": "2026-08-24T16:05:38.299817+00:00",
+      "prompt": "captures/qwen-code/0.1.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.1.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.1.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.1.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-10-27T09:58:51.749Z",
+      "captured_at": "2026-08-24T16:05:24.013947+00:00",
+      "prompt": "captures/qwen-code/0.1.0/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.1.0/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.1.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.14",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 10
+      },
+      "published_at": "2025-09-29T06:24:31.229Z",
+      "captured_at": "2026-08-24T16:05:05.962437+00:00",
+      "prompt": "captures/qwen-code/0.0.14/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.14/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.14/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.13",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2025-09-24T03:15:01.983Z",
+      "captured_at": "2026-08-24T16:03:50.703029+00:00",
+      "prompt": "captures/qwen-code/0.0.13/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.13/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.13/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.12",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2025-09-19T11:58:20.050Z",
+      "captured_at": "2026-08-24T16:02:09.210933+00:00",
+      "prompt": "captures/qwen-code/0.0.12/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.12/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.12/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.11",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 9
+      },
+      "published_at": "2025-09-12T10:06:40.888Z",
+      "captured_at": "2026-08-24T16:01:33.554372+00:00",
+      "prompt": "captures/qwen-code/0.0.11/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.11/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.11/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.10",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 8
+      },
+      "published_at": "2025-09-02T08:20:08.185Z",
+      "captured_at": "2026-08-24T16:01:12.686609+00:00",
+      "prompt": "captures/qwen-code/0.0.10/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.10/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.10/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.9",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 7
+      },
+      "published_at": "2025-08-27T09:42:12.466Z",
+      "captured_at": "2026-08-24T16:15:21.431690+00:00",
+      "prompt": "captures/qwen-code/0.0.9/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.9/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.9/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.8",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 7
+      },
+      "published_at": "2025-08-22T08:44:43.337Z",
+      "captured_at": "2026-08-24T15:59:59.340985+00:00",
+      "prompt": "captures/qwen-code/0.0.8/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.8/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.8/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.7",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 7
+      },
+      "published_at": "2025-08-15T10:36:16.249Z",
+      "captured_at": "2026-08-24T15:59:45.939965+00:00",
+      "prompt": "captures/qwen-code/0.0.7/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.7/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.7/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.6",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 8
+      },
+      "published_at": "2025-08-12T14:07:56.374Z",
+      "captured_at": "2026-08-24T15:59:32.208892+00:00",
+      "prompt": "captures/qwen-code/0.0.6/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.6/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.6/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.5",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 8
+      },
+      "published_at": "2025-08-08T13:46:19.332Z",
+      "captured_at": "2026-08-24T15:59:22.901067+00:00",
+      "prompt": "captures/qwen-code/0.0.5/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.5/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.4",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 8
+      },
+      "published_at": "2025-08-03T10:26:05.872Z",
+      "captured_at": "2026-08-24T15:59:11.624512+00:00",
+      "prompt": "captures/qwen-code/0.0.4/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.4/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 7
+      },
+      "published_at": "2025-08-01T10:29:31.430Z",
+      "captured_at": "2026-08-24T15:58:59.125848+00:00",
+      "prompt": "captures/qwen-code/0.0.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
+      "version": "0.0.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 8
+      },
+      "published_at": "2025-07-22T14:36:58.393Z",
+      "captured_at": "2026-08-24T16:20:15.209807+00:00",
+      "prompt": "captures/qwen-code/0.0.1/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.0.1/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.0.1/variants/default/meta.json"
     },
     {
       "agent_id": "mimo",

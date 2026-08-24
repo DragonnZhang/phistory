@@ -278,7 +278,7 @@ wheels = [
 [[package]]
 name = "claude-tap"
 version = "0.2.0"
-source = { git = "https://github.com/WEIFENG2333/claude-tap.git?rev=main#d2fb6c961ff6db3dd4651d5e14eb7cbdc6546207" }
+source = { git = "https://github.com/DragonnZhang/claude-tap.git?rev=f88763b64fd5d55cf2f8c46ffedecda4d95d742d#f88763b64fd5d55cf2f8c46ffedecda4d95d742d" }
 dependencies = [
     { name = "aiohttp" },
     { name = "backports-zstd" },
@@ -620,7 +620,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "claude-tap", git = "https://github.com/WEIFENG2333/claude-tap.git?rev=main" },
+    { name = "claude-tap", git = "https://github.com/DragonnZhang/claude-tap.git?rev=f88763b64fd5d55cf2f8c46ffedecda4d95d742d" },
     { name = "tree-sitter", specifier = ">=0.25.2" },
     { name = "tree-sitter-javascript", specifier = ">=0.25.0" },
 ]

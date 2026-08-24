@@ -26,6 +26,10 @@ def run_oneshot(context: CaptureRunContext) -> CaptureExecution:
         _reset_output(context)
         argv = _without_arg_and_value(argv, "--model")
         result = _run(argv, context, env)
+    if _needs_qwen_output_format_retry(context, result):
+        _reset_output(context)
+        argv = _without_arg_and_value(argv, "--output-format")
+        result = _run(argv, context, env)
     for _ in range(2):
         if not _needs_prompt_retry(result, context.prompt_path):
             break
@@ -42,6 +46,7 @@ def _run(argv: list[str], context: CaptureRunContext, env: dict[str, str]):
         env=env,
         timeout=CAPTURE_TIMEOUT_SECONDS,
         check=False,
+        inherit_env=False,
     )
 
 
@@ -69,6 +74,13 @@ def _needs_antigravity_model_retry(context: CaptureRunContext, result) -> bool:
         return False
     output = f"{result.stderr}\n{result.stdout}"
     return "flags provided but not defined: -model" in output
+
+
+def _needs_qwen_output_format_retry(context: CaptureRunContext, result) -> bool:
+    if context.target.agent.id != "qwen-code" or result.returncode == 0:
+        return False
+    output = f"{result.stderr}\n{result.stdout}"
+    return "Unknown arguments: output-format, outputFormat" in output
 
 
 def _needs_prompt_retry(result, prompt_path) -> bool:
