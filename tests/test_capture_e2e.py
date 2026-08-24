@@ -272,7 +272,13 @@ def test_sanitize_trace_fully_redacts_headers_and_secret_values(tmp_path: Path):
                 "request": {
                     "headers": {
                         "authorization": "Bearer qoder...",
+                        "Cosy-Key": "qoder-cosy-key",
+                        "Cosy-MachineHostname": "developer-macbook",
+                        "Cosy-MachineId": "qoder-machine-id",
+                        "Cosy-MachineToken": "qoder-machine-token",
+                        "Cosy-User": "qoder-user-id",
                         "x-api-key": "qoder...",
+                        "X-Model-Key": "qoder-model-key",
                         "content-type": "application/json",
                     },
                     "body": {"credential": secret},
@@ -291,7 +297,13 @@ def test_sanitize_trace_fully_redacts_headers_and_secret_values(tmp_path: Path):
     assert secret not in text
     assert record["request"]["headers"] == {
         "authorization": "***",
+        "Cosy-Key": "***",
+        "Cosy-MachineHostname": "***",
+        "Cosy-MachineId": "***",
+        "Cosy-MachineToken": "***",
+        "Cosy-User": "***",
         "x-api-key": "***",
+        "X-Model-Key": "***",
         "content-type": "application/json",
     }
     assert record["request"]["body"]["credential"] == "<redacted>"

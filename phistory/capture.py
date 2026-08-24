@@ -65,9 +65,15 @@ _SENSITIVE_TRACE_HEADERS = frozenset(
     {
         "api-key",
         "authorization",
+        "cosy-key",
+        "cosy-machinehostname",
+        "cosy-machineid",
+        "cosy-machinetoken",
+        "cosy-user",
         "proxy-authorization",
         "x-api-key",
         "x-goog-api-key",
+        "x-model-key",
     }
 )
 
