@@ -1,0 +1,32 @@
+{
+  "agent_id": "qoder",
+  "agent": "Qoder CLI",
+  "package": "@qoder-ai/qodercli",
+  "version": "0.1.27",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {},
+  "published_at": "2026-02-10T06:03:30.670Z",
+  "tarball_url": null,
+  "binary_version": "0.1.27",
+  "captured_at": "2026-08-24T19:38:08Z",
+  "archived_at": "2026-08-24T19:38:08Z",
+  "tap_client": "qoder",
+  "capture_status": "static-only",
+  "capture_unavailable": {
+    "reason_code": "retired-packaged-client",
+    "message": "This retired packaged Qoder client no longer reaches a prompt-bearing generation request. Prompt material extracted from this release's exact official executable is archived instead, with its extraction mode recorded explicitly."
+  },
+  "target": "exact published native binary static extraction",
+  "static_archive": {
+    "source": "node_modules/@qoder-ai/qodercli/bin/qodercli",
+    "extractor": "go-binary/exact-template-v1",
+    "mode": "exact-template",
+    "archived_content_sha256": "861e8cf7fa4b0042c3521cc1159c9cde4a8b6f0f97f56b0fd9d0faded21e2fb1",
+    "prompt_count": 1
+  }
+}
