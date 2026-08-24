@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、DeepSeek Harness、Antigravity、Grok Buil
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每小时自动检查新版本，归档最近更新于 **2026-08-24 02:08 UTC**。
+> 每小时自动检查新版本，归档最近更新于 **2026-08-24 04:23 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -74,7 +74,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-08-24 02:08 UTC
+最近抓取更新：2026-08-24 04:23 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -91,7 +91,7 @@ uv run phistory render-site
 | Kimi CLI | [1.49.0 - 2026-07-16](captures/kimi/1.49.0/variants/default/prompt.md) | 21 | 21 | 2026-07-16 11:21 UTC |
 | opencode | [1.18.21 - 2026-08-21](captures/opencode/1.18.21/variants/default/prompt.md) | 106 | 106 | 2026-08-21 15:05 UTC |
 | Pi | [0.84.2 - 2026-08-14](captures/pi/0.84.2/variants/default/prompt.md) | 41 | 41 | 2026-08-14 10:35 UTC |
-| Oh My Pi | [18.0.3 - 2026-08-23](captures/omp/18.0.3/variants/default/prompt.md) | 68 | 68 | 2026-08-23 09:53 UTC |
+| Oh My Pi | [18.0.4 - 2026-08-24](captures/omp/18.0.4/variants/default/prompt.md) | 69 | 69 | 2026-08-24 04:23 UTC |
 | Qwen Code | [0.21.13 - 2026-08-17](captures/qwen-code/0.21.13/variants/default/prompt.md) | 1 | 1 | 2026-08-18 17:11 UTC |
 
 ## 项目趋势
