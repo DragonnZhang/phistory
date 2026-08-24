@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-24 17:52 UTC**.
+> Checks for new releases hourly. Archive last updated: **2026-08-24 17:58 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -73,7 +73,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-24 17:52 UTC
+Last capture update: 2026-08-24 17:58 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -85,7 +85,7 @@ Last capture update: 2026-08-24 17:52 UTC
 | MiniMax Code | [3.0.67 - 2026-08-21](captures/minimax-code/3.0.67/variants/default/prompt.md) | 31 | 31 | 2026-08-21 09:31 UTC |
 | Kimi Code | [0.38.0 - 2026-08-20](captures/kimi-code/0.38.0/variants/default/prompt.md) | 66 | 66 | 2026-08-20 13:28 UTC |
 | Qwen Code | [0.22.0 - 2026-08-22](captures/qwen-code/0.22.0/variants/default/prompt.md) | 120 | 120 | 2026-08-24 15:38 UTC |
-| Qoder CLI | [1.1.29 - 2026-08-24](captures/qoder/1.1.29/variants/default/prompt.md) | 56 | 56 | 2026-08-24 17:27 UTC |
+| Qoder CLI | [1.1.29 - 2026-08-24](captures/qoder/1.1.29/variants/default/prompt.md) | 85 | 85 | 2026-08-24 17:27 UTC |
 | MiMo Code | [0.1.13 - 2026-08-19](captures/mimo/0.1.13/variants/default/prompt.md) | 13 | 13 | 2026-08-19 11:53 UTC |
 | OpenClaw | [2026.7.1-2 - 2026-07-18](captures/openclaw/2026.7.1-2/variants/default/prompt.md) | 69 | 69 | 2026-07-18 04:30 UTC |
 | Hermes Agent | [v2026.8.19 - 2026-08-21](captures/hermes/v2026.8.19/variants/default/prompt.md) | 27 | 27 | 2026-08-21 13:44 UTC |
