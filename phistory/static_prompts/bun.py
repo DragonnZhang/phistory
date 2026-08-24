@@ -20,11 +20,44 @@ _SECTION_RE = re.compile(
 
 def extract_bun_entrypoint_js(binary_path: Path) -> str | None:
     data = binary_path.read_bytes()
-    blob = _bun_blob_from_elf_section(binary_path, data) or _bun_blob_from_legacy_overlay(data)
+    blob = (
+        _bun_blob_from_macho_section(data)
+        or _bun_blob_from_elf_section(binary_path, data)
+        or _bun_blob_from_legacy_overlay(data)
+    )
     if blob is None:
         return None
     js = _entrypoint_module(blob)
     return js.decode("utf-8", errors="replace") if js else None
+
+
+def _bun_blob_from_macho_section(data: bytes) -> bytes | None:
+    if not data.startswith(b"\xcf\xfa\xed\xfe") or len(data) < 32:
+        return None
+    command_count = struct.unpack_from("<I", data, 16)[0]
+    command_offset = 32
+    for _ in range(command_count):
+        if command_offset + 8 > len(data):
+            return None
+        command, command_size = struct.unpack_from("<II", data, command_offset)
+        if command_size < 8 or command_offset + command_size > len(data):
+            return None
+        if command == 0x19 and command_size >= 72:
+            section_count = struct.unpack_from("<I", data, command_offset + 64)[0]
+            section_offset = command_offset + 72
+            for index in range(section_count):
+                offset = section_offset + index * 80
+                if offset + 80 > command_offset + command_size:
+                    return None
+                section_name, segment_name, _, section_size, file_offset = struct.unpack_from(
+                    "<16s16sQQI", data, offset
+                )
+                if section_name.rstrip(b"\0") != b"__bun" or segment_name.rstrip(b"\0") != b"__BUN":
+                    continue
+                section = data[file_offset : file_offset + section_size]
+                return _bun_blob_from_section(section)
+        command_offset += command_size
+    return None
 
 
 def _bun_blob_from_elf_section(binary_path: Path, data: bytes) -> bytes | None:
@@ -38,6 +71,10 @@ def _bun_blob_from_elf_section(binary_path: Path, data: bytes) -> bytes | None:
     offset = int(match.group("offset"), 16)
     size = int(match.group("size"), 16)
     section = data[offset : offset + size]
+    return _bun_blob_from_section(section)
+
+
+def _bun_blob_from_section(section: bytes) -> bytes | None:
     if len(section) < 8:
         return None
     blob_size = struct.unpack_from("<Q", section, 0)[0]
@@ -111,4 +148,5 @@ def _is_entrypoint_name(name: str) -> bool:
         or name == "claude.exe"
         or name.endswith("/src/entrypoints/cli.js")
         or name == "src/entrypoints/cli.js"
+        or name == "/$bunfs/root/index.js"
     )

@@ -2,13 +2,13 @@
 
 [English](README.md)
 
-Phistory 追踪 Claude Code、Codex、DeepSeek Harness、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
+Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。
 
 打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 agent 设计如何变化。
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每小时自动检查新版本，归档最近更新于 **2026-08-24 18:56 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-08-24 18:56 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -23,9 +23,9 @@ Phistory 追踪 Claude Code、Codex、DeepSeek Harness、Antigravity、Grok Buil
 
 Phistory 会安装每个受支持的具体 CLI 版本，再通过 [`claude-tap`](https://github.com/WEIFENG2333/claude-tap) 分别运行每个已配置快照，抓取包含系统提示词的 HTTP 请求，不调用真实模型服务，然后把结果保存到 `captures/<agent>/<version>/variants/<variant>/`，里面包含 `prompt.md`、`trace.jsonl` 和 `meta.json`。抓取配置以 `default` 快照为基线，显式选择的模型或模式会作为额外变体保存。
 
-对于最近的 Claude Code 版本，Phistory 还会从安装包里提取疑似静态 prompt 的字符串，保存在 `captures/<agent>/<version>/static/`。候选文件会保留原始内容，方便以后改进匹配规则时不用重新安装所有历史包。
+Phistory 还会从近期 Claude Code 安装包里提取疑似静态 prompt 的字符串，并从退役 Qoder 版本的精确官方可执行文件中提取 prompt 内容，保存在 `captures/<agent>/<version>/static/`。候选文件会保留原始内容，方便以后改进匹配规则时不用重新安装所有历史包。
 
-GitHub Actions 每小时检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。
+GitHub Actions 每天检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。
 
 ## 本地开发
 
@@ -36,7 +36,7 @@ GitHub Actions 每小时检查一次已自动追踪的 CLI 版本；发现新版
 uv sync --all-groups
 
 # 抓取每个 CLI 的最新版本及其全部已配置快照。
-uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # 只抓取 Codex 的指定快照。
 uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6
@@ -46,6 +46,9 @@ uv run phistory backfill claude-code --from 2.1.113 --to latest
 
 # 重建最近 10 个已捕获 Claude Code 版本的静态 prompt 文件。
 uv run phistory extract-static claude-code --latest-captured 10
+
+# 从退役 Qoder 版本的精确官方可执行文件中归档 prompt 内容。
+uv run phistory archive-static qoder --from 0.0.16 --to 0.2.7
 
 # 重新生成 README.md、README_zh.md、docs/captures.md 和 captures/index.json。
 uv run phistory render-index
@@ -58,6 +61,8 @@ uv run phistory render-site
 
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
+- Qwen Code (`@qwen-code/qwen-code`)
+- Qoder CLI (`@qoder-ai/qodercli`)
 - DeepSeek Harness (`@deepseek-ai/dsh`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
 - Grok Build (`@xai-official/grok`)

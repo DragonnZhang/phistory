@@ -1,7 +1,11 @@
 import json
+import struct
 
 import pytest
 
+from phistory.models import AgentSpec, CaptureTarget, VersionInfo
+from phistory.static_prompts.archive import archive_qoder_static_prompt
+from phistory.static_prompts.bun import BUN_TRAILER, _bun_blob_from_macho_section, _is_entrypoint_name
 from phistory.static_prompts.catalog import load_catalog, match_candidates, normalize_for_match
 from phistory.static_prompts.extract import (
     StaticSourceUnavailable,
@@ -14,6 +18,117 @@ from phistory.static_prompts.extract import (
 )
 from phistory.static_prompts.javascript import extract_prompt_candidates, extract_string_candidates
 from phistory.static_prompts.models import StaticCandidatesResult, StaticPromptMatch, StaticPromptResult
+from phistory.static_prompts.qoder import QODER_CODER_TEMPLATE_MARKER, extract_qoder_coder_prompt
+from phistory.storage import is_captured
+
+
+def _qoder_prompt() -> bytes:
+    return (
+        QODER_CODER_TEMPLATE_MARKER
+        + b" Use the instructions below and the tools available to you to assist the user.\n\n"
+        + b"{{.EnvironmentInfo}}\n\n# Code References\nUse file_path:line_number.\n{{end}}"
+    )
+
+
+def _synthetic_elf_qoder_binary(prompt: bytes) -> bytes:
+    data = bytearray(0x400 + len(prompt))
+    data[:16] = b"\x7fELF\x02\x01\x01" + b"\0" * 9
+    struct.pack_into("<Q", data, 32, 64)
+    struct.pack_into("<H", data, 54, 56)
+    struct.pack_into("<H", data, 56, 1)
+    struct.pack_into("<IIQQQQQQ", data, 64, 1, 5, 0, 0x400000, 0x400000, len(data), len(data), 0x1000)
+    prompt_offset = 0x300
+    data[prompt_offset : prompt_offset + len(prompt)] = prompt
+    struct.pack_into("<QQ", data, 0x180, 0x400000 + prompt_offset, len(prompt))
+    return bytes(data)
+
+
+def _synthetic_macho_qoder_binary(prompt: bytes) -> bytes:
+    data = bytearray(0x400 + len(prompt))
+    struct.pack_into("<IiiIIIII", data, 0, 0xFEEDFACF, 0x0100000C, 0, 2, 1, 72, 0, 0)
+    struct.pack_into(
+        "<II16sQQQQiiII",
+        data,
+        32,
+        0x19,
+        72,
+        b"__TEXT\0\0\0\0\0\0\0\0\0\0",
+        0x100000000,
+        len(data),
+        0,
+        len(data),
+        7,
+        5,
+        0,
+        0,
+    )
+    prompt_offset = 0x300
+    data[prompt_offset : prompt_offset + len(prompt)] = prompt
+    struct.pack_into("<QQ", data, 0x180, 0x100000000 + prompt_offset, len(prompt))
+    return bytes(data)
+
+
+def test_bun_blob_extraction_supports_macho_qoder_section():
+    blob = b"compiled entrypoint" + b"\0" * 32 + BUN_TRAILER
+    section = struct.pack("<Q", len(blob)) + blob
+    data = bytearray(0x200 + len(section))
+    struct.pack_into("<IiiIIIII", data, 0, 0xFEEDFACF, 0x0100000C, 0, 2, 1, 152, 0, 0)
+    struct.pack_into("<II16sQQQQiiII", data, 32, 0x19, 152, b"__BUN", 0x100000000, len(data), 0, len(data), 3, 3, 1, 0)
+    struct.pack_into(
+        "<16s16sQQIIIIIIII", data, 104, b"__bun", b"__BUN", 0x100000200, len(section), 0x200, 0, 0, 0, 0, 0, 0, 0
+    )
+    data[0x200:] = section
+
+    assert _bun_blob_from_macho_section(bytes(data)) == blob
+    assert _is_entrypoint_name("/$bunfs/root/index.js")
+
+
+@pytest.mark.parametrize("binary_factory", [_synthetic_elf_qoder_binary, _synthetic_macho_qoder_binary])
+def test_qoder_native_prompt_extraction_uses_exact_go_string_header(tmp_path, binary_factory):
+    prompt = _qoder_prompt()
+    binary = tmp_path / "qodercli"
+    binary.write_bytes(binary_factory(prompt))
+
+    assert extract_qoder_coder_prompt(binary) == prompt.decode("utf-8")
+
+
+def test_qoder_native_static_archive_is_transparently_labeled(tmp_path):
+    install_dir = tmp_path / "install"
+    package_dir = install_dir / "node_modules/@qoder-ai/qodercli"
+    binary = package_dir / "bin/qodercli"
+    binary.parent.mkdir(parents=True)
+    (package_dir / "package.json").write_text(
+        json.dumps({"name": "@qoder-ai/qodercli", "version": "0.1.29", "bin": {"qodercli": "bin/qodercli"}}),
+        encoding="utf-8",
+    )
+    prompt = _qoder_prompt()
+    binary.write_bytes(_synthetic_elf_qoder_binary(prompt))
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+    )
+    target = CaptureTarget(
+        agent, VersionInfo("0.1.29", "2026-01-01T00:00:00Z"), agent.default_variant, tmp_path / "captures"
+    )
+
+    result = archive_qoder_static_prompt(target, install_dir)
+
+    assert is_captured(target)
+    assert result.matches[0].entry is not None
+    assert result.matches[0].entry.id == "qoder-coder-system-template"
+    assert prompt.decode("utf-8") in target.prompt_path.read_text(encoding="utf-8")
+    trace = json.loads(target.trace_path.read_text(encoding="utf-8"))
+    meta = json.loads(target.meta_path.read_text(encoding="utf-8"))
+    assert trace["record_type"] == "phistory.capture-status"
+    assert trace["capture_status"] == "static-only"
+    assert "request" not in trace
+    assert meta["capture_status"] == "static-only"
+    assert meta["capture_unavailable"]["reason_code"] == "retired-packaged-client"
+    assert meta["static_archive"]["source"] == "node_modules/@qoder-ai/qodercli/bin/qodercli"
+    assert meta["static_archive"]["mode"] == "exact-template"
 
 
 def test_claude_code_binary_only_package_marks_static_source_unavailable(tmp_path):

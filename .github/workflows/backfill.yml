@@ -29,6 +29,11 @@ on:
         required: false
         default: false
         type: boolean
+      static_only:
+        description: Archive prompt material from exact official executables for retired Qoder releases
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -62,6 +67,7 @@ jobs:
           BACKFILL_TO: ${{ inputs.to }}
           FORCE: ${{ inputs.force }}
           INCLUDE_PRERELEASE: ${{ inputs.include_prerelease }}
+          STATIC_ONLY: ${{ inputs.static_only }}
           QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
         run: |
           status=0
@@ -75,12 +81,20 @@ jobs:
           if [ "$AGENT" != "qoder" ]; then
             unset QODER_PERSONAL_ACCESS_TOKEN
           fi
-          if [ "$AGENT" = "qoder" ] && [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ]; then
+          if [ "$STATIC_ONLY" = "true" ] && [ "$AGENT" != "qoder" ]; then
+            echo "::error title=Invalid static-only archive::Static-only archives are supported only for Qoder CLI."
+            status=1
+          elif [ "$AGENT" = "qoder" ] && [ "$STATIC_ONLY" != "true" ] && [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ]; then
             echo "::error title=Missing Qoder credential::Configure the QODER_PERSONAL_ACCESS_TOKEN repository secret."
             status=1
           else
             set +e
-            uv run phistory backfill "${args[@]}" --summary-title "$AGENT history backfill"
+            if [ "$STATIC_ONLY" = "true" ]; then
+              unset QODER_PERSONAL_ACCESS_TOKEN
+              uv run phistory archive-static "${args[@]}"
+            else
+              uv run phistory backfill "${args[@]}" --summary-title "$AGENT history backfill"
+            fi
             status=$?
             set -e
           fi

@@ -2,13 +2,13 @@
 
 [中文](README_zh.md)
 
-Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
+Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
 
 Open the web viewer to compare prompt snapshots across versions and see how agent design changes through prompts, tools, policies, and runtime instructions.
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-24 18:56 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-08-24 18:56 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -23,9 +23,9 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 For each supported release, Phistory installs the exact CLI package and runs each configured snapshot through [`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP request without calling the real model provider, and stores the result under `captures/<agent>/<version>/variants/<variant>/` with `prompt.md`, `trace.jsonl`, and `meta.json`. Capture configurations use a `default` snapshot as their baseline; selected models or modes are stored as additional variants.
 
-For recent Claude Code releases, Phistory also extracts static prompt-like strings from the installed package and stores them under `captures/<agent>/<version>/static/`. The candidate archive keeps the raw extraction input so matching rules can be improved later without reinstalling every historical package.
+Phistory also extracts static prompt-like strings from recent Claude Code packages and prompt material from exact official executables for retired Qoder releases, storing them under `captures/<agent>/<version>/static/`. The candidate archive keeps the raw extraction input so matching rules can be improved later without reinstalling every historical package.
 
-GitHub Actions checks automatically tracked CLI releases every hour and commits new snapshots when they appear.
+GitHub Actions checks automatically tracked CLI releases every day and commits new snapshots when they appear.
 
 ## Local Development
 
@@ -36,7 +36,7 @@ Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are
 uv sync --all-groups
 
 # Capture the latest release and every configured snapshot for each CLI.
-uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # Capture only selected Codex snapshots.
 uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6
@@ -46,6 +46,9 @@ uv run phistory backfill claude-code --from 2.1.113 --to latest
 
 # Rebuild static prompt files for the latest 10 captured Claude Code versions.
 uv run phistory extract-static claude-code --latest-captured 10
+
+# Archive prompt material from exact official executables for retired Qoder releases.
+uv run phistory archive-static qoder --from 0.0.16 --to 0.2.7
 
 # Regenerate README.md, README_zh.md, docs/captures.md, and captures/index.json.
 uv run phistory render-index
@@ -58,6 +61,8 @@ uv run phistory render-site
 
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
+- Qwen Code (`@qwen-code/qwen-code`)
+- Qoder CLI (`@qoder-ai/qodercli`)
 - DeepSeek Harness (`@deepseek-ai/dsh`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
 - Grok Build (`@xai-official/grok`)

@@ -43,23 +43,20 @@ def test_capture_paths_and_index(tmp_path: Path):
     zh_text = (tmp_path / "README_zh.md").read_text(encoding="utf-8")
     assert "Agent" in text
     assert "[中文](README_zh.md)" in text
-    assert (
-        "popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code"
-        in text
-    )
-    assert "> Checks for new releases hourly. Archive last updated: **2026-05-22 01:00 UTC**." in text
+    assert "popular coding-agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness" in text
+    assert "> Checks for new releases daily. Archive last updated: **2026-05-22 01:00 UTC**." in text
     assert "## Why Use It" in text
     assert "Anthropic, OpenAI, and other agent builders" in text
     assert "new tools, permission checks, model defaults" in text
     assert "claude-tap" in text
-    assert "GitHub Actions checks automatically tracked CLI releases every hour" in text
+    assert "GitHub Actions checks automatically tracked CLI releases every day" in text
     assert "## Data" not in text
     assert "`captures/<agent>/<version>/variants/<variant>/`" in text
     assert "`prompt.md`, `trace.jsonl`, and `meta.json`" in text
     assert "## Local Development" in text
     assert "# Capture the latest release and every configured snapshot for each CLI." in text
     assert "--variants default,gpt-5.5,gpt-5.6" in text
-    assert "--agents claude-code,codex,dsh,antigravity" in text
+    assert "--agents claude-code,codex,qwen-code,dsh,antigravity" in text
     assert "## Web UI" not in text
     assert "## For AI Agents" not in text
     assert "## Capture Status" in text
@@ -69,13 +66,13 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "2026-05-22 01:00 UTC" in text
     assert "| Agent | Version | Published | Captured | Snapshot | Raw Trace |" not in text
     assert "[English](README.md)" in zh_text
-    assert "追踪 Claude Code、Codex、DeepSeek Harness、Antigravity、Grok Build、MiniMax Code" in zh_text
-    assert "--agents claude-code,codex,dsh,antigravity" in zh_text
-    assert "> 每小时自动检查新版本，归档最近更新于 **2026-05-22 01:00 UTC**。" in zh_text
+    assert "追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness" in zh_text
+    assert "--agents claude-code,codex,qwen-code,dsh,antigravity" in zh_text
+    assert "> 每天自动检查新版本，归档最近更新于 **2026-05-22 01:00 UTC**。" in zh_text
     assert "## 为什么看它" in zh_text
     assert "Anthropic、OpenAI 等团队" in zh_text
     assert "新工具、权限检查、默认模型行为" in zh_text
-    assert "每小时检查一次已自动追踪的 CLI 版本" in zh_text
+    assert "每天检查一次已自动追踪的 CLI 版本" in zh_text
     assert "## 数据" not in zh_text
     assert "`captures/<agent>/<version>/variants/<variant>/`" in zh_text
     assert "`prompt.md`、`trace.jsonl` 和 `meta.json`" in zh_text
@@ -93,13 +90,14 @@ def test_capture_paths_and_index(tmp_path: Path):
     capture_doc_text = capture_doc.read_text(encoding="utf-8")
     capture_index_json = json.loads(capture_index.read_text(encoding="utf-8"))
     assert (
-        "| Agent | Version | Variant | Published | Captured | Snapshot | Static | Candidates | Raw Trace |"
+        "| Agent | Version | Variant | Status | Published | Captured | Snapshot | Static | Candidates | Raw Trace |"
         in capture_doc_text
     )
     assert "[agent 1.0.0 [default], published 2026-05-22 00:00 UTC]" in capture_doc_text
     assert capture_index_json["agents"][0]["latest_version"] == "1.0.0"
     assert capture_index_json["captures"][0]["variant_id"] == "default"
     assert capture_index_json["captures"][0]["observed"] == {}
+    assert capture_index_json["captures"][0]["capture_status"] == "captured"
     assert capture_index_json["captures"][0]["prompt"] == "captures/agent/1.0.0/variants/default/prompt.md"
 
 
@@ -195,6 +193,7 @@ def test_render_site_writes_static_html_manifest(tmp_path: Path):
     assert "from_variant" in text
     assert "variant-chip" in text
     assert '"default_variant":"default"' in text
+    assert '"capture_status":"captured"' in text
     assert "mini-diffstat" in text
     assert '"trace":"' in text
     assert "captures/agent/1.1.0/variants/default/trace.jsonl" in text
@@ -252,3 +251,18 @@ def test_change_summary_keeps_repeated_prompt_lines_matchable(tmp_path: Path):
     assert change["added_lines"] == 1
     assert change["removed_lines"] == 1
     assert change["changed_lines"] == 2
+
+
+def test_change_summary_does_not_compare_static_only_with_live_capture(tmp_path: Path):
+    old_prompt = tmp_path / "old.md"
+    new_prompt = tmp_path / "new.md"
+    old_prompt.write_text("embedded template\n", encoding="utf-8")
+    new_prompt.write_text("rendered live prompt\n", encoding="utf-8")
+
+    change = _change_summary(
+        {"version": "0.2.8", "prompt": new_prompt, "capture_status": "captured"},
+        {"version": "0.2.7", "prompt": old_prompt, "capture_status": "static-only"},
+    )
+
+    assert change["changed_lines"] == 0
+    assert change["comparable"] is False
