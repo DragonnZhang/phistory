@@ -16,7 +16,9 @@ from phistory.drivers import CaptureRunContext
 from phistory.drivers.oneshot import (
     _needs_antigravity_model_retry,
     _needs_prompt_retry,
+    _needs_qoder_session_persistence_retry,
     _needs_qwen_output_format_retry,
+    _without_arg,
     _without_arg_and_value,
 )
 from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo
@@ -541,6 +543,29 @@ def test_qwen_output_format_retry_removes_unsupported_flag():
         "--prompt",
         "hello",
     ]
+
+
+def test_qoder_session_persistence_retry_removes_unsupported_flag(tmp_path: Path):
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+    )
+    target = _target(agent, VersionInfo("1.0.47"), tmp_path / "captures")
+    result = type(
+        "Result",
+        (),
+        {"returncode": 1, "stderr": "no valid records found in trace file", "stdout": ""},
+    )()
+    context = CaptureRunContext(target, target.prompt_path, target.variant_dir / ".tap", Path("workspace"), {})
+
+    assert _needs_qoder_session_persistence_retry(context, result)
+    assert _without_arg(
+        ["qoder", "--no-yolo", "--", "--print", "--no-session-persistence", "hello"],
+        "--no-session-persistence",
+    ) == ["qoder", "--no-yolo", "--", "--print", "hello"]
 
 
 def test_no_prompt_retry_handles_claude_tap_export_failures(tmp_path: Path):
