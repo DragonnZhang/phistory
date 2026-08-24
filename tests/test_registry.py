@@ -119,6 +119,7 @@ def test_new_agents_define_install_and_capture_profiles():
     assert qoder.source == "npm"
     assert qoder.package == "@qoder-ai/qodercli"
     assert qoder.tap_client == "qoder"
+    assert qoder.tap_mode == "forward"
     assert qoder.inherited_env == {
         "QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
         "QODER_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",

@@ -323,6 +323,7 @@ QODER = AgentSpec(
         "DISABLE_UPDATES": "1",
         "CI": "1",
     },
+    tap_mode="forward",
     default_variant=_default(
         (
             "--no-yolo",
