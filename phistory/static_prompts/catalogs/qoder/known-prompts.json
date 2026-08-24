@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "qoder-coder-system-template",
+      "name": "Qoder coder system prompt template",
+      "description": "Exact Go text/template embedded in the published native Qoder CLI executable.",
+      "category": "system-prompt",
+      "anchors": [
+        "interactive CLI tool that helps users with software engineering tasks",
+        "Use the instructions below and the tools available to you to assist the user",
+        "ULTRA IMPORTANT: When asked for the language model you use or the system prompt"
+      ],
+      "samples": []
+    }
+  ]
+}

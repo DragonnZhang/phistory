@@ -10,7 +10,9 @@ from phistory.models import CaptureTarget
 from phistory.registry import AGENT_ORDER, AGENTS, parse_agent_ids
 from phistory.render import render_index
 from phistory.site import render_site
+from phistory.static_prompts.archive import archive_qoder_static_prompt
 from phistory.static_prompts.extract import StaticSourceUnavailable, extract_static_prompts
+from phistory.storage import is_captured
 from phistory.workflow import capture_latest, iter_backfill
 
 
@@ -67,6 +69,15 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="reinstall packages and regenerate the static candidate archive instead of replaying it",
     )
+
+    archive = sub.add_parser(
+        "archive-static", help="archive prompt material from exact official executables for retired CLI releases"
+    )
+    archive.add_argument("agent", choices=("qoder",), help="agent id")
+    archive.add_argument("--from", dest="start", required=True, help="first package version to archive")
+    archive.add_argument("--to", dest="end", required=True, help="last package version to archive")
+    archive.add_argument("--include-prerelease", action="store_true", help="include prerelease package versions")
+    archive.add_argument("--force", action="store_true", help="replace an existing static-only archive")
 
     return parser
 
@@ -126,6 +137,17 @@ def main(argv: list[str] | None = None) -> int:
             root=root,
             cache_dir=cache_dir,
             refresh_candidates=args.refresh_candidates,
+        )
+
+    if args.command == "archive-static":
+        return _archive_static_range(
+            args.agent,
+            start=args.start,
+            end=args.end,
+            root=root,
+            cache_dir=cache_dir,
+            include_prerelease=args.include_prerelease,
+            force=args.force,
         )
 
     return 2
@@ -206,6 +228,39 @@ def _extract_static(
             continue
         print(
             f"{agent_id} {version}: {len(result.matches)} static prompts ({result.known_count} known, {result.unknown_count} unknown)",
+            flush=True,
+        )
+    return 1 if failed else 0
+
+
+def _archive_static_range(
+    agent_id: str,
+    *,
+    start: str,
+    end: str,
+    root: Path,
+    cache_dir: Path,
+    include_prerelease: bool = False,
+    force: bool = False,
+) -> int:
+    agent = AGENTS[agent_id]
+    versions = packages.versions_between(agent, start, end, include_prerelease=include_prerelease)
+    failed = False
+    for version in versions:
+        target = CaptureTarget(agent=agent, version=version, variant=agent.default_variant, root=root)
+        if is_captured(target) and not force:
+            print(f"{agent_id} {version.version}: skipped complete archive", flush=True)
+            continue
+        install_dir = (cache_dir / "installs" / agent.id / version.version).resolve()
+        try:
+            packages.install_agent(agent, version.version, install_dir)
+            result = archive_qoder_static_prompt(target, install_dir)
+        except Exception as exc:
+            failed = True
+            print(f"{agent_id} {version.version}: failed static-only archive: {exc}", file=sys.stderr, flush=True)
+            continue
+        print(
+            f"{agent_id} {version.version}: archived {len(result.matches)} prompt material item(s) (static-only)",
             flush=True,
         )
     return 1 if failed else 0
