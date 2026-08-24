@@ -23,6 +23,10 @@ def run_oneshot(context: CaptureRunContext) -> CaptureExecution:
         _reset_output(context)
         argv = _without_arg(argv, "--no-session-persistence")
         result = _run(argv, context, env)
+    if _needs_qoder_lite_model_retry(context, result):
+        _reset_output(context)
+        argv = _with_arg_and_value(argv, "--model", "lite")
+        result = _run(argv, context, env)
     if _needs_codex_api_key_retry(context, result):
         _reset_output(context)
         env = {**env, "OPENAI_API_KEY": "phistory-fake-api-key"}
@@ -76,7 +80,15 @@ def _needs_claude_session_persistence_retry(context: CaptureRunContext, result) 
 def _needs_qoder_session_persistence_retry(context: CaptureRunContext, result) -> bool:
     if context.target.agent.id != "qoder" or result.returncode == 0:
         return False
+    if _has_upgrade_required(result):
+        return False
     return _needs_prompt_retry(result, context.prompt_path)
+
+
+def _needs_qoder_lite_model_retry(context: CaptureRunContext, result) -> bool:
+    if context.target.agent.id != "qoder" or result.returncode == 0 or context.prompt_path.exists():
+        return False
+    return _has_upgrade_required(result)
 
 
 def _needs_codex_api_key_retry(context: CaptureRunContext, result) -> bool:
@@ -103,6 +115,8 @@ def _needs_qwen_output_format_retry(context: CaptureRunContext, result) -> bool:
 def _needs_prompt_retry(result, prompt_path) -> bool:
     if prompt_path.exists():
         return False
+    if _has_upgrade_required(result):
+        return False
     output = f"{result.stderr}\n{result.stdout}"
     return any(
         message in output
@@ -111,6 +125,11 @@ def _needs_prompt_retry(result, prompt_path) -> bool:
             "no valid records found in trace file",
         )
     )
+
+
+def _has_upgrade_required(result) -> bool:
+    output = f"{result.stderr}\n{result.stdout}".lower()
+    return "upgrade required" in output or "github actions only available" in output
 
 
 def _without_arg(argv: list[str], value: str) -> list[str]:
@@ -129,3 +148,7 @@ def _without_arg_and_value(argv: list[str], value: str) -> list[str]:
             continue
         out.append(arg)
     return out
+
+
+def _with_arg_and_value(argv: list[str], name: str, value: str) -> list[str]:
+    return [*_without_arg_and_value(argv, name), name, value]

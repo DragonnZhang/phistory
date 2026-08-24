@@ -17,8 +17,10 @@ from phistory.drivers.oneshot import (
     _capture_timeout,
     _needs_antigravity_model_retry,
     _needs_prompt_retry,
+    _needs_qoder_lite_model_retry,
     _needs_qoder_session_persistence_retry,
     _needs_qwen_output_format_retry,
+    _with_arg_and_value,
     _without_arg,
     _without_arg_and_value,
 )
@@ -570,6 +572,35 @@ def test_qoder_session_persistence_retry_removes_unsupported_flag(tmp_path: Path
         ["qoder", "--no-yolo", "--", "--print", "--no-session-persistence", "hello"],
         "--no-session-persistence",
     ) == ["qoder", "--no-yolo", "--", "--print", "hello"]
+
+
+def test_qoder_upgrade_retry_selects_legacy_lite_model_once(tmp_path: Path):
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+    )
+    target = _target(agent, VersionInfo("0.1.29"), tmp_path / "captures")
+    result = type(
+        "Result",
+        (),
+        {"returncode": 1, "stderr": "Error: upgrade required\nno valid records found in trace file", "stdout": ""},
+    )()
+    context = CaptureRunContext(target, target.prompt_path, target.variant_dir / ".tap", Path("workspace"), {})
+
+    assert not _needs_qoder_session_persistence_retry(context, result)
+    assert _needs_qoder_lite_model_retry(context, result)
+    assert not _needs_prompt_retry(result, target.prompt_path)
+    assert _with_arg_and_value(["qoder", "--", "--print", "hello"], "--model", "lite") == [
+        "qoder",
+        "--",
+        "--print",
+        "hello",
+        "--model",
+        "lite",
+    ]
 
 
 def test_no_prompt_retry_handles_claude_tap_export_failures(tmp_path: Path):
