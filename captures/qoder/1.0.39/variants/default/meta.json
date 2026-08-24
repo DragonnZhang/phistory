@@ -1,0 +1,43 @@
+{
+  "agent_id": "qoder",
+  "agent": "Qoder CLI",
+  "package": "@qoder-ai/qodercli",
+  "version": "1.0.39",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "tool_count": 23
+  },
+  "published_at": "2026-07-07T10:09:16.685Z",
+  "tarball_url": null,
+  "binary_version": null,
+  "captured_at": "2026-08-24T17:50:52.382138+00:00",
+  "tap_client": "qoder",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 10.86,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "qoder",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--print",
+    "Reply with one short sentence."
+  ]
+}
