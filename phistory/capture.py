@@ -174,6 +174,11 @@ def capture_target(
                 "client_exit_code": result.returncode,
                 "duration_seconds": round(time.time() - started, 3),
                 "command": [_replace_many(part, replacements) for part in _portable_command(argv, variant_dir)],
+                **(
+                    {"compatibility_patches": list(patches)}
+                    if (patches := packages.compatibility_patches(target.agent, target.version.version))
+                    else {}
+                ),
             },
         )
         if not keep_tap:
