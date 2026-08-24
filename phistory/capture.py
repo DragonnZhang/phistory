@@ -285,6 +285,9 @@ def _capture_env(
         "GITHUB_ACTIONS": "true",
         "TZ": "Etc/UTC",
     }
+    if target.agent.id == "qoder":
+        # Older releases interpret this as a paid workflow mode instead of ordinary headless CLI execution.
+        env.pop("GITHUB_ACTIONS")
     if target.agent.home_profile == "hermes":
         env["HERMES_HOME"] = str(home / ".hermes")
     if target.agent.home_profile == "dsh":
