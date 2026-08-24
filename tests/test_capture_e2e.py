@@ -175,6 +175,8 @@ def test_capture_env_only_inherits_explicitly_mapped_values(tmp_path: Path, monk
 
     assert env["QODER_PERSONAL_ACCESS_TOKEN"] == "qoder-secret-value"
     assert env["QODER_ACCESS_TOKEN"] == "qoder-secret-value"
+    assert env["CI"] == "true"
+    assert "GITHUB_ACTIONS" not in env
     assert "UNRELATED_SECRET" not in env
 
 
