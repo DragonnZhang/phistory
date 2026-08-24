@@ -4,9 +4,11 @@ from pathlib import Path
 
 from phistory.models import AgentSpec, VersionInfo
 from phistory.packages import (
+    _apply_npm_compatibility_patches,
     _github_headers,
     agent_executable,
     all_versions,
+    compatibility_patches,
     install_agent,
     latest_version,
     versions_between,
@@ -49,6 +51,52 @@ def test_agent_executable_defaults_to_tap_client_and_can_be_overridden():
 
     assert agent_executable(default) == "x-tap"
     assert agent_executable(overridden) == "kimi"
+
+
+def test_qoder_1_0_15_compatibility_patch_breaks_initializer_cycle(tmp_path):
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+    )
+    bundle = tmp_path / "node_modules" / "@qoder-ai" / "qodercli" / "bundle" / "qodercli.js"
+    bundle.parent.mkdir(parents=True)
+    cycle = (
+        "var Po,yWA,NWA,vYe,HYe=p(async()=>{await he(),Ye(),await yV(),NA(),await PV(),await TWA(),"
+        "await xWA(),await NYe()"
+    )
+    bundle.write_text(f"before;{cycle};after", encoding="utf-8")
+
+    _apply_npm_compatibility_patches(agent, "1.0.15", tmp_path)
+    _apply_npm_compatibility_patches(agent, "1.0.15", tmp_path)
+
+    patched = bundle.read_text(encoding="utf-8")
+    assert cycle not in patched
+    assert "await TWA(),await NYe()" in patched
+    assert compatibility_patches(agent, "1.0.15")
+    assert compatibility_patches(agent, "1.0.14") == ()
+
+
+def test_qoder_1_0_15_compatibility_patch_fails_closed_on_unknown_bundle(tmp_path):
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+    )
+    bundle = tmp_path / "node_modules" / "@qoder-ai" / "qodercli" / "bundle" / "qodercli.js"
+    bundle.parent.mkdir(parents=True)
+    bundle.write_text("unknown bundle", encoding="utf-8")
+
+    try:
+        _apply_npm_compatibility_patches(agent, "1.0.15", tmp_path)
+    except RuntimeError as exc:
+        assert str(exc) == "Qoder CLI 1.0.15 compatibility patch signature mismatch"
+    else:
+        raise AssertionError("expected compatibility patch signature mismatch")
 
 
 def test_all_versions_filters_platform_and_prerelease_versions(monkeypatch):

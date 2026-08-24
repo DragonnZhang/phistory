@@ -8,6 +8,7 @@ from phistory.storage import remove_if_exists
 from phistory.subprocesses import run
 
 CAPTURE_TIMEOUT_SECONDS = 1800
+QODER_CAPTURE_TIMEOUT_SECONDS = 180
 
 
 def run_oneshot(context: CaptureRunContext) -> CaptureExecution:
@@ -48,10 +49,16 @@ def _run(argv: list[str], context: CaptureRunContext, env: dict[str, str]):
         argv,
         cwd=context.work_dir,
         env=env,
-        timeout=CAPTURE_TIMEOUT_SECONDS,
+        timeout=_capture_timeout(context),
         check=False,
         inherit_env=False,
     )
+
+
+def _capture_timeout(context: CaptureRunContext) -> int:
+    if context.target.agent.id == "qoder":
+        return QODER_CAPTURE_TIMEOUT_SECONDS
+    return CAPTURE_TIMEOUT_SECONDS
 
 
 def _reset_output(context: CaptureRunContext) -> None:
