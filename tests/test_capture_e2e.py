@@ -14,6 +14,7 @@ from phistory.capture import (
 )
 from phistory.drivers import CaptureRunContext
 from phistory.drivers.oneshot import (
+    _capture_timeout,
     _needs_antigravity_model_retry,
     _needs_prompt_retry,
     _needs_qoder_session_persistence_retry,
@@ -561,6 +562,7 @@ def test_qoder_session_persistence_retry_removes_unsupported_flag(tmp_path: Path
     )()
     context = CaptureRunContext(target, target.prompt_path, target.variant_dir / ".tap", Path("workspace"), {})
 
+    assert _capture_timeout(context) == 180
     assert _needs_qoder_session_persistence_retry(context, result)
     assert _without_arg(
         ["qoder", "--no-yolo", "--", "--print", "--no-session-persistence", "hello"],
