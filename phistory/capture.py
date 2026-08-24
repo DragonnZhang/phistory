@@ -76,6 +76,11 @@ _SENSITIVE_TRACE_HEADERS = frozenset(
         "x-model-key",
     }
 )
+_QODER_COMPAT_VERSION = "0.2.8"
+_QODER_COMPAT_NOTE = (
+    "Relayed the exact legacy Qoder CLI request with its upstream Cosy-Version header set to 0.2.8, the first "
+    "service-compatible stable client version; the archived trace retains the original client header."
+)
 
 
 def capture_target(
@@ -151,6 +156,9 @@ def capture_target(
             **{secret: "<redacted>" for secret in inherited_env.values()},
         }
         _sanitize_file(prompt_path, replacements)
+        compatibility_patches = list(packages.compatibility_patches(target.agent, target.version.version))
+        if _uses_qoder_version_compatibility(target):
+            compatibility_patches.append(_QODER_COMPAT_NOTE)
         write_meta(
             working_target,
             {
@@ -174,11 +182,7 @@ def capture_target(
                 "client_exit_code": result.returncode,
                 "duration_seconds": round(time.time() - started, 3),
                 "command": [_replace_many(part, replacements) for part in _portable_command(argv, variant_dir)],
-                **(
-                    {"compatibility_patches": list(patches)}
-                    if (patches := packages.compatibility_patches(target.agent, target.version.version))
-                    else {}
-                ),
+                **({"compatibility_patches": compatibility_patches} if compatibility_patches else {}),
             },
         )
         if not keep_tap:
@@ -288,6 +292,8 @@ def _capture_env(
     if target.agent.id == "qoder":
         # Older releases interpret this as a paid workflow mode instead of ordinary headless CLI execution.
         env.pop("GITHUB_ACTIONS")
+        if _uses_qoder_version_compatibility(target):
+            env["CLAUDE_TAP_QODER_COMPAT_VERSION"] = _QODER_COMPAT_VERSION
     if target.agent.home_profile == "hermes":
         env["HERMES_HOME"] = str(home / ".hermes")
     if target.agent.home_profile == "dsh":
@@ -325,6 +331,15 @@ def _capture_env(
     if target.agent.fake_chatgpt_auth:
         env.update({"OPENAI_API_KEY": "", "CODEX_API_KEY": "", "CODEX_ACCESS_TOKEN": ""})
     return env
+
+
+def _uses_qoder_version_compatibility(target: CaptureTarget) -> bool:
+    if target.agent.id != "qoder" or target.agent.package != "@qoder-ai/qodercli":
+        return False
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:[-+].*)?", target.version.version)
+    if match is None:
+        return False
+    return tuple(map(int, match.groups())) < (0, 2, 8)
 
 
 def _extract_static_best_effort(target: CaptureTarget, install_dir: Path) -> None:

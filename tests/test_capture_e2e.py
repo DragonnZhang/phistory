@@ -182,6 +182,32 @@ def test_capture_env_only_inherits_explicitly_mapped_values(tmp_path: Path, monk
     assert "UNRELATED_SECRET" not in env
 
 
+def test_capture_env_spoofs_only_legacy_qoder_upstream_version(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("QODER_PERSONAL_ACCESS_TOKEN", "qoder-secret-value")
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+        inherited_env={"QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN"},
+    )
+
+    legacy_env = _capture_env(
+        _target(agent, VersionInfo("0.1.48"), tmp_path),
+        tmp_path / "legacy-bin",
+        tmp_path / "legacy-home",
+    )
+    current_env = _capture_env(
+        _target(agent, VersionInfo("0.2.8"), tmp_path),
+        tmp_path / "current-bin",
+        tmp_path / "current-home",
+    )
+
+    assert legacy_env["CLAUDE_TAP_QODER_COMPAT_VERSION"] == "0.2.8"
+    assert "CLAUDE_TAP_QODER_COMPAT_VERSION" not in current_env
+
+
 def test_capture_env_reports_missing_required_value_without_exposing_secrets(tmp_path: Path, monkeypatch):
     monkeypatch.delenv("QODER_PERSONAL_ACCESS_TOKEN", raising=False)
     agent = AgentSpec(
