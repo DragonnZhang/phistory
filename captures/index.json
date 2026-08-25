@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-25T07:51:56.935539Z",
+  "updated_at": "2026-08-25T08:30:21.822893Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -71,7 +71,7 @@
       "agent": "Qwen Code",
       "latest_version": "0.22.0",
       "latest_published_at": "2026-08-22T14:56:59.352Z",
-      "latest_captured_at": "2026-08-24T15:38:53.090109+00:00",
+      "latest_captured_at": "2026-08-25T08:29:55.593067+00:00",
       "versions": 120,
       "snapshots": 120
     },
@@ -14618,12 +14618,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 63
       },
       "capture_status": "captured",
       "published_at": "2026-08-22T14:56:59.352Z",
-      "captured_at": "2026-08-24T15:38:53.090109+00:00",
+      "captured_at": "2026-08-25T08:29:55.593067+00:00",
       "prompt": "captures/qwen-code/0.22.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.22.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.22.0/variants/default/meta.json"
@@ -14636,12 +14636,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-20T17:36:46.233Z",
-      "captured_at": "2026-08-24T15:38:48.581708+00:00",
+      "captured_at": "2026-08-25T08:29:56.566055+00:00",
       "prompt": "captures/qwen-code/0.21.15/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.15/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.15/variants/default/meta.json"
@@ -14654,12 +14654,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-19T02:45:12.309Z",
-      "captured_at": "2026-08-24T15:38:40.535982+00:00",
+      "captured_at": "2026-08-25T08:29:56.848315+00:00",
       "prompt": "captures/qwen-code/0.21.14/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.14/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.14/variants/default/meta.json"
@@ -14672,12 +14672,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-17T02:10:18.724Z",
-      "captured_at": "2026-08-24T15:38:32.877755+00:00",
+      "captured_at": "2026-08-25T08:29:46.903831+00:00",
       "prompt": "captures/qwen-code/0.21.13/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.13/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.13/variants/default/meta.json"
@@ -14690,12 +14690,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-14T16:38:10.799Z",
-      "captured_at": "2026-08-24T15:38:23.397057+00:00",
+      "captured_at": "2026-08-25T08:29:50.062882+00:00",
       "prompt": "captures/qwen-code/0.21.12/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.12/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.12/variants/default/meta.json"
@@ -14708,12 +14708,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-13T05:23:44.256Z",
-      "captured_at": "2026-08-24T15:38:14.993572+00:00",
+      "captured_at": "2026-08-25T08:29:49.770742+00:00",
       "prompt": "captures/qwen-code/0.21.11/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.11/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.11/variants/default/meta.json"
@@ -14726,12 +14726,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-11T14:20:34.242Z",
-      "captured_at": "2026-08-24T15:38:06.478161+00:00",
+      "captured_at": "2026-08-25T08:29:39.799813+00:00",
       "prompt": "captures/qwen-code/0.21.10/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.10/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.10/variants/default/meta.json"
@@ -14744,12 +14744,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-10T15:12:48.554Z",
-      "captured_at": "2026-08-24T15:37:55.251931+00:00",
+      "captured_at": "2026-08-25T08:29:43.134410+00:00",
       "prompt": "captures/qwen-code/0.21.9/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.9/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.9/variants/default/meta.json"
@@ -14762,12 +14762,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-08T17:06:05.223Z",
-      "captured_at": "2026-08-24T15:37:44.388683+00:00",
+      "captured_at": "2026-08-25T08:29:43.416338+00:00",
       "prompt": "captures/qwen-code/0.21.8/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.8/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.8/variants/default/meta.json"
@@ -14780,12 +14780,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-06T23:18:17.888Z",
-      "captured_at": "2026-08-24T15:37:31.305225+00:00",
+      "captured_at": "2026-08-25T08:29:33.217572+00:00",
       "prompt": "captures/qwen-code/0.21.7/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.7/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.7/variants/default/meta.json"
@@ -14798,12 +14798,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-05T15:56:13.739Z",
-      "captured_at": "2026-08-24T15:37:19.187400+00:00",
+      "captured_at": "2026-08-25T08:29:36.679457+00:00",
       "prompt": "captures/qwen-code/0.21.6/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.6/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.6/variants/default/meta.json"
@@ -14816,12 +14816,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-04T02:16:51.746Z",
-      "captured_at": "2026-08-24T15:37:08.037916+00:00",
+      "captured_at": "2026-08-25T08:29:37.088507+00:00",
       "prompt": "captures/qwen-code/0.21.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.5/variants/default/meta.json"
@@ -14834,12 +14834,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-03T04:18:04.154Z",
-      "captured_at": "2026-08-24T15:36:57.869300+00:00",
+      "captured_at": "2026-08-25T08:29:26.148123+00:00",
       "prompt": "captures/qwen-code/0.21.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.4/variants/default/meta.json"
@@ -14852,12 +14852,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-08-01T17:22:52.768Z",
-      "captured_at": "2026-08-24T15:36:46.688096+00:00",
+      "captured_at": "2026-08-25T08:29:30.218929+00:00",
       "prompt": "captures/qwen-code/0.21.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.3/variants/default/meta.json"
@@ -14870,12 +14870,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 64
       },
       "capture_status": "captured",
       "published_at": "2026-07-31T03:11:51.419Z",
-      "captured_at": "2026-08-24T15:36:34.930013+00:00",
+      "captured_at": "2026-08-25T08:29:30.556206+00:00",
       "prompt": "captures/qwen-code/0.21.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.2/variants/default/meta.json"
@@ -14888,12 +14888,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-07-28T17:49:23.802Z",
-      "captured_at": "2026-08-24T15:36:19.337684+00:00",
+      "captured_at": "2026-08-25T08:29:19.797167+00:00",
       "prompt": "captures/qwen-code/0.21.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.1/variants/default/meta.json"
@@ -14906,12 +14906,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-07-24T13:29:57.986Z",
-      "captured_at": "2026-08-24T15:35:48.905072+00:00",
+      "captured_at": "2026-08-25T08:29:23.204607+00:00",
       "prompt": "captures/qwen-code/0.21.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.21.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.21.0/variants/default/meta.json"
@@ -14924,12 +14924,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 8
+        "model": "qwen3-coder-plus",
+        "tool_count": 12
       },
       "capture_status": "captured",
       "published_at": "2026-07-21T16:49:57.960Z",
-      "captured_at": "2026-08-24T15:35:14.560632+00:00",
+      "captured_at": "2026-08-25T08:29:24.094191+00:00",
       "prompt": "captures/qwen-code/0.20.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.20.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.20.1/variants/default/meta.json"
@@ -14942,12 +14942,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-19T07:27:15.501Z",
-      "captured_at": "2026-08-24T15:34:57.955369+00:00",
+      "captured_at": "2026-08-25T08:29:13.086561+00:00",
       "prompt": "captures/qwen-code/0.20.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.20.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.20.0/variants/default/meta.json"
@@ -14960,12 +14960,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-18T14:36:53.296Z",
-      "captured_at": "2026-08-24T15:34:43.265816+00:00",
+      "captured_at": "2026-08-25T08:29:17.153640+00:00",
       "prompt": "captures/qwen-code/0.19.12/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.12/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.12/variants/default/meta.json"
@@ -14978,12 +14978,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-16T14:22:10.878Z",
-      "captured_at": "2026-08-24T15:34:14.494826+00:00",
+      "captured_at": "2026-08-25T08:29:17.440194+00:00",
       "prompt": "captures/qwen-code/0.19.11/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.11/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.11/variants/default/meta.json"
@@ -14996,12 +14996,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-14T05:03:54.633Z",
-      "captured_at": "2026-08-24T15:34:01.641848+00:00",
+      "captured_at": "2026-08-25T08:29:05.861820+00:00",
       "prompt": "captures/qwen-code/0.19.10/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.10/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.10/variants/default/meta.json"
@@ -15014,12 +15014,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-10T19:39:36.569Z",
-      "captured_at": "2026-08-24T15:33:40.624399+00:00",
+      "captured_at": "2026-08-25T08:29:10.058885+00:00",
       "prompt": "captures/qwen-code/0.19.9/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.9/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.9/variants/default/meta.json"
@@ -15032,12 +15032,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-08T15:29:36.872Z",
-      "captured_at": "2026-08-24T15:33:28.103624+00:00",
+      "captured_at": "2026-08-25T08:29:10.319767+00:00",
       "prompt": "captures/qwen-code/0.19.8/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.8/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.8/variants/default/meta.json"
@@ -15050,12 +15050,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-07T17:21:52.490Z",
-      "captured_at": "2026-08-24T15:33:10.431515+00:00",
+      "captured_at": "2026-08-25T08:28:58.632987+00:00",
       "prompt": "captures/qwen-code/0.19.7/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.7/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.7/variants/default/meta.json"
@@ -15068,12 +15068,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-03T16:36:49.305Z",
-      "captured_at": "2026-08-24T15:32:54.095517+00:00",
+      "captured_at": "2026-08-25T08:29:02.830101+00:00",
       "prompt": "captures/qwen-code/0.19.6/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.6/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.6/variants/default/meta.json"
@@ -15086,12 +15086,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-02T13:35:55.255Z",
-      "captured_at": "2026-08-24T15:32:35.047880+00:00",
+      "captured_at": "2026-08-25T08:29:03.852001+00:00",
       "prompt": "captures/qwen-code/0.19.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.5/variants/default/meta.json"
@@ -15104,12 +15104,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-07-01T13:08:25.554Z",
-      "captured_at": "2026-08-24T15:32:12.557360+00:00",
+      "captured_at": "2026-08-25T08:30:21.822893+00:00",
       "prompt": "captures/qwen-code/0.19.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.4/variants/default/meta.json"
@@ -15122,12 +15122,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-06-28T06:12:23.182Z",
-      "captured_at": "2026-08-24T15:31:45.212311+00:00",
+      "captured_at": "2026-08-25T08:28:56.645760+00:00",
       "prompt": "captures/qwen-code/0.19.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.3/variants/default/meta.json"
@@ -15140,12 +15140,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-06-24T13:54:46.722Z",
-      "captured_at": "2026-08-24T15:31:30.076743+00:00",
+      "captured_at": "2026-08-25T08:28:56.211849+00:00",
       "prompt": "captures/qwen-code/0.19.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.2/variants/default/meta.json"
@@ -15158,12 +15158,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-06-23T09:22:00.652Z",
-      "captured_at": "2026-08-24T16:07:12.769169+00:00",
+      "captured_at": "2026-08-25T08:28:51.090298+00:00",
       "prompt": "captures/qwen-code/0.19.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.1/variants/default/meta.json"
@@ -15176,12 +15176,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-06-23T03:26:58.848Z",
-      "captured_at": "2026-08-24T16:06:21.469953+00:00",
+      "captured_at": "2026-08-25T08:28:50.215228+00:00",
       "prompt": "captures/qwen-code/0.19.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.19.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.19.0/variants/default/meta.json"
@@ -15194,12 +15194,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-06-21T13:06:03.959Z",
-      "captured_at": "2026-08-24T16:05:49.701040+00:00",
+      "captured_at": "2026-08-25T08:28:48.741808+00:00",
       "prompt": "captures/qwen-code/0.18.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.18.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.18.5/variants/default/meta.json"
@@ -15212,12 +15212,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-06-20T09:37:30.853Z",
-      "captured_at": "2026-08-24T16:05:32.316678+00:00",
+      "captured_at": "2026-08-25T08:28:43.578126+00:00",
       "prompt": "captures/qwen-code/0.18.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.18.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.18.4/variants/default/meta.json"
@@ -15230,12 +15230,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-06-17T16:27:48.570Z",
-      "captured_at": "2026-08-24T16:05:12.587027+00:00",
+      "captured_at": "2026-08-25T08:28:40.924838+00:00",
       "prompt": "captures/qwen-code/0.18.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.18.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.18.3/variants/default/meta.json"
@@ -15248,12 +15248,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-06-17T11:34:10.962Z",
-      "captured_at": "2026-08-24T16:04:41.505935+00:00",
+      "captured_at": "2026-08-25T08:28:42.257304+00:00",
       "prompt": "captures/qwen-code/0.18.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.18.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.18.2/variants/default/meta.json"
@@ -15266,12 +15266,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-06-15T11:26:00.237Z",
-      "captured_at": "2026-08-24T16:04:14.489471+00:00",
+      "captured_at": "2026-08-25T08:28:35.968591+00:00",
       "prompt": "captures/qwen-code/0.18.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.18.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.18.1/variants/default/meta.json"
@@ -15284,12 +15284,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-06-12T14:41:21.102Z",
-      "captured_at": "2026-08-24T16:03:46.154929+00:00",
+      "captured_at": "2026-08-25T08:28:34.243923+00:00",
       "prompt": "captures/qwen-code/0.18.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.18.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.18.0/variants/default/meta.json"
@@ -15302,12 +15302,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-06-03T11:58:05.299Z",
-      "captured_at": "2026-08-24T16:02:26.959066+00:00",
+      "captured_at": "2026-08-25T08:28:35.639160+00:00",
       "prompt": "captures/qwen-code/0.17.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.17.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.17.1/variants/default/meta.json"
@@ -15320,12 +15320,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-05-29T09:58:40.432Z",
-      "captured_at": "2026-08-24T16:02:12.608411+00:00",
+      "captured_at": "2026-08-25T08:28:29.005248+00:00",
       "prompt": "captures/qwen-code/0.17.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.17.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.17.0/variants/default/meta.json"
@@ -15338,12 +15338,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-05-27T09:30:48.774Z",
-      "captured_at": "2026-08-24T16:01:58.760736+00:00",
+      "captured_at": "2026-08-25T08:28:27.774733+00:00",
       "prompt": "captures/qwen-code/0.16.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.16.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.16.2/variants/default/meta.json"
@@ -15356,12 +15356,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-05-23T14:52:55.155Z",
-      "captured_at": "2026-08-24T16:01:42.495176+00:00",
+      "captured_at": "2026-08-25T08:28:28.767819+00:00",
       "prompt": "captures/qwen-code/0.16.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.16.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.16.1/variants/default/meta.json"
@@ -15374,12 +15374,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-05-21T09:48:24.849Z",
-      "captured_at": "2026-08-24T16:01:32.535978+00:00",
+      "captured_at": "2026-08-25T08:28:22.854190+00:00",
       "prompt": "captures/qwen-code/0.16.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.16.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.16.0/variants/default/meta.json"
@@ -15392,12 +15392,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 12
       },
       "capture_status": "captured",
       "published_at": "2026-05-13T03:37:48.334Z",
-      "captured_at": "2026-08-24T16:01:20.475965+00:00",
+      "captured_at": "2026-08-25T08:28:21.696624+00:00",
       "prompt": "captures/qwen-code/0.15.11/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.11/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.11/variants/default/meta.json"
@@ -15410,12 +15410,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-05-10T06:48:22.718Z",
-      "captured_at": "2026-08-24T16:01:06.034757+00:00",
+      "captured_at": "2026-08-25T08:28:22.626889+00:00",
       "prompt": "captures/qwen-code/0.15.10/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.10/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.10/variants/default/meta.json"
@@ -15428,12 +15428,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 12
+        "model": "qwen3-coder-plus",
+        "tool_count": 16
       },
       "capture_status": "captured",
       "published_at": "2026-05-08T14:44:51.701Z",
-      "captured_at": "2026-08-24T16:00:53.385072+00:00",
+      "captured_at": "2026-08-25T08:28:16.772049+00:00",
       "prompt": "captures/qwen-code/0.15.9/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.9/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.9/variants/default/meta.json"
@@ -15446,12 +15446,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 12
+        "model": "qwen3-coder-plus",
+        "tool_count": 16
       },
       "capture_status": "captured",
       "published_at": "2026-05-07T16:24:19.776Z",
-      "captured_at": "2026-08-24T16:00:42.215450+00:00",
+      "captured_at": "2026-08-25T08:28:15.292938+00:00",
       "prompt": "captures/qwen-code/0.15.8/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.8/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.8/variants/default/meta.json"
@@ -15464,12 +15464,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 12
+        "model": "qwen3-coder-plus",
+        "tool_count": 16
       },
       "capture_status": "captured",
       "published_at": "2026-05-07T09:22:05.502Z",
-      "captured_at": "2026-08-24T16:00:31.298946+00:00",
+      "captured_at": "2026-08-25T08:28:16.179483+00:00",
       "prompt": "captures/qwen-code/0.15.7/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.7/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.7/variants/default/meta.json"
@@ -15482,12 +15482,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 12
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-04-30T07:58:52.249Z",
-      "captured_at": "2026-08-24T16:00:14.828065+00:00",
+      "captured_at": "2026-08-25T08:28:10.477698+00:00",
       "prompt": "captures/qwen-code/0.15.6/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.6/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.6/variants/default/meta.json"
@@ -15500,12 +15500,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 12
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-04-29T09:54:13.560Z",
-      "captured_at": "2026-08-24T16:00:00.810308+00:00",
+      "captured_at": "2026-08-25T08:28:07.979639+00:00",
       "prompt": "captures/qwen-code/0.15.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.5/variants/default/meta.json"
@@ -15518,12 +15518,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 12
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
       },
       "capture_status": "captured",
       "published_at": "2026-04-28T13:22:24.160Z",
-      "captured_at": "2026-08-24T15:59:49.963363+00:00",
+      "captured_at": "2026-08-25T08:28:09.777868+00:00",
       "prompt": "captures/qwen-code/0.15.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.4/variants/default/meta.json"
@@ -15536,12 +15536,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-04-26T06:49:49.396Z",
-      "captured_at": "2026-08-24T15:59:36.131934+00:00",
+      "captured_at": "2026-08-25T08:28:03.792740+00:00",
       "prompt": "captures/qwen-code/0.15.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.3/variants/default/meta.json"
@@ -15554,12 +15554,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-04-24T12:11:38.951Z",
-      "captured_at": "2026-08-24T15:59:25.435549+00:00",
+      "captured_at": "2026-08-25T08:28:01.444167+00:00",
       "prompt": "captures/qwen-code/0.15.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.2/variants/default/meta.json"
@@ -15572,12 +15572,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-04-23T03:57:33.027Z",
-      "captured_at": "2026-08-24T15:59:18.484232+00:00",
+      "captured_at": "2026-08-25T08:28:03.446883+00:00",
       "prompt": "captures/qwen-code/0.15.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.1/variants/default/meta.json"
@@ -15590,12 +15590,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-04-22T11:45:28.390Z",
-      "captured_at": "2026-08-24T15:59:10.636814+00:00",
+      "captured_at": "2026-08-25T08:27:57.573104+00:00",
       "prompt": "captures/qwen-code/0.15.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.15.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.15.0/variants/default/meta.json"
@@ -15608,12 +15608,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-04-15T15:32:59.673Z",
-      "captured_at": "2026-08-24T15:59:01.869453+00:00",
+      "captured_at": "2026-08-25T08:27:55.530164+00:00",
       "prompt": "captures/qwen-code/0.14.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.14.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.14.5/variants/default/meta.json"
@@ -15626,12 +15626,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-04-13T14:26:18.353Z",
-      "captured_at": "2026-08-24T15:58:55.941329+00:00",
+      "captured_at": "2026-08-25T08:27:57.158897+00:00",
       "prompt": "captures/qwen-code/0.14.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.14.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.14.4/variants/default/meta.json"
@@ -15644,12 +15644,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-04-10T14:21:36.237Z",
-      "captured_at": "2026-08-24T15:58:48.832689+00:00",
+      "captured_at": "2026-08-25T08:27:50.600956+00:00",
       "prompt": "captures/qwen-code/0.14.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.14.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.14.3/variants/default/meta.json"
@@ -15662,12 +15662,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-04-08T13:59:45.787Z",
-      "captured_at": "2026-08-24T15:58:42.020080+00:00",
+      "captured_at": "2026-08-25T08:27:49.632467+00:00",
       "prompt": "captures/qwen-code/0.14.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.14.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.14.2/variants/default/meta.json"
@@ -15680,12 +15680,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-04-07T13:06:53.985Z",
-      "captured_at": "2026-08-24T15:57:58.887702+00:00",
+      "captured_at": "2026-08-25T08:27:50.379659+00:00",
       "prompt": "captures/qwen-code/0.14.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.14.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.14.1/variants/default/meta.json"
@@ -15698,12 +15698,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-04-03T00:41:34.972Z",
-      "captured_at": "2026-08-24T16:05:12.322804+00:00",
+      "captured_at": "2026-08-25T08:27:44.286025+00:00",
       "prompt": "captures/qwen-code/0.14.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.14.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.14.0/variants/default/meta.json"
@@ -15716,12 +15716,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-30T11:43:39.831Z",
-      "captured_at": "2026-08-24T16:04:40.668910+00:00",
+      "captured_at": "2026-08-25T08:27:43.721594+00:00",
       "prompt": "captures/qwen-code/0.13.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.13.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.13.2/variants/default/meta.json"
@@ -15734,12 +15734,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-27T10:17:28.030Z",
-      "captured_at": "2026-08-24T16:04:13.640767+00:00",
+      "captured_at": "2026-08-25T08:27:43.990574+00:00",
       "prompt": "captures/qwen-code/0.13.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.13.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.13.1/variants/default/meta.json"
@@ -15752,12 +15752,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-23T14:31:59.874Z",
-      "captured_at": "2026-08-24T16:03:45.664623+00:00",
+      "captured_at": "2026-08-25T08:27:38.364993+00:00",
       "prompt": "captures/qwen-code/0.13.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.13.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.13.0/variants/default/meta.json"
@@ -15770,12 +15770,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-17T11:55:23.297Z",
-      "captured_at": "2026-08-24T16:02:27.263807+00:00",
+      "captured_at": "2026-08-25T08:27:37.557482+00:00",
       "prompt": "captures/qwen-code/0.12.6/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.12.6/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.12.6/variants/default/meta.json"
@@ -15788,12 +15788,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-16T15:38:54.438Z",
-      "captured_at": "2026-08-24T16:02:12.451073+00:00",
+      "captured_at": "2026-08-25T08:27:38.161851+00:00",
       "prompt": "captures/qwen-code/0.12.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.12.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.12.5/variants/default/meta.json"
@@ -15806,12 +15806,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-16T10:04:55.946Z",
-      "captured_at": "2026-08-24T16:01:58.611820+00:00",
+      "captured_at": "2026-08-25T08:27:31.442265+00:00",
       "prompt": "captures/qwen-code/0.12.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.12.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.12.4/variants/default/meta.json"
@@ -15824,12 +15824,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-13T12:49:39.303Z",
-      "captured_at": "2026-08-24T16:01:42.858810+00:00",
+      "captured_at": "2026-08-25T08:27:30.492754+00:00",
       "prompt": "captures/qwen-code/0.12.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.12.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.12.3/variants/default/meta.json"
@@ -15842,12 +15842,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-12T14:37:44.133Z",
-      "captured_at": "2026-08-24T16:01:32.533866+00:00",
+      "captured_at": "2026-08-25T08:27:31.124834+00:00",
       "prompt": "captures/qwen-code/0.12.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.12.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.12.2/variants/default/meta.json"
@@ -15860,12 +15860,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-11T13:42:01.101Z",
-      "captured_at": "2026-08-24T16:01:20.449581+00:00",
+      "captured_at": "2026-08-25T08:27:25.627030+00:00",
       "prompt": "captures/qwen-code/0.12.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.12.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.12.1/variants/default/meta.json"
@@ -15878,12 +15878,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 11
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
       },
       "capture_status": "captured",
       "published_at": "2026-03-09T13:06:04.321Z",
-      "captured_at": "2026-08-24T16:01:06.041441+00:00",
+      "captured_at": "2026-08-25T08:27:24.340507+00:00",
       "prompt": "captures/qwen-code/0.12.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.12.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.12.0/variants/default/meta.json"
@@ -15896,12 +15896,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-03-03T13:08:40.098Z",
-      "captured_at": "2026-08-24T16:00:53.442357+00:00",
+      "captured_at": "2026-08-25T08:27:25.346698+00:00",
       "prompt": "captures/qwen-code/0.11.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.11.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.11.1/variants/default/meta.json"
@@ -15914,12 +15914,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-28T10:43:39.127Z",
-      "captured_at": "2026-08-24T16:00:42.374424+00:00",
+      "captured_at": "2026-08-25T08:27:19.962751+00:00",
       "prompt": "captures/qwen-code/0.11.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.11.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.11.0/variants/default/meta.json"
@@ -15932,12 +15932,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-24T16:21:12.546Z",
-      "captured_at": "2026-08-24T16:00:30.870835+00:00",
+      "captured_at": "2026-08-25T08:27:18.697500+00:00",
       "prompt": "captures/qwen-code/0.10.6/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.10.6/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.10.6/variants/default/meta.json"
@@ -15950,12 +15950,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-18T13:05:52.390Z",
-      "captured_at": "2026-08-24T16:00:14.492951+00:00",
+      "captured_at": "2026-08-25T08:27:19.755660+00:00",
       "prompt": "captures/qwen-code/0.10.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.10.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.10.5/variants/default/meta.json"
@@ -15968,12 +15968,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-18T04:45:34.793Z",
-      "captured_at": "2026-08-24T16:00:00.959957+00:00",
+      "captured_at": "2026-08-25T08:27:14.164479+00:00",
       "prompt": "captures/qwen-code/0.10.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.10.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.10.4/variants/default/meta.json"
@@ -15986,12 +15986,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-16T09:46:56.404Z",
-      "captured_at": "2026-08-24T15:59:48.409187+00:00",
+      "captured_at": "2026-08-25T08:27:13.246803+00:00",
       "prompt": "captures/qwen-code/0.10.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.10.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.10.3/variants/default/meta.json"
@@ -16004,12 +16004,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-14T11:14:46.325Z",
-      "captured_at": "2026-08-24T15:59:36.429844+00:00",
+      "captured_at": "2026-08-25T08:27:13.639979+00:00",
       "prompt": "captures/qwen-code/0.10.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.10.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.10.2/variants/default/meta.json"
@@ -16022,12 +16022,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-11T09:41:12.794Z",
-      "captured_at": "2026-08-24T15:59:26.447049+00:00",
+      "captured_at": "2026-08-25T08:27:07.914761+00:00",
       "prompt": "captures/qwen-code/0.10.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.10.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.10.1/variants/default/meta.json"
@@ -16040,12 +16040,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-09T04:09:48.478Z",
-      "captured_at": "2026-08-24T15:59:16.688292+00:00",
+      "captured_at": "2026-08-25T08:27:07.328318+00:00",
       "prompt": "captures/qwen-code/0.10.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.10.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.10.0/variants/default/meta.json"
@@ -16058,12 +16058,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-05T03:43:14.162Z",
-      "captured_at": "2026-08-24T15:59:08.655857+00:00",
+      "captured_at": "2026-08-25T08:27:07.095689+00:00",
       "prompt": "captures/qwen-code/0.9.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.9.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.9.1/variants/default/meta.json"
@@ -16076,12 +16076,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-02-03T07:06:50.336Z",
-      "captured_at": "2026-08-24T15:59:00.444347+00:00",
+      "captured_at": "2026-08-25T08:27:01.748329+00:00",
       "prompt": "captures/qwen-code/0.9.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.9.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.9.0/variants/default/meta.json"
@@ -16094,12 +16094,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-01-30T02:31:54.772Z",
-      "captured_at": "2026-08-24T15:58:55.030469+00:00",
+      "captured_at": "2026-08-25T08:27:01.558871+00:00",
       "prompt": "captures/qwen-code/0.8.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.8.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.8.2/variants/default/meta.json"
@@ -16112,12 +16112,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-01-27T13:36:30.125Z",
-      "captured_at": "2026-08-24T15:58:48.761499+00:00",
+      "captured_at": "2026-08-25T08:27:01.064663+00:00",
       "prompt": "captures/qwen-code/0.8.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.8.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.8.1/variants/default/meta.json"
@@ -16130,12 +16130,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-01-27T12:15:21.262Z",
-      "captured_at": "2026-08-24T15:58:42.079208+00:00",
+      "captured_at": "2026-08-25T08:26:56.068498+00:00",
       "prompt": "captures/qwen-code/0.8.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.8.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.8.0/variants/default/meta.json"
@@ -16148,12 +16148,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-01-20T09:10:52.719Z",
-      "captured_at": "2026-08-24T15:32:26.919640+00:00",
+      "captured_at": "2026-08-25T08:26:55.876951+00:00",
       "prompt": "captures/qwen-code/0.7.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.7.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.7.2/variants/default/meta.json"
@@ -16166,12 +16166,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-01-14T11:12:20.299Z",
-      "captured_at": "2026-08-24T15:32:08.890243+00:00",
+      "captured_at": "2026-08-25T08:26:55.569872+00:00",
       "prompt": "captures/qwen-code/0.7.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.7.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.7.1/variants/default/meta.json"
@@ -16184,12 +16184,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-01-14T01:39:45.865Z",
-      "captured_at": "2026-08-24T15:31:54.940256+00:00",
+      "captured_at": "2026-08-25T08:26:50.291130+00:00",
       "prompt": "captures/qwen-code/0.7.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.7.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.7.0/variants/default/meta.json"
@@ -16202,12 +16202,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-01-12T04:28:02.801Z",
-      "captured_at": "2026-08-24T15:31:42.310222+00:00",
+      "captured_at": "2026-08-25T08:26:49.905925+00:00",
       "prompt": "captures/qwen-code/0.6.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.6.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.6.2/variants/default/meta.json"
@@ -16220,12 +16220,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2026-01-07T10:15:19.815Z",
-      "captured_at": "2026-08-24T15:31:28.036055+00:00",
+      "captured_at": "2026-08-25T08:26:49.628992+00:00",
       "prompt": "captures/qwen-code/0.6.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.6.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.6.1/variants/default/meta.json"
@@ -16238,12 +16238,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-12-26T10:43:41.485Z",
-      "captured_at": "2026-08-24T16:10:34.715016+00:00",
+      "captured_at": "2026-08-25T08:26:43.306512+00:00",
       "prompt": "captures/qwen-code/0.6.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.6.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.6.0/variants/default/meta.json"
@@ -16256,12 +16256,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-12-22T07:43:08.527Z",
-      "captured_at": "2026-08-24T16:10:14.824472+00:00",
+      "captured_at": "2026-08-25T08:26:43.498203+00:00",
       "prompt": "captures/qwen-code/0.5.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.5.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.5.2/variants/default/meta.json"
@@ -16274,12 +16274,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-12-19T11:10:03.580Z",
-      "captured_at": "2026-08-24T16:09:56.002659+00:00",
+      "captured_at": "2026-08-25T08:26:42.878066+00:00",
       "prompt": "captures/qwen-code/0.5.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.5.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.5.1/variants/default/meta.json"
@@ -16292,12 +16292,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-12-13T17:00:16.565Z",
-      "captured_at": "2026-08-24T16:09:27.060659+00:00",
+      "captured_at": "2026-08-25T08:26:37.095441+00:00",
       "prompt": "captures/qwen-code/0.5.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.5.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.5.0/variants/default/meta.json"
@@ -16310,12 +16310,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-12-12T09:56:26.952Z",
-      "captured_at": "2026-08-24T16:09:12.499064+00:00",
+      "captured_at": "2026-08-25T08:26:37.593282+00:00",
       "prompt": "captures/qwen-code/0.4.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.4.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.4.1/variants/default/meta.json"
@@ -16328,12 +16328,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-12-06T12:08:15.976Z",
-      "captured_at": "2026-08-24T16:08:54.071181+00:00",
+      "captured_at": "2026-08-25T08:26:36.387582+00:00",
       "prompt": "captures/qwen-code/0.4.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.4.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.4.0/variants/default/meta.json"
@@ -16346,12 +16346,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-11-28T08:59:11.259Z",
-      "captured_at": "2026-08-24T16:08:34.100335+00:00",
+      "captured_at": "2026-08-25T08:26:31.610093+00:00",
       "prompt": "captures/qwen-code/0.3.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.3.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.3.0/variants/default/meta.json"
@@ -16364,12 +16364,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-11-20T07:28:20.094Z",
-      "captured_at": "2026-08-24T16:08:17.153898+00:00",
+      "captured_at": "2026-08-25T08:26:32.058279+00:00",
       "prompt": "captures/qwen-code/0.2.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.2.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.2.3/variants/default/meta.json"
@@ -16382,12 +16382,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-11-19T06:40:47.038Z",
-      "captured_at": "2026-08-24T16:08:01.621178+00:00",
+      "captured_at": "2026-08-25T08:26:29.771683+00:00",
       "prompt": "captures/qwen-code/0.2.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.2.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.2.2/variants/default/meta.json"
@@ -16400,12 +16400,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-11-13T11:27:11.711Z",
-      "captured_at": "2026-08-24T16:07:49.772446+00:00",
+      "captured_at": "2026-08-25T08:26:25.594754+00:00",
       "prompt": "captures/qwen-code/0.2.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.2.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.2.1/variants/default/meta.json"
@@ -16418,12 +16418,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-11-07T11:00:33.607Z",
-      "captured_at": "2026-08-24T16:07:38.420896+00:00",
+      "captured_at": "2026-08-25T08:26:25.577098+00:00",
       "prompt": "captures/qwen-code/0.2.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.2.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.2.0/variants/default/meta.json"
@@ -16436,12 +16436,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-11-07T10:01:54.416Z",
-      "captured_at": "2026-08-24T16:07:19.796903+00:00",
+      "captured_at": "2026-08-25T08:26:24.618465+00:00",
       "prompt": "captures/qwen-code/0.1.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.1.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.1.5/variants/default/meta.json"
@@ -16454,12 +16454,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-11-05T12:18:58.325Z",
-      "captured_at": "2026-08-24T16:06:46.354317+00:00",
+      "captured_at": "2026-08-25T08:26:19.940260+00:00",
       "prompt": "captures/qwen-code/0.1.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.1.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.1.4/variants/default/meta.json"
@@ -16472,12 +16472,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-11-04T09:48:27.858Z",
-      "captured_at": "2026-08-24T16:06:17.861275+00:00",
+      "captured_at": "2026-08-25T08:26:19.997311+00:00",
       "prompt": "captures/qwen-code/0.1.3/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.1.3/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.1.3/variants/default/meta.json"
@@ -16490,12 +16490,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-10-31T10:24:08.119Z",
-      "captured_at": "2026-08-24T16:05:52.940163+00:00",
+      "captured_at": "2026-08-25T08:26:18.781283+00:00",
       "prompt": "captures/qwen-code/0.1.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.1.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.1.2/variants/default/meta.json"
@@ -16508,12 +16508,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-10-29T06:54:52.627Z",
-      "captured_at": "2026-08-24T16:05:38.299817+00:00",
+      "captured_at": "2026-08-25T08:26:14.197275+00:00",
       "prompt": "captures/qwen-code/0.1.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.1.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.1.1/variants/default/meta.json"
@@ -16526,12 +16526,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-10-27T09:58:51.749Z",
-      "captured_at": "2026-08-24T16:05:24.013947+00:00",
+      "captured_at": "2026-08-25T08:26:14.894865+00:00",
       "prompt": "captures/qwen-code/0.1.0/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.1.0/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.1.0/variants/default/meta.json"
@@ -16544,12 +16544,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 10
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
       },
       "capture_status": "captured",
       "published_at": "2025-09-29T06:24:31.229Z",
-      "captured_at": "2026-08-24T16:05:05.962437+00:00",
+      "captured_at": "2026-08-25T08:26:10.496304+00:00",
       "prompt": "captures/qwen-code/0.0.14/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.14/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.14/variants/default/meta.json"
@@ -16562,12 +16562,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 12
       },
       "capture_status": "captured",
       "published_at": "2025-09-24T03:15:01.983Z",
-      "captured_at": "2026-08-24T16:03:50.703029+00:00",
+      "captured_at": "2026-08-25T08:26:03.278076+00:00",
       "prompt": "captures/qwen-code/0.0.13/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.13/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.13/variants/default/meta.json"
@@ -16580,12 +16580,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 12
       },
       "capture_status": "captured",
       "published_at": "2025-09-19T11:58:20.050Z",
-      "captured_at": "2026-08-24T16:02:09.210933+00:00",
+      "captured_at": "2026-08-25T08:26:04.199905+00:00",
       "prompt": "captures/qwen-code/0.0.12/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.12/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.12/variants/default/meta.json"
@@ -16598,12 +16598,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 9
+        "model": "qwen3-coder-plus",
+        "tool_count": 12
       },
       "capture_status": "captured",
       "published_at": "2025-09-12T10:06:40.888Z",
-      "captured_at": "2026-08-24T16:01:33.554372+00:00",
+      "captured_at": "2026-08-25T08:25:54.767140+00:00",
       "prompt": "captures/qwen-code/0.0.11/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.11/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.11/variants/default/meta.json"
@@ -16616,12 +16616,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 8
+        "model": "qwen3-coder-plus",
+        "tool_count": 11
       },
       "capture_status": "captured",
       "published_at": "2025-09-02T08:20:08.185Z",
-      "captured_at": "2026-08-24T16:01:12.686609+00:00",
+      "captured_at": "2026-08-25T08:25:45.202861+00:00",
       "prompt": "captures/qwen-code/0.0.10/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.10/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.10/variants/default/meta.json"
@@ -16634,12 +16634,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 7
+        "model": "qwen3-coder-plus",
+        "tool_count": 10
       },
       "capture_status": "captured",
       "published_at": "2025-08-27T09:42:12.466Z",
-      "captured_at": "2026-08-24T16:15:21.431690+00:00",
+      "captured_at": "2026-08-25T08:25:46.340014+00:00",
       "prompt": "captures/qwen-code/0.0.9/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.9/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.9/variants/default/meta.json"
@@ -16652,12 +16652,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 7
+        "model": "qwen3-coder-plus",
+        "tool_count": 10
       },
       "capture_status": "captured",
       "published_at": "2025-08-22T08:44:43.337Z",
-      "captured_at": "2026-08-24T15:59:59.340985+00:00",
+      "captured_at": "2026-08-25T08:25:37.966549+00:00",
       "prompt": "captures/qwen-code/0.0.8/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.8/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.8/variants/default/meta.json"
@@ -16670,12 +16670,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 7
+        "model": "qwen3-coder-plus",
+        "tool_count": 10
       },
       "capture_status": "captured",
       "published_at": "2025-08-15T10:36:16.249Z",
-      "captured_at": "2026-08-24T15:59:45.939965+00:00",
+      "captured_at": "2026-08-25T08:25:27.546206+00:00",
       "prompt": "captures/qwen-code/0.0.7/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.7/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.7/variants/default/meta.json"
@@ -16688,12 +16688,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 8
+        "model": "qwen3-coder-plus",
+        "tool_count": 11
       },
       "capture_status": "captured",
       "published_at": "2025-08-12T14:07:56.374Z",
-      "captured_at": "2026-08-24T15:59:32.208892+00:00",
+      "captured_at": "2026-08-25T08:25:28.802748+00:00",
       "prompt": "captures/qwen-code/0.0.6/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.6/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.6/variants/default/meta.json"
@@ -16706,12 +16706,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 8
+        "model": "qwen3-coder-plus",
+        "tool_count": 11
       },
       "capture_status": "captured",
       "published_at": "2025-08-08T13:46:19.332Z",
-      "captured_at": "2026-08-24T15:59:22.901067+00:00",
+      "captured_at": "2026-08-25T08:25:18.598170+00:00",
       "prompt": "captures/qwen-code/0.0.5/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.5/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.5/variants/default/meta.json"
@@ -16724,12 +16724,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 8
+        "model": "qwen3-coder-plus",
+        "tool_count": 11
       },
       "capture_status": "captured",
       "published_at": "2025-08-03T10:26:05.872Z",
-      "captured_at": "2026-08-24T15:59:11.624512+00:00",
+      "captured_at": "2026-08-25T08:25:11.208783+00:00",
       "prompt": "captures/qwen-code/0.0.4/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.4/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.4/variants/default/meta.json"
@@ -16742,12 +16742,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 7
+        "model": "qwen3-coder-plus",
+        "tool_count": 10
       },
       "capture_status": "captured",
       "published_at": "2025-08-01T10:29:31.430Z",
-      "captured_at": "2026-08-24T15:58:59.125848+00:00",
+      "captured_at": "2026-08-25T08:25:12.771868+00:00",
       "prompt": "captures/qwen-code/0.0.2/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.2/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.2/variants/default/meta.json"
@@ -16760,12 +16760,12 @@
       "variant_label": "Default",
       "variant_dimensions": {},
       "observed": {
-        "model": "gpt-4.1",
-        "tool_count": 8
+        "model": "qwen3-coder-plus",
+        "tool_count": 11
       },
       "capture_status": "captured",
       "published_at": "2025-07-22T14:36:58.393Z",
-      "captured_at": "2026-08-24T16:20:15.209807+00:00",
+      "captured_at": "2026-08-25T08:25:05.599345+00:00",
       "prompt": "captures/qwen-code/0.0.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.1/variants/default/meta.json"

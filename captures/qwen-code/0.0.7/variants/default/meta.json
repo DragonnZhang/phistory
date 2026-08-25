@@ -10,24 +10,23 @@
   },
   "requested": {},
   "observed": {
-    "model": "gpt-4.1",
-    "tool_count": 7
+    "model": "qwen3-coder-plus",
+    "tool_count": 10
   },
   "published_at": "2025-08-15T10:36:16.249Z",
   "tarball_url": null,
   "binary_version": "0.0.7",
-  "captured_at": "2026-08-24T15:59:45.939965+00:00",
+  "captured_at": "2026-08-25T08:25:27.546206+00:00",
   "tap_client": "qwen",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 13.729,
+  "duration_seconds": 12.254,
   "command": [
     "python",
     "-m",
     "claude_tap",
     "run",
     "qwen",
-    "--no-yolo",
     "--export-prompt",
     "prompt.md",
     "--no-live",
@@ -38,6 +37,7 @@
     "--mode",
     "reverse",
     "--",
+    "--yolo",
     "--prompt",
     "Reply with one short sentence."
   ]

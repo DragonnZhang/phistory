@@ -234,7 +234,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 # User Message
 
 This is the Qwen Code. We are setting up the context for our chat.
-Today's date is Monday, August 24, 2026.
+Today's date is Tuesday, August 25, 2026.
 My operating system is: darwin
 I'm currently working in the directory: /private$PHISTORY_WORKSPACE
 Here is the folder structure of the current working directories:
@@ -420,6 +420,89 @@ Use this tool when the user's query implies needing the content of several files
 }
 ```
 
+## replace
+
+Replaces text within a file. By default, replaces a single occurrence, but can replace multiple occurrences when `expected_replacements` is specified. This tool requires providing significant context around the change to ensure precise targeting. Always use the read_file tool to examine the file's current content before attempting a text replacement.
+
+      The user has the ability to modify the `new_string` content. If modified, this will be stated in the response.
+
+Expectation for required parameters:
+1. `file_path` MUST be an absolute path; otherwise an error will be thrown.
+2. `old_string` MUST be the exact literal text to replace (including all whitespace, indentation, newlines, and surrounding code etc.).
+3. `new_string` MUST be the exact literal text to replace `old_string` with (also including all whitespace, indentation, newlines, and surrounding code etc.). Ensure the resulting code is correct and idiomatic.
+4. NEVER escape `old_string` or `new_string`, that would break the exact literal text requirement.
+**Important:** If ANY of the above are not satisfied, the tool will fail. CRITICAL for `old_string`: Must uniquely identify the single instance to change. Include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. If this string matches multiple locations, or does not match exactly, the tool will fail.
+**Multiple replacements:** Set `expected_replacements` to the number of occurrences you want to replace. The tool will replace ALL occurrences that match `old_string` exactly. Ensure the number of replacements matches your expectation.
+
+```json
+{
+  "properties": {
+    "file_path": {
+      "description": "The absolute path to the file to modify. Must start with '/'.",
+      "type": "string"
+    },
+    "old_string": {
+      "description": "The exact literal text to replace, preferably unescaped. For single replacements (default), include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. For multiple replacements, specify expected_replacements parameter. If this string is not the exact literal text (i.e. you escaped it) or does not match exactly, the tool will fail.",
+      "type": "string"
+    },
+    "new_string": {
+      "description": "The exact literal text to replace `old_string` with, preferably unescaped. Provide the EXACT text. Ensure the resulting code is correct and idiomatic.",
+      "type": "string"
+    },
+    "expected_replacements": {
+      "type": "number",
+      "description": "Number of replacements expected. Defaults to 1 if not specified. Use when you want to replace multiple occurrences.",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "file_path",
+    "old_string",
+    "new_string"
+  ],
+  "type": "object"
+}
+```
+
+## run_shell_command
+
+This tool executes a given shell command as `bash -c <command>`. Command can start background processes using `&`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as `kill -- -PGID` or signaled as `kill -s SIGNAL -- -PGID`.
+
+      The following information is returned:
+
+      Command: Executed command.
+      Directory: Directory (relative to project root) where command was executed, or `(root)`.
+      Stdout: Output on stdout stream. Can be `(empty)` or partial on error and for any unwaited background processes.
+      Stderr: Output on stderr stream. Can be `(empty)` or partial on error and for any unwaited background processes.
+      Error: Error or `(none)` if no error was reported for the subprocess.
+      Exit Code: Exit code or `(none)` if terminated by signal.
+      Signal: Signal number or `(none)` if no signal was received.
+      Background PIDs: List of background processes started or `(none)`.
+      Process Group PGID: Process group started or `(none)`
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "command": {
+      "type": "string",
+      "description": "Exact bash command to execute as `bash -c <command>`"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the command for the user. Be specific and concise. Ideally a single sentence. Can be up to 3 sentences for clarity. No line breaks."
+    },
+    "directory": {
+      "type": "string",
+      "description": "(OPTIONAL) Directory to run the command in, if not the project root directory. Must be relative to the project root directory and must already exist."
+    }
+  },
+  "required": [
+    "command"
+  ]
+}
+```
+
 ## save_memory
 
 
@@ -531,6 +614,32 @@ Usage notes:
   "required": [
     "url",
     "prompt"
+  ],
+  "type": "object"
+}
+```
+
+## write_file
+
+Writes content to a specified file in the local filesystem.
+
+      The user has the ability to modify `content`. If modified, this will be stated in the response.
+
+```json
+{
+  "properties": {
+    "file_path": {
+      "description": "The absolute path to the file to write to (e.g., '/home/user/project/file.txt'). Relative paths are not supported.",
+      "type": "string"
+    },
+    "content": {
+      "description": "The content to write to the file.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "file_path",
+    "content"
   ],
   "type": "object"
 }

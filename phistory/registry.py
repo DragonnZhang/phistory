@@ -295,7 +295,7 @@ QWEN_CODE = AgentSpec(
     fake_env={
         "OPENAI_API_KEY": "phistory-fake-api-key",
         "OPENAI_BASE_URL": "https://api.openai.com/v1",
-        "OPENAI_MODEL": "gpt-4.1",
+        "OPENAI_MODEL": "qwen3-coder-plus",
     },
     extra_env={
         "DISABLE_AUTOUPDATER": "1",
@@ -306,8 +306,7 @@ QWEN_CODE = AgentSpec(
     tap_mode="reverse",
     default_variant=_default(
         (
-            "--no-yolo",
-            "--",
+            "--yolo",
             "--prompt",
             "Reply with one short sentence.",
             "--output-format",
