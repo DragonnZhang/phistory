@@ -99,14 +99,14 @@ As you work, consult your memory files to build on previous experience.
 
 
 ## Environment
-You have been invoked in the following environment: 
+You have been invoked in the following environment:
  - Primary working directory: $PHISTORY_WORKSPACE
   - Is a git repository: false
  - Platform: linux
- - Shell: bash
+ - Shell: unknown
  - OS Version: $PHISTORY_OS_VERSION
  - You are powered by the model named Sonnet 4.6. The exact model ID is claude-sonnet-4-6.
- - 
+ -
 
 Assistant knowledge cutoff is August 2025.
  - The most recent Claude model family is Claude 4.5/4.6. Model IDs — Opus 4.6: 'claude-opus-4-6', Sonnet 4.6: 'claude-sonnet-4-6', Haiku 4.5: 'claude-haiku-4-5-20251001'. When building AI applications, default to the latest and most capable Claude models.
