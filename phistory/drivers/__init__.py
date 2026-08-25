@@ -20,6 +20,7 @@ class CaptureRunContext:
 class CaptureExecution:
     command: tuple[str, ...]
     result: CommandResult
+    compatibility_patches: tuple[str, ...] = ()
 
 
 CaptureRunner = Callable[[CaptureRunContext], CaptureExecution]

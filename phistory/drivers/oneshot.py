@@ -1,19 +1,28 @@
 from __future__ import annotations
 
+import os
+import shutil
+import sys
 import time
+from pathlib import Path
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
-from phistory.drivers.common import tap_command
+from phistory.drivers.common import effective_tap_mode, tap_command
+from phistory.packages import agent_executable
 from phistory.storage import remove_if_exists
 from phistory.subprocesses import run
 
 CAPTURE_TIMEOUT_SECONDS = 1800
 QODER_CAPTURE_TIMEOUT_SECONDS = 180
+LEGACY_CLAUDE_FORWARD_PATCH = (
+    "Claude Code does not accept inline --settings JSON; stripped claude-tap's injected forward-proxy settings "
+    "argument and relied on the equivalent proxy and CA environment."
+)
 
 
 def run_oneshot(context: CaptureRunContext) -> CaptureExecution:
     argv = tap_command(context.target, context.prompt_path, context.tap_output_dir)
-    env = context.env
+    env, compatibility_patches = _prepare_claude_forward_compat(context, context.env)
     result = _run(argv, context, env)
     if _needs_claude_session_persistence_retry(context, result):
         _reset_output(context)
@@ -41,7 +50,66 @@ def run_oneshot(context: CaptureRunContext) -> CaptureExecution:
         _reset_output(context)
         time.sleep(1)
         result = _run(argv, context, env)
-    return CaptureExecution(tuple(argv), result)
+    return CaptureExecution(tuple(argv), result, compatibility_patches)
+
+
+def _prepare_claude_forward_compat(
+    context: CaptureRunContext,
+    env: dict[str, str],
+) -> tuple[dict[str, str], tuple[str, ...]]:
+    target = context.target
+    if target.agent.id != "claude-code" or effective_tap_mode(target) != "forward":
+        return env, ()
+    executable = shutil.which(agent_executable(target.agent), path=env.get("PATH"))
+    if executable is None or _claude_supports_inline_settings(Path(executable), context, env):
+        return env, ()
+
+    wrapper_dir = context.work_dir / ".phistory-forward-bin"
+    wrapper_dir.mkdir(parents=True, exist_ok=True)
+    wrapper = wrapper_dir / agent_executable(target.agent)
+    wrapper.write_text(_legacy_claude_wrapper(Path(executable)), encoding="utf-8")
+    wrapper.chmod(0o755)
+    return (
+        {**env, "PATH": f"{wrapper_dir}{os.pathsep}{env.get('PATH', '')}"},
+        (LEGACY_CLAUDE_FORWARD_PATCH,),
+    )
+
+
+def _claude_supports_inline_settings(executable: Path, context: CaptureRunContext, env: dict[str, str]) -> bool:
+    result = run(
+        [str(executable), "--help"],
+        cwd=context.work_dir,
+        env=env,
+        timeout=30,
+        check=False,
+        inherit_env=False,
+    )
+    help_text = f"{result.stdout}\n{result.stderr}"
+    return "--settings <file-or-json>" in help_text
+
+
+def _legacy_claude_wrapper(executable: Path) -> str:
+    return f"""#!{sys.executable}
+from __future__ import annotations
+
+import os
+import sys
+
+executable = {str(executable)!r}
+args: list[str] = []
+skip_next = False
+for arg in sys.argv[1:]:
+    if skip_next:
+        skip_next = False
+        continue
+    if arg == "--settings":
+        skip_next = True
+        continue
+    if arg.startswith("--settings="):
+        continue
+    args.append(arg)
+os.execv(executable, [executable, *args])
+"""
 
 
 def _run(argv: list[str], context: CaptureRunContext, env: dict[str, str]):

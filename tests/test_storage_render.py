@@ -57,6 +57,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`" in text
     assert "non-official/custom-API path as its `default` snapshot" in text
     assert "`ANTHROPIC_BASE_URL` remains unset" in text
+    assert "do not reconstruct the model that was the official default" in text
     assert "deterministic, documented baseline rather than the rollout state" in text
     assert "## Local Development" in text
     assert "# Capture the latest release and every configured snapshot for each CLI." in text
@@ -86,6 +87,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`" in zh_text
     assert "非官方／自定义 API 路径" in zh_text
     assert "`ANTHROPIC_BASE_URL` 保持未设置" in zh_text
+    assert "并不还原该版本发布时的官方默认模型" in zh_text
     assert "明确记录的确定性基线" in zh_text
     assert "## 本地开发" in zh_text
     assert "# 抓取每个 CLI 的最新版本及其全部已配置快照。" in zh_text

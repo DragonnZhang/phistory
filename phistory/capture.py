@@ -141,6 +141,10 @@ def capture_target(
             )
             argv = list(execution.command)
             result = execution.result
+            compatibility_patches = (
+                *packages.compatibility_patches(target.agent, target.version.version),
+                *execution.compatibility_patches,
+            )
         if not prompt_path.exists():
             detail = (result.stderr or result.stdout).strip()[-4000:]
             raise RuntimeError(f"capture command failed ({result.returncode})\n{detail}")
@@ -187,11 +191,7 @@ def capture_target(
                     if target.agent.recorded_env
                     else {}
                 ),
-                **(
-                    {"compatibility_patches": list(patches)}
-                    if (patches := packages.compatibility_patches(target.agent, target.version.version))
-                    else {}
-                ),
+                **({"compatibility_patches": list(patches)} if (patches := compatibility_patches) else {}),
             },
         )
         if not keep_tap:

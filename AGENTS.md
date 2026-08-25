@@ -148,8 +148,12 @@ uv run phistory backfill <agent> --from <version> --to <version> --force
 
 Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1`, `DISABLE_TELEMETRY=1`, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`; their metadata records this deterministic baseline.
 
-The dedicated Claude Code history recapture workflow intentionally selects `--variants default`. The `official`
-Sonnet 5 lane is a current-release comparison surface, not a requirement for rebuilding the complete historical archive.
+The dedicated Claude Code history recapture workflow accepts a `default` or `official` variant input and defaults to
+`default`. Select `official` explicitly when rebuilding the first-party Sonnet 5 comparison lane across historical releases.
+That lane is a compatibility snapshot of each historical CLI explicitly targeting `claude-sonnet-5`, not a reconstruction
+of the model that was the official default at the time. For older releases that cannot consume inline `--settings` JSON,
+the oneshot driver detects the CLI capability and temporarily strips claude-tap's redundant settings argument while keeping
+the same forward-proxy and CA environment; affected metadata records this compatibility adjustment.
 
 If you push changes that affect CI capture, verify the `Capture prompts` workflow and the Pages deployment with `gh run list` / `gh run watch`.
 

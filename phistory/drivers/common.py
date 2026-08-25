@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from phistory.models import CaptureTarget
+from phistory.models import CaptureTarget, TapMode
 
 
 def tap_command(target: CaptureTarget, prompt_path: Path, tap_output_dir: Path) -> list[str]:
@@ -37,10 +37,14 @@ def upstream_client_args(run_args: tuple[str, ...]) -> list[str]:
 
 
 def _tap_mode_args(target: CaptureTarget) -> list[str]:
-    tap_mode = target.variant.tap_mode or target.agent.tap_mode
+    tap_mode = effective_tap_mode(target)
     if tap_mode == "auto":
         return []
     return ["--mode", tap_mode]
+
+
+def effective_tap_mode(target: CaptureTarget) -> TapMode:
+    return target.variant.tap_mode or target.agent.tap_mode
 
 
 def _tap_yolo_args(target: CaptureTarget) -> list[str]:

@@ -123,7 +123,9 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
                 "Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional "
                 "`official` snapshot pins `claude-sonnet-5` and uses transparent forward-proxy capture so "
                 "`ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead "
-                "of calling the model provider."
+                "of calling the model provider. Historical entries in this lane run each old CLI against the "
+                "same explicit Sonnet 5 model; they do not reconstruct the model that was the official default "
+                "when that CLI was released."
             ),
             "",
             (
@@ -277,7 +279,8 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             (
                 "Claude Code 的 `default` 快照保留非官方／自定义 API 路径；额外的 `official` 快照固定使用 "
                 "`claude-sonnet-5`，并通过透明正向代理抓取，使 `ANTHROPIC_BASE_URL` 保持未设置。"
-                "capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。"
+                "capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。该通道的历史条目会让每个旧版 "
+                "CLI 显式使用同一个 Sonnet 5 模型，并不还原该版本发布时的官方默认模型。"
             ),
             "",
             (

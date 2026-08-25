@@ -3,6 +3,14 @@ name: Recapture Claude Code history
 on:
   workflow_dispatch:
     inputs:
+      variant:
+        description: Claude Code capture variant to recapture
+        required: true
+        default: default
+        type: choice
+        options:
+          - default
+          - official
       from:
         description: First stable Claude Code version to recapture
         required: true
@@ -75,6 +83,7 @@ jobs:
         env:
           BACKFILL_FROM: ${{ inputs.from }}
           BACKFILL_TO: ${{ inputs.to }}
+          BACKFILL_VARIANT: ${{ inputs.variant }}
           SHARD_INDEX: ${{ matrix.shard }}
         run: |
           mkdir -p /tmp/phistory-history/status /tmp/phistory-history/captures/claude-code
@@ -83,14 +92,14 @@ jobs:
             --root /tmp/phistory-history/captures \
             --cache-dir /tmp/phistory-cache \
             backfill claude-code \
-            --variants default \
+            --variants "$BACKFILL_VARIANT" \
             --from "$BACKFILL_FROM" \
             --to "$BACKFILL_TO" \
             --skip-static \
             --prune-installs \
             --shard-index "$SHARD_INDEX" \
             --shard-count "$SHARD_COUNT" \
-            --summary-title "Claude Code history shard $SHARD_INDEX/$SHARD_COUNT"
+            --summary-title "Claude Code $BACKFILL_VARIANT history shard $SHARD_INDEX/$SHARD_COUNT"
           status=$?
           set -e
           printf '%s\n' "$status" > "/tmp/phistory-history/status/shard-$SHARD_INDEX"
@@ -126,6 +135,7 @@ jobs:
         env:
           BACKFILL_FROM: ${{ inputs.from }}
           BACKFILL_TO: ${{ inputs.to }}
+          BACKFILL_VARIANT: ${{ inputs.variant }}
         run: |
           uv run python - <<'PY'
           import json
@@ -149,6 +159,8 @@ jobs:
               raise SystemExit(f"artifact mismatch: missing={missing}, unexpected={unexpected}")
 
           agent = get_agent("claude-code")
+          variant = agent.variant(os.environ["BACKFILL_VARIANT"])
+          variant_id = variant.id
           versions = [
               item.version
               for item in packages.versions_between(
@@ -180,7 +192,7 @@ jobs:
                   Path("captures") / "claude-code",
               }
               for version in expected_by_shard[shard_index]:
-                  variant_dir = Path("captures") / "claude-code" / version / "variants" / "default"
+                  variant_dir = Path("captures") / "claude-code" / version / "variants" / variant_id
                   allowed_files.update(variant_dir / name for name in ("prompt.md", "trace.jsonl", "meta.json"))
                   allowed_dirs.update(
                       {
@@ -238,7 +250,7 @@ jobs:
                           f"duplicate version ownership: {version} in shards {owners[version]} and {shard_index}"
                       )
                   owners[version] = shard_index
-                  variant_dir = version_dir / "variants" / "default"
+                  variant_dir = version_dir / "variants" / variant_id
                   required = [variant_dir / name for name in ("prompt.md", "trace.jsonl", "meta.json")]
                   missing_files = [str(path) for path in required if not path.is_file()]
                   if missing_files:
@@ -246,8 +258,34 @@ jobs:
                   meta = json.loads((variant_dir / "meta.json").read_text(encoding="utf-8"))
                   if meta.get("agent_id") != "claude-code" or meta.get("version") != version:
                       raise SystemExit(f"capture identity mismatch in {variant_dir / 'meta.json'}")
+                  if meta.get("variant", {}).get("id") != variant_id:
+                      raise SystemExit(f"capture variant mismatch in {variant_dir / 'meta.json'}")
+                  if meta.get("variant", {}).get("dimensions") != variant.dimensions:
+                      raise SystemExit(f"capture dimensions mismatch in {variant_dir / 'meta.json'}")
+                  if meta.get("requested") != variant.dimensions:
+                      raise SystemExit(f"requested dimensions mismatch in {variant_dir / 'meta.json'}")
                   if meta.get("capture_environment") != expected_environment:
                       raise SystemExit(f"unexpected capture environment in {variant_dir / 'meta.json'}")
+                  if variant_id == "official":
+                      expected_model = variant.dimensions["model"]
+                      if meta.get("observed", {}).get("model") != expected_model:
+                          raise SystemExit(f"official model mismatch in {variant_dir / 'meta.json'}")
+                      trace_models = []
+                      for line in (variant_dir / "trace.jsonl").read_text(encoding="utf-8").splitlines():
+                          record = json.loads(line)
+                          body = record.get("request", {}).get("body")
+                          if isinstance(body, str):
+                              try:
+                                  body = json.loads(body)
+                              except json.JSONDecodeError:
+                                  continue
+                          if not isinstance(body, dict) or not isinstance(body.get("model"), str):
+                              continue
+                          trace_models.append(body["model"])
+                          if record.get("upstream_base_url") != "https://api.anthropic.com:443":
+                              raise SystemExit(f"non-official upstream found in {variant_dir / 'trace.jsonl'}")
+                      if expected_model not in trace_models:
+                          raise SystemExit(f"official model request missing in {variant_dir / 'trace.jsonl'}")
                   prompt = (variant_dir / "prompt.md").read_text(encoding="utf-8")
                   if "platform: darwin" in prompt.lower():
                       raise SystemExit(f"Darwin capture found in Linux backfill: {variant_dir / 'prompt.md'}")
@@ -256,7 +294,10 @@ jobs:
 
           if set(owners) != set(versions):
               raise SystemExit("artifact union does not exactly match the requested versions")
-          print(f"validated {len(owners)} deterministic Claude Code captures across {shard_count} shards")
+          print(
+              f"validated {len(owners)} deterministic Claude Code {variant_id} captures "
+              f"across {shard_count} shards"
+          )
           PY
       - name: Merge validated captures
         run: |
@@ -273,6 +314,7 @@ jobs:
         env:
           BACKFILL_FROM: ${{ inputs.from }}
           BACKFILL_TO: ${{ inputs.to }}
+          BACKFILL_VARIANT: ${{ inputs.variant }}
         run: |
           uv run python - <<'PY'
           import os
@@ -282,6 +324,7 @@ jobs:
           from phistory.registry import get_agent
 
           agent = get_agent("claude-code")
+          variant_id = agent.variant(os.environ["BACKFILL_VARIANT"]).id
           expected = {
               item.version
               for item in packages.versions_between(
@@ -294,9 +337,9 @@ jobs:
           complete = {
               path.name
               for path in root.iterdir()
-              if (path / "variants/default/prompt.md").is_file()
-              and (path / "variants/default/trace.jsonl").is_file()
-              and (path / "variants/default/meta.json").is_file()
+              if (path / "variants" / variant_id / "prompt.md").is_file()
+              and (path / "variants" / variant_id / "trace.jsonl").is_file()
+              and (path / "variants" / variant_id / "meta.json").is_file()
           }
           recaptured = set()
           for artifact in Path("/tmp/phistory-artifacts").glob("claude-history-*"):
@@ -307,9 +350,9 @@ jobs:
                   path.name
                   for path in capture_root.iterdir()
                   if path.is_dir()
-                  and (path / "variants/default/prompt.md").is_file()
-                  and (path / "variants/default/trace.jsonl").is_file()
-                  and (path / "variants/default/meta.json").is_file()
+                  and (path / "variants" / variant_id / "prompt.md").is_file()
+                  and (path / "variants" / variant_id / "trace.jsonl").is_file()
+                  and (path / "variants" / variant_id / "meta.json").is_file()
               )
           missing = sorted(expected - complete)
           not_recaptured = sorted(expected - recaptured)
@@ -328,6 +371,7 @@ jobs:
         env:
           BACKFILL_FROM: ${{ inputs.from }}
           BACKFILL_TO: ${{ inputs.to }}
+          BACKFILL_VARIANT: ${{ inputs.variant }}
         run: |
           git add README.md README_zh.md index.html docs captures
           if git diff --cached --quiet; then
@@ -337,7 +381,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Recapture Claude Code prompts with remote experiments disabled"
+          git commit -m "Recapture Claude Code $BACKFILL_VARIANT prompt history"
           echo "changed=true" >> "$GITHUB_OUTPUT"
       - name: Push deterministic history
         if: steps.commit.outputs.changed == 'true'
