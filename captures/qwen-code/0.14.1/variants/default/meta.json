@@ -10,17 +10,17 @@
   },
   "requested": {},
   "observed": {
-    "model": "qwen3-coder-plus",
+    "model": "qwen3.8-max",
     "tool_count": 14
   },
   "published_at": "2026-04-07T13:06:53.985Z",
   "tarball_url": null,
   "binary_version": "0.14.1",
-  "captured_at": "2026-08-25T08:27:50.379659+00:00",
+  "captured_at": "2026-08-25T09:01:08.859159+00:00",
   "tap_client": "qwen",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 6.373,
+  "duration_seconds": 6.142,
   "command": [
     "python",
     "-m",

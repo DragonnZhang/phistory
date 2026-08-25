@@ -138,7 +138,7 @@ def test_new_agents_define_install_and_capture_profiles():
     assert qwen_code.tap_client == "qwen"
     assert qwen_code.tap_mode == "reverse"
     assert qwen_code.fake_env["OPENAI_BASE_URL"] == "https://api.openai.com/v1"
-    assert qwen_code.fake_env["OPENAI_MODEL"] == "qwen3-coder-plus"
+    assert qwen_code.fake_env["OPENAI_MODEL"] == "qwen3.8-max"
     assert qwen_code.default_variant.run_args[0] == "--yolo"
     assert "--prompt" in qwen_code.default_variant.run_args
 

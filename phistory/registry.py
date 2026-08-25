@@ -295,7 +295,7 @@ QWEN_CODE = AgentSpec(
     fake_env={
         "OPENAI_API_KEY": "phistory-fake-api-key",
         "OPENAI_BASE_URL": "https://api.openai.com/v1",
-        "OPENAI_MODEL": "qwen3-coder-plus",
+        "OPENAI_MODEL": "qwen3.8-max",
     },
     extra_env={
         "DISABLE_AUTOUPDATER": "1",
