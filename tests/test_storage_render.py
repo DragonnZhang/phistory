@@ -3,7 +3,7 @@ from pathlib import Path
 
 from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo
 from phistory.render import render_index
-from phistory.site import AGENT_SHORT_NAMES, _change_summary, render_site
+from phistory.site import AGENT_ICONS, AGENT_SHORT_NAMES, _change_summary, render_site
 from phistory.storage import is_captured, write_meta
 
 
@@ -148,6 +148,10 @@ def test_render_index_sorts_versions_numerically(tmp_path: Path):
 
 def test_render_site_writes_static_html_manifest(tmp_path: Path):
     assert AGENT_SHORT_NAMES["dsh"] == "DSH"
+    project_root = Path(__file__).parents[1]
+    for agent_id in ("qoder", "qwen-code"):
+        assert (project_root / AGENT_ICONS[agent_id]).is_file()
+
     agent = AgentSpec(
         id="agent",
         display_name="Agent",

@@ -22,6 +22,8 @@ AGENT_ICONS = {
     "openclaw": "docs/agent-icons/openclaw.png",
     "opencode": "docs/agent-icons/opencode.png",
     "pi": "docs/agent-icons/pi.png",
+    "qoder": "docs/agent-icons/qoder.svg",
+    "qwen-code": "docs/agent-icons/qwen-code.svg",
 }
 AGENT_SHORT_NAMES = {"dsh": "DSH"}
 CHANGE_SMALL_MAX_LINES = 12
