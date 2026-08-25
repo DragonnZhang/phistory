@@ -1,0 +1,58 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.190",
+  "variant": {
+    "id": "official",
+    "label": "Official API · Sonnet 5",
+    "dimensions": {
+      "api": "official",
+      "model": "claude-sonnet-5"
+    }
+  },
+  "requested": {
+    "api": "official",
+    "model": "claude-sonnet-5"
+  },
+  "observed": {
+    "model": "claude-sonnet-5",
+    "tool_count": 8
+  },
+  "published_at": "2026-06-24T14:39:56.222Z",
+  "tarball_url": null,
+  "binary_version": "2.1.190 (Claude Code)",
+  "captured_at": "2026-08-25T12:37:03.668247+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 3.723,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--no-session-persistence",
+    "--model",
+    "claude-sonnet-5",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  }
+}
