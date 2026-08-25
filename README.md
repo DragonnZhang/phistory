@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-08-25 06:23 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-08-25 07:51 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -23,7 +23,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 For each supported release, Phistory installs the exact CLI package and runs each configured snapshot through [`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP request without calling the real model provider, and stores the result under `captures/<agent>/<version>/variants/<variant>/` with `prompt.md`, `trace.jsonl`, and `meta.json`. Capture configurations use a `default` snapshot as their baseline; selected models or modes are stored as additional variants.
 
-Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` so remote feature assignments are not fetched. These snapshots reflect each release's compiled code defaults, not the rollout state at capture time; the baseline is recorded in `meta.json`.
+Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` so remote feature assignments are not fetched, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off` so the internal rolling task-budget reminder does not enter archived prompts. These snapshots use a deterministic, documented baseline rather than the rollout state at capture time; the baseline is recorded in `meta.json`.
 
 Phistory also extracts static prompt-like strings from recent Claude Code packages and prompt material from exact official executables for retired Qoder releases, storing them under `captures/<agent>/<version>/static/`. The candidate archive keeps the raw extraction input so matching rules can be improved later without reinstalling every historical package.
 
@@ -80,11 +80,11 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-25 06:23 UTC
+Last capture update: 2026-08-25 07:51 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.245 - 2026-08-25](captures/claude-code/2.1.245/variants/default/prompt.md) | 403 | 403 | 2026-08-25 06:22 UTC |
+| Claude Code | [2.1.245 - 2026-08-25](captures/claude-code/2.1.245/variants/default/prompt.md) | 403 | 403 | 2026-08-25 07:51 UTC |
 | Codex CLI | [0.149.1 - 2026-08-24](captures/codex/0.149.1/variants/default/prompt.md) | 77 | 89 | 2026-08-24 02:08 UTC |
 | DeepSeek Harness | [0.1.1-rc.2 - 2026-08-21](captures/dsh/0.1.1-rc.2/variants/default/prompt.md) | 8 | 39 | 2026-08-21 13:43 UTC |
 | Antigravity CLI | [1.1.20 - 2026-08-25](captures/antigravity/1.1.20/variants/default/prompt.md) | 34 | 34 | 2026-08-25 03:27 UTC |

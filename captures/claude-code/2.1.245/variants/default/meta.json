@@ -16,11 +16,11 @@
   "published_at": "2026-08-25T04:45:52.102Z",
   "tarball_url": null,
   "binary_version": "2.1.245 (Claude Code)",
-  "captured_at": "2026-08-25T06:22:56.010420+00:00",
+  "captured_at": "2026-08-25T07:51:56.935539+00:00",
   "tap_client": "claude",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 4.65,
+  "duration_seconds": 89.96,
   "command": [
     "python",
     "-m",
@@ -41,6 +41,7 @@
     "Reply with one short sentence."
   ],
   "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
     "DISABLE_GROWTHBOOK": "1",
     "DISABLE_TELEMETRY": "1"
   }

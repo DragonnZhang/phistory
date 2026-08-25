@@ -144,7 +144,7 @@ For a targeted historical check:
 uv run phistory backfill <agent> --from <version> --to <version> --force
 ```
 
-Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1`; their metadata records this code-default baseline.
+Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1`, `DISABLE_TELEMETRY=1`, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`; their metadata records this deterministic baseline.
 
 If you push changes that affect CI capture, verify the `Capture prompts` workflow and the Pages deployment with `gh run list` / `gh run watch`.
 

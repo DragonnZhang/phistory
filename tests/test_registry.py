@@ -51,16 +51,22 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
     assert "--exclude-dynamic-system-prompt-sections" not in agent.default_variant.run_args
 
 
-def test_claude_code_disables_experiment_fetching_in_capture_environment(tmp_path: Path):
+def test_claude_code_uses_deterministic_capture_environment(tmp_path: Path):
     agent = get_agent("claude-code")
     target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.default_variant, tmp_path / "captures")
 
+    assert agent.extra_env["CLAUDE_CODE_TOTAL_TOKENS_REMINDER"] == "off"
     assert agent.extra_env["DISABLE_GROWTHBOOK"] == "1"
     assert agent.extra_env["DISABLE_TELEMETRY"] == "1"
-    assert agent.recorded_env == ("DISABLE_GROWTHBOOK", "DISABLE_TELEMETRY")
+    assert agent.recorded_env == (
+        "CLAUDE_CODE_TOTAL_TOKENS_REMINDER",
+        "DISABLE_GROWTHBOOK",
+        "DISABLE_TELEMETRY",
+    )
 
     env = _capture_env(target, tmp_path / "bin", tmp_path / "home")
 
+    assert env["CLAUDE_CODE_TOTAL_TOKENS_REMINDER"] == "off"
     assert env["DISABLE_GROWTHBOOK"] == "1"
     assert env["DISABLE_TELEMETRY"] == "1"
 

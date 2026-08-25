@@ -42,13 +42,18 @@ CLAUDE_CODE = AgentSpec(
     tap_client="claude",
     fake_env={"ANTHROPIC_API_KEY": "fake"},
     extra_env={
+        "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
         "DISABLE_AUTOUPDATER": "1",
         "DISABLE_GROWTHBOOK": "1",
         "DISABLE_TELEMETRY": "1",
         "DISABLE_UPDATES": "1",
         "CI": "1",
     },
-    recorded_env=("DISABLE_GROWTHBOOK", "DISABLE_TELEMETRY"),
+    recorded_env=(
+        "CLAUDE_CODE_TOTAL_TOKENS_REMINDER",
+        "DISABLE_GROWTHBOOK",
+        "DISABLE_TELEMETRY",
+    ),
     default_variant=_default(
         (
             "--no-yolo",

@@ -161,7 +161,11 @@ jobs:
               for index in range(shard_count)
           }
           owners: dict[str, int] = {}
-          expected_environment = {"DISABLE_GROWTHBOOK": "1", "DISABLE_TELEMETRY": "1"}
+          expected_environment = {
+              "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+              "DISABLE_GROWTHBOOK": "1",
+              "DISABLE_TELEMETRY": "1",
+          }
           volatile_date = re.compile(
               r"Today's date(?: is|:) (?:\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}/\d{1,2}/\d{4})"
           )

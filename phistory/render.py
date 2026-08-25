@@ -121,8 +121,10 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             (
                 "Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` "
-                "so remote feature assignments are not fetched. These snapshots reflect each release's compiled "
-                "code defaults, not the rollout state at capture time; the baseline is recorded in `meta.json`."
+                "so remote feature assignments are not fetched, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off` so "
+                "the internal rolling task-budget reminder does not enter archived prompts. These snapshots use a "
+                "deterministic, documented baseline rather than the rollout state at capture time; the baseline is "
+                "recorded in `meta.json`."
             ),
             "",
             (
@@ -264,7 +266,8 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             (
                 "Claude Code 抓取会固定设置 `DISABLE_GROWTHBOOK=1` 和 `DISABLE_TELEMETRY=1`，避免拉取远程灰度配置。"
-                "因此快照反映的是各版本编译进代码的默认值，而不是抓取当天的灰度状态；该基线会记录在 `meta.json` 中。"
+                "同时设置 `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`，避免内部滚动任务预算提醒进入归档提示词。"
+                "因此快照采用明确记录的确定性基线，而不是抓取当天的灰度状态；该基线会记录在 `meta.json` 中。"
             ),
             "",
             (

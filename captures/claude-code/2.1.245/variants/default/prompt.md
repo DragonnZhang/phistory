@@ -80,8 +80,6 @@ A follow-up question about your earlier work is not, by itself, a signal that yo
 Do not call the AgentTool unless the user requested it
 Do not use workflows or deep-research unless the user requested it
 
-<total_tokens>15000000 tokens left</total_tokens>
-
 # User Message
 
 <system-reminder>
