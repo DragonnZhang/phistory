@@ -1,0 +1,57 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.0.27",
+  "variant": {
+    "id": "official-fable",
+    "label": "Official API · Fable 5",
+    "dimensions": {
+      "api": "official",
+      "model": "claude-fable-5"
+    }
+  },
+  "requested": {
+    "api": "official",
+    "model": "claude-fable-5"
+  },
+  "observed": {
+    "model": "claude-fable-5",
+    "tool_count": 16
+  },
+  "published_at": "2025-10-24T19:50:51.616Z",
+  "tarball_url": null,
+  "binary_version": "2.0.27 (Claude Code)",
+  "captured_at": "2026-08-25T17:09:32.341618+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 5.322,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--model",
+    "claude-fable-5",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  }
+}
