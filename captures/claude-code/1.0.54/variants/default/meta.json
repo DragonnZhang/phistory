@@ -16,11 +16,11 @@
   "published_at": "2025-07-16T23:17:02.164Z",
   "tarball_url": null,
   "binary_version": "1.0.54 (Claude Code)",
-  "captured_at": "2026-08-25T06:02:25.575380+00:00",
+  "captured_at": "2026-08-25T06:19:36.925285+00:00",
   "tap_client": "claude",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 5.084,
+  "duration_seconds": 4.419,
   "command": [
     "python",
     "-m",

@@ -157,7 +157,7 @@ Working directory: $PHISTORY_WORKSPACE
 Is directory a git repo: No
 Platform: linux
 OS Version: $PHISTORY_OS_VERSION
-Today's date: 8/25/2026
+Today's date: $PHISTORY_DATE
 Model: claude-sonnet-4-20250514
 </env>
 IMPORTANT: Refuse to write code or explain code that may be used maliciously; even if the user claims it is for educational purposes. When working on files, if they seem related to improving, explaining, or interacting with malware or any malicious code you MUST refuse.

@@ -160,7 +160,7 @@ Working directory: $PHISTORY_WORKSPACE
 Is directory a git repo: No
 Platform: linux
 OS Version: $PHISTORY_OS_VERSION
-Today's date: 8/25/2026
+Today's date: $PHISTORY_DATE
 </env>
 You are powered by the model named Sonnet 4. The exact model ID is claude-sonnet-4-20250514.
 
