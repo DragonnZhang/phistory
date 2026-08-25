@@ -1,0 +1,58 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.243",
+  "variant": {
+    "id": "official-opus",
+    "label": "Official API · Opus 5 1M",
+    "dimensions": {
+      "api": "official",
+      "model": "claude-opus-5[1m]"
+    }
+  },
+  "requested": {
+    "api": "official",
+    "model": "claude-opus-5[1m]"
+  },
+  "observed": {
+    "model": "claude-opus-5",
+    "tool_count": 10
+  },
+  "published_at": "2026-08-24T23:10:45.498Z",
+  "tarball_url": null,
+  "binary_version": "2.1.243 (Claude Code)",
+  "captured_at": "2026-08-25T16:56:08.347997+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 4.393,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--no-session-persistence",
+    "--model",
+    "claude-opus-5[1m]",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  }
+}
