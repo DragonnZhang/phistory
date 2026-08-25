@@ -23,8 +23,14 @@ _VOLATILE_TEXT_PATTERNS = (
     (re.compile(r"(?m)^ - OS Version: .+$"), " - OS Version: $PHISTORY_OS_VERSION"),
     (re.compile(r"(?m)^OS Version: .+$"), "OS Version: $PHISTORY_OS_VERSION"),
     (re.compile(r" - OS Version: [^\\\n]*(?=\\n)"), " - OS Version: $PHISTORY_OS_VERSION"),
-    (re.compile(r"Today's date is \d{4}[-/]\d{2}[-/]\d{2}\."), "Today's date is $PHISTORY_DATE."),
-    (re.compile(r"Today's date: \d{4}[-/]\d{2}[-/]\d{2}"), "Today's date: $PHISTORY_DATE"),
+    (
+        re.compile(r"Today's date is (?:\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}/\d{1,2}/\d{4})\."),
+        "Today's date is $PHISTORY_DATE.",
+    ),
+    (
+        re.compile(r"Today's date: (?:\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}/\d{1,2}/\d{4})"),
+        "Today's date: $PHISTORY_DATE",
+    ),
     (re.compile(r"http://(?:127\.0\.0\.1|localhost):\d+"), "http://127.0.0.1:$PHISTORY_PORT"),
     (
         re.compile(r"The current date and time in ISO format is `[^`]+`\."),

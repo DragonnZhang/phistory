@@ -15,7 +15,7 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: capture-prompts-${{ github.ref }}
@@ -23,14 +23,26 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  GH_TOKEN: ${{ github.token }}
   SHARD_COUNT: "8"
 
 jobs:
   preflight:
     runs-on: ubuntu-latest
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
     steps:
+      - name: Require a branch ref
+        if: ${{ github.ref_type != 'branch' }}
+        run: |
+          echo "::error title=Unsupported ref::Claude history recapture must be dispatched from a branch."
+          exit 1
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+      - name: Pin queued run to current branch head
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
@@ -51,6 +63,9 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.preflight.outputs.source_sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
@@ -62,7 +77,7 @@ jobs:
           BACKFILL_TO: ${{ inputs.to }}
           SHARD_INDEX: ${{ matrix.shard }}
         run: |
-          mkdir -p /tmp/phistory-history/status
+          mkdir -p /tmp/phistory-history/status /tmp/phistory-history/captures/claude-code
           set +e
           uv run phistory \
             --root /tmp/phistory-history/captures \
@@ -88,12 +103,15 @@ jobs:
 
   merge:
     needs: [preflight, capture]
-    if: always() && needs.preflight.result == 'success'
+    if: ${{ !cancelled() && needs.preflight.result == 'success' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ needs.preflight.outputs.source_sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
@@ -102,42 +120,155 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           pattern: claude-history-*
-          path: /tmp/phistory-history
-          merge-multiple: true
-      - name: Validate captured shard artifacts
-        run: |
-          uv run python - <<'PY'
-          import json
-          from pathlib import Path
-
-          root = Path("/tmp/phistory-history/captures/claude-code")
-          metas = sorted(root.glob("*/variants/default/meta.json"))
-          if not metas:
-              raise SystemExit("no Claude Code captures were downloaded")
-          for path in metas:
-              data = json.loads(path.read_text(encoding="utf-8"))
-              expected = {"DISABLE_GROWTHBOOK": "1", "DISABLE_TELEMETRY": "1"}
-              if data.get("capture_environment") != expected:
-                  raise SystemExit(f"unexpected capture environment in {path}")
-          for path in root.glob("*/variants/default/prompt.md"):
-              text = path.read_text(encoding="utf-8")
-              if "platform: darwin" in text.lower():
-                  raise SystemExit(f"Darwin capture found in Linux backfill: {path}")
-          print(f"validated {len(metas)} deterministic Claude Code captures")
-          PY
-      - name: Merge successful captures
-        run: |
-          mkdir -p captures/claude-code
-          rsync -a /tmp/phistory-history/captures/claude-code/ captures/claude-code/
-      - run: uv run phistory render-index
-      - run: uv run phistory render-site
-      - name: Audit requested version coverage
-        id: coverage
+          path: /tmp/phistory-artifacts
+      - name: Validate complete, disjoint shard artifacts
         env:
           BACKFILL_FROM: ${{ inputs.from }}
           BACKFILL_TO: ${{ inputs.to }}
         run: |
-          set +e
+          uv run python - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          from phistory import packages
+          from phistory.registry import get_agent
+
+          shard_count = int(os.environ["SHARD_COUNT"])
+          artifact_root = Path("/tmp/phistory-artifacts")
+          expected_artifacts = {
+              f"claude-history-{index}": artifact_root / f"claude-history-{index}"
+              for index in range(shard_count)
+          }
+          actual_artifacts = {path.name: path for path in artifact_root.glob("claude-history-*") if path.is_dir()}
+          if set(actual_artifacts) != set(expected_artifacts):
+              missing = sorted(set(expected_artifacts) - set(actual_artifacts))
+              unexpected = sorted(set(actual_artifacts) - set(expected_artifacts))
+              raise SystemExit(f"artifact mismatch: missing={missing}, unexpected={unexpected}")
+
+          agent = get_agent("claude-code")
+          versions = [
+              item.version
+              for item in packages.versions_between(
+                  agent,
+                  os.environ["BACKFILL_FROM"],
+                  os.environ["BACKFILL_TO"],
+              )
+          ]
+          expected_by_shard = {
+              index: set(versions[index::shard_count])
+              for index in range(shard_count)
+          }
+          owners: dict[str, int] = {}
+          expected_environment = {"DISABLE_GROWTHBOOK": "1", "DISABLE_TELEMETRY": "1"}
+          volatile_date = re.compile(
+              r"Today's date(?: is|:) (?:\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}/\d{1,2}/\d{4})"
+          )
+
+          for index, artifact_dir in expected_artifacts.items():
+              shard_index = int(index.rsplit("-", 1)[1])
+              allowed_files = {Path("status") / f"shard-{shard_index}"}
+              allowed_dirs = {
+                  Path("status"),
+                  Path("captures"),
+                  Path("captures") / "claude-code",
+              }
+              for version in expected_by_shard[shard_index]:
+                  variant_dir = Path("captures") / "claude-code" / version / "variants" / "default"
+                  allowed_files.update(variant_dir / name for name in ("prompt.md", "trace.jsonl", "meta.json"))
+                  allowed_dirs.update(
+                      {
+                          Path("captures") / "claude-code" / version,
+                          Path("captures") / "claude-code" / version / "variants",
+                          variant_dir,
+                      }
+                  )
+              actual_files: set[Path] = set()
+              actual_dirs: set[Path] = set()
+              for path in artifact_dir.rglob("*"):
+                  relative = path.relative_to(artifact_dir)
+                  if path.is_symlink():
+                      raise SystemExit(f"symlink is not allowed in shard {shard_index}: {relative}")
+                  if path.is_file():
+                      actual_files.add(relative)
+                  elif path.is_dir():
+                      actual_dirs.add(relative)
+                  else:
+                      raise SystemExit(f"unsupported artifact entry in shard {shard_index}: {relative}")
+              if actual_files != allowed_files:
+                  missing = sorted(str(path) for path in allowed_files - actual_files)
+                  unexpected = sorted(str(path) for path in actual_files - allowed_files)
+                  raise SystemExit(
+                      f"shard {shard_index} file allowlist mismatch: missing={missing}, unexpected={unexpected}"
+                  )
+              unexpected_dirs = sorted(str(path) for path in actual_dirs - allowed_dirs)
+              if unexpected_dirs:
+                  raise SystemExit(f"unexpected directories in shard {shard_index}: {unexpected_dirs}")
+
+              status_dir = artifact_dir / "status"
+              status_files = sorted(status_dir.glob("shard-*"))
+              expected_status = status_dir / f"shard-{shard_index}"
+              if status_files != [expected_status]:
+                  raise SystemExit(f"unexpected status files for shard {shard_index}: {status_files}")
+              if expected_status.read_text(encoding="utf-8").strip() != "0":
+                  raise SystemExit(f"capture command failed for shard {shard_index}")
+
+              capture_root = artifact_dir / "captures" / "claude-code"
+              actual_versions = {
+                  path.name: path
+                  for path in capture_root.iterdir()
+                  if path.is_dir()
+              } if capture_root.is_dir() else {}
+              if set(actual_versions) != expected_by_shard[shard_index]:
+                  missing = sorted(expected_by_shard[shard_index] - set(actual_versions))
+                  unexpected = sorted(set(actual_versions) - expected_by_shard[shard_index])
+                  raise SystemExit(
+                      f"shard {shard_index} ownership mismatch: missing={missing}, unexpected={unexpected}"
+                  )
+
+              for version, version_dir in actual_versions.items():
+                  if version in owners:
+                      raise SystemExit(
+                          f"duplicate version ownership: {version} in shards {owners[version]} and {shard_index}"
+                      )
+                  owners[version] = shard_index
+                  variant_dir = version_dir / "variants" / "default"
+                  required = [variant_dir / name for name in ("prompt.md", "trace.jsonl", "meta.json")]
+                  missing_files = [str(path) for path in required if not path.is_file()]
+                  if missing_files:
+                      raise SystemExit(f"incomplete capture for {version}: {missing_files}")
+                  meta = json.loads((variant_dir / "meta.json").read_text(encoding="utf-8"))
+                  if meta.get("agent_id") != "claude-code" or meta.get("version") != version:
+                      raise SystemExit(f"capture identity mismatch in {variant_dir / 'meta.json'}")
+                  if meta.get("capture_environment") != expected_environment:
+                      raise SystemExit(f"unexpected capture environment in {variant_dir / 'meta.json'}")
+                  prompt = (variant_dir / "prompt.md").read_text(encoding="utf-8")
+                  if "platform: darwin" in prompt.lower():
+                      raise SystemExit(f"Darwin capture found in Linux backfill: {variant_dir / 'prompt.md'}")
+                  if volatile_date.search(prompt):
+                      raise SystemExit(f"unnormalized date found in backfill: {variant_dir / 'prompt.md'}")
+
+          if set(owners) != set(versions):
+              raise SystemExit("artifact union does not exactly match the requested versions")
+          print(f"validated {len(owners)} deterministic Claude Code captures across {shard_count} shards")
+          PY
+      - name: Merge validated captures
+        run: |
+          mkdir -p captures/claude-code
+          for artifact_dir in /tmp/phistory-artifacts/claude-history-*; do
+            capture_dir="$artifact_dir/captures/claude-code"
+            if [ -d "$capture_dir" ]; then
+              rsync -a "$capture_dir/" captures/claude-code/
+            fi
+          done
+      - run: uv run phistory render-index
+      - run: uv run phistory render-site
+      - name: Audit requested version coverage
+        env:
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+        run: |
           uv run python - <<'PY'
           import os
           from pathlib import Path
@@ -162,13 +293,19 @@ jobs:
               and (path / "variants/default/trace.jsonl").is_file()
               and (path / "variants/default/meta.json").is_file()
           }
-          recaptured = {
-              path.name
-              for path in Path("/tmp/phistory-history/captures/claude-code").iterdir()
-              if (path / "variants/default/prompt.md").is_file()
-              and (path / "variants/default/trace.jsonl").is_file()
-              and (path / "variants/default/meta.json").is_file()
-          }
+          recaptured = set()
+          for artifact in Path("/tmp/phistory-artifacts").glob("claude-history-*"):
+              capture_root = artifact / "captures/claude-code"
+              if not capture_root.is_dir():
+                  continue
+              recaptured.update(
+                  path.name
+                  for path in capture_root.iterdir()
+                  if path.is_dir()
+                  and (path / "variants/default/prompt.md").is_file()
+                  and (path / "variants/default/trace.jsonl").is_file()
+                  and (path / "variants/default/meta.json").is_file()
+              )
           missing = sorted(expected - complete)
           not_recaptured = sorted(expected - recaptured)
           print(f"complete requested captures: {len(expected) - len(missing)}/{len(expected)}")
@@ -180,11 +317,9 @@ jobs:
           if missing or not_recaptured:
               raise SystemExit(1)
           PY
-          status=$?
-          set -e
-          echo "status=$status" >> "$GITHUB_OUTPUT"
       - run: git diff --check
       - name: Commit deterministic history
+        id: commit
         env:
           BACKFILL_FROM: ${{ inputs.from }}
           BACKFILL_TO: ${{ inputs.to }}
@@ -192,32 +327,19 @@ jobs:
           git add README.md README_zh.md index.html docs captures
           if git diff --cached --quiet; then
             echo "No history changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Recapture Claude Code prompts with remote experiments disabled"
-          git push
-      - name: Report incomplete shards or coverage
-        if: always()
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Push deterministic history
+        if: steps.commit.outputs.changed == 'true'
         env:
-          COVERAGE_STATUS: ${{ steps.coverage.outputs.status }}
+          PUSH_TOKEN: ${{ github.token }}
         run: |
-          status=0
-          status_count=$(find /tmp/phistory-history/status -type f -name 'shard-*' | wc -l)
-          if [ "$status_count" != "$SHARD_COUNT" ]; then
-            echo "::error title=Missing Claude history shards::Expected $SHARD_COUNT status files, found $status_count."
-            status=1
-          fi
-          while IFS= read -r status_file; do
-            shard_status=$(tr -d '[:space:]' < "$status_file")
-            if [ "$shard_status" != "0" ]; then
-              echo "::error title=Claude history shard failed::$status_file exited with $shard_status"
-              status=1
-            fi
-          done < <(find /tmp/phistory-history/status -type f -name 'shard-*' | sort)
-          if [ "$COVERAGE_STATUS" != "0" ]; then
-            echo "::error title=Incomplete Claude history::One or more requested stable versions are missing."
-            status=1
-          fi
-          exit "$status"
+          git \
+            -c credential.helper= \
+            -c 'credential.helper=!f() { printf "%s\n" "username=x-access-token" "password=$PUSH_TOKEN"; }; f' \
+            push origin "HEAD:${GITHUB_REF}"
