@@ -86,6 +86,21 @@ CLAUDE_CODE = AgentSpec(
             dimensions={"api": "official", "model": "claude-sonnet-5"},
             tap_mode="forward",
         ),
+        _variant(
+            "official-opus",
+            "Official API · Opus 5 1M",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-opus-5[1m]",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-opus-5[1m]"},
+            tap_mode="forward",
+        ),
     ),
 )
 

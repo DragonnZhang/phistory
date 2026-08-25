@@ -11,6 +11,7 @@ on:
         options:
           - default
           - official
+          - official-opus
       from:
         description: First stable Claude Code version to recapture
         required: true
@@ -19,7 +20,7 @@ on:
       to:
         description: Last stable Claude Code version to recapture
         required: true
-        default: 2.1.245
+        default: latest
         type: string
 
 permissions:
@@ -266,11 +267,17 @@ jobs:
                       raise SystemExit(f"requested dimensions mismatch in {variant_dir / 'meta.json'}")
                   if meta.get("capture_environment") != expected_environment:
                       raise SystemExit(f"unexpected capture environment in {variant_dir / 'meta.json'}")
-                  if variant_id == "official":
-                      expected_model = variant.dimensions["model"]
-                      if meta.get("observed", {}).get("model") != expected_model:
+                  if variant.dimensions.get("api") == "official":
+                      model_selector = variant.dimensions.get("model")
+                      if not isinstance(model_selector, str):
+                          raise SystemExit(f"official model dimension missing for {variant_id}")
+                      expected_model = model_selector.partition("[")[0]
+                      observed_model = meta.get("observed", {}).get("model")
+                      if observed_model not in {model_selector, expected_model}:
                           raise SystemExit(f"official model mismatch in {variant_dir / 'meta.json'}")
                       trace_models = []
+                      selector_seen = False
+                      one_million_context_seen = False
                       for line in (variant_dir / "trace.jsonl").read_text(encoding="utf-8").splitlines():
                           record = json.loads(line)
                           body = record.get("request", {}).get("body")
@@ -282,10 +289,24 @@ jobs:
                           if not isinstance(body, dict) or not isinstance(body.get("model"), str):
                               continue
                           trace_models.append(body["model"])
+                          selector_seen = selector_seen or body["model"] == model_selector
                           if record.get("upstream_base_url") != "https://api.anthropic.com:443":
                               raise SystemExit(f"non-official upstream found in {variant_dir / 'trace.jsonl'}")
-                      if expected_model not in trace_models:
+                          headers = record.get("request", {}).get("headers")
+                          if body["model"] == expected_model and isinstance(headers, dict):
+                              beta = next(
+                                  (
+                                      value
+                                      for name, value in headers.items()
+                                      if name.lower() == "anthropic-beta" and isinstance(value, str)
+                                  ),
+                                  "",
+                              )
+                              one_million_context_seen = one_million_context_seen or "context-1m-" in beta
+                      if model_selector not in trace_models and expected_model not in trace_models:
                           raise SystemExit(f"official model request missing in {variant_dir / 'trace.jsonl'}")
+                      if model_selector.endswith("[1m]") and not (selector_seen or one_million_context_seen):
+                          raise SystemExit(f"1M model selector missing in {variant_dir / 'trace.jsonl'}")
                   prompt = (variant_dir / "prompt.md").read_text(encoding="utf-8")
                   if "platform: darwin" in prompt.lower():
                       raise SystemExit(f"Darwin capture found in Linux backfill: {variant_dir / 'prompt.md'}")
@@ -388,6 +409,8 @@ jobs:
         env:
           PUSH_TOKEN: ${{ github.token }}
         run: |
+          # Git invokes the helper later with PUSH_TOKEN in its environment.
+          # shellcheck disable=SC2016
           git \
             -c credential.helper= \
             -c 'credential.helper=!f() { printf "%s\n" "username=x-access-token" "password=$PUSH_TOKEN"; }; f' \

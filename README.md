@@ -23,7 +23,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 For each supported release, Phistory installs the exact CLI package and runs each configured snapshot through [`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP request without calling the real model provider, and stores the result under `captures/<agent>/<version>/variants/<variant>/` with `prompt.md`, `trace.jsonl`, and `meta.json`. Capture configurations use a `default` snapshot as their baseline; selected models or modes are stored as additional variants.
 
-Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional `official` snapshot pins `claude-sonnet-5` and uses transparent forward-proxy capture so `ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead of calling the model provider. Historical entries in this lane run each old CLI against the same explicit Sonnet 5 model; they do not reconstruct the model that was the official default when that CLI was released.
+Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional official API snapshots pin `claude-sonnet-5` in `official` and `claude-opus-5[1m]` in `official-opus`; both use transparent forward-proxy capture so `ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead of calling the model provider. Historical entries in these lanes run each old CLI against the same explicit Sonnet 5 or Opus 5 1M model; they do not reconstruct the model that was the official default when that CLI was released.
 
 Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` so remote feature assignments are not fetched, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off` so the internal rolling task-budget reminder does not enter archived prompts. These snapshots use a deterministic, documented baseline rather than the rollout state at capture time; the baseline is recorded in `meta.json`.
 
@@ -45,8 +45,8 @@ uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigr
 # Capture only selected Codex snapshots.
 uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6
 
-# Capture Claude Code's non-official default and official Sonnet 5 snapshots.
-uv run phistory capture --latest --agents claude-code --variants default,official
+# Capture Claude Code's non-official default and both official API model snapshots.
+uv run phistory capture --latest --agents claude-code --variants default,official,official-opus
 
 # Capture a historical version range for one agent.
 uv run phistory backfill claude-code --from 2.1.113 --to latest
