@@ -112,7 +112,10 @@ def npm_view(package: str, *fields: str) -> object:
     args = ["npm", "view", package, *fields, "--json"]
     result = run(args, timeout=120)
     text = result.stdout.strip()
-    return json.loads(text) if text else None
+    data = json.loads(text) if text else None
+    if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
+        return data[0]
+    return data
 
 
 def _npm_latest(agent: AgentSpec) -> VersionInfo:

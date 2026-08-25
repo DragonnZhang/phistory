@@ -21,6 +21,7 @@ from phistory.subprocesses import run
 _VOLATILE_TEXT_PATTERNS = (
     (re.compile(r"\bcch=[^;\s]+"), "cch=<normalized>"),
     (re.compile(r"(?m)^ - OS Version: .+$"), " - OS Version: $PHISTORY_OS_VERSION"),
+    (re.compile(r"(?m)^OS Version: .+$"), "OS Version: $PHISTORY_OS_VERSION"),
     (re.compile(r" - OS Version: [^\\\n]*(?=\\n)"), " - OS Version: $PHISTORY_OS_VERSION"),
     (re.compile(r"Today's date is \d{4}[-/]\d{2}[-/]\d{2}\."), "Today's date is $PHISTORY_DATE."),
     (re.compile(r"Today's date: \d{4}[-/]\d{2}[-/]\d{2}"), "Today's date: $PHISTORY_DATE"),
@@ -84,6 +85,7 @@ def capture_target(
     cache_dir: Path,
     force: bool = False,
     keep_tap: bool = False,
+    extract_static: bool = True,
 ) -> CaptureResult:
     if is_captured(target) and not force:
         return CaptureResult(
@@ -175,6 +177,11 @@ def capture_target(
                 "duration_seconds": round(time.time() - started, 3),
                 "command": [_replace_many(part, replacements) for part in _portable_command(argv, variant_dir)],
                 **(
+                    {"capture_environment": {key: env[key] for key in target.agent.recorded_env}}
+                    if target.agent.recorded_env
+                    else {}
+                ),
+                **(
                     {"compatibility_patches": list(patches)}
                     if (patches := packages.compatibility_patches(target.agent, target.version.version))
                     else {}
@@ -185,7 +192,7 @@ def capture_target(
             remove_if_exists(tap_output_dir)
         if staging_root is not None:
             _promote_staged_capture(working_target.variant_dir, target.variant_dir, staging_root)
-        if target.variant.id == "default":
+        if extract_static and target.variant.id == "default":
             _extract_static_best_effort(target, install_dir)
         return CaptureResult(
             target.agent.id,

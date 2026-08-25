@@ -19,6 +19,7 @@ This file is for future coding agents. Read it before changing the project.
 - `tests/`: focused unit and local integration tests for package sources, registry contracts, capture behavior, and rendering.
 - `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest smoke capture for all agents, real latest capture, Claude Code static prompt extraction for the latest captured versions, renders artifacts, and commits updates.
 - `.github/workflows/backfill.yml`: manually triggered stable-history backfill for Qwen Code and Qoder CLI with explicit version ranges.
+- `.github/workflows/recapture-claude-history.yml`: manually triggered, sharded Linux recapture for the complete Claude Code history with remote experiment fetching disabled.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
 
 Generated capture artifacts live in:
@@ -142,6 +143,8 @@ For a targeted historical check:
 ```bash
 uv run phistory backfill <agent> --from <version> --to <version> --force
 ```
+
+Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1`; their metadata records this code-default baseline.
 
 If you push changes that affect CI capture, verify the `Capture prompts` workflow and the Pages deployment with `gh run list` / `gh run watch`.
 

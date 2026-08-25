@@ -1,6 +1,8 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from phistory import cli
 from phistory.cli import _print_results
 from phistory.models import AgentSpec, CaptureResult
@@ -72,3 +74,58 @@ def test_extract_static_treats_unavailable_packaged_source_as_skip(monkeypatch, 
 
     assert status == 0
     assert "skipped static extraction: binary-only package" in capsys.readouterr().out
+
+
+def test_backfill_cli_forwards_resource_and_shard_options(monkeypatch, tmp_path: Path):
+    observed = {}
+
+    def fake_iter_backfill(agent_id, **kwargs):
+        observed["agent_id"] = agent_id
+        observed.update(kwargs)
+        return iter(())
+
+    monkeypatch.setattr(cli, "iter_backfill", fake_iter_backfill)
+
+    status = cli.main(
+        [
+            "--root",
+            str(tmp_path / "captures"),
+            "--cache-dir",
+            str(tmp_path / "cache"),
+            "backfill",
+            "claude-code",
+            "--from",
+            "1.0.0",
+            "--to",
+            "2.0.0",
+            "--skip-static",
+            "--prune-installs",
+            "--shard-index",
+            "1",
+            "--shard-count",
+            "4",
+        ]
+    )
+
+    assert status == 0
+    assert observed["agent_id"] == "claude-code"
+    assert observed["extract_static"] is False
+    assert observed["prune_installs"] is True
+    assert observed["shard_index"] == 1
+    assert observed["shard_count"] == 4
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["--shard-index", "0"],
+        ["--shard-count", "2"],
+        ["--shard-index", "0", "--shard-count", "0"],
+        ["--shard-index", "2", "--shard-count", "2"],
+    ],
+)
+def test_backfill_cli_rejects_invalid_shard_options(args):
+    with pytest.raises(SystemExit) as exc:
+        cli.main(["backfill", "claude-code", "--from", "1.0.0", *args])
+
+    assert exc.value.code == 2

@@ -1,0 +1,223 @@
+name: Recapture Claude Code history
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: First stable Claude Code version to recapture
+        required: true
+        default: 1.0.0
+        type: string
+      to:
+        description: Last stable Claude Code version to recapture
+        required: true
+        default: 2.1.245
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: capture-prompts-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  GH_TOKEN: ${{ github.token }}
+  SHARD_COUNT: "8"
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - run: uv run ruff format --check phistory tests
+      - run: uv run ruff check phistory tests
+      - run: uv run pytest
+      - run: uv build
+
+  capture:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - name: Capture deterministic Claude Code history shard
+        env:
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+          SHARD_INDEX: ${{ matrix.shard }}
+        run: |
+          mkdir -p /tmp/phistory-history/status
+          set +e
+          uv run phistory \
+            --root /tmp/phistory-history/captures \
+            --cache-dir /tmp/phistory-cache \
+            backfill claude-code \
+            --from "$BACKFILL_FROM" \
+            --to "$BACKFILL_TO" \
+            --skip-static \
+            --prune-installs \
+            --shard-index "$SHARD_INDEX" \
+            --shard-count "$SHARD_COUNT" \
+            --summary-title "Claude Code history shard $SHARD_INDEX/$SHARD_COUNT"
+          status=$?
+          set -e
+          printf '%s\n' "$status" > "/tmp/phistory-history/status/shard-$SHARD_INDEX"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: claude-history-${{ matrix.shard }}
+          path: /tmp/phistory-history
+          if-no-files-found: error
+          retention-days: 7
+
+  merge:
+    needs: [preflight, capture]
+    if: always() && needs.preflight.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: claude-history-*
+          path: /tmp/phistory-history
+          merge-multiple: true
+      - name: Validate captured shard artifacts
+        run: |
+          uv run python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("/tmp/phistory-history/captures/claude-code")
+          metas = sorted(root.glob("*/variants/default/meta.json"))
+          if not metas:
+              raise SystemExit("no Claude Code captures were downloaded")
+          for path in metas:
+              data = json.loads(path.read_text(encoding="utf-8"))
+              expected = {"DISABLE_GROWTHBOOK": "1", "DISABLE_TELEMETRY": "1"}
+              if data.get("capture_environment") != expected:
+                  raise SystemExit(f"unexpected capture environment in {path}")
+          for path in root.glob("*/variants/default/prompt.md"):
+              text = path.read_text(encoding="utf-8")
+              if "platform: darwin" in text.lower():
+                  raise SystemExit(f"Darwin capture found in Linux backfill: {path}")
+          print(f"validated {len(metas)} deterministic Claude Code captures")
+          PY
+      - name: Merge successful captures
+        run: |
+          mkdir -p captures/claude-code
+          rsync -a /tmp/phistory-history/captures/claude-code/ captures/claude-code/
+      - run: uv run phistory render-index
+      - run: uv run phistory render-site
+      - name: Audit requested version coverage
+        id: coverage
+        env:
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+        run: |
+          set +e
+          uv run python - <<'PY'
+          import os
+          from pathlib import Path
+
+          from phistory import packages
+          from phistory.registry import get_agent
+
+          agent = get_agent("claude-code")
+          expected = {
+              item.version
+              for item in packages.versions_between(
+                  agent,
+                  os.environ["BACKFILL_FROM"],
+                  os.environ["BACKFILL_TO"],
+              )
+          }
+          root = Path("captures/claude-code")
+          complete = {
+              path.name
+              for path in root.iterdir()
+              if (path / "variants/default/prompt.md").is_file()
+              and (path / "variants/default/trace.jsonl").is_file()
+              and (path / "variants/default/meta.json").is_file()
+          }
+          recaptured = {
+              path.name
+              for path in Path("/tmp/phistory-history/captures/claude-code").iterdir()
+              if (path / "variants/default/prompt.md").is_file()
+              and (path / "variants/default/trace.jsonl").is_file()
+              and (path / "variants/default/meta.json").is_file()
+          }
+          missing = sorted(expected - complete)
+          not_recaptured = sorted(expected - recaptured)
+          print(f"complete requested captures: {len(expected) - len(missing)}/{len(expected)}")
+          print(f"successfully recaptured: {len(expected) - len(not_recaptured)}/{len(expected)}")
+          if missing:
+              print("missing versions after merge: " + ", ".join(missing))
+          if not_recaptured:
+              print("versions not recaptured in this run: " + ", ".join(not_recaptured))
+          if missing or not_recaptured:
+              raise SystemExit(1)
+          PY
+          status=$?
+          set -e
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+      - run: git diff --check
+      - name: Commit deterministic history
+        env:
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+        run: |
+          git add README.md README_zh.md index.html docs captures
+          if git diff --cached --quiet; then
+            echo "No history changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Recapture Claude Code prompts with remote experiments disabled"
+          git push
+      - name: Report incomplete shards or coverage
+        if: always()
+        env:
+          COVERAGE_STATUS: ${{ steps.coverage.outputs.status }}
+        run: |
+          status=0
+          status_count=$(find /tmp/phistory-history/status -type f -name 'shard-*' | wc -l)
+          if [ "$status_count" != "$SHARD_COUNT" ]; then
+            echo "::error title=Missing Claude history shards::Expected $SHARD_COUNT status files, found $status_count."
+            status=1
+          fi
+          while IFS= read -r status_file; do
+            shard_status=$(tr -d '[:space:]' < "$status_file")
+            if [ "$shard_status" != "0" ]; then
+              echo "::error title=Claude history shard failed::$status_file exited with $shard_status"
+              status=1
+            fi
+          done < <(find /tmp/phistory-history/status -type f -name 'shard-*' | sort)
+          if [ "$COVERAGE_STATUS" != "0" ]; then
+            echo "::error title=Incomplete Claude history::One or more requested stable versions are missing."
+            status=1
+          fi
+          exit "$status"

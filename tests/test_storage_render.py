@@ -53,6 +53,8 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "## Data" not in text
     assert "`captures/<agent>/<version>/variants/<variant>/`" in text
     assert "`prompt.md`, `trace.jsonl`, and `meta.json`" in text
+    assert "`DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1`" in text
+    assert "compiled code defaults, not the rollout state" in text
     assert "## Local Development" in text
     assert "# Capture the latest release and every configured snapshot for each CLI." in text
     assert "--variants default,gpt-5.5,gpt-5.6" in text
@@ -76,6 +78,8 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "## 数据" not in zh_text
     assert "`captures/<agent>/<version>/variants/<variant>/`" in zh_text
     assert "`prompt.md`、`trace.jsonl` 和 `meta.json`" in zh_text
+    assert "`DISABLE_GROWTHBOOK=1` 和 `DISABLE_TELEMETRY=1`" in zh_text
+    assert "编译进代码的默认值" in zh_text
     assert "## 本地开发" in zh_text
     assert "# 抓取每个 CLI 的最新版本及其全部已配置快照。" in zh_text
     assert "## Web UI" not in zh_text

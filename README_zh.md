@@ -23,6 +23,8 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 Phistory 会安装每个受支持的具体 CLI 版本，再通过 [`claude-tap`](https://github.com/WEIFENG2333/claude-tap) 分别运行每个已配置快照，抓取包含系统提示词的 HTTP 请求，不调用真实模型服务，然后把结果保存到 `captures/<agent>/<version>/variants/<variant>/`，里面包含 `prompt.md`、`trace.jsonl` 和 `meta.json`。抓取配置以 `default` 快照为基线，显式选择的模型或模式会作为额外变体保存。
 
+Claude Code 抓取会固定设置 `DISABLE_GROWTHBOOK=1` 和 `DISABLE_TELEMETRY=1`，避免拉取远程灰度配置。因此快照反映的是各版本编译进代码的默认值，而不是抓取当天的灰度状态；该基线会记录在 `meta.json` 中。
+
 Phistory 还会从近期 Claude Code 安装包里提取疑似静态 prompt 的字符串，并从退役 Qoder 版本的精确官方可执行文件中提取 prompt 内容，保存在 `captures/<agent>/<version>/static/`。候选文件会保留原始内容，方便以后改进匹配规则时不用重新安装所有历史包。
 
 GitHub Actions 每天检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。

@@ -38,6 +38,11 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
     fake_codex.chmod(fake_codex.stat().st_mode | stat.S_IXUSR)
 
     monkeypatch.setattr("phistory.packages.install_agent", lambda *_args, **_kwargs: bin_dir)
+    static_extractions = []
+    monkeypatch.setattr(
+        "phistory.capture._extract_static_best_effort",
+        lambda target, install_dir: static_extractions.append((target, install_dir)),
+    )
 
     agent = AgentSpec(
         id="fake-codex",
@@ -45,6 +50,8 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
         package="fake-codex",
         tap_client="codex",
         fake_env={"OPENAI_API_KEY": "fake"},
+        extra_env={"TEST_CAPTURE_BASELINE": "code-defaults"},
+        recorded_env=("TEST_CAPTURE_BASELINE",),
         default_variant=CaptureVariant("default", "Default", ("--no-yolo", "--", "exec", "hello", "--json")),
     )
     target = _target(agent, VersionInfo("1.0.0", "2026-05-22T00:00:00Z"), tmp_path / "captures")
@@ -53,18 +60,20 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
     target.trace_path.write_text("old trace\n", encoding="utf-8")
     target.meta_path.write_text("old meta\n", encoding="utf-8")
 
-    result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
+    result = capture_target(target, cache_dir=tmp_path / "cache", force=True, extract_static=False)
 
     assert result.status == "captured"
     assert target.prompt_path.exists()
     assert target.trace_path.exists()
     assert target.meta_path.exists()
     assert not (target.version_dir / ".home").exists()
+    assert static_extractions == []
 
     meta = json.loads(target.meta_path.read_text(encoding="utf-8"))
     assert meta["binary_version"] == "fake-codex 1.0.0"
     assert meta["target"] == "claude-tap capture-only"
     assert meta["observed"] == {"model": "fake-model", "tool_count": 1}
+    assert meta["capture_environment"] == {"TEST_CAPTURE_BASELINE": "code-defaults"}
     assert "-t" not in meta["command"]
 
     trace_records = [json.loads(line) for line in target.trace_path.read_text(encoding="utf-8").splitlines()]
@@ -81,6 +90,7 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
     text = (
         "x-anthropic-billing-header: cc_version=2.1.146.6c9; cc_entrypoint=sdk-cli; cch=abc123;\n"
         " - OS Version: Linux 6.17.0-1013-azure\n"
+        "OS Version: Linux 5.15.0-1092-azure\n"
         "Line with trailing whitespace. \t\n"
         "Today's date is 2026-05-21.\n"
         "Today's date: 2026-05-21\n"
@@ -109,6 +119,7 @@ def test_sanitize_text_normalizes_volatile_claude_headers():
     assert _sanitize_text(text, {}) == (
         "x-anthropic-billing-header: cc_version=2.1.146.6c9; cc_entrypoint=sdk-cli; cch=<normalized>;\n"
         " - OS Version: $PHISTORY_OS_VERSION\n"
+        "OS Version: $PHISTORY_OS_VERSION\n"
         "Line with trailing whitespace.\n"
         "Today's date is $PHISTORY_DATE.\n"
         "Today's date: $PHISTORY_DATE\n"

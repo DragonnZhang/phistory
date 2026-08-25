@@ -46,6 +46,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     fill.add_argument("--force", action="store_true", help="recapture existing versions")
     fill.add_argument("--keep-tap", action="store_true", help="keep raw claude-tap output directories")
+    fill.add_argument(
+        "--skip-static",
+        action="store_true",
+        help="skip package-embedded static prompt extraction during backfill",
+    )
+    fill.add_argument(
+        "--prune-installs",
+        action="store_true",
+        help="remove each exact package install after all of its variants finish",
+    )
+    fill.add_argument("--shard-index", type=int, default=None, help="zero-based shard index")
+    fill.add_argument("--shard-count", type=int, default=None, help="total number of deterministic shards")
     fill.add_argument("--summary-title", default="Backfill results", help="GitHub Actions summary title")
 
     index = sub.add_parser("render-index", help="render capture index")
@@ -83,7 +95,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
     root = Path(args.root)
     cache_dir = Path(args.cache_dir)
 
@@ -101,6 +114,12 @@ def main(argv: list[str] | None = None) -> int:
         return _print_results(results, args.summary_title)
 
     if args.command == "backfill":
+        if (args.shard_index is None) != (args.shard_count is None):
+            parser.error("--shard-index and --shard-count must be provided together")
+        if args.shard_count is not None and args.shard_count < 1:
+            parser.error("--shard-count must be greater than zero")
+        if args.shard_index is not None and not 0 <= args.shard_index < args.shard_count:
+            parser.error("--shard-index must be between zero and --shard-count - 1")
         failed = False
         for result in iter_backfill(
             args.agent,
@@ -114,6 +133,10 @@ def main(argv: list[str] | None = None) -> int:
             limit=args.limit,
             newest_first=args.newest_first,
             include_prerelease=args.include_prerelease,
+            extract_static=not args.skip_static,
+            prune_installs=args.prune_installs,
+            shard_index=args.shard_index,
+            shard_count=args.shard_count,
         ):
             failed = _print_result(result) or failed
             _write_github_summary([result], args.summary_title)
