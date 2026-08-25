@@ -12,6 +12,7 @@ on:
           - default
           - official
           - official-opus
+          - official-fable
       from:
         description: First stable Claude Code version to recapture
         required: true

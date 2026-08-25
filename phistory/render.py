@@ -121,11 +121,12 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             (
                 "Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional official "
-                "API snapshots pin `claude-sonnet-5` in `official` and `claude-opus-5[1m]` in `official-opus`; both use "
+                "API snapshots pin `claude-sonnet-5` in `official`, `claude-opus-5[1m]` in `official-opus`, and "
+                "`claude-fable-5` in `official-fable`; all three use "
                 "transparent forward-proxy capture so "
                 "`ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead "
                 "of calling the model provider. Historical entries in these lanes run each old CLI against the "
-                "same explicit Sonnet 5 or Opus 5 1M model; they do not reconstruct the model that was the official default "
+                "same explicit Sonnet 5, Opus 5 1M, or Fable 5 model; they do not reconstruct the model that was the official default "
                 "when that CLI was released."
             ),
             "",
@@ -160,8 +161,8 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "# Capture only selected Codex snapshots.",
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6",
             "",
-            "# Capture Claude Code's non-official default and both official API model snapshots.",
-            "uv run phistory capture --latest --agents claude-code --variants default,official,official-opus",
+            "# Capture Claude Code's non-official default and all official API model snapshots.",
+            "uv run phistory capture --latest --agents claude-code --variants default,official,official-opus,official-fable",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -278,10 +279,11 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             ),
             "",
             (
-                "Claude Code 的 `default` 快照保留非官方／自定义 API 路径；两个官方 API 快照分别在 `official` "
-                "中固定使用 `claude-sonnet-5`，在 `official-opus` 中固定使用 `claude-opus-5[1m]`。两者都通过透明正向代理抓取，"
+                "Claude Code 的 `default` 快照保留非官方／自定义 API 路径；三个官方 API 快照分别在 `official` "
+                "中固定使用 `claude-sonnet-5`，在 `official-opus` 中固定使用 `claude-opus-5[1m]`，在 `official-fable` "
+                "中固定使用 `claude-fable-5`。三者都通过透明正向代理抓取，"
                 "使 `ANTHROPIC_BASE_URL` 保持未设置。capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。"
-                "这些通道的历史条目会让每个旧版 CLI 显式使用同一个 Sonnet 5 或 Opus 5 1M 模型，并不还原该版本发布时的官方默认模型。"
+                "这些通道的历史条目会让每个旧版 CLI 显式使用同一个 Sonnet 5、Opus 5 1M 或 Fable 5 模型，并不还原该版本发布时的官方默认模型。"
             ),
             "",
             (
@@ -312,8 +314,8 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "# 只抓取 Codex 的指定快照。",
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6",
             "",
-            "# 抓取 Claude Code 的非官方默认快照和两个官方 API 模型快照。",
-            "uv run phistory capture --latest --agents claude-code --variants default,official,official-opus",
+            "# 抓取 Claude Code 的非官方默认快照和全部官方 API 模型快照。",
+            "uv run phistory capture --latest --agents claude-code --variants default,official,official-opus,official-fable",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",

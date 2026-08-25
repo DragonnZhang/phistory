@@ -60,6 +60,11 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             "Official API · Opus 5 1M",
             {"api": "official", "model": "claude-opus-5[1m]"},
         ),
+        (
+            "official-fable",
+            "Official API · Fable 5",
+            {"api": "official", "model": "claude-fable-5"},
+        ),
     ]
 
 
@@ -72,7 +77,11 @@ def test_claude_code_official_variants_use_forward_capture_without_changing_defa
     assert "--mode" not in default_command
     assert "--export-prompt" in default_command
 
-    for variant_id, model in (("official", "claude-sonnet-5"), ("official-opus", "claude-opus-5[1m]")):
+    for variant_id, model in (
+        ("official", "claude-sonnet-5"),
+        ("official-opus", "claude-opus-5[1m]"),
+        ("official-fable", "claude-fable-5"),
+    ):
         target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant(variant_id), tmp_path / "captures")
         command = tap_command(target, target.prompt_path, target.variant_dir / ".tap")
 
