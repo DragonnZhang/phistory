@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-from phistory.models import AgentSpec, CaptureDriver, CaptureVariant
+from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, TapMode
 
 
 def _default(
     run_args: tuple[str, ...] = (),
     *,
+    label: str = "Default",
     driver: CaptureDriver = "oneshot",
     dimensions: dict[str, str] | None = None,
+    tap_mode: TapMode | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id="default",
-        label="Default",
+        label=label,
         run_args=run_args,
         driver=driver,
         dimensions=dimensions or {},
+        tap_mode=tap_mode,
     )
 
 
@@ -25,6 +28,7 @@ def _variant(
     *,
     driver: CaptureDriver = "oneshot",
     dimensions: dict[str, str] | None = None,
+    tap_mode: TapMode | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id=variant_id,
@@ -32,6 +36,7 @@ def _variant(
         run_args=run_args,
         driver=driver,
         dimensions=dimensions or {},
+        tap_mode=tap_mode,
     )
 
 
@@ -61,7 +66,26 @@ CLAUDE_CODE = AgentSpec(
             "--no-session-persistence",
             "-p",
             "Reply with one short sentence.",
-        )
+        ),
+        label="Non-official API",
+        dimensions={"api": "non-official"},
+    ),
+    variants=(
+        _variant(
+            "official",
+            "Official API · Sonnet 5",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-sonnet-5",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-sonnet-5"},
+            tap_mode="forward",
+        ),
     ),
 )
 

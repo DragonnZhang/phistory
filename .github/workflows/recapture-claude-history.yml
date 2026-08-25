@@ -83,6 +83,7 @@ jobs:
             --root /tmp/phistory-history/captures \
             --cache-dir /tmp/phistory-cache \
             backfill claude-code \
+            --variants default \
             --from "$BACKFILL_FROM" \
             --to "$BACKFILL_TO" \
             --skip-static \

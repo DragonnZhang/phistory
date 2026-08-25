@@ -35,6 +35,7 @@ class CaptureVariant:
     dimensions: dict[str, str] = field(default_factory=dict)
     driver: CaptureDriver = "oneshot"
     extra_env: dict[str, str] = field(default_factory=dict)
+    tap_mode: TapMode | None = None
 
 
 @dataclass(frozen=True)

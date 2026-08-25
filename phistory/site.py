@@ -57,7 +57,7 @@ def _build_manifest(root: Path) -> dict:
             variants.append(
                 {
                     "id": variant_id,
-                    "label": first["variant_label"],
+                    "label": _variant_label(agent_id, variant_id, first["variant_label"]),
                     "dimensions": first["variant_dimensions"],
                     "latest": versions[0] if versions else None,
                     "versions": versions,
@@ -86,6 +86,14 @@ def _variant_sort_key(agent_id: str, variant_id: str) -> tuple[int, str]:
         return (0 if variant_id == "default" else 1, variant_id)
     positions = {variant.id: index for index, variant in enumerate(agent.capture_variants)}
     return (positions.get(variant_id, len(positions)), variant_id)
+
+
+def _variant_label(agent_id: str, variant_id: str, fallback: str) -> str:
+    agent = AGENTS.get(agent_id)
+    if agent is None:
+        return fallback
+    variant = next((item for item in agent.capture_variants if item.id == variant_id), None)
+    return variant.label if variant is not None else fallback
 
 
 def _site_versions(rows: list[dict]) -> list[dict]:

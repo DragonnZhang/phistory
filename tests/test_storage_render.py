@@ -55,10 +55,13 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`prompt.md`, `trace.jsonl`, and `meta.json`" in text
     assert "`DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1`" in text
     assert "`CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`" in text
+    assert "non-official/custom-API path as its `default` snapshot" in text
+    assert "`ANTHROPIC_BASE_URL` remains unset" in text
     assert "deterministic, documented baseline rather than the rollout state" in text
     assert "## Local Development" in text
     assert "# Capture the latest release and every configured snapshot for each CLI." in text
     assert "--variants default,gpt-5.5,gpt-5.6" in text
+    assert "--agents claude-code --variants default,official" in text
     assert "--agents claude-code,codex,qwen-code,dsh,antigravity" in text
     assert "## Web UI" not in text
     assert "## For AI Agents" not in text
@@ -81,6 +84,8 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`prompt.md`、`trace.jsonl` 和 `meta.json`" in zh_text
     assert "`DISABLE_GROWTHBOOK=1` 和 `DISABLE_TELEMETRY=1`" in zh_text
     assert "`CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`" in zh_text
+    assert "非官方／自定义 API 路径" in zh_text
+    assert "`ANTHROPIC_BASE_URL` 保持未设置" in zh_text
     assert "明确记录的确定性基线" in zh_text
     assert "## 本地开发" in zh_text
     assert "# 抓取每个 CLI 的最新版本及其全部已配置快照。" in zh_text

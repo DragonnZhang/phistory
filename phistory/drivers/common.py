@@ -37,9 +37,10 @@ def upstream_client_args(run_args: tuple[str, ...]) -> list[str]:
 
 
 def _tap_mode_args(target: CaptureTarget) -> list[str]:
-    if target.agent.tap_mode == "auto":
+    tap_mode = target.variant.tap_mode or target.agent.tap_mode
+    if tap_mode == "auto":
         return []
-    return ["--mode", target.agent.tap_mode]
+    return ["--mode", tap_mode]
 
 
 def _tap_yolo_args(target: CaptureTarget) -> list[str]:

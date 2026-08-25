@@ -120,6 +120,13 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             ),
             "",
             (
+                "Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional "
+                "`official` snapshot pins `claude-sonnet-5` and uses transparent forward-proxy capture so "
+                "`ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead "
+                "of calling the model provider."
+            ),
+            "",
+            (
                 "Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` "
                 "so remote feature assignments are not fetched, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off` so "
                 "the internal rolling task-budget reminder does not enter archived prompts. These snapshots use a "
@@ -149,6 +156,9 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             "# Capture only selected Codex snapshots.",
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6",
+            "",
+            "# Capture Claude Code's non-official default and official Sonnet 5 snapshots.",
+            "uv run phistory capture --latest --agents claude-code --variants default,official",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -265,6 +275,12 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             ),
             "",
             (
+                "Claude Code 的 `default` 快照保留非官方／自定义 API 路径；额外的 `official` 快照固定使用 "
+                "`claude-sonnet-5`，并通过透明正向代理抓取，使 `ANTHROPIC_BASE_URL` 保持未设置。"
+                "capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。"
+            ),
+            "",
+            (
                 "Claude Code 抓取会固定设置 `DISABLE_GROWTHBOOK=1` 和 `DISABLE_TELEMETRY=1`，避免拉取远程灰度配置。"
                 "同时设置 `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`，避免内部滚动任务预算提醒进入归档提示词。"
                 "因此快照采用明确记录的确定性基线，而不是抓取当天的灰度状态；该基线会记录在 `meta.json` 中。"
@@ -291,6 +307,9 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             "# 只抓取 Codex 的指定快照。",
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6",
+            "",
+            "# 抓取 Claude Code 的非官方默认快照和官方 Sonnet 5 快照。",
+            "uv run phistory capture --latest --agents claude-code --variants default,official",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",

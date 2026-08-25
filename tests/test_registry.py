@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from phistory.capture import _capture_env
+from phistory.drivers.common import tap_command
 from phistory.models import CaptureTarget, VersionInfo
 from phistory.registry import AGENT_ORDER, get_agent, parse_agent_ids
 
@@ -46,9 +47,33 @@ def test_get_agent_has_capture_contract():
 def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
     agent = get_agent("claude-code")
 
+    assert agent.default_variant.label == "Non-official API"
+    assert agent.default_variant.dimensions == {"api": "non-official"}
+    assert agent.default_variant.tap_mode is None
     assert "--no-session-persistence" in agent.default_variant.run_args
     assert "--bare" not in agent.default_variant.run_args
     assert "--exclude-dynamic-system-prompt-sections" not in agent.default_variant.run_args
+    assert [(variant.id, variant.label, variant.dimensions) for variant in agent.variants] == [
+        ("official", "Official API · Sonnet 5", {"api": "official", "model": "claude-sonnet-5"})
+    ]
+
+
+def test_claude_code_official_variant_uses_forward_capture_without_changing_default_mode(tmp_path: Path):
+    agent = get_agent("claude-code")
+    default = CaptureTarget(agent, VersionInfo("1.0.0"), agent.default_variant, tmp_path / "captures")
+    official = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant("official"), tmp_path / "captures")
+
+    default_command = tap_command(default, default.prompt_path, default.variant_dir / ".tap")
+    official_command = tap_command(official, official.prompt_path, official.variant_dir / ".tap")
+
+    assert agent.tap_mode == "auto"
+    assert "--mode" not in default_command
+    assert "--mode" in official_command
+    assert official_command[official_command.index("--mode") + 1] == "forward"
+    assert "--export-prompt" in default_command
+    assert "--export-prompt" in official_command
+    assert official.variant.tap_mode == "forward"
+    assert official.variant.run_args[official.variant.run_args.index("--model") + 1] == "claude-sonnet-5"
 
 
 def test_claude_code_uses_deterministic_capture_environment(tmp_path: Path):

@@ -71,7 +71,9 @@ Static prompt extraction is separate from request capture. It parses installed p
 
 Current agents are defined in `phistory/registry.py`:
 
-- `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`.
+- `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`; the `default` variant captures
+  the non-official/custom-base-URL compatibility path, while `official` pins `claude-sonnet-5` and uses
+  transparent forward capture so `ANTHROPIC_BASE_URL` remains unset without calling the real provider.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives default, GPT-5.5, and GPT-5.6 variants.
 - `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode; uses a Web RPC driver for default, Standard, PTC, Minimal, and Creator snapshots, plus the headless snapshot.
 - `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and forward capture mode.
@@ -145,6 +147,9 @@ uv run phistory backfill <agent> --from <version> --to <version> --force
 ```
 
 Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1`, `DISABLE_TELEMETRY=1`, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`; their metadata records this deterministic baseline.
+
+The dedicated Claude Code history recapture workflow intentionally selects `--variants default`. The `official`
+Sonnet 5 lane is a current-release comparison surface, not a requirement for rebuilding the complete historical archive.
 
 If you push changes that affect CI capture, verify the `Capture prompts` workflow and the Pages deployment with `gh run list` / `gh run watch`.
 
