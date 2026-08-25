@@ -216,6 +216,8 @@ def test_render_site_writes_static_html_manifest(tmp_path: Path):
     assert "changedLineStats" in text
     assert "Trace detail" in text
     assert "Raw Request Body" in text
+    assert "In-conversation message · <code>role: system</code>" in text
+    assert "block.title === 'System Message'" in text
     assert "toolDeclarations" in text
     assert "traceToolItems" in text
     assert "flattenTraceTool" in text

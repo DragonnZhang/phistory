@@ -701,6 +701,17 @@ a:hover { text-decoration: none; }
 .prompt-block + .prompt-block {
   margin-top: 22px;
 }
+.prompt-block-origin {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .01em;
+}
+.prompt-block-origin code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: inherit;
+}
 .trace-rendered {
   color: var(--text);
   font-size: 14px;
@@ -2718,7 +2729,12 @@ function updateTraceModeLabel(section) {
 function blocksSectionHtml(title, blocks, open) {
   if (!blocks.length) return '';
   const section = sectionId(title);
-  const body = blocks.map(block => `<div class="prompt-block"><div class="trace-rendered">${markdownHtml(block.text)}</div><pre class="trace-text trace-raw">${escapeHtml(block.text)}</pre></div>`).join('');
+  const body = blocks.map(block => {
+    const origin = block.title === 'System Message'
+      ? '<div class="prompt-block-origin">In-conversation message · <code>role: system</code></div>'
+      : '';
+    return `<div class="prompt-block">${origin}<div class="trace-rendered">${markdownHtml(block.text)}</div><pre class="trace-text trace-raw">${escapeHtml(block.text)}</pre></div>`;
+  }).join('');
   return `<section class="trace-section${open ? ' is-open' : ''}" data-section="${section}">${traceSummaryHtml(title, open, '', true)}<div class="trace-content"><div class="trace-body">${body}</div></div></section>`;
 }
 
