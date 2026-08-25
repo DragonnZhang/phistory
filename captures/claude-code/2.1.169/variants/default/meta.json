@@ -3,32 +3,6 @@
   "agent": "Claude Code",
   "package": "@anthropic-ai/claude-code",
   "version": "2.1.169",
-  "published_at": "2026-06-08T18:11:20.859Z",
-  "tarball_url": "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.169.tgz",
-  "binary_version": "2.1.169 (Claude Code)",
-  "captured_at": "2026-06-08T22:50:28.974417+00:00",
-  "tap_client": "claude",
-  "target": "claude-tap capture-only",
-  "client_exit_code": 0,
-  "duration_seconds": 3.11,
-  "command": [
-    "python",
-    "-m",
-    "claude_tap",
-    "--tap-client",
-    "claude",
-    "--tap-export-prompt",
-    "prompt.md",
-    "--tap-no-live",
-    "--tap-no-open",
-    "--tap-no-update-check",
-    "--tap-output-dir",
-    ".tap",
-    "--",
-    "--no-session-persistence",
-    "-p",
-    "Reply with one short sentence."
-  ],
   "variant": {
     "id": "default",
     "label": "Default",
@@ -37,6 +11,37 @@
   "requested": {},
   "observed": {
     "model": "claude-opus-4-8",
-    "tool_count": 27
+    "tool_count": 25
+  },
+  "published_at": "2026-06-08T18:11:20.859Z",
+  "tarball_url": null,
+  "binary_version": "2.1.169 (Claude Code)",
+  "captured_at": "2026-08-25T06:22:12.609285+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 3.304,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--no-session-persistence",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
   }
 }

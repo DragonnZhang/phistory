@@ -1,0 +1,394 @@
+name: Recapture Claude Code history
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: Claude Code capture variant to recapture
+        required: true
+        default: default
+        type: choice
+        options:
+          - default
+          - official
+      from:
+        description: First stable Claude Code version to recapture
+        required: true
+        default: 1.0.0
+        type: string
+      to:
+        description: Last stable Claude Code version to recapture
+        required: true
+        default: 2.1.245
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: capture-prompts-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  SHARD_COUNT: "8"
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - name: Require a branch ref
+        if: ${{ github.ref_type != 'branch' }}
+        run: |
+          echo "::error title=Unsupported ref::Claude history recapture must be dispatched from a branch."
+          exit 1
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+      - name: Pin queued run to current branch head
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - run: uv run ruff format --check phistory tests
+      - run: uv run ruff check phistory tests
+      - run: uv run pytest
+      - run: uv build
+
+  capture:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.preflight.outputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - name: Capture deterministic Claude Code history shard
+        env:
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+          BACKFILL_VARIANT: ${{ inputs.variant }}
+          SHARD_INDEX: ${{ matrix.shard }}
+        run: |
+          mkdir -p /tmp/phistory-history/status /tmp/phistory-history/captures/claude-code
+          set +e
+          uv run phistory \
+            --root /tmp/phistory-history/captures \
+            --cache-dir /tmp/phistory-cache \
+            backfill claude-code \
+            --variants "$BACKFILL_VARIANT" \
+            --from "$BACKFILL_FROM" \
+            --to "$BACKFILL_TO" \
+            --skip-static \
+            --prune-installs \
+            --shard-index "$SHARD_INDEX" \
+            --shard-count "$SHARD_COUNT" \
+            --summary-title "Claude Code $BACKFILL_VARIANT history shard $SHARD_INDEX/$SHARD_COUNT"
+          status=$?
+          set -e
+          printf '%s\n' "$status" > "/tmp/phistory-history/status/shard-$SHARD_INDEX"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: claude-history-${{ matrix.shard }}
+          path: /tmp/phistory-history
+          if-no-files-found: error
+          retention-days: 7
+
+  merge:
+    needs: [preflight, capture]
+    if: ${{ !cancelled() && needs.preflight.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.preflight.outputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: claude-history-*
+          path: /tmp/phistory-artifacts
+      - name: Validate complete, disjoint shard artifacts
+        env:
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+          BACKFILL_VARIANT: ${{ inputs.variant }}
+        run: |
+          uv run python - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          from phistory import packages
+          from phistory.registry import get_agent
+
+          shard_count = int(os.environ["SHARD_COUNT"])
+          artifact_root = Path("/tmp/phistory-artifacts")
+          expected_artifacts = {
+              f"claude-history-{index}": artifact_root / f"claude-history-{index}"
+              for index in range(shard_count)
+          }
+          actual_artifacts = {path.name: path for path in artifact_root.glob("claude-history-*") if path.is_dir()}
+          if set(actual_artifacts) != set(expected_artifacts):
+              missing = sorted(set(expected_artifacts) - set(actual_artifacts))
+              unexpected = sorted(set(actual_artifacts) - set(expected_artifacts))
+              raise SystemExit(f"artifact mismatch: missing={missing}, unexpected={unexpected}")
+
+          agent = get_agent("claude-code")
+          variant = agent.variant(os.environ["BACKFILL_VARIANT"])
+          variant_id = variant.id
+          versions = [
+              item.version
+              for item in packages.versions_between(
+                  agent,
+                  os.environ["BACKFILL_FROM"],
+                  os.environ["BACKFILL_TO"],
+              )
+          ]
+          expected_by_shard = {
+              index: set(versions[index::shard_count])
+              for index in range(shard_count)
+          }
+          owners: dict[str, int] = {}
+          expected_environment = {
+              "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+              "DISABLE_GROWTHBOOK": "1",
+              "DISABLE_TELEMETRY": "1",
+          }
+          volatile_date = re.compile(
+              r"Today's date(?: is|:) (?:\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}/\d{1,2}/\d{4})"
+          )
+
+          for index, artifact_dir in expected_artifacts.items():
+              shard_index = int(index.rsplit("-", 1)[1])
+              allowed_files = {Path("status") / f"shard-{shard_index}"}
+              allowed_dirs = {
+                  Path("status"),
+                  Path("captures"),
+                  Path("captures") / "claude-code",
+              }
+              for version in expected_by_shard[shard_index]:
+                  variant_dir = Path("captures") / "claude-code" / version / "variants" / variant_id
+                  allowed_files.update(variant_dir / name for name in ("prompt.md", "trace.jsonl", "meta.json"))
+                  allowed_dirs.update(
+                      {
+                          Path("captures") / "claude-code" / version,
+                          Path("captures") / "claude-code" / version / "variants",
+                          variant_dir,
+                      }
+                  )
+              actual_files: set[Path] = set()
+              actual_dirs: set[Path] = set()
+              for path in artifact_dir.rglob("*"):
+                  relative = path.relative_to(artifact_dir)
+                  if path.is_symlink():
+                      raise SystemExit(f"symlink is not allowed in shard {shard_index}: {relative}")
+                  if path.is_file():
+                      actual_files.add(relative)
+                  elif path.is_dir():
+                      actual_dirs.add(relative)
+                  else:
+                      raise SystemExit(f"unsupported artifact entry in shard {shard_index}: {relative}")
+              if actual_files != allowed_files:
+                  missing = sorted(str(path) for path in allowed_files - actual_files)
+                  unexpected = sorted(str(path) for path in actual_files - allowed_files)
+                  raise SystemExit(
+                      f"shard {shard_index} file allowlist mismatch: missing={missing}, unexpected={unexpected}"
+                  )
+              unexpected_dirs = sorted(str(path) for path in actual_dirs - allowed_dirs)
+              if unexpected_dirs:
+                  raise SystemExit(f"unexpected directories in shard {shard_index}: {unexpected_dirs}")
+
+              status_dir = artifact_dir / "status"
+              status_files = sorted(status_dir.glob("shard-*"))
+              expected_status = status_dir / f"shard-{shard_index}"
+              if status_files != [expected_status]:
+                  raise SystemExit(f"unexpected status files for shard {shard_index}: {status_files}")
+              if expected_status.read_text(encoding="utf-8").strip() != "0":
+                  raise SystemExit(f"capture command failed for shard {shard_index}")
+
+              capture_root = artifact_dir / "captures" / "claude-code"
+              actual_versions = {
+                  path.name: path
+                  for path in capture_root.iterdir()
+                  if path.is_dir()
+              } if capture_root.is_dir() else {}
+              if set(actual_versions) != expected_by_shard[shard_index]:
+                  missing = sorted(expected_by_shard[shard_index] - set(actual_versions))
+                  unexpected = sorted(set(actual_versions) - expected_by_shard[shard_index])
+                  raise SystemExit(
+                      f"shard {shard_index} ownership mismatch: missing={missing}, unexpected={unexpected}"
+                  )
+
+              for version, version_dir in actual_versions.items():
+                  if version in owners:
+                      raise SystemExit(
+                          f"duplicate version ownership: {version} in shards {owners[version]} and {shard_index}"
+                      )
+                  owners[version] = shard_index
+                  variant_dir = version_dir / "variants" / variant_id
+                  required = [variant_dir / name for name in ("prompt.md", "trace.jsonl", "meta.json")]
+                  missing_files = [str(path) for path in required if not path.is_file()]
+                  if missing_files:
+                      raise SystemExit(f"incomplete capture for {version}: {missing_files}")
+                  meta = json.loads((variant_dir / "meta.json").read_text(encoding="utf-8"))
+                  if meta.get("agent_id") != "claude-code" or meta.get("version") != version:
+                      raise SystemExit(f"capture identity mismatch in {variant_dir / 'meta.json'}")
+                  if meta.get("variant", {}).get("id") != variant_id:
+                      raise SystemExit(f"capture variant mismatch in {variant_dir / 'meta.json'}")
+                  if meta.get("variant", {}).get("dimensions") != variant.dimensions:
+                      raise SystemExit(f"capture dimensions mismatch in {variant_dir / 'meta.json'}")
+                  if meta.get("requested") != variant.dimensions:
+                      raise SystemExit(f"requested dimensions mismatch in {variant_dir / 'meta.json'}")
+                  if meta.get("capture_environment") != expected_environment:
+                      raise SystemExit(f"unexpected capture environment in {variant_dir / 'meta.json'}")
+                  if variant_id == "official":
+                      expected_model = variant.dimensions["model"]
+                      if meta.get("observed", {}).get("model") != expected_model:
+                          raise SystemExit(f"official model mismatch in {variant_dir / 'meta.json'}")
+                      trace_models = []
+                      for line in (variant_dir / "trace.jsonl").read_text(encoding="utf-8").splitlines():
+                          record = json.loads(line)
+                          body = record.get("request", {}).get("body")
+                          if isinstance(body, str):
+                              try:
+                                  body = json.loads(body)
+                              except json.JSONDecodeError:
+                                  continue
+                          if not isinstance(body, dict) or not isinstance(body.get("model"), str):
+                              continue
+                          trace_models.append(body["model"])
+                          if record.get("upstream_base_url") != "https://api.anthropic.com:443":
+                              raise SystemExit(f"non-official upstream found in {variant_dir / 'trace.jsonl'}")
+                      if expected_model not in trace_models:
+                          raise SystemExit(f"official model request missing in {variant_dir / 'trace.jsonl'}")
+                  prompt = (variant_dir / "prompt.md").read_text(encoding="utf-8")
+                  if "platform: darwin" in prompt.lower():
+                      raise SystemExit(f"Darwin capture found in Linux backfill: {variant_dir / 'prompt.md'}")
+                  if volatile_date.search(prompt):
+                      raise SystemExit(f"unnormalized date found in backfill: {variant_dir / 'prompt.md'}")
+
+          if set(owners) != set(versions):
+              raise SystemExit("artifact union does not exactly match the requested versions")
+          print(
+              f"validated {len(owners)} deterministic Claude Code {variant_id} captures "
+              f"across {shard_count} shards"
+          )
+          PY
+      - name: Merge validated captures
+        run: |
+          mkdir -p captures/claude-code
+          for artifact_dir in /tmp/phistory-artifacts/claude-history-*; do
+            capture_dir="$artifact_dir/captures/claude-code"
+            if [ -d "$capture_dir" ]; then
+              rsync -a "$capture_dir/" captures/claude-code/
+            fi
+          done
+      - run: uv run phistory render-index
+      - run: uv run phistory render-site
+      - name: Audit requested version coverage
+        env:
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+          BACKFILL_VARIANT: ${{ inputs.variant }}
+        run: |
+          uv run python - <<'PY'
+          import os
+          from pathlib import Path
+
+          from phistory import packages
+          from phistory.registry import get_agent
+
+          agent = get_agent("claude-code")
+          variant_id = agent.variant(os.environ["BACKFILL_VARIANT"]).id
+          expected = {
+              item.version
+              for item in packages.versions_between(
+                  agent,
+                  os.environ["BACKFILL_FROM"],
+                  os.environ["BACKFILL_TO"],
+              )
+          }
+          root = Path("captures/claude-code")
+          complete = {
+              path.name
+              for path in root.iterdir()
+              if (path / "variants" / variant_id / "prompt.md").is_file()
+              and (path / "variants" / variant_id / "trace.jsonl").is_file()
+              and (path / "variants" / variant_id / "meta.json").is_file()
+          }
+          recaptured = set()
+          for artifact in Path("/tmp/phistory-artifacts").glob("claude-history-*"):
+              capture_root = artifact / "captures/claude-code"
+              if not capture_root.is_dir():
+                  continue
+              recaptured.update(
+                  path.name
+                  for path in capture_root.iterdir()
+                  if path.is_dir()
+                  and (path / "variants" / variant_id / "prompt.md").is_file()
+                  and (path / "variants" / variant_id / "trace.jsonl").is_file()
+                  and (path / "variants" / variant_id / "meta.json").is_file()
+              )
+          missing = sorted(expected - complete)
+          not_recaptured = sorted(expected - recaptured)
+          print(f"complete requested captures: {len(expected) - len(missing)}/{len(expected)}")
+          print(f"successfully recaptured: {len(expected) - len(not_recaptured)}/{len(expected)}")
+          if missing:
+              print("missing versions after merge: " + ", ".join(missing))
+          if not_recaptured:
+              print("versions not recaptured in this run: " + ", ".join(not_recaptured))
+          if missing or not_recaptured:
+              raise SystemExit(1)
+          PY
+      - run: git diff --check
+      - name: Commit deterministic history
+        id: commit
+        env:
+          BACKFILL_FROM: ${{ inputs.from }}
+          BACKFILL_TO: ${{ inputs.to }}
+          BACKFILL_VARIANT: ${{ inputs.variant }}
+        run: |
+          git add README.md README_zh.md index.html docs captures
+          if git diff --cached --quiet; then
+            echo "No history changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Recapture Claude Code $BACKFILL_VARIANT prompt history"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Push deterministic history
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          PUSH_TOKEN: ${{ github.token }}
+        run: |
+          git \
+            -c credential.helper= \
+            -c 'credential.helper=!f() { printf "%s\n" "username=x-access-token" "password=$PUSH_TOKEN"; }; f' \
+            push origin "HEAD:${GITHUB_REF}"

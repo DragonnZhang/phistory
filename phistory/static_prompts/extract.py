@@ -15,8 +15,11 @@ from phistory.static_prompts.models import (
     StaticPromptMatch,
     StaticPromptResult,
 )
+from phistory.static_prompts.qoder import extract_qoder_coder_prompt
 
 STATIC_CANDIDATES_EXTRACTOR = "tree-sitter-javascript/raw-template-body"
+QODER_NATIVE_EXTRACTOR = "go-binary/exact-template-v1"
+QODER_BUN_EXTRACTOR = "bun-entrypoint/prompt-candidates-v1"
 STATIC_CANDIDATES_MIN_LENGTH = 20
 STATIC_PROMPT_DOUBLE_TERNARY_EXPR_RE = re.compile(
     r'\$\{[^{}\n?]{1,400}\?"(?P<yes>(?:[^"\\\n]|\\.)*)":"(?P<no>(?:[^"\\\n]|\\.)*)"\}'
@@ -40,7 +43,7 @@ class StaticSourceUnavailable(RuntimeError):
 
 
 def extract_static_prompts(target: CaptureTarget, install_dir: Path) -> StaticPromptResult | None:
-    if target.agent.id != "claude-code":
+    if target.agent.id not in {"claude-code", "qoder"}:
         return None
     target.static_dir.mkdir(parents=True, exist_ok=True)
     candidates = load_or_extract_static_candidates(target, install_dir)
@@ -53,6 +56,10 @@ def extract_static_prompts(target: CaptureTarget, install_dir: Path) -> StaticPr
 def load_or_extract_static_candidates(target: CaptureTarget, install_dir: Path) -> StaticCandidatesResult:
     if target.static_candidates_json_path.exists():
         return read_static_candidates(target.static_candidates_json_path)
+    if target.agent.id == "qoder":
+        result = _extract_qoder_candidates(target, install_dir)
+        write_static_candidates(target.static_candidates_json_path, result)
+        return result
     source_path, source = _claude_code_source(install_dir)
     result = StaticCandidatesResult(
         agent_id=target.agent.id,
@@ -69,6 +76,47 @@ def load_or_extract_static_candidates(target: CaptureTarget, install_dir: Path) 
     )
     write_static_candidates(target.static_candidates_json_path, result)
     return result
+
+
+def _extract_qoder_candidates(target: CaptureTarget, install_dir: Path) -> StaticCandidatesResult:
+    source_path, binary_path = _qoder_executable_source(install_dir)
+    try:
+        content = extract_qoder_coder_prompt(binary_path)
+    except RuntimeError as native_error:
+        source = extract_bun_entrypoint_js(binary_path)
+        if source is None:
+            raise StaticSourceUnavailable(
+                f"Qoder package contains neither an exact Go prompt template nor an extractable Bun entrypoint: "
+                f"{binary_path}"
+            ) from native_error
+        candidates = tuple(
+            candidate
+            for candidate in extract_string_candidates(source, min_length=STATIC_CANDIDATES_MIN_LENGTH)
+            if is_prompt_like(candidate.content)
+        )
+        if not candidates:
+            raise StaticSourceUnavailable(
+                f"Qoder Bun entrypoint contains no prompt-like string candidates: {binary_path}"
+            )
+        return StaticCandidatesResult(
+            agent_id=target.agent.id,
+            version=target.version.version,
+            source=source_path,
+            extractor=QODER_BUN_EXTRACTOR,
+            min_length=STATIC_CANDIDATES_MIN_LENGTH,
+            candidates=candidates,
+        )
+    candidate = StaticPromptCandidate(
+        id="qoder-coder-system-template", content=content, kind="go-string", score=100, order=0
+    )
+    return StaticCandidatesResult(
+        agent_id=target.agent.id,
+        version=target.version.version,
+        source=source_path,
+        extractor=QODER_NATIVE_EXTRACTOR,
+        min_length=len(content),
+        candidates=(candidate,),
+    )
 
 
 def _prune_static_candidates(agent_id: str, candidates: list[StaticPromptCandidate]) -> list[StaticPromptCandidate]:
@@ -164,6 +212,27 @@ def _claude_code_source(install_dir: Path) -> tuple[str, str]:
         if js:
             return _relative_source(install_dir, candidate), js
     raise StaticSourceUnavailable(f"package does not include extractable source under {package_dir}")
+
+
+def _qoder_executable_source(install_dir: Path) -> tuple[str, Path]:
+    install_dir = Path(install_dir)
+    package_dir = install_dir / "node_modules" / "@qoder-ai" / "qodercli"
+    package_json = package_dir / "package.json"
+    if not package_json.exists():
+        raise RuntimeError(f"Qoder CLI package not found: {package_dir}")
+    package = json.loads(package_json.read_text(encoding="utf-8"))
+    bin_field = package.get("bin")
+    if isinstance(bin_field, str):
+        binary_path = package_dir / bin_field
+    elif isinstance(bin_field, dict) and isinstance(bin_field.get("qodercli"), str):
+        binary_path = package_dir / bin_field["qodercli"]
+    else:
+        binary_path = package_dir / "bin" / "qodercli"
+    if not binary_path.exists():
+        raise RuntimeError(f"Qoder CLI executable not found: {binary_path}")
+    if _looks_text(binary_path):
+        raise StaticSourceUnavailable(f"Qoder package does not contain a retired packaged executable: {package_dir}")
+    return _relative_source(install_dir, binary_path), binary_path
 
 
 def _package_bin_path(package_dir: Path, bin_field: object) -> Path:

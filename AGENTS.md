@@ -17,7 +17,9 @@ This file is for future coding agents. Read it before changing the project.
 - `phistory/static_prompts/`: static prompt extraction for package-embedded prompt strings. It currently targets Claude Code and is structured so other agents can be added later.
 - `phistory/cli.py`: CLI entrypoint for `capture`, `backfill`, `extract-static`, `render-index`, and `render-site`.
 - `tests/`: focused unit and local integration tests for package sources, registry contracts, capture behavior, and rendering.
-- `.github/workflows/capture.yml`: hourly capture workflow. It runs lint, tests, build, latest smoke capture for all agents, real latest capture, Claude Code static prompt extraction for the latest captured versions, renders artifacts, and commits updates.
+- `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest smoke capture for all agents, real latest capture, Claude Code static prompt extraction for the latest captured versions, renders artifacts, and commits updates.
+- `.github/workflows/backfill.yml`: manually triggered stable-history backfill for Qwen Code and Qoder CLI with explicit version ranges.
+- `.github/workflows/recapture-claude-history.yml`: manually triggered, sharded Linux recapture for the complete Claude Code history with remote experiment fetching disabled.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
 
 Generated capture artifacts live in:
@@ -69,13 +71,17 @@ Static prompt extraction is separate from request capture. It parses installed p
 
 Current agents are defined in `phistory/registry.py`:
 
-- `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`.
+- `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`; the `default` variant captures
+  the non-official/custom-base-URL compatibility path, while `official` pins `claude-sonnet-5` and uses
+  transparent forward capture so `ANTHROPIC_BASE_URL` remains unset without calling the real provider.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives default, GPT-5.5, and GPT-5.6 variants.
 - `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode; uses a Web RPC driver for default, Standard, PTC, Minimal, and Creator snapshots, plus the headless snapshot.
 - `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and forward capture mode.
 - `grok`: npm package `@xai-official/grok`, tap client `grok`, isolated Grok home and fake xAI API key.
 - `minimax-code`: official MiniMax Code desktop updater source, tap client `minimax-code`; Phistory extracts the bundled Mavis runtime, installs matching Linux native dependencies (plus the pinned OpenCode engine for legacy releases), and launches it headlessly through an isolated provider.
 - `kimi-code`: npm package `@moonshot-ai/kimi-code`, tap client `kimi-code`, executable `kimi`, isolated Kimi Code config.
+- `qwen-code`: npm package `@qwen-code/qwen-code`, first-class tap client `qwen`, Node 22 wrapper, isolated OpenAI-compatible fake provider.
+- `qoder`: npm package `@qoder-ai/qodercli`, tap client `qoder`; requires `QODER_PERSONAL_ACCESS_TOKEN` through the repository secret of the same name.
 - `mimo`: npm package `@mimo-ai/cli`, tap client `mimo`, reverse tap mode with OpenAI-compatible provider config.
 - `openclaw`: npm package `openclaw`, tap client `openclaw`, Node 24 wrapper, isolated OpenClaw config.
 - `hermes`: GitHub release source `NousResearch/hermes-agent`, tap client `hermes`, OpenRouter provider path.
@@ -139,6 +145,15 @@ For a targeted historical check:
 ```bash
 uv run phistory backfill <agent> --from <version> --to <version> --force
 ```
+
+Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1`, `DISABLE_TELEMETRY=1`, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`; their metadata records this deterministic baseline.
+
+The dedicated Claude Code history recapture workflow accepts a `default` or `official` variant input and defaults to
+`default`. Select `official` explicitly when rebuilding the first-party Sonnet 5 comparison lane across historical releases.
+That lane is a compatibility snapshot of each historical CLI explicitly targeting `claude-sonnet-5`, not a reconstruction
+of the model that was the official default at the time. For older releases that cannot consume inline `--settings` JSON,
+the oneshot driver detects the CLI capability and temporarily strips claude-tap's redundant settings argument while keeping
+the same forward-proxy and CA environment; affected metadata records this compatibility adjustment.
 
 If you push changes that affect CI capture, verify the `Capture prompts` workflow and the Pages deployment with `gh run list` / `gh run watch`.
 

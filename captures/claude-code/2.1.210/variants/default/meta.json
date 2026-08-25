@@ -3,14 +3,24 @@
   "agent": "Claude Code",
   "package": "@anthropic-ai/claude-code",
   "version": "2.1.210",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "claude-opus-4-8",
+    "tool_count": 25
+  },
   "published_at": "2026-07-14T19:39:21.730Z",
-  "tarball_url": "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.210.tgz",
+  "tarball_url": null,
   "binary_version": "2.1.210 (Claude Code)",
-  "captured_at": "2026-07-15T00:54:19.166018+00:00",
+  "captured_at": "2026-08-25T06:21:59.480796+00:00",
   "tap_client": "claude",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 23.474,
+  "duration_seconds": 2.952,
   "command": [
     "python",
     "-m",
@@ -30,14 +40,8 @@
     "-p",
     "Reply with one short sentence."
   ],
-  "variant": {
-    "id": "default",
-    "label": "Default",
-    "dimensions": {}
-  },
-  "requested": {},
-  "observed": {
-    "model": "claude-opus-4-8",
-    "tool_count": 27
+  "capture_environment": {
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
   }
 }

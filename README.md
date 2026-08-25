@@ -2,13 +2,13 @@
 
 [中文](README_zh.md)
 
-Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
+Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.
 
 Open the web viewer to compare prompt snapshots across versions and see how agent design changes through prompts, tools, policies, and runtime instructions.
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases hourly. Archive last updated: **2026-08-25 07:27 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-08-25 12:37 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -23,9 +23,13 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 For each supported release, Phistory installs the exact CLI package and runs each configured snapshot through [`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP request without calling the real model provider, and stores the result under `captures/<agent>/<version>/variants/<variant>/` with `prompt.md`, `trace.jsonl`, and `meta.json`. Capture configurations use a `default` snapshot as their baseline; selected models or modes are stored as additional variants.
 
-For recent Claude Code releases, Phistory also extracts static prompt-like strings from the installed package and stores them under `captures/<agent>/<version>/static/`. The candidate archive keeps the raw extraction input so matching rules can be improved later without reinstalling every historical package.
+Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional `official` snapshot pins `claude-sonnet-5` and uses transparent forward-proxy capture so `ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead of calling the model provider. Historical entries in this lane run each old CLI against the same explicit Sonnet 5 model; they do not reconstruct the model that was the official default when that CLI was released.
 
-GitHub Actions checks automatically tracked CLI releases every hour and commits new snapshots when they appear.
+Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` so remote feature assignments are not fetched, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off` so the internal rolling task-budget reminder does not enter archived prompts. These snapshots use a deterministic, documented baseline rather than the rollout state at capture time; the baseline is recorded in `meta.json`.
+
+Phistory also extracts static prompt-like strings from recent Claude Code packages and prompt material from exact official executables for retired Qoder releases, storing them under `captures/<agent>/<version>/static/`. The candidate archive keeps the raw extraction input so matching rules can be improved later without reinstalling every historical package.
+
+GitHub Actions checks automatically tracked CLI releases every day and commits new snapshots when they appear.
 
 ## Local Development
 
@@ -36,16 +40,22 @@ Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are
 uv sync --all-groups
 
 # Capture the latest release and every configured snapshot for each CLI.
-uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
 
 # Capture only selected Codex snapshots.
 uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6
+
+# Capture Claude Code's non-official default and official Sonnet 5 snapshots.
+uv run phistory capture --latest --agents claude-code --variants default,official
 
 # Capture a historical version range for one agent.
 uv run phistory backfill claude-code --from 2.1.113 --to latest
 
 # Rebuild static prompt files for the latest 10 captured Claude Code versions.
 uv run phistory extract-static claude-code --latest-captured 10
+
+# Archive prompt material from exact official executables for retired Qoder releases.
+uv run phistory archive-static qoder --from 0.0.16 --to 0.2.7
 
 # Regenerate README.md, README_zh.md, docs/captures.md, and captures/index.json.
 uv run phistory render-index
@@ -58,6 +68,8 @@ uv run phistory render-site
 
 - Claude Code (`@anthropic-ai/claude-code`)
 - Codex CLI (`@openai/codex`)
+- Qwen Code (`@qwen-code/qwen-code`)
+- Qoder CLI (`@qoder-ai/qodercli`)
 - DeepSeek Harness (`@deepseek-ai/dsh`)
 - Antigravity CLI (`google-antigravity/antigravity-cli`)
 - Grok Build (`@xai-official/grok`)
@@ -73,22 +85,24 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-25 07:27 UTC
+Last capture update: 2026-08-25 12:37 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.245 - 2026-08-25](captures/claude-code/2.1.245/variants/default/prompt.md) | 397 | 397 | 2026-08-25 06:00 UTC |
+| Claude Code | [2.1.245 - 2026-08-25](captures/claude-code/2.1.245/variants/default/prompt.md) | 403 | 806 | 2026-08-25 07:51 UTC |
 | Codex CLI | [0.149.1 - 2026-08-24](captures/codex/0.149.1/variants/default/prompt.md) | 77 | 89 | 2026-08-24 02:08 UTC |
 | DeepSeek Harness | [0.1.1-rc.2 - 2026-08-21](captures/dsh/0.1.1-rc.2/variants/default/prompt.md) | 8 | 39 | 2026-08-21 13:43 UTC |
 | Antigravity CLI | [1.1.20 - 2026-08-25](captures/antigravity/1.1.20/variants/default/prompt.md) | 34 | 34 | 2026-08-25 03:27 UTC |
 | Grok Build | [1.0.5 - 2026-08-16](captures/grok/1.0.5/variants/default/prompt.md) | 130 | 130 | 2026-08-18 02:00 UTC |
 | MiniMax Code | [3.0.67 - 2026-08-21](captures/minimax-code/3.0.67/variants/default/prompt.md) | 31 | 31 | 2026-08-21 09:31 UTC |
 | Kimi Code | [0.38.0 - 2026-08-20](captures/kimi-code/0.38.0/variants/default/prompt.md) | 66 | 66 | 2026-08-20 13:28 UTC |
+| Qwen Code | [0.22.0 - 2026-08-22](captures/qwen-code/0.22.0/variants/default/prompt.md) | 120 | 120 | 2026-08-25 09:03 UTC |
+| Qoder CLI | [1.1.29 - 2026-08-24](captures/qoder/1.1.29/variants/default/prompt.md) | 146 | 146 | 2026-08-24 17:27 UTC |
 | MiMo Code | [0.1.13 - 2026-08-19](captures/mimo/0.1.13/variants/default/prompt.md) | 13 | 13 | 2026-08-19 11:53 UTC |
 | OpenClaw | [2026.7.1-2 - 2026-07-18](captures/openclaw/2026.7.1-2/variants/default/prompt.md) | 69 | 69 | 2026-07-18 04:30 UTC |
 | Hermes Agent | [v2026.8.19 - 2026-08-21](captures/hermes/v2026.8.19/variants/default/prompt.md) | 27 | 27 | 2026-08-21 13:44 UTC |
 | Kimi CLI | [1.49.0 - 2026-07-16](captures/kimi/1.49.0/variants/default/prompt.md) | 21 | 21 | 2026-07-16 11:21 UTC |
-| opencode | [1.18.23 - 2026-08-25](captures/opencode/1.18.23/variants/default/prompt.md) | 108 | 108 | 2026-08-25 07:27 UTC |
+| opencode | [1.18.23 - 2026-08-25](captures/opencode/1.18.23/variants/default/prompt.md) | 108 | 108 | 2026-08-25 12:07 UTC |
 | Pi | [0.84.3 - 2026-08-24](captures/pi/0.84.3/variants/default/prompt.md) | 42 | 42 | 2026-08-24 11:57 UTC |
 | Oh My Pi | [18.0.4 - 2026-08-24](captures/omp/18.0.4/variants/default/prompt.md) | 69 | 69 | 2026-08-24 04:23 UTC |
 

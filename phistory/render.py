@@ -13,7 +13,8 @@ _VERSION_PART_RE = re.compile(r"\d+|[A-Za-z]+")
 
 PROJECT_DESCRIPTION = (
     "Phistory automatically archives versioned system prompt snapshots from agent CLIs "
-    "like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi."
+    "like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, "
+    "Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi."
 )
 CAPTURE_DOC = Path("docs/captures.md")
 CAPTURE_JSON = Path("captures/index.json")
@@ -55,6 +56,7 @@ def read_capture_rows(root: Path) -> list[dict[str, Any]]:
                 "variant_label": variant_meta.get("label") or variant_dir.name,
                 "variant_dimensions": variant_meta.get("dimensions") or {},
                 "observed": meta.get("observed") or {},
+                "capture_status": meta.get("capture_status") or "captured",
                 "published_at": meta.get("published_at") or "",
                 "captured_at": meta.get("captured_at") or "",
                 "prompt": prompt,
@@ -77,7 +79,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "[中文](README_zh.md)",
         "",
-        "Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
+        "Phistory tracks how system prompts change across popular coding-agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
         "",
         (
             "Open the web viewer to compare prompt snapshots across versions and see how agent design "
@@ -91,7 +93,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         lines.extend(
             [
                 (
-                    f"> Checks for new releases hourly. Archive last updated: **{_human_time(latest_capture['captured_at'])}**."
+                    f"> Checks for new releases daily. Archive last updated: **{_human_time(latest_capture['captured_at'])}**."
                 ),
                 "",
             ]
@@ -118,13 +120,30 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             ),
             "",
             (
-                "For recent Claude Code releases, Phistory also extracts static prompt-like strings from the "
-                "installed package and stores them under `captures/<agent>/<version>/static/`. "
+                "Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional "
+                "`official` snapshot pins `claude-sonnet-5` and uses transparent forward-proxy capture so "
+                "`ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead "
+                "of calling the model provider. Historical entries in this lane run each old CLI against the "
+                "same explicit Sonnet 5 model; they do not reconstruct the model that was the official default "
+                "when that CLI was released."
+            ),
+            "",
+            (
+                "Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` "
+                "so remote feature assignments are not fetched, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off` so "
+                "the internal rolling task-budget reminder does not enter archived prompts. These snapshots use a "
+                "deterministic, documented baseline rather than the rollout state at capture time; the baseline is "
+                "recorded in `meta.json`."
+            ),
+            "",
+            (
+                "Phistory also extracts static prompt-like strings from recent Claude Code packages and prompt material "
+                "from exact official executables for retired Qoder releases, storing them under `captures/<agent>/<version>/static/`. "
                 "The candidate archive keeps the raw extraction input so matching "
                 "rules can be improved later without reinstalling every historical package."
             ),
             "",
-            "GitHub Actions checks automatically tracked CLI releases every hour and commits new snapshots when they appear.",
+            "GitHub Actions checks automatically tracked CLI releases every day and commits new snapshots when they appear.",
             "",
             "## Local Development",
             "",
@@ -135,16 +154,22 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "uv sync --all-groups",
             "",
             "# Capture the latest release and every configured snapshot for each CLI.",
-            "uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
+            "uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
             "",
             "# Capture only selected Codex snapshots.",
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6",
+            "",
+            "# Capture Claude Code's non-official default and official Sonnet 5 snapshots.",
+            "uv run phistory capture --latest --agents claude-code --variants default,official",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
             "",
             "# Rebuild static prompt files for the latest 10 captured Claude Code versions.",
             "uv run phistory extract-static claude-code --latest-captured 10",
+            "",
+            "# Archive prompt material from exact official executables for retired Qoder releases.",
+            "uv run phistory archive-static qoder --from 0.0.16 --to 0.2.7",
             "",
             "# Regenerate README.md, README_zh.md, docs/captures.md, and captures/index.json.",
             "uv run phistory render-index",
@@ -157,6 +182,8 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             "- Claude Code (`@anthropic-ai/claude-code`)",
             "- Codex CLI (`@openai/codex`)",
+            "- Qwen Code (`@qwen-code/qwen-code`)",
+            "- Qoder CLI (`@qoder-ai/qodercli`)",
             "- DeepSeek Harness (`@deepseek-ai/dsh`)",
             "- Antigravity CLI (`google-antigravity/antigravity-cli`)",
             "- Grok Build (`@xai-official/grok`)",
@@ -211,7 +238,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "[English](README.md)",
         "",
-        "Phistory 追踪 Claude Code、Codex、DeepSeek Harness、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。",
+        "Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness、Antigravity、Grok Build、MiniMax Code、Kimi Code、MiMo Code、OpenClaw、Hermes、Kimi CLI、opencode、Pi、Oh My Pi 等热门 coding-agent CLI 的系统提示词如何随版本变化。",
         "",
         (
             "打开网页查看器，可以对比不同版本的提示词快照，从 prompts、tools、策略和运行时指令里观察 "
@@ -224,7 +251,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
     if latest_capture:
         lines.extend(
             [
-                (f"> 每小时自动检查新版本，归档最近更新于 **{_human_time(latest_capture['captured_at'])}**。"),
+                (f"> 每天自动检查新版本，归档最近更新于 **{_human_time(latest_capture['captured_at'])}**。"),
                 "",
             ]
         )
@@ -250,12 +277,25 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             ),
             "",
             (
-                "对于最近的 Claude Code 版本，Phistory 还会从安装包里提取疑似静态 prompt 的字符串，"
-                "保存在 `captures/<agent>/<version>/static/`。候选文件会保留原始内容，"
+                "Claude Code 的 `default` 快照保留非官方／自定义 API 路径；额外的 `official` 快照固定使用 "
+                "`claude-sonnet-5`，并通过透明正向代理抓取，使 `ANTHROPIC_BASE_URL` 保持未设置。"
+                "capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。该通道的历史条目会让每个旧版 "
+                "CLI 显式使用同一个 Sonnet 5 模型，并不还原该版本发布时的官方默认模型。"
+            ),
+            "",
+            (
+                "Claude Code 抓取会固定设置 `DISABLE_GROWTHBOOK=1` 和 `DISABLE_TELEMETRY=1`，避免拉取远程灰度配置。"
+                "同时设置 `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`，避免内部滚动任务预算提醒进入归档提示词。"
+                "因此快照采用明确记录的确定性基线，而不是抓取当天的灰度状态；该基线会记录在 `meta.json` 中。"
+            ),
+            "",
+            (
+                "Phistory 还会从近期 Claude Code 安装包里提取疑似静态 prompt 的字符串，并从退役 Qoder 版本的"
+                "精确官方可执行文件中提取 prompt 内容，保存在 `captures/<agent>/<version>/static/`。候选文件会保留原始内容，"
                 "方便以后改进匹配规则时不用重新安装所有历史包。"
             ),
             "",
-            "GitHub Actions 每小时检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。",
+            "GitHub Actions 每天检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。",
             "",
             "## 本地开发",
             "",
@@ -266,16 +306,22 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "uv sync --all-groups",
             "",
             "# 抓取每个 CLI 的最新版本及其全部已配置快照。",
-            "uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
+            "uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp",
             "",
             "# 只抓取 Codex 的指定快照。",
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.5,gpt-5.6",
+            "",
+            "# 抓取 Claude Code 的非官方默认快照和官方 Sonnet 5 快照。",
+            "uv run phistory capture --latest --agents claude-code --variants default,official",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
             "",
             "# 重建最近 10 个已捕获 Claude Code 版本的静态 prompt 文件。",
             "uv run phistory extract-static claude-code --latest-captured 10",
+            "",
+            "# 从退役 Qoder 版本的精确官方可执行文件中归档 prompt 内容。",
+            "uv run phistory archive-static qoder --from 0.0.16 --to 0.2.7",
             "",
             "# 重新生成 README.md、README_zh.md、docs/captures.md 和 captures/index.json。",
             "uv run phistory render-index",
@@ -288,6 +334,8 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "",
             "- Claude Code (`@anthropic-ai/claude-code`)",
             "- Codex CLI (`@openai/codex`)",
+            "- Qwen Code (`@qwen-code/qwen-code`)",
+            "- Qoder CLI (`@qoder-ai/qodercli`)",
             "- DeepSeek Harness (`@deepseek-ai/dsh`)",
             "- Antigravity CLI (`google-antigravity/antigravity-cli`)",
             "- Grok Build (`@xai-official/grok`)",
@@ -340,7 +388,9 @@ def _write_capture_doc(rows: list[dict[str, Any]], base: Path) -> None:
         "# Capture Index",
         "",
         (
-            "Full generated index of archived prompt snapshots. "
+            "Full generated index of archived prompt snapshots. `static-only` rows contain prompt material extracted "
+            "from the exact published executable because the retired client can no longer produce a live request; "
+            "metadata distinguishes exact templates from prompt-candidate archives. "
             "The short project overview lives in [README.md](../README.md)."
         ),
         "",
@@ -349,9 +399,9 @@ def _write_capture_doc(rows: list[dict[str, Any]], base: Path) -> None:
         lines.extend(["No captures yet.", ""])
     else:
         lines.append(
-            "| Agent | Version | Variant | Published | Captured | Snapshot | Static | Candidates | Raw Trace |"
+            "| Agent | Version | Variant | Status | Published | Captured | Snapshot | Static | Candidates | Raw Trace |"
         )
-        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
         for row in _sorted_capture_rows(rows):
             prompt = _rel(row["prompt"], output.parent)
             trace = _rel(row["trace"], output.parent)
@@ -361,7 +411,8 @@ def _write_capture_doc(rows: list[dict[str, Any]], base: Path) -> None:
             captured = _human_time(row["captured_at"])
             prompt_label = _snapshot_label(row["agent_id"], row["version"], row["variant_id"], published)
             lines.append(
-                f"| {row['agent']} | `{row['version']}` | `{row['variant_id']}` | {published} | {captured} | "
+                f"| {row['agent']} | `{row['version']}` | `{row['variant_id']}` | `{row['capture_status']}` | "
+                f"{published} | {captured} | "
                 f"[{prompt_label}]({prompt}) | {static} | {candidates} | [trace.jsonl]({trace}) |"
             )
         lines.append("")
@@ -401,6 +452,7 @@ def _capture_json_row(row: dict[str, Any], base: Path) -> dict[str, Any]:
         "variant_label": row["variant_label"],
         "variant_dimensions": row["variant_dimensions"],
         "observed": row["observed"],
+        "capture_status": row["capture_status"],
         "published_at": row["published_at"],
         "captured_at": row["captured_at"],
         "prompt": _rel(row["prompt"], base),

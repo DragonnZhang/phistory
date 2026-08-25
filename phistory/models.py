@@ -21,6 +21,7 @@ HomeProfile = Literal[
     "openclaw",
     "opencode",
     "pi",
+    "qwen",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -34,6 +35,7 @@ class CaptureVariant:
     dimensions: dict[str, str] = field(default_factory=dict)
     driver: CaptureDriver = "oneshot"
     extra_env: dict[str, str] = field(default_factory=dict)
+    tap_mode: TapMode | None = None
 
 
 @dataclass(frozen=True)
@@ -55,6 +57,8 @@ class AgentSpec:
     home_profile: HomeProfile = "none"
     tap_mode: TapMode = "auto"
     extra_env: dict[str, str] = field(default_factory=dict)
+    recorded_env: tuple[str, ...] = ()
+    inherited_env: dict[str, str] = field(default_factory=dict)
     fake_chatgpt_auth: bool = False
     release_asset: str | None = None
     release_asset_binary: str | None = None
@@ -71,6 +75,10 @@ class AgentSpec:
         for variant_id in ids:
             if _VARIANT_ID_RE.fullmatch(variant_id) is None:
                 raise ValueError(f"{self.id}: invalid capture variant id {variant_id!r}")
+        unknown_recorded_env = sorted(set(self.recorded_env) - set(self.extra_env))
+        if unknown_recorded_env:
+            names = ", ".join(unknown_recorded_env)
+            raise ValueError(f"{self.id}: recorded environment variables must be defined in extra_env: {names}")
 
     @property
     def capture_variants(self) -> tuple[CaptureVariant, ...]:

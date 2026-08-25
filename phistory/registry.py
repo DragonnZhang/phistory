@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-from phistory.models import AgentSpec, CaptureDriver, CaptureVariant
+from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, TapMode
 
 
 def _default(
     run_args: tuple[str, ...] = (),
     *,
+    label: str = "Default",
     driver: CaptureDriver = "oneshot",
     dimensions: dict[str, str] | None = None,
+    tap_mode: TapMode | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id="default",
-        label="Default",
+        label=label,
         run_args=run_args,
         driver=driver,
         dimensions=dimensions or {},
+        tap_mode=tap_mode,
     )
 
 
@@ -25,6 +28,7 @@ def _variant(
     *,
     driver: CaptureDriver = "oneshot",
     dimensions: dict[str, str] | None = None,
+    tap_mode: TapMode | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id=variant_id,
@@ -32,6 +36,7 @@ def _variant(
         run_args=run_args,
         driver=driver,
         dimensions=dimensions or {},
+        tap_mode=tap_mode,
     )
 
 
@@ -42,10 +47,18 @@ CLAUDE_CODE = AgentSpec(
     tap_client="claude",
     fake_env={"ANTHROPIC_API_KEY": "fake"},
     extra_env={
+        "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
         "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_GROWTHBOOK": "1",
+        "DISABLE_TELEMETRY": "1",
         "DISABLE_UPDATES": "1",
         "CI": "1",
     },
+    recorded_env=(
+        "CLAUDE_CODE_TOTAL_TOKENS_REMINDER",
+        "DISABLE_GROWTHBOOK",
+        "DISABLE_TELEMETRY",
+    ),
     default_variant=_default(
         (
             "--no-yolo",
@@ -53,7 +66,26 @@ CLAUDE_CODE = AgentSpec(
             "--no-session-persistence",
             "-p",
             "Reply with one short sentence.",
-        )
+        ),
+        label="Non-official API",
+        dimensions={"api": "non-official"},
+    ),
+    variants=(
+        _variant(
+            "official",
+            "Official API · Sonnet 5",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-sonnet-5",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-sonnet-5"},
+            tap_mode="forward",
+        ),
     ),
 )
 
@@ -273,6 +305,63 @@ KIMI_CODE = AgentSpec(
             "Reply with one short sentence.",
             "--output-format",
             "text",
+        )
+    ),
+)
+
+QWEN_CODE = AgentSpec(
+    id="qwen-code",
+    display_name="Qwen Code",
+    package="@qwen-code/qwen-code",
+    tap_client="qwen",
+    node_runtime="node@22",
+    home_profile="qwen",
+    fake_env={
+        "OPENAI_API_KEY": "phistory-fake-api-key",
+        "OPENAI_BASE_URL": "https://api.openai.com/v1",
+        "OPENAI_MODEL": "qwen3.8-max",
+    },
+    extra_env={
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1",
+        "QWEN_CODE_SKIP_UPDATE_CHECK_ONCE": "true",
+        "CI": "1",
+    },
+    tap_mode="reverse",
+    default_variant=_default(
+        (
+            "--yolo",
+            "--prompt",
+            "Reply with one short sentence.",
+            "--output-format",
+            "text",
+        )
+    ),
+)
+
+QODER = AgentSpec(
+    id="qoder",
+    display_name="Qoder CLI",
+    package="@qoder-ai/qodercli",
+    tap_client="qoder",
+    fake_env={},
+    inherited_env={
+        "QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+        "QODER_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+    },
+    extra_env={
+        "DISABLE_AUTOUPDATER": "1",
+        "DISABLE_UPDATES": "1",
+        "CI": "1",
+    },
+    tap_mode="forward",
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--print",
+            "--no-session-persistence",
+            "Reply with one short sentence.",
         )
     ),
 )
@@ -508,6 +597,8 @@ AGENTS: dict[str, AgentSpec] = {
         GROK,
         MINIMAX_CODE,
         KIMI_CODE,
+        QWEN_CODE,
+        QODER,
         MIMO,
         OPENCLAW,
         HERMES,

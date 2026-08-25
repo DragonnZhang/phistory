@@ -16,11 +16,11 @@
   "published_at": "2026-08-25T06:33:58.860Z",
   "tarball_url": "https://registry.npmjs.org/opencode-ai/-/opencode-ai-1.18.23.tgz",
   "binary_version": "1.18.23",
-  "captured_at": "2026-08-25T07:27:16.813517+00:00",
+  "captured_at": "2026-08-25T12:07:01.858060+00:00",
   "tap_client": "opencode",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 9.914,
+  "duration_seconds": 10.583,
   "command": [
     "python",
     "-m",

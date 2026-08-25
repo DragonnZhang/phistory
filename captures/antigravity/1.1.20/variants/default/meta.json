@@ -15,11 +15,11 @@
   "published_at": "2026-08-25T02:58:27Z",
   "tarball_url": "https://github.com/google-antigravity/antigravity-cli/releases/download/1.1.20/agy_cli_linux_x64.tar.gz",
   "binary_version": "1.1.20",
-  "captured_at": "2026-08-25T03:27:37.435591+00:00",
+  "captured_at": "2026-08-25T03:27:44.633673+00:00",
   "tap_client": "agy",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 3.259,
+  "duration_seconds": 3.302,
   "command": [
     "python",
     "-m",

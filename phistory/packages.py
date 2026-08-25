@@ -17,6 +17,16 @@ from phistory.subprocesses import run
 
 _PLATFORM_VERSION_RE = re.compile(r"-(darwin|linux|win32)-(x64|arm64)$")
 _PYPI_PRERELEASE_RE = re.compile(r"(?:a|b|rc|dev)\d*$", re.IGNORECASE)
+_QODER_1_0_15_CYCLE_SIGNATURE = (
+    "var Po,yWA,NWA,vYe,HYe=p(async()=>{await he(),Ye(),await yV(),NA(),await PV(),await TWA(),await xWA(),await NYe()"
+)
+_QODER_1_0_15_PATCHED_SIGNATURE = (
+    "var Po,yWA,NWA,vYe,HYe=p(async()=>{await he(),Ye(),await yV(),NA(),await PV(),await TWA(),await NYe()"
+)
+_QODER_1_0_15_PATCH_NOTE = (
+    "After installing the exact official @qoder-ai/qodercli@1.0.15 package, removed the redundant HYe-to-xWA "
+    "initializer await that deadlocks with xWA-to-HYe; all other published bundle code is unchanged."
+)
 INSTALL_TIMEOUT_SECONDS = 1800
 
 
@@ -92,11 +102,20 @@ def agent_executable(agent: AgentSpec) -> str:
     return agent.executable or agent.tap_client
 
 
+def compatibility_patches(agent: AgentSpec, version: str) -> tuple[str, ...]:
+    if agent.id == "qoder" and agent.package == "@qoder-ai/qodercli" and version == "1.0.15":
+        return (_QODER_1_0_15_PATCH_NOTE,)
+    return ()
+
+
 def npm_view(package: str, *fields: str) -> object:
     args = ["npm", "view", package, *fields, "--json"]
     result = run(args, timeout=120)
     text = result.stdout.strip()
-    return json.loads(text) if text else None
+    data = json.loads(text) if text else None
+    if isinstance(data, list) and len(data) == 1 and isinstance(data[0], dict):
+        return data[0]
+    return data
 
 
 def _npm_latest(agent: AgentSpec) -> VersionInfo:
@@ -128,12 +147,30 @@ def _install_npm(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     install_dir.mkdir(parents=True, exist_ok=True)
     package_ref = f"{agent.package}@{version}"
     run([*agent.install_command, "--prefix", str(install_dir), package_ref], timeout=INSTALL_TIMEOUT_SECONDS)
+    _apply_npm_compatibility_patches(agent, version, install_dir)
     bin_dir = install_dir / "node_modules" / ".bin"
     if not bin_dir.exists():
         raise RuntimeError(f"npm install did not create bin dir: {bin_dir}")
     if agent.node_runtime:
         _wrap_runtime_bin(bin_dir / agent_executable(agent), agent.node_runtime, "NODE")
     return bin_dir
+
+
+def _apply_npm_compatibility_patches(agent: AgentSpec, version: str, install_dir: Path) -> None:
+    if not compatibility_patches(agent, version):
+        return
+    bundle = install_dir / "node_modules" / "@qoder-ai" / "qodercli" / "bundle" / "qodercli.js"
+    if not bundle.is_file():
+        raise RuntimeError(f"Qoder CLI 1.0.15 compatibility patch target is missing: {bundle}")
+    source = bundle.read_text(encoding="utf-8")
+    if _QODER_1_0_15_PATCHED_SIGNATURE in source and _QODER_1_0_15_CYCLE_SIGNATURE not in source:
+        return
+    if source.count(_QODER_1_0_15_CYCLE_SIGNATURE) != 1:
+        raise RuntimeError("Qoder CLI 1.0.15 compatibility patch signature mismatch")
+    bundle.write_text(
+        source.replace(_QODER_1_0_15_CYCLE_SIGNATURE, _QODER_1_0_15_PATCHED_SIGNATURE),
+        encoding="utf-8",
+    )
 
 
 def _install_binary_release(agent: AgentSpec, version: str, install_dir: Path) -> Path:

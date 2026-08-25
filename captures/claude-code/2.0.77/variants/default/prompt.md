@@ -134,8 +134,8 @@ Here is useful information about the environment you are running in:
 Working directory: $PHISTORY_WORKSPACE
 Is directory a git repo: No
 Platform: linux
-OS Version: Linux 5.15.120.bsk.3-amd64
-Today's date: 2026-05-21
+OS Version: $PHISTORY_OS_VERSION
+Today's date: $PHISTORY_DATE
 </env>
 You are powered by the model named Sonnet 4.5. The exact model ID is claude-sonnet-4-5-20250929.
 
@@ -272,7 +272,7 @@ Usage notes:
   - It is very helpful if you write a clear, concise description of what this command does in 5-10 words.
   - If the output exceeds 30000 characters, output will be truncated before being returned to you.
   - You can use the `run_in_background` parameter to run the command in the background. Only use this if you don't need the result immediately and are OK being notified when the command completes later. You do not need to check the output right away - you'll be notified when it finishes. You do not need to use '&' at the end of the command when using this parameter.
-  
+
   - Avoid using Bash with the `find`, `grep`, `cat`, `head`, `tail`, `sed`, `awk`, or `echo` commands, unless explicitly instructed or when these commands are truly necessary for the task. Instead, always prefer using the dedicated tools for these commands:
     - File search: Use Glob (NOT find or ls)
     - Content search: Use Grep (NOT grep or rg)
@@ -413,14 +413,14 @@ Important:
 
 ## Edit
 
-Performs exact string replacements in files. 
+Performs exact string replacements in files.
 
 Usage:
-- You must use your `Read` tool at least once in the conversation before editing. This tool will error if you attempt an edit without reading the file. 
+- You must use your `Read` tool at least once in the conversation before editing. This tool will error if you attempt an edit without reading the file.
 - When editing text from Read tool output, ensure you preserve the exact indentation (tabs/spaces) as it appears AFTER the line number prefix. The line number prefix format is: spaces + line number + tab. Everything after that tab is the actual file content to match. Never include any part of the line number prefix in the old_string or new_string.
 - ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
-- The edit will FAIL if `old_string` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use `replace_all` to change every instance of `old_string`. 
+- The edit will FAIL if `old_string` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use `replace_all` to change every instance of `old_string`.
 - Use `replace_all` for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable for instance.
 
 ```json
@@ -705,7 +705,7 @@ A powerful search tool built on ripgrep
 
 - Kills a running background bash shell by its ID
 - Takes a shell_id parameter identifying the shell to kill
-- Returns a success or failure status 
+- Returns a success or failure status
 - Use this tool when you need to terminate a long-running shell
 - Shell IDs can be found using the /tasks command
 
@@ -940,7 +940,7 @@ Available skills:
 
 ## Task
 
-Launch a new agent to handle complex, multi-step tasks autonomously. 
+Launch a new agent to handle complex, multi-step tasks autonomously.
 
 The Task tool launches specialized agents (subprocesses) that autonomously handle complex tasks. Each agent type has specific capabilities and tools available to it.
 

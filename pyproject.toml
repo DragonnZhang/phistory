@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "WEIFENG2333" }]
 dependencies = [
-    "claude-tap @ git+https://github.com/WEIFENG2333/claude-tap.git@main",
+    "claude-tap @ git+https://github.com/DragonnZhang/claude-tap.git@64872f527b862906b5944e74b4d155e6cbb4bd44",
     "tree-sitter>=0.25.2",
     "tree-sitter-javascript>=0.25.0",
 ]

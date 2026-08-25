@@ -5,6 +5,8 @@ import json
 import os
 import re
 import time
+from collections.abc import Iterable, Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
 
@@ -19,9 +21,16 @@ from phistory.subprocesses import run
 _VOLATILE_TEXT_PATTERNS = (
     (re.compile(r"\bcch=[^;\s]+"), "cch=<normalized>"),
     (re.compile(r"(?m)^ - OS Version: .+$"), " - OS Version: $PHISTORY_OS_VERSION"),
+    (re.compile(r"(?m)^OS Version: .+$"), "OS Version: $PHISTORY_OS_VERSION"),
     (re.compile(r" - OS Version: [^\\\n]*(?=\\n)"), " - OS Version: $PHISTORY_OS_VERSION"),
-    (re.compile(r"Today's date is \d{4}[-/]\d{2}[-/]\d{2}\."), "Today's date is $PHISTORY_DATE."),
-    (re.compile(r"Today's date: \d{4}[-/]\d{2}[-/]\d{2}"), "Today's date: $PHISTORY_DATE"),
+    (
+        re.compile(r"Today's date is (?:\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}/\d{1,2}/\d{4})\."),
+        "Today's date is $PHISTORY_DATE.",
+    ),
+    (
+        re.compile(r"Today's date: (?:\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}/\d{1,2}/\d{4})"),
+        "Today's date: $PHISTORY_DATE",
+    ),
     (re.compile(r"http://(?:127\.0\.0\.1|localhost):\d+"), "http://127.0.0.1:$PHISTORY_PORT"),
     (
         re.compile(r"The current date and time in ISO format is `[^`]+`\."),
@@ -59,6 +68,21 @@ _VOLATILE_TEXT_PATTERNS = (
     ),
     (re.compile(r"Bearer phistory-[A-Za-z0-9_-]+"), "Bearer <redacted>"),
 )
+_SENSITIVE_TRACE_HEADERS = frozenset(
+    {
+        "api-key",
+        "authorization",
+        "cosy-key",
+        "cosy-machinehostname",
+        "cosy-machineid",
+        "cosy-machinetoken",
+        "cosy-user",
+        "proxy-authorization",
+        "x-api-key",
+        "x-goog-api-key",
+        "x-model-key",
+    }
+)
 
 
 def capture_target(
@@ -67,6 +91,7 @@ def capture_target(
     cache_dir: Path,
     force: bool = False,
     keep_tap: bool = False,
+    extract_static: bool = True,
 ) -> CaptureResult:
     if is_captured(target) and not force:
         return CaptureResult(
@@ -92,15 +117,18 @@ def capture_target(
     variant_dir = working_target.variant_dir.resolve()
     prompt_path = working_target.prompt_path.resolve()
     tap_output_dir = (variant_dir / ".tap").resolve()
+    inherited_env: dict[str, str] = {}
 
     try:
-        bin_dir = packages.install_agent(target.agent, target.version.version, install_dir)
-        binary_version = _binary_version(target, bin_dir)
+        inherited_env = _resolve_inherited_env(target.agent.id, target.agent.inherited_env)
+        with _without_parent_env(target.agent.inherited_env.values()):
+            bin_dir = packages.install_agent(target.agent, target.version.version, install_dir)
+            binary_version = _binary_version(target, bin_dir, inherited_env=inherited_env)
         with (
             TemporaryDirectory(prefix="phistory-home-", ignore_cleanup_errors=True) as home_dir,
             TemporaryDirectory(prefix="phistory-work-", ignore_cleanup_errors=True) as work_dir,
         ):
-            env = _capture_env(working_target, bin_dir, Path(home_dir))
+            env = _capture_env(working_target, bin_dir, Path(home_dir), inherited_env=inherited_env)
             env["PWD"] = str(Path(work_dir))
             execution = run_capture(
                 CaptureRunContext(
@@ -113,17 +141,26 @@ def capture_target(
             )
             argv = list(execution.command)
             result = execution.result
+            compatibility_patches = (
+                *packages.compatibility_patches(target.agent, target.version.version),
+                *execution.compatibility_patches,
+            )
         if not prompt_path.exists():
             detail = (result.stderr or result.stdout).strip()[-4000:]
             raise RuntimeError(f"capture command failed ({result.returncode})\n{detail}")
 
         if not working_target.trace_path.exists():
             trace = latest_trace(tap_output_dir)
+            if inherited_env:
+                _sanitize_trace(trace, inherited_env.values())
             copy_trace(trace, working_target)
+        if inherited_env:
+            _sanitize_trace(working_target.trace_path, inherited_env.values())
         replacements = {
             str(install_dir): "$PHISTORY_INSTALL",
             str(home_dir): "$PHISTORY_HOME",
             str(work_dir): "$PHISTORY_WORKSPACE",
+            **{secret: "<redacted>" for secret in inherited_env.values()},
         }
         _sanitize_file(prompt_path, replacements)
         write_meta(
@@ -142,20 +179,26 @@ def capture_target(
                 "observed": _trace_observation(working_target.trace_path),
                 "published_at": target.version.published_at,
                 "tarball_url": target.version.tarball_url,
-                "binary_version": binary_version,
+                "binary_version": _replace_many(binary_version, replacements) if binary_version else None,
                 "captured_at": _iso_now(),
                 "tap_client": target.agent.tap_client,
                 "target": "claude-tap capture-only",
                 "client_exit_code": result.returncode,
                 "duration_seconds": round(time.time() - started, 3),
                 "command": [_replace_many(part, replacements) for part in _portable_command(argv, variant_dir)],
+                **(
+                    {"capture_environment": {key: env[key] for key in target.agent.recorded_env}}
+                    if target.agent.recorded_env
+                    else {}
+                ),
+                **({"compatibility_patches": list(patches)} if (patches := compatibility_patches) else {}),
             },
         )
         if not keep_tap:
             remove_if_exists(tap_output_dir)
         if staging_root is not None:
             _promote_staged_capture(working_target.variant_dir, target.variant_dir, staging_root)
-        if target.variant.id == "default":
+        if extract_static and target.variant.id == "default":
             _extract_static_best_effort(target, install_dir)
         return CaptureResult(
             target.agent.id,
@@ -175,7 +218,8 @@ def capture_target(
                 _remove_empty_capture_parents(working_target)
         elif staging_root is not None:
             exc = RuntimeError(f"{exc}\nfailed capture kept under {staging_root}")
-        return CaptureResult(target.agent.id, target.version.version, target.variant.id, "failed", error=str(exc))
+        error = _redact_secrets(str(exc), tuple(inherited_env.values()))
+        return CaptureResult(target.agent.id, target.version.version, target.variant.id, "failed", error=error)
 
 
 def _remove_empty_capture_parents(target: CaptureTarget) -> None:
@@ -201,7 +245,13 @@ def _promote_staged_capture(staged: Path, destination: Path, staging_root: Path)
     remove_if_exists(staging_root)
 
 
-def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = None) -> dict[str, str]:
+def _capture_env(
+    target: CaptureTarget,
+    bin_dir: Path,
+    home_dir: Path | None = None,
+    *,
+    inherited_env: Mapping[str, str] | None = None,
+) -> dict[str, str]:
     home = home_dir or target.version_dir / ".home"
     for path in (home, home / ".config", home / ".cache", home / ".local" / "share", home / ".codex", home / ".claude"):
         path.mkdir(parents=True, exist_ok=True)
@@ -225,10 +275,18 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
         _write_opencode_config(home)
     if target.agent.home_profile == "pi":
         _write_pi_config(home)
+    if target.agent.home_profile == "qwen":
+        _write_qwen_config(home)
+    inherited = (
+        dict(inherited_env)
+        if inherited_env is not None
+        else _resolve_inherited_env(target.agent.id, target.agent.inherited_env)
+    )
     env = {
         **target.agent.fake_env,
         **target.agent.extra_env,
         **target.variant.extra_env,
+        **inherited,
         "PATH": f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}",
         "HOME": str(home),
         "XDG_CONFIG_HOME": str(home / ".config"),
@@ -240,6 +298,9 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
         "GITHUB_ACTIONS": "true",
         "TZ": "Etc/UTC",
     }
+    if target.agent.id == "qoder":
+        # Older releases interpret this as a paid workflow mode instead of ordinary headless CLI execution.
+        env.pop("GITHUB_ACTIONS")
     if target.agent.home_profile == "hermes":
         env["HERMES_HOME"] = str(home / ".hermes")
     if target.agent.home_profile == "dsh":
@@ -272,6 +333,8 @@ def _capture_env(target: CaptureTarget, bin_dir: Path, home_dir: Path | None = N
         env["PI_CODING_AGENT_DIR"] = str(home / ".pi" / "agent")
     if target.agent.home_profile == "omp":
         env["PI_CODING_AGENT_DIR"] = str(home / ".omp" / "agent")
+    if target.agent.node_runtime:
+        env["NPM_CONFIG_CACHE"] = str(bin_dir.parents[2] / ".npm-runtime-cache")
     if target.agent.fake_chatgpt_auth:
         env.update({"OPENAI_API_KEY": "", "CODEX_API_KEY": "", "CODEX_ACCESS_TOKEN": ""})
     return env
@@ -497,6 +560,16 @@ def _write_mimo_config(home: Path) -> None:
     (config_dir / "mimocode.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
 
 
+def _write_qwen_config(home: Path) -> None:
+    qwen_home = home / ".qwen"
+    qwen_home.mkdir(parents=True, exist_ok=True)
+    config = {
+        "selectedAuthType": "openai",
+        "security": {"auth": {"selectedType": "openai"}},
+    }
+    (qwen_home / "settings.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
+
+
 def _write_opencode_config(home: Path) -> None:
     config_dir = home / ".config" / "opencode"
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -581,18 +654,32 @@ def _b64url_json(value: dict) -> str:
     return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
 
 
-def _binary_version(target: CaptureTarget, bin_dir: Path) -> str | None:
+def _binary_version(
+    target: CaptureTarget,
+    bin_dir: Path,
+    *,
+    inherited_env: Mapping[str, str] | None = None,
+) -> str | None:
     executable = bin_dir / agent_executable(target.agent)
     if not executable.exists():
         return None
     with TemporaryDirectory(prefix="phistory-version-home-") as home_dir:
         try:
-            env = _capture_env(target, bin_dir, Path(home_dir))
-            result = run([str(executable), "--version"], env=env, timeout=30, check=False)
+            env = _capture_env(target, bin_dir, Path(home_dir), inherited_env=inherited_env)
+            result = run(
+                [str(executable), "--version"],
+                cwd=Path(home_dir),
+                env=env,
+                timeout=30,
+                check=False,
+                inherit_env=False,
+            )
         except Exception:
             return target.version.version
     text = (result.stdout or result.stderr).strip()
-    return text or None
+    if "\n" in text or target.version.version not in text:
+        return target.version.version
+    return text
 
 
 def _portable_command(argv: list[str], version_dir: Path) -> list[str]:
@@ -615,6 +702,64 @@ def _portable_command(argv: list[str], version_dir: Path) -> list[str]:
 def _sanitize_file(path: Path, replacements: dict[str, str]) -> None:
     text = path.read_text(encoding="utf-8")
     path.write_text(_sanitize_text(text, replacements), encoding="utf-8")
+
+
+def _sanitize_trace(path: Path, secret_values: Iterable[str]) -> None:
+    secrets = tuple(dict.fromkeys(value for value in secret_values if value))
+    lines: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            lines.append(_redact_secrets(line, secrets))
+            continue
+        _redact_trace_headers(record)
+        serialized = json.dumps(record, ensure_ascii=False, separators=(",", ":"))
+        lines.append(_redact_secrets(serialized, secrets))
+    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+
+
+def _redact_trace_headers(value: object) -> None:
+    if isinstance(value, list):
+        for item in value:
+            _redact_trace_headers(item)
+        return
+    if not isinstance(value, dict):
+        return
+    for key, item in value.items():
+        if key.lower() == "headers" and isinstance(item, dict):
+            for header in item:
+                if header.lower() in _SENSITIVE_TRACE_HEADERS:
+                    item[header] = "***"
+        _redact_trace_headers(item)
+
+
+def _redact_secrets(text: str, secrets: tuple[str, ...]) -> str:
+    for secret in secrets:
+        text = text.replace(secret, "<redacted>")
+    return text
+
+
+def _resolve_inherited_env(agent_id: str, mapping: Mapping[str, str]) -> dict[str, str]:
+    missing = sorted({source for source in mapping.values() if not os.environ.get(source)})
+    if missing:
+        names = ", ".join(missing)
+        raise RuntimeError(f"{agent_id}: missing required environment variable(s): {names}")
+    return {child: os.environ[source] for child, source in mapping.items()}
+
+
+@contextmanager
+def _without_parent_env(names: Iterable[str]) -> Iterator[None]:
+    unique_names = tuple(dict.fromkeys(names))
+    saved = {name: os.environ[name] for name in unique_names if name in os.environ}
+    for name in unique_names:
+        os.environ.pop(name, None)
+    try:
+        yield
+    finally:
+        for name in unique_names:
+            os.environ.pop(name, None)
+        os.environ.update(saved)
 
 
 def _sanitize_text(text: str, replacements: dict[str, str]) -> str:

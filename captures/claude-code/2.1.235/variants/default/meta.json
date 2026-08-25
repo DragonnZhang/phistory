@@ -11,16 +11,16 @@
   "requested": {},
   "observed": {
     "model": "claude-opus-5",
-    "tool_count": 24
+    "tool_count": 21
   },
   "published_at": "2026-08-18T18:24:10.210Z",
-  "tarball_url": "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.235.tgz",
+  "tarball_url": null,
   "binary_version": "2.1.235 (Claude Code)",
-  "captured_at": "2026-08-18T20:52:58.882263+00:00",
+  "captured_at": "2026-08-25T06:22:09.185936+00:00",
   "tap_client": "claude",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 5.355,
+  "duration_seconds": 3.29,
   "command": [
     "python",
     "-m",
@@ -39,5 +39,9 @@
     "--no-session-persistence",
     "-p",
     "Reply with one short sentence."
-  ]
+  ],
+  "capture_environment": {
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  }
 }

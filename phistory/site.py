@@ -22,6 +22,8 @@ AGENT_ICONS = {
     "openclaw": "docs/agent-icons/openclaw.png",
     "opencode": "docs/agent-icons/opencode.png",
     "pi": "docs/agent-icons/pi.png",
+    "qoder": "docs/agent-icons/qoder.svg",
+    "qwen-code": "docs/agent-icons/qwen-code.svg",
 }
 AGENT_SHORT_NAMES = {"dsh": "DSH"}
 CHANGE_SMALL_MAX_LINES = 12
@@ -55,7 +57,7 @@ def _build_manifest(root: Path) -> dict:
             variants.append(
                 {
                     "id": variant_id,
-                    "label": first["variant_label"],
+                    "label": _variant_label(agent_id, variant_id, first["variant_label"]),
                     "dimensions": first["variant_dimensions"],
                     "latest": versions[0] if versions else None,
                     "versions": versions,
@@ -86,6 +88,14 @@ def _variant_sort_key(agent_id: str, variant_id: str) -> tuple[int, str]:
     return (positions.get(variant_id, len(positions)), variant_id)
 
 
+def _variant_label(agent_id: str, variant_id: str, fallback: str) -> str:
+    agent = AGENTS.get(agent_id)
+    if agent is None:
+        return fallback
+    variant = next((item for item in agent.capture_variants if item.id == variant_id), None)
+    return variant.label if variant is not None else fallback
+
+
 def _site_versions(rows: list[dict]) -> list[dict]:
     versions = []
     for index, row in enumerate(rows):
@@ -106,6 +116,7 @@ def _site_row(row: dict) -> dict:
         "variant_label": row["variant_label"],
         "variant_dimensions": row["variant_dimensions"],
         "observed": row["observed"],
+        "capture_status": row["capture_status"],
         "published_compact": _compact_date(row["published_at"]),
         "published_display": _display_time(row["published_at"]),
         "captured_display": _display_time(row.get("captured_at") or ""),
@@ -140,6 +151,17 @@ def _change_summary(current: dict, previous: dict | None) -> dict:
             "changed_lines": 0,
             "level": 0,
             "line_count": len(new_lines),
+            "_compared_line_count": len(new_lines),
+        }
+    if current.get("capture_status", "captured") != previous.get("capture_status", "captured"):
+        return {
+            "previous_version": previous["version"],
+            "added_lines": 0,
+            "removed_lines": 0,
+            "changed_lines": 0,
+            "level": 0,
+            "line_count": len(new_lines),
+            "comparable": False,
             "_compared_line_count": len(new_lines),
         }
     try:
@@ -238,21 +260,21 @@ _HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Phistory automatically archives versioned system prompt snapshots and diffs from agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
-<meta name="keywords" content="Phistory, system prompt history, system prompt diff, Claude Code prompt, Codex CLI prompt, DeepSeek Harness prompt, DSH prompt, Antigravity CLI prompt, Grok Build prompt, Kimi Code prompt, MiMo Code prompt, OpenClaw prompt, Hermes prompt, Kimi CLI prompt, opencode prompt, Pi prompt, Oh My Pi prompt, agent CLI, prompt archive">
+<meta name="description" content="Phistory automatically archives versioned system prompt snapshots and diffs from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
+<meta name="keywords" content="Phistory, system prompt history, system prompt diff, Claude Code prompt, Codex CLI prompt, Qwen Code prompt, Qoder CLI prompt, DeepSeek Harness prompt, DSH prompt, Antigravity CLI prompt, Grok Build prompt, Kimi Code prompt, MiMo Code prompt, OpenClaw prompt, Hermes prompt, Kimi CLI prompt, opencode prompt, Pi prompt, Oh My Pi prompt, agent CLI, prompt archive">
 <meta name="application-name" content="Phistory">
 <meta name="robots" content="index,follow">
 <meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
 <meta property="og:title" content="Phistory">
-<meta property="og:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
+<meta property="og:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://phistory.cc/">
 <meta property="og:image" content="https://phistory.cc/docs/screenshot.png">
 <meta property="og:site_name" content="Phistory">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Phistory">
-<meta name="twitter:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
+<meta name="twitter:description" content="Automatically archived system prompt snapshots and diffs for agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.">
 <meta name="twitter:image" content="https://phistory.cc/docs/screenshot.png">
 <link rel="canonical" href="https://phistory.cc/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f1115'/%3E%3Cpath d='M8 10h16M8 16h10M8 22h14' stroke='%237cc7ff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -935,6 +957,17 @@ a:hover { text-decoration: none; }
 }
 .prompt-block + .prompt-block {
   margin-top: 22px;
+}
+.prompt-block-origin {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .01em;
+}
+.prompt-block-origin code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: inherit;
 }
 .trace-rendered {
   color: var(--text);
@@ -1929,12 +1962,14 @@ function agentIconHtml(agent) {
 
 function versionLabel(item, variant, latest = false, showVariant = false) {
   const marker = latest ? '<em class="latest-mark">Latest</em>' : '';
-  const secondary = showVariant ? variant.label : item.published_compact;
+  const status = item.capture_status === 'static-only' ? 'Static only' : '';
+  const secondary = [showVariant ? variant.label : item.published_compact, status].filter(Boolean).join(' · ');
   return `<strong>${escapeHtml(item.version)}</strong><span class="version-sub"><small>${escapeHtml(secondary)}</small>${marker}</span>`;
 }
 
 function snapshotLabel(item, variant) {
-  return `${item.version} · ${variant.label} · ${item.published_compact}`;
+  const status = item.capture_status === 'static-only' ? ' · Static only' : '';
+  return `${item.version} · ${variant.label} · ${item.published_compact}${status}`;
 }
 
 function togglePicker(kind, anchor) {
@@ -2018,7 +2053,7 @@ function optionHtml(item) {
   if (isAgent) {
     return `<button class="option agent-option${active ? ' active' : ''}" type="button" role="option" aria-selected="${active}" data-value="${escapeHtml(value)}">${agentIconHtml(item)}<span><strong>${escapeHtml(primary)}</strong><small>${escapeHtml(item.id)}</small></span></button>`;
   }
-  const secondary = item.published_compact;
+  const secondary = [item.published_compact, item.capture_status === 'static-only' ? 'Static only' : ''].filter(Boolean).join(' · ');
   return `<button class="option version-option${active ? ' active' : ''}" type="button" role="option" aria-selected="${active}" data-value="${escapeHtml(value)}"><span class="version-copy"><strong>${escapeHtml(primary)}</strong><small>${escapeHtml(secondary)}</small></span>${miniDiffstatHtml(item.change)}</button>`;
 }
 
@@ -2030,7 +2065,9 @@ function miniDiffstatHtml(change) {
   const addPct = total ? (added / total) * 100 : 50;
   const removePct = total ? (removed / total) * 100 : 50;
   const scale = Math.max(0, Math.min(100, Number(change?.scale || 0)));
-  const title = changed ? `${changed} changed lines from previous version` : 'No prompt change from previous version';
+  const title = change?.comparable === false
+    ? 'Static and live prompt sources are not directly comparable'
+    : (changed ? `${changed} changed lines from previous version` : 'No prompt change from previous version');
   return `<span class="mini-diffstat${changed ? '' : ' no-change'}" style="--fill-width:${scale.toFixed(2)}%;--removed-part:${removePct.toFixed(2)}%;--added-part:${addPct.toFixed(2)}%;" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"><span class="diffstat-fill"><i class="removed"></i><i class="added"></i></span></span>`;
 }
 
@@ -2949,7 +2986,12 @@ function updateTraceModeLabel(section) {
 function blocksSectionHtml(title, blocks, open) {
   if (!blocks.length) return '';
   const section = sectionId(title);
-  const body = blocks.map(block => `<div class="prompt-block"><div class="trace-rendered">${markdownHtml(block.text)}</div><pre class="trace-text trace-raw">${escapeHtml(block.text)}</pre></div>`).join('');
+  const body = blocks.map(block => {
+    const origin = block.title === 'System Message'
+      ? '<div class="prompt-block-origin">In-conversation message · <code>role: system</code></div>'
+      : '';
+    return `<div class="prompt-block">${origin}<div class="trace-rendered">${markdownHtml(block.text)}</div><pre class="trace-text trace-raw">${escapeHtml(block.text)}</pre></div>`;
+  }).join('');
   return `<section class="trace-section${open ? ' is-open' : ''}" data-section="${section}">${traceSummaryHtml(title, open, '', true)}<div class="trace-content"><div class="trace-body">${body}</div></div></section>`;
 }
 

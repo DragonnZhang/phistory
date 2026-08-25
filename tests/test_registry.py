@@ -1,3 +1,8 @@
+from pathlib import Path
+
+from phistory.capture import _capture_env
+from phistory.drivers.common import tap_command
+from phistory.models import CaptureTarget, VersionInfo
 from phistory.registry import AGENT_ORDER, get_agent, parse_agent_ids
 
 
@@ -14,6 +19,8 @@ def test_parse_default_agents():
         "grok",
         "minimax-code",
         "kimi-code",
+        "qwen-code",
+        "qoder",
         "mimo",
         "openclaw",
         "hermes",
@@ -40,9 +47,53 @@ def test_get_agent_has_capture_contract():
 def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
     agent = get_agent("claude-code")
 
+    assert agent.default_variant.label == "Non-official API"
+    assert agent.default_variant.dimensions == {"api": "non-official"}
+    assert agent.default_variant.tap_mode is None
     assert "--no-session-persistence" in agent.default_variant.run_args
     assert "--bare" not in agent.default_variant.run_args
     assert "--exclude-dynamic-system-prompt-sections" not in agent.default_variant.run_args
+    assert [(variant.id, variant.label, variant.dimensions) for variant in agent.variants] == [
+        ("official", "Official API · Sonnet 5", {"api": "official", "model": "claude-sonnet-5"})
+    ]
+
+
+def test_claude_code_official_variant_uses_forward_capture_without_changing_default_mode(tmp_path: Path):
+    agent = get_agent("claude-code")
+    default = CaptureTarget(agent, VersionInfo("1.0.0"), agent.default_variant, tmp_path / "captures")
+    official = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant("official"), tmp_path / "captures")
+
+    default_command = tap_command(default, default.prompt_path, default.variant_dir / ".tap")
+    official_command = tap_command(official, official.prompt_path, official.variant_dir / ".tap")
+
+    assert agent.tap_mode == "auto"
+    assert "--mode" not in default_command
+    assert "--mode" in official_command
+    assert official_command[official_command.index("--mode") + 1] == "forward"
+    assert "--export-prompt" in default_command
+    assert "--export-prompt" in official_command
+    assert official.variant.tap_mode == "forward"
+    assert official.variant.run_args[official.variant.run_args.index("--model") + 1] == "claude-sonnet-5"
+
+
+def test_claude_code_uses_deterministic_capture_environment(tmp_path: Path):
+    agent = get_agent("claude-code")
+    target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.default_variant, tmp_path / "captures")
+
+    assert agent.extra_env["CLAUDE_CODE_TOTAL_TOKENS_REMINDER"] == "off"
+    assert agent.extra_env["DISABLE_GROWTHBOOK"] == "1"
+    assert agent.extra_env["DISABLE_TELEMETRY"] == "1"
+    assert agent.recorded_env == (
+        "CLAUDE_CODE_TOTAL_TOKENS_REMINDER",
+        "DISABLE_GROWTHBOOK",
+        "DISABLE_TELEMETRY",
+    )
+
+    env = _capture_env(target, tmp_path / "bin", tmp_path / "home")
+
+    assert env["CLAUDE_CODE_TOTAL_TOKENS_REMINDER"] == "off"
+    assert env["DISABLE_GROWTHBOOK"] == "1"
+    assert env["DISABLE_TELEMETRY"] == "1"
 
 
 def test_new_agents_define_install_and_capture_profiles():
@@ -51,6 +102,8 @@ def test_new_agents_define_install_and_capture_profiles():
     grok = get_agent("grok")
     minimax_code = get_agent("minimax-code")
     kimi_code = get_agent("kimi-code")
+    qwen_code = get_agent("qwen-code")
+    qoder = get_agent("qoder")
     mimo = get_agent("mimo")
     openclaw = get_agent("openclaw")
     hermes = get_agent("hermes")
@@ -102,6 +155,28 @@ def test_new_agents_define_install_and_capture_profiles():
     assert kimi_code.executable == "kimi"
     assert kimi_code.home_profile == "kimi-code"
     assert "--prompt" in kimi_code.default_variant.run_args
+
+    assert qwen_code.source == "npm"
+    assert qwen_code.node_runtime == "node@22"
+    assert qwen_code.home_profile == "qwen"
+    assert qwen_code.package == "@qwen-code/qwen-code"
+    assert qwen_code.tap_client == "qwen"
+    assert qwen_code.tap_mode == "reverse"
+    assert qwen_code.fake_env["OPENAI_BASE_URL"] == "https://api.openai.com/v1"
+    assert qwen_code.fake_env["OPENAI_MODEL"] == "qwen3.8-max"
+    assert qwen_code.default_variant.run_args[0] == "--yolo"
+    assert "--prompt" in qwen_code.default_variant.run_args
+
+    assert qoder.source == "npm"
+    assert qoder.package == "@qoder-ai/qodercli"
+    assert qoder.tap_client == "qoder"
+    assert qoder.tap_mode == "forward"
+    assert qoder.inherited_env == {
+        "QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+        "QODER_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN",
+    }
+    assert "--print" in qoder.default_variant.run_args
+    assert "--no-session-persistence" in qoder.default_variant.run_args
 
     assert mimo.source == "npm"
     assert mimo.package == "@mimo-ai/cli"

@@ -2,13 +2,18 @@ import io
 import tarfile
 from pathlib import Path
 
-from phistory.models import AgentSpec, VersionInfo
+import pytest
+
+from phistory.models import AgentSpec, CaptureVariant, VersionInfo
 from phistory.packages import (
+    _apply_npm_compatibility_patches,
     _github_headers,
     agent_executable,
     all_versions,
+    compatibility_patches,
     install_agent,
     latest_version,
+    npm_view,
     versions_between,
 )
 from phistory.workflow import iter_backfill
@@ -30,6 +35,22 @@ def test_versions_between_uses_registry_order(monkeypatch):
     assert [item.version for item in versions_between(agent, "1.1.0", "latest")] == ["1.1.0", "2.0.0"]
 
 
+def test_npm_view_unwraps_npm_12_multi_field_result(monkeypatch):
+    monkeypatch.setattr(
+        "phistory.packages.run",
+        lambda *_args, **_kwargs: type(
+            "Result",
+            (),
+            {"stdout": '[{"versions":["1.0.0"],"time":{"1.0.0":"2026-01-01T00:00:00Z"}}]'},
+        )(),
+    )
+
+    assert npm_view("pkg", "versions", "time") == {
+        "versions": ["1.0.0"],
+        "time": {"1.0.0": "2026-01-01T00:00:00Z"},
+    }
+
+
 def test_agent_executable_defaults_to_tap_client_and_can_be_overridden():
     default = AgentSpec(
         id="x",
@@ -49,6 +70,52 @@ def test_agent_executable_defaults_to_tap_client_and_can_be_overridden():
 
     assert agent_executable(default) == "x-tap"
     assert agent_executable(overridden) == "kimi"
+
+
+def test_qoder_1_0_15_compatibility_patch_breaks_initializer_cycle(tmp_path):
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+    )
+    bundle = tmp_path / "node_modules" / "@qoder-ai" / "qodercli" / "bundle" / "qodercli.js"
+    bundle.parent.mkdir(parents=True)
+    cycle = (
+        "var Po,yWA,NWA,vYe,HYe=p(async()=>{await he(),Ye(),await yV(),NA(),await PV(),await TWA(),"
+        "await xWA(),await NYe()"
+    )
+    bundle.write_text(f"before;{cycle};after", encoding="utf-8")
+
+    _apply_npm_compatibility_patches(agent, "1.0.15", tmp_path)
+    _apply_npm_compatibility_patches(agent, "1.0.15", tmp_path)
+
+    patched = bundle.read_text(encoding="utf-8")
+    assert cycle not in patched
+    assert "await TWA(),await NYe()" in patched
+    assert compatibility_patches(agent, "1.0.15")
+    assert compatibility_patches(agent, "1.0.14") == ()
+
+
+def test_qoder_1_0_15_compatibility_patch_fails_closed_on_unknown_bundle(tmp_path):
+    agent = AgentSpec(
+        id="qoder",
+        display_name="Qoder CLI",
+        package="@qoder-ai/qodercli",
+        tap_client="qoder",
+        fake_env={},
+    )
+    bundle = tmp_path / "node_modules" / "@qoder-ai" / "qodercli" / "bundle" / "qodercli.js"
+    bundle.parent.mkdir(parents=True)
+    bundle.write_text("unknown bundle", encoding="utf-8")
+
+    try:
+        _apply_npm_compatibility_patches(agent, "1.0.15", tmp_path)
+    except RuntimeError as exc:
+        assert str(exc) == "Qoder CLI 1.0.15 compatibility patch signature mismatch"
+    else:
+        raise AssertionError("expected compatibility patch signature mismatch")
 
 
 def test_all_versions_filters_platform_and_prerelease_versions(monkeypatch):
@@ -345,3 +412,140 @@ def test_iter_backfill_can_walk_newest_first(monkeypatch, tmp_path):
             limit=2,
         )
     ) == ["2.0.0", "1.1.0"]
+
+
+def test_iter_backfill_shards_the_selected_version_list(monkeypatch, tmp_path):
+    agent = AgentSpec(
+        id="x",
+        display_name="X",
+        package="x",
+        tap_client="x",
+        fake_env={},
+    )
+    versions = [VersionInfo(f"1.0.{index}") for index in range(6)]
+    monkeypatch.setattr("phistory.workflow.get_agent", lambda _agent_id: agent)
+    monkeypatch.setattr("phistory.workflow.packages.versions_between", lambda *_args, **_kwargs: versions)
+    monkeypatch.setattr(
+        "phistory.workflow.capture_target",
+        lambda target, **kwargs: (target.version.version, kwargs["extract_static"]),
+    )
+
+    results = list(
+        iter_backfill(
+            "x",
+            start="1.0.0",
+            end="1.0.5",
+            root=tmp_path,
+            cache_dir=tmp_path / "cache",
+            newest_first=True,
+            limit=5,
+            extract_static=False,
+            shard_index=1,
+            shard_count=2,
+        )
+    )
+
+    assert results == [("1.0.4", False), ("1.0.2", False)]
+
+
+@pytest.mark.parametrize(
+    ("shard_index", "shard_count", "message"),
+    [
+        (0, None, "must be provided together"),
+        (None, 2, "must be provided together"),
+        (0, 0, "must be greater than zero"),
+        (-1, 2, "must be between zero"),
+        (2, 2, "must be between zero"),
+    ],
+)
+def test_iter_backfill_rejects_invalid_shards(monkeypatch, tmp_path, shard_index, shard_count, message):
+    with pytest.raises(ValueError, match=message):
+        list(
+            iter_backfill(
+                "x",
+                start="1.0.0",
+                end="1.0.0",
+                root=tmp_path,
+                cache_dir=tmp_path / "cache",
+                shard_index=shard_index,
+                shard_count=shard_count,
+            )
+        )
+
+
+def test_iter_backfill_prunes_each_install_after_all_variants(monkeypatch, tmp_path):
+    agent = AgentSpec(
+        id="x",
+        display_name="X",
+        package="x",
+        tap_client="x",
+        fake_env={},
+        variants=(CaptureVariant("alternate", "Alternate"),),
+    )
+    versions = [VersionInfo("1.0.0"), VersionInfo("1.1.0")]
+    cache_dir = tmp_path / "cache"
+    preserved = cache_dir / "installs" / agent.id / "preserved"
+    preserved.mkdir(parents=True)
+    calls = []
+
+    monkeypatch.setattr("phistory.workflow.get_agent", lambda _agent_id: agent)
+    monkeypatch.setattr("phistory.workflow.packages.versions_between", lambda *_args, **_kwargs: versions)
+
+    def fake_capture(target, **_kwargs):
+        install_dir = cache_dir / "installs" / agent.id / target.version.version
+        if target.version.version == "1.1.0":
+            assert not (cache_dir / "installs" / agent.id / "1.0.0").exists()
+        install_dir.mkdir(parents=True, exist_ok=True)
+        calls.append((target.version.version, target.variant.id))
+        return target.variant.id
+
+    monkeypatch.setattr("phistory.workflow.capture_target", fake_capture)
+
+    assert list(
+        iter_backfill(
+            "x",
+            start="1.0.0",
+            end="1.1.0",
+            root=tmp_path,
+            cache_dir=cache_dir,
+            prune_installs=True,
+        )
+    ) == ["default", "alternate", "default", "alternate"]
+    assert calls == [
+        ("1.0.0", "default"),
+        ("1.0.0", "alternate"),
+        ("1.1.0", "default"),
+        ("1.1.0", "alternate"),
+    ]
+    assert not (cache_dir / "installs" / agent.id / "1.1.0").exists()
+    assert preserved.exists()
+
+
+def test_iter_backfill_prunes_install_when_capture_raises(monkeypatch, tmp_path):
+    agent = AgentSpec(id="x", display_name="X", package="x", tap_client="x", fake_env={})
+    cache_dir = tmp_path / "cache"
+    install_dir = cache_dir / "installs" / agent.id / "1.0.0"
+    monkeypatch.setattr("phistory.workflow.get_agent", lambda _agent_id: agent)
+    monkeypatch.setattr(
+        "phistory.workflow.packages.versions_between",
+        lambda *_args, **_kwargs: [VersionInfo("1.0.0")],
+    )
+
+    def failed_capture(_target, **_kwargs):
+        install_dir.mkdir(parents=True)
+        raise RuntimeError("capture failed")
+
+    monkeypatch.setattr("phistory.workflow.capture_target", failed_capture)
+
+    with pytest.raises(RuntimeError, match="capture failed"):
+        list(
+            iter_backfill(
+                "x",
+                start="1.0.0",
+                end="1.0.0",
+                root=tmp_path,
+                cache_dir=cache_dir,
+                prune_installs=True,
+            )
+        )
+    assert not install_dir.exists()

@@ -6,7 +6,7 @@ import pytest
 from phistory.drivers import CaptureRunContext
 from phistory.drivers.dsh_web import PROMPT, _create_and_prompt_session, _has_prompt_request
 from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo
-from phistory.registry import get_agent
+from phistory.registry import AGENTS, get_agent
 from phistory.site import _build_manifest
 from phistory.storage import write_meta
 from phistory.workflow import capture_latest
@@ -157,6 +157,51 @@ def test_site_manifest_builds_independent_variant_version_lanes(tmp_path: Path):
     assert lanes["default"]["versions"][0]["change"]["previous_version"] == "1.0.0"
     assert lanes["model-b"]["versions"][0]["change"]["previous_version"] is None
     assert lanes["model-b"]["versions"][0]["variant_dimensions"] == {"model": "model-b"}
+
+
+def test_site_manifest_prefers_registered_lane_label_over_captured_version_label(monkeypatch, tmp_path: Path):
+    agent = AgentSpec(
+        id="renamed-agent",
+        display_name="Renamed Agent",
+        package="agent",
+        tap_client="agent",
+        fake_env={},
+        default_variant=CaptureVariant("default", "Non-official API"),
+    )
+    monkeypatch.setitem(AGENTS, agent.id, agent)
+    target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.default_variant, tmp_path)
+    target.variant_dir.mkdir(parents=True)
+    target.prompt_path.write_text("prompt\n", encoding="utf-8")
+    target.trace_path.write_text("{}\n", encoding="utf-8")
+    write_meta(
+        target,
+        {
+            "agent_id": agent.id,
+            "agent": agent.display_name,
+            "version": target.version.version,
+            "variant": {"id": "default", "label": "Default", "dimensions": {}},
+        },
+    )
+    retired_variant = CaptureVariant("retired", "Retired Snapshot")
+    retired_target = CaptureTarget(agent, VersionInfo("1.0.0"), retired_variant, tmp_path)
+    retired_target.variant_dir.mkdir(parents=True)
+    retired_target.prompt_path.write_text("retired prompt\n", encoding="utf-8")
+    retired_target.trace_path.write_text("{}\n", encoding="utf-8")
+    write_meta(
+        retired_target,
+        {
+            "agent_id": agent.id,
+            "agent": agent.display_name,
+            "version": retired_target.version.version,
+            "variant": {"id": "retired", "label": "Captured Retired", "dimensions": {}},
+        },
+    )
+
+    lanes = {lane["id"]: lane for lane in _build_manifest(tmp_path)["agents"][0]["variants"]}
+
+    assert lanes["default"]["label"] == "Non-official API"
+    assert lanes["default"]["versions"][0]["variant_label"] == "Default"
+    assert lanes["retired"]["label"] == "Captured Retired"
 
 
 def test_site_does_not_read_the_removed_flat_capture_layout(tmp_path: Path):
