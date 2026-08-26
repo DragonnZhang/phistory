@@ -57,14 +57,20 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`" in text
     assert "non-official/custom-API path as its `default` snapshot" in text
     assert "`claude-opus-5[1m]` in `official-opus`" in text
+    assert "`claude-opus-4-8[1m]` in `official-opus-4-8`" in text
+    assert "`claude-opus-4-7[1m]` in `official-opus-4-7`" in text
     assert "`claude-fable-5` in `official-fable`" in text
+    assert "official archives cover the complete stable CLI history" in text
     assert "`ANTHROPIC_BASE_URL` remains unset" in text
     assert "do not reconstruct the model that was the official default" in text
     assert "deterministic, documented baseline rather than the rollout state" in text
     assert "## Local Development" in text
     assert "# Capture the latest release and every configured snapshot for each CLI." in text
     assert "--variants default,gpt-5.5,gpt-5.6" in text
-    assert "--agents claude-code --variants default,official,official-opus,official-fable" in text
+    assert (
+        "--agents claude-code --variants "
+        "default,official,official-opus,official-opus-4-8,official-opus-4-7,official-fable"
+    ) in text
     assert "--agents claude-code,codex,qwen-code,dsh,antigravity" in text
     assert "## Web UI" not in text
     assert "## For AI Agents" not in text

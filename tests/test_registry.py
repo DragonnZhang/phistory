@@ -61,6 +61,16 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             {"api": "official", "model": "claude-opus-5[1m]"},
         ),
         (
+            "official-opus-4-8",
+            "Official API · Opus 4.8 1M",
+            {"api": "official", "model": "claude-opus-4-8[1m]"},
+        ),
+        (
+            "official-opus-4-7",
+            "Official API · Opus 4.7 1M",
+            {"api": "official", "model": "claude-opus-4-7[1m]"},
+        ),
+        (
             "official-fable",
             "Official API · Fable 5",
             {"api": "official", "model": "claude-fable-5"},
@@ -80,6 +90,8 @@ def test_claude_code_official_variants_use_forward_capture_without_changing_defa
     for variant_id, model in (
         ("official", "claude-sonnet-5"),
         ("official-opus", "claude-opus-5[1m]"),
+        ("official-opus-4-8", "claude-opus-4-8[1m]"),
+        ("official-opus-4-7", "claude-opus-4-7[1m]"),
         ("official-fable", "claude-fable-5"),
     ):
         target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant(variant_id), tmp_path / "captures")

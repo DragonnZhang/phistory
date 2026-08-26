@@ -74,8 +74,8 @@ Current agents are defined in `phistory/registry.py`:
 - `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`; the `default` variant captures
   the non-official/custom-base-URL compatibility path, while `official` pins `claude-sonnet-5` and uses
   transparent forward capture so `ANTHROPIC_BASE_URL` remains unset without calling the real provider; the parallel
-  `official-opus` and `official-fable` variants use the same official API path with `claude-opus-5[1m]` and
-  `claude-fable-5`, respectively.
+  `official-opus`, `official-opus-4-8`, `official-opus-4-7`, and `official-fable` variants use the same official API
+  path with `claude-opus-5[1m]`, `claude-opus-4-8[1m]`, `claude-opus-4-7[1m]`, and `claude-fable-5`, respectively.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives default, GPT-5.5, and GPT-5.6 variants.
 - `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode; uses a Web RPC driver for default, Standard, PTC, Minimal, and Creator snapshots, plus the headless snapshot.
 - `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and forward capture mode.
@@ -150,9 +150,10 @@ uv run phistory backfill <agent> --from <version> --to <version> --force
 
 Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1`, `DISABLE_TELEMETRY=1`, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`; their metadata records this deterministic baseline.
 
-The dedicated Claude Code history recapture workflow accepts `default`, `official`, `official-opus`, or `official-fable`
-and defaults to `default`. Select `official` for the first-party Sonnet 5 comparison lane, `official-opus` for the Opus 5
-1M lane, or `official-fable` for the Fable 5 lane.
+The dedicated Claude Code history recapture workflow accepts `default`, `official`, `official-opus`,
+`official-opus-4-8`, `official-opus-4-7`, or `official-fable` and defaults to `default`. Select `official` for the
+first-party Sonnet 5 comparison lane, `official-opus` for Opus 5 1M, `official-opus-4-8` for Opus 4.8 1M,
+`official-opus-4-7` for Opus 4.7 1M, or `official-fable` for Fable 5.
 Each official lane is a compatibility snapshot of every historical CLI explicitly targeting its configured model, not a
 reconstruction of the model that was the official default at the time. For older releases that cannot consume inline `--settings` JSON,
 the oneshot driver detects the CLI capability and temporarily strips claude-tap's redundant settings argument while keeping

@@ -12,6 +12,8 @@ on:
           - default
           - official
           - official-opus
+          - official-opus-4-8
+          - official-opus-4-7
           - official-fable
       from:
         description: First stable Claude Code version to recapture
@@ -33,6 +35,9 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NPM_CONFIG_AUDIT: "false"
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_LIBC: glibc
   SHARD_COUNT: "8"
 
 jobs:

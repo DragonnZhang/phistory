@@ -102,6 +102,36 @@ CLAUDE_CODE = AgentSpec(
             tap_mode="forward",
         ),
         _variant(
+            "official-opus-4-8",
+            "Official API · Opus 4.8 1M",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-opus-4-8[1m]",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-opus-4-8[1m]"},
+            tap_mode="forward",
+        ),
+        _variant(
+            "official-opus-4-7",
+            "Official API · Opus 4.7 1M",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-opus-4-7[1m]",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-opus-4-7[1m]"},
+            tap_mode="forward",
+        ),
+        _variant(
             "official-fable",
             "Official API · Fable 5",
             (

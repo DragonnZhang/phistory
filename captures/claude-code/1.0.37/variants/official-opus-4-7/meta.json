@@ -1,0 +1,60 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "1.0.37",
+  "variant": {
+    "id": "official-opus-4-7",
+    "label": "Official API · Opus 4.7 1M",
+    "dimensions": {
+      "api": "official",
+      "model": "claude-opus-4-7[1m]"
+    }
+  },
+  "requested": {
+    "api": "official",
+    "model": "claude-opus-4-7[1m]"
+  },
+  "observed": {
+    "model": "claude-opus-4-7[1m]",
+    "tool_count": 16
+  },
+  "published_at": "2025-06-27T23:04:05.745Z",
+  "tarball_url": null,
+  "binary_version": "1.0.37 (Claude Code)",
+  "captured_at": "2026-08-26T07:43:43.906596+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 2.553,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--model",
+    "claude-opus-4-7[1m]",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  },
+  "compatibility_patches": [
+    "Claude Code does not accept inline --settings JSON; stripped claude-tap's injected forward-proxy settings argument and relied on the equivalent proxy and CA environment."
+  ]
+}
