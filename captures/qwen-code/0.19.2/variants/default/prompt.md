@@ -253,7 +253,7 @@ Raw tool/system outputs may contain fixed-format English. Preserve them verbatim
 You have two persistent, file-based memory directories. This directory already exists — write to it directly with the write_file tool (do not run mkdir or check for its existence).
 
 - USER memory (cross-project, durable knowledge about who the user is): `$PHISTORY_HOME/.qwen/memories`
-- PROJECT memory (this project only, may be shared with teammates): `$PHISTORY_HOME/.qwen/projects/-private-var-folders--6-1prb7x252-j-m70ky5t2h7hw0000gn-T-phistory-work-j34wssih/memory`
+- PROJECT memory (this project only, may be shared with teammates): `$PHISTORY_HOME/.qwen/projects/$PHISTORY_PROJECT/memory`
 
 For every memory you save, decide which directory it belongs in using the per-type `<scope>` guidance below.
 
@@ -391,7 +391,7 @@ Memory is one of several persistence mechanisms available to you as you assist t
 
 Your MEMORY.md is currently empty. When you save new memories, they will appear here.
 
-### $PHISTORY_HOME/.qwen/projects/-private-var-folders--6-1prb7x252-j-m70ky5t2h7hw0000gn-T-phistory-work-j34wssih/memory/MEMORY.md
+### $PHISTORY_HOME/.qwen/projects/$PHISTORY_PROJECT/memory/MEMORY.md
 
 Your MEMORY.md is currently empty. When you save new memories, they will appear here.
 

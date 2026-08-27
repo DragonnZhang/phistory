@@ -63,6 +63,10 @@ _VOLATILE_TEXT_PATTERNS = (
         "$PHISTORY_HOME/.claude/projects/$PHISTORY_PROJECT",
     ),
     (
+        re.compile(r"\$PHISTORY_HOME/\.qwen/projects/[A-Za-z0-9-]+"),
+        "$PHISTORY_HOME/.qwen/projects/$PHISTORY_PROJECT",
+    ),
+    (
         re.compile(r"\$PHISTORY_HOME/\.local/share/mimocode/memory/sessions/ses_[A-Za-z0-9_]+"),
         "$PHISTORY_HOME/.local/share/mimocode/memory/sessions/$PHISTORY_SESSION",
     ),

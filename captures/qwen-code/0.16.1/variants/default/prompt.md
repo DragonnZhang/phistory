@@ -269,7 +269,7 @@ Raw tool/system outputs may contain fixed-format English. Preserve them verbatim
 
 ## auto memory
 
-You have a persistent, file-based memory system at `$PHISTORY_HOME/.qwen/projects/-private-var-folders--6-1prb7x252-j-m70ky5t2h7hw0000gn-T-phistory-work-e-v96g46/memory`. This directory already exists — write to it directly with the write_file tool (do not run mkdir or check for its existence).
+You have a persistent, file-based memory system at `$PHISTORY_HOME/.qwen/projects/$PHISTORY_PROJECT/memory`. This directory already exists — write to it directly with the write_file tool (do not run mkdir or check for its existence).
 
 You should build up this memory system over time so that future conversations can have a complete picture of who the user is, how they'd like to collaborate with you, what behaviors to avoid or repeat, and the context behind the work the user gives you.
 
@@ -365,9 +365,9 @@ type: {{user, feedback, project, reference}}
 {{memory content — for feedback/project types, structure as: rule/fact, then **Why:** and **How to apply:** lines}}
 ```
 
-**Step 2** — add a pointer to that file in `$PHISTORY_HOME/.qwen/projects/-private-var-folders--6-1prb7x252-j-m70ky5t2h7hw0000gn-T-phistory-work-e-v96g46/memory/MEMORY.md` (the full absolute path). This index file is an index, not a memory — each entry should be one line, under ~150 characters: `- [Title](file.md) — one-line hook`. It has no frontmatter. Never write memory content directly into `$PHISTORY_HOME/.qwen/projects/-private-var-folders--6-1prb7x252-j-m70ky5t2h7hw0000gn-T-phistory-work-e-v96g46/memory/MEMORY.md`.
+**Step 2** — add a pointer to that file in `$PHISTORY_HOME/.qwen/projects/$PHISTORY_PROJECT/memory/MEMORY.md` (the full absolute path). This index file is an index, not a memory — each entry should be one line, under ~150 characters: `- [Title](file.md) — one-line hook`. It has no frontmatter. Never write memory content directly into `$PHISTORY_HOME/.qwen/projects/$PHISTORY_PROJECT/memory/MEMORY.md`.
 
-- `$PHISTORY_HOME/.qwen/projects/-private-var-folders--6-1prb7x252-j-m70ky5t2h7hw0000gn-T-phistory-work-e-v96g46/memory/MEMORY.md` is always loaded into your conversation context — lines after 200 will be truncated, so keep the index concise
+- `$PHISTORY_HOME/.qwen/projects/$PHISTORY_PROJECT/memory/MEMORY.md` is always loaded into your conversation context — lines after 200 will be truncated, so keep the index concise
 - Keep the name, description, and type fields in memory files up-to-date with the content
 - Organize memory semantically by topic, not chronologically.
 - Update or remove memories that turn out to be wrong or outdated.
@@ -396,7 +396,7 @@ Memory is one of several persistence mechanisms available to you as you assist t
 - When to use or update a plan instead of memory: If you are about to start a non-trivial implementation task and would like to reach alignment with the user on your approach you should use a Plan rather than saving this information to memory. Similarly, if you already have a plan within the conversation and you have changed your approach persist that change by updating the plan rather than saving a memory.
 - When to use or update tasks instead of memory: When you need to break your work in current conversation into discrete steps or keep track of your progress use tasks instead of saving to memory. Tasks are great for persisting information about the work that needs to be done in the current conversation, but memory should be reserved for information that will be useful in future conversations.
 
-### $PHISTORY_HOME/.qwen/projects/-private-var-folders--6-1prb7x252-j-m70ky5t2h7hw0000gn-T-phistory-work-e-v96g46/memory/MEMORY.md
+### $PHISTORY_HOME/.qwen/projects/$PHISTORY_PROJECT/memory/MEMORY.md
 
 Your MEMORY.md is currently empty. When you save new memories, they will appear here.
 
