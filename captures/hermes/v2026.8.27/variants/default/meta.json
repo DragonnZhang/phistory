@@ -1,0 +1,51 @@
+{
+  "agent_id": "hermes",
+  "agent": "Hermes Agent",
+  "package": "NousResearch/hermes-agent",
+  "version": "v2026.8.27",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "phistory-dummy",
+    "tool_count": 21
+  },
+  "published_at": "2026-08-27T12:06:53Z",
+  "tarball_url": "https://github.com/NousResearch/hermes-agent/releases/tag/v2026.8.27",
+  "binary_version": "v2026.8.27",
+  "captured_at": "2026-08-27T13:04:18.089648+00:00",
+  "tap_client": "hermes",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 25.34,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "hermes",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--",
+    "chat",
+    "-q",
+    "Reply with one short sentence.",
+    "--yolo",
+    "-Q",
+    "--provider",
+    "openrouter",
+    "--model",
+    "phistory-dummy"
+  ]
+}
