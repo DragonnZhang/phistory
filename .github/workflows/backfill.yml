@@ -8,8 +8,14 @@ on:
         required: true
         type: choice
         options:
+          - codex
           - qwen-code
           - qoder
+      variants:
+        description: Optional comma-separated capture variant ids
+        required: false
+        default: ""
+        type: string
       from:
         description: First stable package version to capture
         required: true
@@ -65,6 +71,7 @@ jobs:
         id: backfill
         env:
           AGENT: ${{ inputs.agent }}
+          VARIANTS: ${{ inputs.variants }}
           BACKFILL_FROM: ${{ inputs.from }}
           BACKFILL_TO: ${{ inputs.to }}
           FORCE: ${{ inputs.force }}
@@ -74,6 +81,16 @@ jobs:
         run: |
           status=0
           args=("$AGENT" --from "$BACKFILL_FROM" --to "$BACKFILL_TO")
+          if [ -n "$VARIANTS" ]; then
+            args+=(--variants "$VARIANTS")
+          fi
+          if [ "$AGENT" = "codex" ]; then
+            if [ -z "$VARIANTS" ]; then
+              echo "::error title=Missing Codex variants::Codex history backfills must select one or more explicit variants."
+              status=1
+            fi
+            args+=(--newest-first --skip-static --prune-installs)
+          fi
           if [ "$FORCE" = "true" ]; then
             args+=(--force)
           fi
@@ -83,7 +100,9 @@ jobs:
           if [ "$AGENT" != "qoder" ]; then
             unset QODER_PERSONAL_ACCESS_TOKEN
           fi
-          if [ "$STATIC_ONLY" = "true" ] && [ "$AGENT" != "qoder" ]; then
+          if [ "$status" != "0" ]; then
+            :
+          elif [ "$STATIC_ONLY" = "true" ] && [ "$AGENT" != "qoder" ]; then
             echo "::error title=Invalid static-only archive::Static-only archives are supported only for Qoder CLI."
             status=1
           elif [ "$AGENT" = "qoder" ] && [ "$STATIC_ONLY" != "true" ] && [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ]; then
