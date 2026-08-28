@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-08-28T08:21:37.100420Z",
+  "updated_at": "2026-08-28T08:41:10.270762Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -19,7 +19,7 @@
       "latest_published_at": "2026-08-27T02:01:46.851Z",
       "latest_captured_at": "2026-08-27T13:02:58.959327+00:00",
       "versions": 79,
-      "snapshots": 167
+      "snapshots": 212
     },
     {
       "agent_id": "dsh",
@@ -53235,6 +53235,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.130.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 16
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-08T23:12:58.744Z",
+      "captured_at": "2026-08-28T08:38:23.057569+00:00",
+      "prompt": "captures/codex/0.130.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.130.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.130.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.129.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53249,6 +53269,26 @@
       "prompt": "captures/codex/0.129.0/variants/default/prompt.md",
       "trace": "captures/codex/0.129.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.129.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.129.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 16
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-07T17:05:37.553Z",
+      "captured_at": "2026-08-28T08:38:27.155045+00:00",
+      "prompt": "captures/codex/0.129.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.129.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.129.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53271,6 +53311,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.128.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 16
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-30T16:43:46.064Z",
+      "captured_at": "2026-08-28T08:38:31.333337+00:00",
+      "prompt": "captures/codex/0.128.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.128.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.128.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.125.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53285,6 +53345,26 @@
       "prompt": "captures/codex/0.125.0/variants/default/prompt.md",
       "trace": "captures/codex/0.125.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.125.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.125.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 16
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-24T18:01:41.002Z",
+      "captured_at": "2026-08-28T08:38:35.209093+00:00",
+      "prompt": "captures/codex/0.125.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.125.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.125.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53307,6 +53387,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.124.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-23T18:30:45.892Z",
+      "captured_at": "2026-08-28T08:38:39.341219+00:00",
+      "prompt": "captures/codex/0.124.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.124.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.124.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.123.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53321,6 +53421,26 @@
       "prompt": "captures/codex/0.123.0/variants/default/prompt.md",
       "trace": "captures/codex/0.123.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.123.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.123.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-23T01:27:03.972Z",
+      "captured_at": "2026-08-28T08:38:43.198638+00:00",
+      "prompt": "captures/codex/0.123.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.123.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.123.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53343,6 +53463,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.122.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-20T18:39:33.583Z",
+      "captured_at": "2026-08-28T08:38:47.002834+00:00",
+      "prompt": "captures/codex/0.122.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.122.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.122.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.121.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53357,6 +53497,26 @@
       "prompt": "captures/codex/0.121.0/variants/default/prompt.md",
       "trace": "captures/codex/0.121.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.121.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.121.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-15T20:46:45.517Z",
+      "captured_at": "2026-08-28T08:38:50.634082+00:00",
+      "prompt": "captures/codex/0.121.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.121.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.121.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53379,6 +53539,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.120.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-11T02:54:37.375Z",
+      "captured_at": "2026-08-28T08:38:54.309892+00:00",
+      "prompt": "captures/codex/0.120.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.120.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.120.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.119.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53393,6 +53573,26 @@
       "prompt": "captures/codex/0.119.0/variants/default/prompt.md",
       "trace": "captures/codex/0.119.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.119.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.119.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-10T22:45:06.804Z",
+      "captured_at": "2026-08-28T08:38:58.445450+00:00",
+      "prompt": "captures/codex/0.119.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.119.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.119.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53415,6 +53615,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.118.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-31T17:03:18.490Z",
+      "captured_at": "2026-08-28T08:39:02.085714+00:00",
+      "prompt": "captures/codex/0.118.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.118.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.118.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.117.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53429,6 +53649,26 @@
       "prompt": "captures/codex/0.117.0/variants/default/prompt.md",
       "trace": "captures/codex/0.117.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.117.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.117.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-26T22:28:43.427Z",
+      "captured_at": "2026-08-28T08:39:05.834909+00:00",
+      "prompt": "captures/codex/0.117.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.117.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.117.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53451,6 +53691,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.116.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-19T17:52:17.991Z",
+      "captured_at": "2026-08-28T08:39:08.885832+00:00",
+      "prompt": "captures/codex/0.116.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.116.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.116.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.115.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53465,6 +53725,26 @@
       "prompt": "captures/codex/0.115.0/variants/default/prompt.md",
       "trace": "captures/codex/0.115.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.115.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.115.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-16T19:38:16.363Z",
+      "captured_at": "2026-08-28T08:39:11.883578+00:00",
+      "prompt": "captures/codex/0.115.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.115.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.115.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53487,6 +53767,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.114.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-11T00:29:28.692Z",
+      "captured_at": "2026-08-28T08:39:14.804396+00:00",
+      "prompt": "captures/codex/0.114.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.114.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.114.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.113.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53501,6 +53801,26 @@
       "prompt": "captures/codex/0.113.0/variants/default/prompt.md",
       "trace": "captures/codex/0.113.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.113.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.113.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-10T05:25:37.995Z",
+      "captured_at": "2026-08-28T08:39:17.975095+00:00",
+      "prompt": "captures/codex/0.113.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.113.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.113.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53523,6 +53843,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.112.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-08T20:44:58.047Z",
+      "captured_at": "2026-08-28T08:39:20.751421+00:00",
+      "prompt": "captures/codex/0.112.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.112.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.112.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.111.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53537,6 +53877,26 @@
       "prompt": "captures/codex/0.111.0/variants/default/prompt.md",
       "trace": "captures/codex/0.111.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.111.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.111.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-05T19:13:00.697Z",
+      "captured_at": "2026-08-28T08:39:23.494057+00:00",
+      "prompt": "captures/codex/0.111.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.111.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.111.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53559,6 +53919,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.110.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-05T02:23:39.861Z",
+      "captured_at": "2026-08-28T08:39:26.289379+00:00",
+      "prompt": "captures/codex/0.110.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.110.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.110.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.107.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53573,6 +53953,26 @@
       "prompt": "captures/codex/0.107.0/variants/default/prompt.md",
       "trace": "captures/codex/0.107.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.107.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.107.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-02T18:00:55.212Z",
+      "captured_at": "2026-08-28T08:39:29.035670+00:00",
+      "prompt": "captures/codex/0.107.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.107.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.107.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53595,6 +53995,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.106.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-26T23:12:45.073Z",
+      "captured_at": "2026-08-28T08:39:31.640925+00:00",
+      "prompt": "captures/codex/0.106.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.106.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.106.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.105.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53609,6 +54029,26 @@
       "prompt": "captures/codex/0.105.0/variants/default/prompt.md",
       "trace": "captures/codex/0.105.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.105.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.105.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-25T17:22:34.496Z",
+      "captured_at": "2026-08-28T08:39:34.369320+00:00",
+      "prompt": "captures/codex/0.105.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.105.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.105.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53631,6 +54071,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.104.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-18T07:13:25.235Z",
+      "captured_at": "2026-08-28T08:39:36.934775+00:00",
+      "prompt": "captures/codex/0.104.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.104.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.104.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.103.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53645,6 +54105,26 @@
       "prompt": "captures/codex/0.103.0/variants/default/prompt.md",
       "trace": "captures/codex/0.103.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.103.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.103.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-17T23:03:50.048Z",
+      "captured_at": "2026-08-28T08:39:39.547274+00:00",
+      "prompt": "captures/codex/0.103.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.103.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.103.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53667,6 +54147,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.102.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-17T20:03:25.029Z",
+      "captured_at": "2026-08-28T08:39:42.647633+00:00",
+      "prompt": "captures/codex/0.102.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.102.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.102.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.101.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53681,6 +54181,26 @@
       "prompt": "captures/codex/0.101.0/variants/default/prompt.md",
       "trace": "captures/codex/0.101.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.101.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.101.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-12T20:06:40.829Z",
+      "captured_at": "2026-08-28T08:39:45.224286+00:00",
+      "prompt": "captures/codex/0.101.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.101.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.101.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53703,6 +54223,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.100.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-12T18:30:51.007Z",
+      "captured_at": "2026-08-28T08:39:47.946044+00:00",
+      "prompt": "captures/codex/0.100.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.100.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.100.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.99.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53717,6 +54257,26 @@
       "prompt": "captures/codex/0.99.0/variants/default/prompt.md",
       "trace": "captures/codex/0.99.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.99.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.99.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-11T20:43:52.809Z",
+      "captured_at": "2026-08-28T08:39:50.639764+00:00",
+      "prompt": "captures/codex/0.99.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.99.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.99.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53739,6 +54299,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.98.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-05T17:01:54.850Z",
+      "captured_at": "2026-08-28T08:39:55.574604+00:00",
+      "prompt": "captures/codex/0.98.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.98.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.98.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.97.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53753,6 +54333,26 @@
       "prompt": "captures/codex/0.97.0/variants/default/prompt.md",
       "trace": "captures/codex/0.97.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.97.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.97.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-05T05:12:14.841Z",
+      "captured_at": "2026-08-28T08:40:00.571173+00:00",
+      "prompt": "captures/codex/0.97.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.97.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.97.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53775,6 +54375,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.96.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-04T18:24:44.133Z",
+      "captured_at": "2026-08-28T08:40:05.552429+00:00",
+      "prompt": "captures/codex/0.96.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.96.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.96.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.95.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53789,6 +54409,26 @@
       "prompt": "captures/codex/0.95.0/variants/default/prompt.md",
       "trace": "captures/codex/0.95.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.95.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.95.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 8
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-04T04:55:36.663Z",
+      "captured_at": "2026-08-28T08:40:10.562198+00:00",
+      "prompt": "captures/codex/0.95.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.95.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.95.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53811,6 +54451,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.94.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 8
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-02T18:28:42.990Z",
+      "captured_at": "2026-08-28T08:40:15.350992+00:00",
+      "prompt": "captures/codex/0.94.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.94.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.94.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.93.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53825,6 +54485,26 @@
       "prompt": "captures/codex/0.93.0/variants/default/prompt.md",
       "trace": "captures/codex/0.93.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.93.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.93.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 7
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-31T07:00:56.838Z",
+      "captured_at": "2026-08-28T08:40:20.066319+00:00",
+      "prompt": "captures/codex/0.93.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.93.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.93.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53847,6 +54527,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.92.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 7
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-27T11:51:59.692Z",
+      "captured_at": "2026-08-28T08:40:25.043243+00:00",
+      "prompt": "captures/codex/0.92.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.92.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.92.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.91.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53861,6 +54561,26 @@
       "prompt": "captures/codex/0.91.0/variants/default/prompt.md",
       "trace": "captures/codex/0.91.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.91.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.91.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-25T17:34:45.939Z",
+      "captured_at": "2026-08-28T08:40:30.381094+00:00",
+      "prompt": "captures/codex/0.91.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.91.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.91.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53883,6 +54603,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.90.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-25T16:38:42.443Z",
+      "captured_at": "2026-08-28T08:40:34.838619+00:00",
+      "prompt": "captures/codex/0.90.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.90.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.90.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.89.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53897,6 +54637,26 @@
       "prompt": "captures/codex/0.89.0/variants/default/prompt.md",
       "trace": "captures/codex/0.89.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.89.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.89.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-22T21:36:53.306Z",
+      "captured_at": "2026-08-28T08:40:39.221137+00:00",
+      "prompt": "captures/codex/0.89.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.89.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.89.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53919,6 +54679,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.88.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-21T19:20:16.986Z",
+      "captured_at": "2026-08-28T08:40:44.394852+00:00",
+      "prompt": "captures/codex/0.88.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.88.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.88.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.87.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53933,6 +54713,26 @@
       "prompt": "captures/codex/0.87.0/variants/default/prompt.md",
       "trace": "captures/codex/0.87.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.87.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.87.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-16T15:39:11.925Z",
+      "captured_at": "2026-08-28T08:40:48.706189+00:00",
+      "prompt": "captures/codex/0.87.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.87.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.87.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53955,6 +54755,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.86.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-16T01:20:07.494Z",
+      "captured_at": "2026-08-28T08:40:53.076049+00:00",
+      "prompt": "captures/codex/0.86.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.86.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.86.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.85.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -53969,6 +54789,26 @@
       "prompt": "captures/codex/0.85.0/variants/default/prompt.md",
       "trace": "captures/codex/0.85.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.85.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.85.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-15T18:39:58.034Z",
+      "captured_at": "2026-08-28T08:40:57.378909+00:00",
+      "prompt": "captures/codex/0.85.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.85.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.85.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "codex",
@@ -53991,6 +54831,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.84.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-15T01:30:11.748Z",
+      "captured_at": "2026-08-28T08:41:01.623604+00:00",
+      "prompt": "captures/codex/0.84.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.84.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.84.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.81.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -54009,6 +54869,26 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.81.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-14T18:13:47.226Z",
+      "captured_at": "2026-08-28T08:41:06.019319+00:00",
+      "prompt": "captures/codex/0.81.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.81.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.81.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.80.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -54023,6 +54903,26 @@
       "prompt": "captures/codex/0.80.0/variants/default/prompt.md",
       "trace": "captures/codex/0.80.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.80.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.80.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-09T19:49:15.685Z",
+      "captured_at": "2026-08-28T08:41:10.270762+00:00",
+      "prompt": "captures/codex/0.80.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.80.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.80.0/variants/gpt-5.5/meta.json"
     },
     {
       "agent_id": "dsh",
