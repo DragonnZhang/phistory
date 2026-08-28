@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-08-28 07:20 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-08-28 07:44 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -85,12 +85,12 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-08-28 07:20 UTC
+Last capture update: 2026-08-28 07:44 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
 | Claude Code | [2.1.247 - 2026-08-26](captures/claude-code/2.1.247/variants/default/prompt.md) | 405 | 2430 | 2026-08-27 13:02 UTC |
-| Codex CLI | [0.150.1 - 2026-08-27](captures/codex/0.150.1/variants/default/prompt.md) | 78 | 95 | 2026-08-27 13:02 UTC |
+| Codex CLI | [0.150.1 - 2026-08-27](captures/codex/0.150.1/variants/default/prompt.md) | 79 | 140 | 2026-08-27 13:02 UTC |
 | DeepSeek Harness | [0.1.1-rc.2 - 2026-08-21](captures/dsh/0.1.1-rc.2/variants/default/prompt.md) | 8 | 39 | 2026-08-21 13:43 UTC |
 | Antigravity CLI | [1.1.22 - 2026-08-27](captures/antigravity/1.1.22/variants/default/prompt.md) | 36 | 36 | 2026-08-27 13:03 UTC |
 | Grok Build | [1.0.5 - 2026-08-16](captures/grok/1.0.5/variants/default/prompt.md) | 130 | 130 | 2026-08-18 02:00 UTC |

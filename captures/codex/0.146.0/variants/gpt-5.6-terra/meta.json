@@ -1,0 +1,50 @@
+{
+  "agent_id": "codex",
+  "agent": "Codex CLI",
+  "package": "@openai/codex",
+  "version": "0.146.0",
+  "variant": {
+    "id": "gpt-5.6-terra",
+    "label": "GPT-5.6 Terra",
+    "dimensions": {
+      "model": "gpt-5.6-terra"
+    }
+  },
+  "requested": {
+    "model": "gpt-5.6-terra"
+  },
+  "observed": {
+    "model": "gpt-5.6-terra",
+    "tool_count": 4
+  },
+  "published_at": "2026-07-29T01:45:57.696Z",
+  "tarball_url": null,
+  "binary_version": "codex-cli 0.146.0",
+  "captured_at": "2026-08-28T07:37:13.351516+00:00",
+  "tap_client": "codex",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 9.02,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "codex",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "exec",
+    "Reply with one short sentence.",
+    "--model",
+    "gpt-5.6-terra",
+    "--skip-git-repo-check",
+    "--json"
+  ]
+}
