@@ -161,6 +161,7 @@ CODEX = AgentSpec(
         "CI": "1",
     },
     fake_chatgpt_auth=True,
+    hidden_capture_variants=("gpt-5.6",),
     default_variant=_default(
         (
             "--no-yolo",
@@ -169,9 +170,54 @@ CODEX = AgentSpec(
             "Reply with one short sentence.",
             "--skip-git-repo-check",
             "--json",
-        )
+        ),
     ),
     variants=(
+        _variant(
+            "gpt-5.6-sol",
+            "GPT-5.6 Sol",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-5.6-sol",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-5.6-sol"},
+        ),
+        _variant(
+            "gpt-5.6-terra",
+            "GPT-5.6 Terra",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-5.6-terra",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-5.6-terra"},
+        ),
+        _variant(
+            "gpt-5.6-luna",
+            "GPT-5.6 Luna",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-5.6-luna",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-5.6-luna"},
+        ),
         _variant(
             "gpt-5.5",
             "GPT-5.5",
@@ -186,21 +232,6 @@ CODEX = AgentSpec(
                 "--json",
             ),
             dimensions={"model": "gpt-5.5"},
-        ),
-        _variant(
-            "gpt-5.6",
-            "GPT-5.6",
-            (
-                "--no-yolo",
-                "--",
-                "exec",
-                "Reply with one short sentence.",
-                "--model",
-                "gpt-5.6",
-                "--skip-git-repo-check",
-                "--json",
-            ),
-            dimensions={"model": "gpt-5.6"},
         ),
     ),
 )

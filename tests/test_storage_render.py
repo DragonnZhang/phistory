@@ -66,7 +66,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "deterministic, documented baseline rather than the rollout state" in text
     assert "## Local Development" in text
     assert "# Capture the latest release and every configured snapshot for each CLI." in text
-    assert "--variants default,gpt-5.5,gpt-5.6" in text
+    assert "--variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5" in text
     assert (
         "--agents claude-code --variants "
         "default,official,official-opus,official-opus-4-8,official-opus-4-7,official-fable"

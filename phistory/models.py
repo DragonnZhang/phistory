@@ -47,6 +47,7 @@ class AgentSpec:
     fake_env: dict[str, str]
     default_variant: CaptureVariant = field(default_factory=lambda: CaptureVariant("default", "Default"))
     variants: tuple[CaptureVariant, ...] = ()
+    hidden_capture_variants: tuple[str, ...] = ()
     executable: str | None = None
     source: PackageSource = "npm"
     install_command: tuple[str, ...] = ("npm", "install", "--no-audit", "--no-fund")
@@ -75,6 +76,13 @@ class AgentSpec:
         for variant_id in ids:
             if _VARIANT_ID_RE.fullmatch(variant_id) is None:
                 raise ValueError(f"{self.id}: invalid capture variant id {variant_id!r}")
+        for variant_id in self.hidden_capture_variants:
+            if _VARIANT_ID_RE.fullmatch(variant_id) is None:
+                raise ValueError(f"{self.id}: invalid hidden capture variant id {variant_id!r}")
+        overlapping_variants = sorted(set(ids) & set(self.hidden_capture_variants))
+        if overlapping_variants:
+            names = ", ".join(overlapping_variants)
+            raise ValueError(f"{self.id}: active capture variants cannot also be hidden: {names}")
         unknown_recorded_env = sorted(set(self.recorded_env) - set(self.extra_env))
         if unknown_recorded_env:
             names = ", ".join(unknown_recorded_env)

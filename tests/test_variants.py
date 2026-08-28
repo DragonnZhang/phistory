@@ -42,6 +42,19 @@ def test_agent_rejects_duplicate_variant_ids():
         )
 
 
+def test_agent_rejects_active_hidden_variant_overlap():
+    with pytest.raises(ValueError, match="cannot also be hidden"):
+        AgentSpec(
+            id="agent",
+            display_name="Agent",
+            package="agent",
+            tap_client="agent",
+            fake_env={},
+            variants=(CaptureVariant("alternate", "Alternate"),),
+            hidden_capture_variants=("alternate",),
+        )
+
+
 @pytest.mark.parametrize("variant_id", ["Not/Safe", "..", ".hidden", "trailing."])
 def test_agent_rejects_invalid_variant_ids(variant_id: str):
     with pytest.raises(ValueError, match="invalid"):
@@ -202,6 +215,21 @@ def test_site_manifest_prefers_registered_lane_label_over_captured_version_label
     assert lanes["default"]["label"] == "Non-official API"
     assert lanes["default"]["versions"][0]["variant_label"] == "Default"
     assert lanes["retired"]["label"] == "Captured Retired"
+
+    hidden_agent = AgentSpec(
+        id=agent.id,
+        display_name=agent.display_name,
+        package=agent.package,
+        tap_client=agent.tap_client,
+        fake_env=agent.fake_env,
+        default_variant=agent.default_variant,
+        hidden_capture_variants=("retired",),
+    )
+    monkeypatch.setitem(AGENTS, agent.id, hidden_agent)
+
+    hidden_lanes = {lane["id"] for lane in _build_manifest(tmp_path)["agents"][0]["variants"]}
+
+    assert hidden_lanes == {"default"}
 
 
 def test_site_does_not_read_the_removed_flat_capture_layout(tmp_path: Path):
