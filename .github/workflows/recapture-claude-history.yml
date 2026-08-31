@@ -15,6 +15,7 @@ on:
           - official-opus-4-8
           - official-opus-4-7
           - official-fable
+          - official-haiku
       from:
         description: First stable Claude Code version to recapture
         required: true

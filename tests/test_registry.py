@@ -83,6 +83,11 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             "Official API · Fable 5",
             {"api": "official", "model": "claude-fable-5"},
         ),
+        (
+            "official-haiku",
+            "Official API · Haiku 4.5",
+            {"api": "official", "model": "claude-haiku-4-5"},
+        ),
     ]
 
 
@@ -101,6 +106,7 @@ def test_claude_code_official_variants_use_forward_capture_without_changing_defa
         ("official-opus-4-8", "claude-opus-4-8[1m]"),
         ("official-opus-4-7", "claude-opus-4-7[1m]"),
         ("official-fable", "claude-fable-5"),
+        ("official-haiku", "claude-haiku-4-5"),
     ):
         target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant(variant_id), tmp_path / "captures")
         command = tap_command(target, target.prompt_path, target.variant_dir / ".tap")

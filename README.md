@@ -23,7 +23,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 For each supported release, Phistory installs the exact CLI package and runs each configured snapshot through [`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP request without calling the real model provider, and stores the result under `captures/<agent>/<version>/variants/<variant>/` with `prompt.md`, `trace.jsonl`, and `meta.json`. Capture configurations use a `default` snapshot as their baseline; selected models or modes are stored as additional variants.
 
-Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional official API snapshots pin `claude-sonnet-5` in `official`, `claude-opus-5[1m]` in `official-opus`, `claude-opus-4-8[1m]` in `official-opus-4-8`, `claude-opus-4-7[1m]` in `official-opus-4-7`, and `claude-fable-5` in `official-fable`; all five use transparent forward-proxy capture so `ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead of calling the model provider. Historical entries in these lanes run each old CLI against the same explicit Sonnet 5, Opus 5 1M, Opus 4.8 1M, Opus 4.7 1M, or Fable 5 model; they do not reconstruct the model that was the official default when that CLI was released. All five official archives cover the complete stable CLI history.
+Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional official API snapshots pin `claude-sonnet-5` in `official`, `claude-opus-5[1m]` in `official-opus`, `claude-opus-4-8[1m]` in `official-opus-4-8`, `claude-opus-4-7[1m]` in `official-opus-4-7`, `claude-fable-5` in `official-fable`, and `claude-haiku-4-5` in `official-haiku`; all six use transparent forward-proxy capture so `ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead of calling the model provider. Historical entries in these lanes run each old CLI against the same explicit Sonnet 5, Opus 5 1M, Opus 4.8 1M, Opus 4.7 1M, Fable 5, or Haiku 4.5 model; they do not reconstruct the model that was the official default when that CLI was released. The history recapture workflow can cover the complete stable CLI history for every official lane.
 
 Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` so remote feature assignments are not fetched, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off` so the internal rolling task-budget reminder does not enter archived prompts. These snapshots use a deterministic, documented baseline rather than the rollout state at capture time; the baseline is recorded in `meta.json`.
 
@@ -46,7 +46,7 @@ uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigr
 uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5
 
 # Capture Claude Code's non-official default and all official API model snapshots.
-uv run phistory capture --latest --agents claude-code --variants default,official,official-opus,official-opus-4-8,official-opus-4-7,official-fable
+uv run phistory capture --latest --agents claude-code --variants default,official,official-opus,official-opus-4-8,official-opus-4-7,official-fable,official-haiku
 
 # Capture a historical version range for one agent.
 uv run phistory backfill claude-code --from 2.1.113 --to latest

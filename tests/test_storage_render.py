@@ -60,7 +60,8 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`claude-opus-4-8[1m]` in `official-opus-4-8`" in text
     assert "`claude-opus-4-7[1m]` in `official-opus-4-7`" in text
     assert "`claude-fable-5` in `official-fable`" in text
-    assert "official archives cover the complete stable CLI history" in text
+    assert "`claude-haiku-4-5` in `official-haiku`" in text
+    assert "history recapture workflow can cover the complete stable CLI history" in text
     assert "`ANTHROPIC_BASE_URL` remains unset" in text
     assert "do not reconstruct the model that was the official default" in text
     assert "deterministic, documented baseline rather than the rollout state" in text
@@ -69,7 +70,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "--variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5" in text
     assert (
         "--agents claude-code --variants "
-        "default,official,official-opus,official-opus-4-8,official-opus-4-7,official-fable"
+        "default,official,official-opus,official-opus-4-8,official-opus-4-7,official-fable,official-haiku"
     ) in text
     assert "--agents claude-code,codex,qwen-code,dsh,antigravity" in text
     assert "## Web UI" not in text
@@ -95,6 +96,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`" in zh_text
     assert "非官方／自定义 API 路径" in zh_text
     assert "`claude-opus-5[1m]`" in zh_text
+    assert "`claude-haiku-4-5`" in zh_text
     assert "`ANTHROPIC_BASE_URL` 保持未设置" in zh_text
     assert "并不还原该版本发布时的官方默认模型" in zh_text
     assert "明确记录的确定性基线" in zh_text
