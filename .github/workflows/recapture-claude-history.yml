@@ -10,11 +10,11 @@ on:
         type: choice
         options:
           - default
-          - official
+          - official-fable
           - official-opus
           - official-opus-4-8
           - official-opus-4-7
-          - official-fable
+          - official
           - official-haiku
       from:
         description: First stable Claude Code version to recapture

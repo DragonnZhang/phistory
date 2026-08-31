@@ -72,18 +72,18 @@ CLAUDE_CODE = AgentSpec(
     ),
     variants=(
         _variant(
-            "official",
-            "Official API · Sonnet 5",
+            "official-fable",
+            "Official API · Fable 5",
             (
                 "--no-yolo",
                 "--",
                 "--no-session-persistence",
                 "--model",
-                "claude-sonnet-5",
+                "claude-fable-5",
                 "-p",
                 "Reply with one short sentence.",
             ),
-            dimensions={"api": "official", "model": "claude-sonnet-5"},
+            dimensions={"api": "official", "model": "claude-fable-5"},
             tap_mode="forward",
         ),
         _variant(
@@ -132,18 +132,18 @@ CLAUDE_CODE = AgentSpec(
             tap_mode="forward",
         ),
         _variant(
-            "official-fable",
-            "Official API · Fable 5",
+            "official",
+            "Official API · Sonnet 5",
             (
                 "--no-yolo",
                 "--",
                 "--no-session-persistence",
                 "--model",
-                "claude-fable-5",
+                "claude-sonnet-5",
                 "-p",
                 "Reply with one short sentence.",
             ),
-            dimensions={"api": "official", "model": "claude-fable-5"},
+            dimensions={"api": "official", "model": "claude-sonnet-5"},
             tap_mode="forward",
         ),
         _variant(

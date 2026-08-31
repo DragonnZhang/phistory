@@ -70,7 +70,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "--variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5" in text
     assert (
         "--agents claude-code --variants "
-        "default,official,official-opus,official-opus-4-8,official-opus-4-7,official-fable,official-haiku"
+        "default,official-fable,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku"
     ) in text
     assert "--agents claude-code,codex,qwen-code,dsh,antigravity" in text
     assert "## Web UI" not in text

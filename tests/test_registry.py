@@ -62,7 +62,11 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
     assert "--bare" not in agent.default_variant.run_args
     assert "--exclude-dynamic-system-prompt-sections" not in agent.default_variant.run_args
     assert [(variant.id, variant.label, variant.dimensions) for variant in agent.variants] == [
-        ("official", "Official API · Sonnet 5", {"api": "official", "model": "claude-sonnet-5"}),
+        (
+            "official-fable",
+            "Official API · Fable 5",
+            {"api": "official", "model": "claude-fable-5"},
+        ),
         (
             "official-opus",
             "Official API · Opus 5 1M",
@@ -79,9 +83,9 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             {"api": "official", "model": "claude-opus-4-7[1m]"},
         ),
         (
-            "official-fable",
-            "Official API · Fable 5",
-            {"api": "official", "model": "claude-fable-5"},
+            "official",
+            "Official API · Sonnet 5",
+            {"api": "official", "model": "claude-sonnet-5"},
         ),
         (
             "official-haiku",
@@ -101,11 +105,11 @@ def test_claude_code_official_variants_use_forward_capture_without_changing_defa
     assert "--export-prompt" in default_command
 
     for variant_id, model in (
-        ("official", "claude-sonnet-5"),
+        ("official-fable", "claude-fable-5"),
         ("official-opus", "claude-opus-5[1m]"),
         ("official-opus-4-8", "claude-opus-4-8[1m]"),
         ("official-opus-4-7", "claude-opus-4-7[1m]"),
-        ("official-fable", "claude-fable-5"),
+        ("official", "claude-sonnet-5"),
         ("official-haiku", "claude-haiku-4-5"),
     ):
         target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant(variant_id), tmp_path / "captures")
