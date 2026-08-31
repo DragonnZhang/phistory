@@ -88,7 +88,7 @@ CLAUDE_CODE = AgentSpec(
         ),
         _variant(
             "official-opus",
-            "Official API · Opus 5 1M",
+            "Official API · Opus 5",
             (
                 "--no-yolo",
                 "--",
@@ -103,7 +103,7 @@ CLAUDE_CODE = AgentSpec(
         ),
         _variant(
             "official-opus-4-8",
-            "Official API · Opus 4.8 1M",
+            "Official API · Opus 4.8",
             (
                 "--no-yolo",
                 "--",
@@ -118,7 +118,7 @@ CLAUDE_CODE = AgentSpec(
         ),
         _variant(
             "official-opus-4-7",
-            "Official API · Opus 4.7 1M",
+            "Official API · Opus 4.7",
             (
                 "--no-yolo",
                 "--",

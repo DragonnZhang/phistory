@@ -69,17 +69,17 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
         ),
         (
             "official-opus",
-            "Official API · Opus 5 1M",
+            "Official API · Opus 5",
             {"api": "official", "model": "claude-opus-5[1m]"},
         ),
         (
             "official-opus-4-8",
-            "Official API · Opus 4.8 1M",
+            "Official API · Opus 4.8",
             {"api": "official", "model": "claude-opus-4-8[1m]"},
         ),
         (
             "official-opus-4-7",
-            "Official API · Opus 4.7 1M",
+            "Official API · Opus 4.7",
             {"api": "official", "model": "claude-opus-4-7[1m]"},
         ),
         (
