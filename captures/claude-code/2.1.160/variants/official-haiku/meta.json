@@ -1,0 +1,58 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.160",
+  "variant": {
+    "id": "official-haiku",
+    "label": "Official API · Haiku 4.5",
+    "dimensions": {
+      "api": "official",
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "requested": {
+    "api": "official",
+    "model": "claude-haiku-4-5"
+  },
+  "observed": {
+    "model": "claude-haiku-4-5",
+    "tool_count": 27
+  },
+  "published_at": "2026-06-01T20:03:23.202Z",
+  "tarball_url": null,
+  "binary_version": "2.1.160 (Claude Code)",
+  "captured_at": "2026-08-31T02:58:21.499067+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 3.769,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--no-session-persistence",
+    "--model",
+    "claude-haiku-4-5",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  }
+}
