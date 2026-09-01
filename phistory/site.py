@@ -1044,13 +1044,29 @@ a:hover { text-decoration: none; }
   font-weight: 700;
   cursor: pointer;
 }
+.trace-wrap {
+  display: none;
+  margin-left: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 7px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
 .trace-mode:hover,
-.trace-mode:focus-visible {
+.trace-mode:focus-visible,
+.trace-wrap:hover,
+.trace-wrap:focus-visible {
   color: var(--text);
   background: var(--control-bg);
   outline: none;
 }
-.trace-section.is-open > .trace-summary .trace-mode {
+.trace-section.is-open > .trace-summary .trace-mode,
+.trace-section.is-open > .trace-summary .trace-wrap {
   display: inline-flex;
 }
 .trace-raw {
@@ -1291,6 +1307,11 @@ a:hover { text-decoration: none; }
   overflow: auto;
   max-height: 520px;
   font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+.trace-section.is-wrapped > .trace-content > .trace-body > .raw-json {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 #diff .inputarea {
   caret-color: transparent;
@@ -1773,6 +1794,7 @@ const state = {
   traceOpenSections: new Set(),
   traceOpenTools: new Set(),
   traceRawSections: new Set(),
+  traceWrappedSections: new Set(),
   editor: null,
   monaco: null,
   monacoPromise: null,
@@ -1907,10 +1929,20 @@ function bindEvents() {
       saveTraceState();
       return;
     }
+    const wrap = event.target.closest?.('.trace-wrap');
+    if (wrap) {
+      event.stopPropagation();
+      const section = wrap.closest('.trace-section');
+      section?.classList.toggle('is-wrapped');
+      updateTraceWrapLabel(section);
+      saveTraceState();
+      return;
+    }
     const summary = event.target.closest?.('.trace-summary');
     if (summary) toggleTracePanel(summary);
   });
   els.trace.addEventListener('keydown', event => {
+    if (event.target.closest?.('.trace-mode, .trace-wrap')) return;
     const summary = event.target.closest?.('.trace-summary');
     if (!summary || !['Enter', ' '].includes(event.key)) return;
     event.preventDefault();
@@ -2253,6 +2285,7 @@ function resetTraceState() {
   state.traceOpenSections = new Set();
   state.traceOpenTools = new Set();
   state.traceRawSections = new Set();
+  state.traceWrappedSections = new Set();
 }
 
 function loadStoredTraceState() {
@@ -2268,6 +2301,7 @@ function loadStoredTraceState() {
     state.traceOpenSections = new Set(Array.isArray(saved.openSections) ? saved.openSections.map(String) : []);
     state.traceOpenTools = new Set(Array.isArray(saved.openTools) ? saved.openTools.map(String) : []);
     state.traceRawSections = new Set(Array.isArray(saved.rawSections) ? saved.rawSections.map(String) : []);
+    state.traceWrappedSections = new Set(Array.isArray(saved.wrappedSections) ? saved.wrappedSections.map(String) : []);
   } catch {
     resetTraceState();
   }
@@ -2282,7 +2316,8 @@ function saveTraceState() {
       scrollTop: state.traceScrollTop,
       openSections: [...state.traceOpenSections],
       openTools: [...state.traceOpenTools],
-      rawSections: [...state.traceRawSections]
+      rawSections: [...state.traceRawSections],
+      wrappedSections: [...state.traceWrappedSections]
     };
     localStorage.setItem(STORAGE_KEYS.traceState, JSON.stringify(pruneTraceStates(all)));
   } catch {}
@@ -2752,6 +2787,11 @@ function snapshotTraceState() {
       .filter(section => section.classList.contains('is-raw'))
       .map(section => section.dataset.section)
   );
+  state.traceWrappedSections = new Set(
+    [...els.trace.querySelectorAll('.trace-section[data-section]')]
+      .filter(section => section.classList.contains('is-wrapped'))
+      .map(section => section.dataset.section)
+  );
 }
 
 function restoreTraceState() {
@@ -2765,6 +2805,8 @@ function restoreTraceState() {
     els.trace.querySelectorAll('.trace-section[data-section]').forEach(section => {
       section.classList.toggle('is-raw', state.traceRawSections.has(section.dataset.section));
       updateTraceModeLabel(section);
+      section.classList.toggle('is-wrapped', state.traceWrappedSections.has(section.dataset.section));
+      updateTraceWrapLabel(section);
     });
   }
   requestAnimationFrame(() => {
@@ -2952,7 +2994,7 @@ function traceDetailHtml(item, detail) {
     ${blocksSectionHtml('Developer Prompt', detail.developerBlocks, false)}
     ${toolsSectionHtml(detail.tools)}
     ${messagesSectionHtml(detail.messages)}
-    ${traceSectionHtml('Raw Request Body', JSON.stringify(detail.rawBody, null, 2), { open: false, raw: true })}
+    ${traceSectionHtml('Raw Request Body', JSON.stringify(detail.rawBody, null, 2), { open: false, raw: true, wrapToggle: true })}
   </article>`;
 }
 
@@ -2970,11 +3012,14 @@ function metaItem(label, value) {
   return `<span>${escapeHtml(label)} <b>${escapeHtml(value)}</b></span>`;
 }
 
-function traceSummaryHtml(title, open, extra = '', modeToggle = false) {
+function traceSummaryHtml(title, open, extra = '', modeToggle = false, wrapToggle = false) {
   const mode = modeToggle
     ? '<button class="trace-mode" type="button">View source</button>'
     : '';
-  return `<div class="trace-summary" role="button" tabindex="0" aria-expanded="${open ? 'true' : 'false'}">${chevronIcon()}<strong>${escapeHtml(title)}</strong>${mode}${extra}</div>`;
+  const wrap = wrapToggle
+    ? '<button class="trace-wrap" type="button" aria-pressed="false">Wrap lines</button>'
+    : '';
+  return `<div class="trace-summary" role="button" tabindex="0" aria-expanded="${open ? 'true' : 'false'}">${chevronIcon()}<strong>${escapeHtml(title)}</strong>${mode}${wrap}${extra}</div>`;
 }
 
 function chevronIcon() {
@@ -2985,6 +3030,14 @@ function updateTraceModeLabel(section) {
   const mode = section?.querySelector(':scope > .trace-summary .trace-mode');
   if (!mode) return;
   mode.textContent = section.classList.contains('is-raw') ? 'View rendered' : 'View source';
+}
+
+function updateTraceWrapLabel(section) {
+  const wrap = section?.querySelector(':scope > .trace-summary .trace-wrap');
+  if (!wrap) return;
+  const wrapped = section.classList.contains('is-wrapped');
+  wrap.textContent = wrapped ? 'No wrap' : 'Wrap lines';
+  wrap.setAttribute('aria-pressed', String(wrapped));
 }
 
 function blocksSectionHtml(title, blocks, open) {
@@ -3191,7 +3244,7 @@ function schemaType(spec) {
 
 function traceSectionHtml(title, text, options = {}) {
   const bodyClass = options.raw ? 'raw-json' : 'trace-text';
-  return `<section class="trace-section${options.open ? ' is-open' : ''}" data-section="${sectionId(title)}">${traceSummaryHtml(title, Boolean(options.open), options.meta ? `<small>${escapeHtml(options.meta)}</small>` : '')}<div class="trace-content"><div class="trace-body"><pre class="${bodyClass}">${escapeHtml(text)}</pre></div></div></section>`;
+  return `<section class="trace-section${options.open ? ' is-open' : ''}" data-section="${sectionId(title)}">${traceSummaryHtml(title, Boolean(options.open), options.meta ? `<small>${escapeHtml(options.meta)}</small>` : '', false, Boolean(options.wrapToggle))}<div class="trace-content"><div class="trace-body"><pre class="${bodyClass}">${escapeHtml(text)}</pre></div></div></section>`;
 }
 
 function sectionId(title) {
