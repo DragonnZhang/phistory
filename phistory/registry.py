@@ -29,6 +29,7 @@ def _variant(
     driver: CaptureDriver = "oneshot",
     dimensions: dict[str, str] | None = None,
     tap_mode: TapMode | None = None,
+    min_version: str | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id=variant_id,
@@ -37,6 +38,7 @@ def _variant(
         driver=driver,
         dimensions=dimensions or {},
         tap_mode=tap_mode,
+        min_version=min_version,
     )
 
 
@@ -202,6 +204,7 @@ CODEX = AgentSpec(
                 "--json",
             ),
             dimensions={"model": "gpt-5.6-sol"},
+            min_version="0.144.0",
         ),
         _variant(
             "gpt-5.6-terra",
@@ -217,6 +220,7 @@ CODEX = AgentSpec(
                 "--json",
             ),
             dimensions={"model": "gpt-5.6-terra"},
+            min_version="0.144.0",
         ),
         _variant(
             "gpt-5.6-luna",
@@ -232,6 +236,7 @@ CODEX = AgentSpec(
                 "--json",
             ),
             dimensions={"model": "gpt-5.6-luna"},
+            min_version="0.144.0",
         ),
         _variant(
             "gpt-5.5",
@@ -247,6 +252,7 @@ CODEX = AgentSpec(
                 "--json",
             ),
             dimensions={"model": "gpt-5.5"},
+            min_version="0.125.0",
         ),
     ),
 )

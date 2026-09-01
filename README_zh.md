@@ -90,7 +90,7 @@ uv run phistory render-site
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
 | Claude Code | [2.1.251 - 2026-08-28](captures/claude-code/2.1.251/variants/default/prompt.md) | 408 | 2716 | 2026-08-29 09:20 UTC |
-| Codex CLI | [0.151.0 - 2026-08-29](captures/codex/0.151.0/variants/default/prompt.md) | 80 | 217 | 2026-08-30 08:31 UTC |
+| Codex CLI | [0.151.0 - 2026-08-29](captures/codex/0.151.0/variants/default/prompt.md) | 80 | 176 | 2026-08-30 08:31 UTC |
 | DeepSeek Harness | [0.1.1-rc.2 - 2026-08-21](captures/dsh/0.1.1-rc.2/variants/default/prompt.md) | 8 | 39 | 2026-08-21 13:43 UTC |
 | Antigravity CLI | [1.1.22 - 2026-08-27](captures/antigravity/1.1.22/variants/default/prompt.md) | 36 | 36 | 2026-08-27 13:03 UTC |
 | Grok Build | [1.0.13 - 2026-08-28](captures/grok/1.0.13/variants/default/prompt.md) | 131 | 131 | 2026-08-29 09:20 UTC |

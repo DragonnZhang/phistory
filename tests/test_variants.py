@@ -9,7 +9,7 @@ from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInf
 from phistory.registry import AGENTS, get_agent
 from phistory.site import _build_manifest
 from phistory.storage import write_meta
-from phistory.workflow import capture_latest
+from phistory.workflow import capture_latest, iter_backfill
 
 
 def test_capture_target_keeps_variants_isolated_under_a_version(tmp_path: Path):
@@ -97,6 +97,65 @@ def test_capture_latest_runs_default_and_every_configured_variant(monkeypatch, t
     assert {target.version.version for target in captured} == {"1.0.0"}
 
 
+def test_capture_latest_skips_variants_before_their_minimum_version(monkeypatch, tmp_path: Path):
+    agent = AgentSpec(
+        id="agent",
+        display_name="Agent",
+        package="agent",
+        tap_client="agent",
+        fake_env={},
+        variants=(CaptureVariant("future", "Future", min_version="2.0.0"),),
+    )
+    captured = []
+    monkeypatch.setattr("phistory.workflow.get_agent", lambda _agent_id: agent)
+    monkeypatch.setattr("phistory.workflow.packages.latest_version", lambda _agent: VersionInfo("1.9.0"))
+    monkeypatch.setattr(
+        "phistory.workflow.capture_target",
+        lambda target, **_kwargs: captured.append(target.variant.id) or target.variant.id,
+    )
+
+    results = capture_latest(["agent"], root=tmp_path / "captures", cache_dir=tmp_path / "cache")
+
+    assert results == ["default"]
+    assert captured == ["default"]
+
+
+def test_backfill_starts_a_variant_at_its_minimum_version(monkeypatch, tmp_path: Path):
+    agent = AgentSpec(
+        id="agent",
+        display_name="Agent",
+        package="agent",
+        tap_client="agent",
+        fake_env={},
+        variants=(CaptureVariant("future", "Future", min_version="1.1.0"),),
+    )
+    versions = [VersionInfo("1.0.0"), VersionInfo("1.1.0"), VersionInfo("1.2.0")]
+    monkeypatch.setattr("phistory.workflow.get_agent", lambda _agent_id: agent)
+    monkeypatch.setattr("phistory.workflow.packages.versions_between", lambda *_args, **_kwargs: versions)
+    monkeypatch.setattr(
+        "phistory.workflow.capture_target",
+        lambda target, **_kwargs: (target.version.version, target.variant.id),
+    )
+
+    results = list(
+        iter_backfill(
+            "agent",
+            start="1.0.0",
+            end="1.2.0",
+            root=tmp_path / "captures",
+            cache_dir=tmp_path / "cache",
+        )
+    )
+
+    assert results == [
+        ("1.0.0", "default"),
+        ("1.1.0", "default"),
+        ("1.1.0", "future"),
+        ("1.2.0", "default"),
+        ("1.2.0", "future"),
+    ]
+
+
 def test_dsh_web_default_does_not_override_mode(monkeypatch, tmp_path: Path):
     agent = get_agent("dsh")
     payloads = []
@@ -170,6 +229,37 @@ def test_site_manifest_builds_independent_variant_version_lanes(tmp_path: Path):
     assert lanes["default"]["versions"][0]["change"]["previous_version"] == "1.0.0"
     assert lanes["model-b"]["versions"][0]["change"]["previous_version"] is None
     assert lanes["model-b"]["versions"][0]["variant_dimensions"] == {"model": "model-b"}
+
+
+def test_site_manifest_hides_captures_before_a_registered_variant_minimum(monkeypatch, tmp_path: Path):
+    agent = AgentSpec(
+        id="gated-agent",
+        display_name="Gated Agent",
+        package="agent",
+        tap_client="agent",
+        fake_env={},
+        variants=(CaptureVariant("future", "Future", min_version="1.1.0"),),
+    )
+    monkeypatch.setitem(AGENTS, agent.id, agent)
+    for version in ("1.0.0", "1.1.0"):
+        target = CaptureTarget(agent, VersionInfo(version), agent.variant("future"), tmp_path)
+        target.variant_dir.mkdir(parents=True)
+        target.prompt_path.write_text(f"prompt {version}\n", encoding="utf-8")
+        target.trace_path.write_text("{}\n", encoding="utf-8")
+        write_meta(
+            target,
+            {
+                "agent_id": agent.id,
+                "agent": agent.display_name,
+                "version": version,
+                "variant": {"id": "future", "label": "Future", "dimensions": {}},
+            },
+        )
+
+    lanes = {lane["id"]: lane for lane in _build_manifest(tmp_path)["agents"][0]["variants"]}
+
+    assert [item["version"] for item in lanes["future"]["versions"]] == ["1.1.0"]
+    assert lanes["future"]["versions"][0]["change"]["previous_version"] is None
 
 
 def test_site_manifest_prefers_registered_lane_label_over_captured_version_label(monkeypatch, tmp_path: Path):

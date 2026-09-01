@@ -25,6 +25,11 @@ HomeProfile = Literal[
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
+_VERSION_PART_RE = re.compile(r"\d+|[A-Za-z]+")
+
+
+def _version_key(version: str) -> tuple[tuple[int, int | str], ...]:
+    return tuple((1, int(part)) if part.isdigit() else (0, part) for part in _VERSION_PART_RE.findall(version))
 
 
 @dataclass(frozen=True)
@@ -36,6 +41,10 @@ class CaptureVariant:
     driver: CaptureDriver = "oneshot"
     extra_env: dict[str, str] = field(default_factory=dict)
     tap_mode: TapMode | None = None
+    min_version: str | None = None
+
+    def supports_version(self, version: str) -> bool:
+        return self.min_version is None or _version_key(version) >= _version_key(self.min_version)
 
 
 @dataclass(frozen=True)

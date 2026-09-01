@@ -47,6 +47,12 @@ def test_get_agent_has_capture_contract():
         ("gpt-5.6-luna", {"model": "gpt-5.6-luna"}),
         ("gpt-5.5", {"model": "gpt-5.5"}),
     ]
+    assert {variant.id: variant.min_version for variant in agent.variants} == {
+        "gpt-5.6-sol": "0.144.0",
+        "gpt-5.6-terra": "0.144.0",
+        "gpt-5.6-luna": "0.144.0",
+        "gpt-5.5": "0.125.0",
+    }
     for variant in agent.variants:
         model_index = variant.run_args.index("--model")
         assert variant.run_args[model_index + 1] == variant.dimensions["model"]

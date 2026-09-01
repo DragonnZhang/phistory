@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from phistory.registry import agent_sort_key
+from phistory.registry import AGENTS, agent_sort_key
 
 _VERSION_PART_RE = re.compile(r"\d+|[A-Za-z]+")
 
@@ -40,6 +40,17 @@ def read_capture_rows(root: Path) -> list[dict[str, Any]]:
         variant_dir = meta_path.parent
         version_dir = variant_dir.parent.parent
         variant_meta = meta.get("variant") if isinstance(meta.get("variant"), dict) else {}
+        agent_id = meta.get("agent_id") or version_dir.parent.name
+        version = meta.get("version") or version_dir.name
+        variant_id = variant_meta.get("id") or variant_dir.name
+        agent = AGENTS.get(agent_id)
+        registered_variant = (
+            next((item for item in agent.capture_variants if item.id == variant_id), None)
+            if agent is not None
+            else None
+        )
+        if registered_variant is not None and not registered_variant.supports_version(version):
+            continue
         prompt = variant_dir / "prompt.md"
         trace = variant_dir / "trace.jsonl"
         static_prompts = version_dir / "static" / "prompts.md"
@@ -50,9 +61,9 @@ def read_capture_rows(root: Path) -> list[dict[str, Any]]:
         rows.append(
             {
                 "agent": meta.get("agent") or meta.get("agent_id") or version_dir.parent.name,
-                "agent_id": meta.get("agent_id") or version_dir.parent.name,
-                "version": meta.get("version") or version_dir.name,
-                "variant_id": variant_meta.get("id") or variant_dir.name,
+                "agent_id": agent_id,
+                "version": version,
+                "variant_id": variant_id,
                 "variant_label": variant_meta.get("label") or variant_dir.name,
                 "variant_dimensions": variant_meta.get("dimensions") or {},
                 "observed": meta.get("observed") or {},
