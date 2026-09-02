@@ -74,6 +74,21 @@ CLAUDE_CODE = AgentSpec(
     ),
     variants=(
         _variant(
+            "official-fable-5-1",
+            "Official API · Fable 5.1",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-fable-5-1",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-fable-5-1"},
+            tap_mode="forward",
+        ),
+        _variant(
             "official-fable",
             "Official API · Fable 5",
             (

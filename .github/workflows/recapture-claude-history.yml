@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - default
+          - official-fable-5-1
           - official-fable
           - official-opus
           - official-opus-4-8

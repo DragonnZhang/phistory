@@ -74,9 +74,10 @@ Current agents are defined in `phistory/registry.py`:
 - `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`; the `default` variant captures
   the non-official/custom-base-URL compatibility path, while `official` pins `claude-sonnet-5` and uses
   transparent forward capture so `ANTHROPIC_BASE_URL` remains unset without calling the real provider; the official
-  variants are ordered Fable, Opus, Sonnet, then Haiku: `official-fable`, `official-opus`, `official-opus-4-8`,
-  `official-opus-4-7`, `official`, and `official-haiku` use `claude-fable-5`, `claude-opus-5[1m]`,
-  `claude-opus-4-8[1m]`, `claude-opus-4-7[1m]`, `claude-sonnet-5`, and `claude-haiku-4-5`, respectively.
+  variants are ordered Fable, Opus, Sonnet, then Haiku: `official-fable-5-1`, `official-fable`, `official-opus`,
+  `official-opus-4-8`, `official-opus-4-7`, `official`, and `official-haiku` use `claude-fable-5-1`,
+  `claude-fable-5`, `claude-opus-5[1m]`, `claude-opus-4-8[1m]`, `claude-opus-4-7[1m]`, `claude-sonnet-5`,
+  and `claude-haiku-4-5`, respectively.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives the real default plus pinned GPT-5.6 Sol, GPT-5.6 Terra, GPT-5.6 Luna, and GPT-5.5 variants. The retired `gpt-5.6` alias capture remains archived but is hidden from the site because the CLI treated it as unknown local model metadata.
   Fixed-model lanes begin at the first Codex CLI release whose bundled model catalog includes that model: 0.125.0 for GPT-5.5 and 0.144.0 for the GPT-5.6 family.
 - `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode; uses a Web RPC driver for default, Standard, PTC, Minimal, and Creator snapshots, plus the headless snapshot.
@@ -152,9 +153,9 @@ uv run phistory backfill <agent> --from <version> --to <version> --force
 
 Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1`, `DISABLE_TELEMETRY=1`, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`; their metadata records this deterministic baseline.
 
-The dedicated Claude Code history recapture workflow accepts `default`, `official-fable`, `official-opus`,
-`official-opus-4-8`, `official-opus-4-7`, `official`, or `official-haiku` and defaults to `default`. Select
-`official-fable` for Fable 5, `official-opus` for Opus 5 1M, `official-opus-4-8` for Opus 4.8 1M,
+The dedicated Claude Code history recapture workflow accepts `default`, `official-fable-5-1`, `official-fable`,
+`official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official`, or `official-haiku` and defaults to `default`.
+Select `official-fable-5-1` for Fable 5.1, `official-fable` for Fable 5, `official-opus` for Opus 5 1M, `official-opus-4-8` for Opus 4.8 1M,
 `official-opus-4-7` for Opus 4.7 1M, `official` for Sonnet 5, or `official-haiku` for Haiku 4.5.
 Each official lane is a compatibility snapshot of every historical CLI explicitly targeting its configured model, not a
 reconstruction of the model that was the official default at the time. For older releases that cannot consume inline `--settings` JSON,
