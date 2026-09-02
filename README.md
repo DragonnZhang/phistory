@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-09-02 04:02 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-09-02 07:18 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -85,7 +85,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-09-02 04:02 UTC
+Last capture update: 2026-09-02 07:18 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -95,7 +95,7 @@ Last capture update: 2026-09-02 04:02 UTC
 | Antigravity CLI | [1.1.24 - 2026-09-02](captures/antigravity/1.1.24/variants/default/prompt.md) | 38 | 38 | 2026-09-02 03:37 UTC |
 | Grok Build | [1.0.13 - 2026-08-28](captures/grok/1.0.13/variants/default/prompt.md) | 131 | 131 | 2026-08-29 09:20 UTC |
 | MiniMax Code | [3.0.68 - 2026-08-27](captures/minimax-code/3.0.68/variants/default/prompt.md) | 32 | 32 | 2026-08-27 13:03 UTC |
-| Kimi Code | [0.39.1 - 2026-08-28](captures/kimi-code/0.39.1/variants/default/prompt.md) | 68 | 68 | 2026-08-28 14:33 UTC |
+| Kimi Code | [0.40.0 - 2026-09-02](captures/kimi-code/0.40.0/variants/default/prompt.md) | 69 | 69 | 2026-09-02 07:18 UTC |
 | Qwen Code | [0.22.3 - 2026-08-28](captures/qwen-code/0.22.3/variants/default/prompt.md) | 123 | 123 | 2026-08-29 09:20 UTC |
 | Qoder CLI | [1.1.40 - 2026-09-01](captures/qoder/1.1.40/variants/default/prompt.md) | 152 | 152 | 2026-09-02 03:39 UTC |
 | MiMo Code | [0.1.13 - 2026-08-19](captures/mimo/0.1.13/variants/default/prompt.md) | 13 | 13 | 2026-08-19 11:53 UTC |
