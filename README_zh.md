@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每天自动检查新版本，归档最近更新于 **2026-09-01 07:59 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-09-02 03:01 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -23,7 +23,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 Phistory 会安装每个受支持的具体 CLI 版本，再通过 [`claude-tap`](https://github.com/WEIFENG2333/claude-tap) 分别运行每个已配置快照，抓取包含系统提示词的 HTTP 请求，不调用真实模型服务，然后把结果保存到 `captures/<agent>/<version>/variants/<variant>/`，里面包含 `prompt.md`、`trace.jsonl` 和 `meta.json`。抓取配置以 `default` 快照为基线，显式选择的模型或模式会作为额外变体保存。
 
-Claude Code 的 `default` 快照保留非官方／自定义 API 路径；六个官方 API 快照按 Fable、Opus、Sonnet、Haiku 排列：在 `official-fable` 中固定使用 `claude-fable-5`，在 `official-opus` 中固定使用 `claude-opus-5[1m]`，在 `official-opus-4-8` 中固定使用 `claude-opus-4-8[1m]`，在 `official-opus-4-7` 中固定使用 `claude-opus-4-7[1m]`，在 `official` 中固定使用 `claude-sonnet-5`，在 `official-haiku` 中固定使用 `claude-haiku-4-5`。六者都通过透明正向代理抓取，使 `ANTHROPIC_BASE_URL` 保持未设置。capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。这些通道的历史条目会让每个旧版 CLI 显式使用同一个 Fable 5、Opus 5 1M、Opus 4.8 1M、Opus 4.7 1M、Sonnet 5 或 Haiku 4.5 模型，并不还原该版本发布时的官方默认模型。历史回捕工作流可以覆盖每条官方线路的完整稳定版 CLI 历史。
+Claude Code 的 `default` 快照保留非官方／自定义 API 路径；七个官方 API 快照按 Fable、Opus、Sonnet、Haiku 排列：在 `official-fable-5-1` 中固定使用 `claude-fable-5-1`，在 `official-fable` 中固定使用 `claude-fable-5`，在 `official-opus` 中固定使用 `claude-opus-5[1m]`，在 `official-opus-4-8` 中固定使用 `claude-opus-4-8[1m]`，在 `official-opus-4-7` 中固定使用 `claude-opus-4-7[1m]`，在 `official` 中固定使用 `claude-sonnet-5`，在 `official-haiku` 中固定使用 `claude-haiku-4-5`。七者都通过透明正向代理抓取，使 `ANTHROPIC_BASE_URL` 保持未设置。capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。这些通道的历史条目会让每个旧版 CLI 显式使用同一个 Fable 5.1、Fable 5、Opus 5 1M、Opus 4.8 1M、Opus 4.7 1M、Sonnet 5 或 Haiku 4.5 模型，并不还原该版本发布时的官方默认模型。历史回捕工作流可以覆盖每条官方线路的完整稳定版 CLI 历史。
 
 Claude Code 抓取会固定设置 `DISABLE_GROWTHBOOK=1` 和 `DISABLE_TELEMETRY=1`，避免拉取远程灰度配置。同时设置 `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`，避免内部滚动任务预算提醒进入归档提示词。因此快照采用明确记录的确定性基线，而不是抓取当天的灰度状态；该基线会记录在 `meta.json` 中。
 
@@ -46,7 +46,7 @@ uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigr
 uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5
 
 # 抓取 Claude Code 的非官方默认快照和全部官方 API 模型快照。
-uv run phistory capture --latest --agents claude-code --variants default,official-fable,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku
+uv run phistory capture --latest --agents claude-code --variants default,official-fable-5-1,official-fable,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku
 
 # 回填某个 agent 的历史版本区间。
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -85,11 +85,11 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-09-01 07:59 UTC
+最近抓取更新：2026-09-02 03:01 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.252 - 2026-08-31](captures/claude-code/2.1.252/variants/default/prompt.md) | 409 | 2723 | 2026-09-01 07:57 UTC |
+| Claude Code | [2.1.258 - 2026-09-01](captures/claude-code/2.1.258/variants/official-fable-5-1/prompt.md) | 410 | 2724 | 2026-09-02 03:01 UTC |
 | Codex CLI | [0.152.0 - 2026-09-01](captures/codex/0.152.0/variants/default/prompt.md) | 81 | 181 | 2026-09-01 07:58 UTC |
 | DeepSeek Harness | [0.1.1-rc.2 - 2026-08-21](captures/dsh/0.1.1-rc.2/variants/default/prompt.md) | 8 | 39 | 2026-08-21 13:43 UTC |
 | Antigravity CLI | [1.1.23 - 2026-09-01](captures/antigravity/1.1.23/variants/default/prompt.md) | 37 | 37 | 2026-09-01 07:58 UTC |

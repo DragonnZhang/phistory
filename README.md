@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-09-01 07:59 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-09-02 03:01 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -23,7 +23,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 For each supported release, Phistory installs the exact CLI package and runs each configured snapshot through [`claude-tap`](https://github.com/WEIFENG2333/claude-tap), captures the prompt-bearing HTTP request without calling the real model provider, and stores the result under `captures/<agent>/<version>/variants/<variant>/` with `prompt.md`, `trace.jsonl`, and `meta.json`. Capture configurations use a `default` snapshot as their baseline; selected models or modes are stored as additional variants.
 
-Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional official API snapshots pin `claude-fable-5` in `official-fable`, `claude-opus-5[1m]` in `official-opus`, `claude-opus-4-8[1m]` in `official-opus-4-8`, `claude-opus-4-7[1m]` in `official-opus-4-7`, `claude-sonnet-5` in `official`, and `claude-haiku-4-5` in `official-haiku`; all six use transparent forward-proxy capture so `ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead of calling the model provider. Historical entries in these lanes run each old CLI against the same explicit Fable 5, Opus 5 1M, Opus 4.8 1M, Opus 4.7 1M, Sonnet 5, or Haiku 4.5 model; they do not reconstruct the model that was the official default when that CLI was released. The history recapture workflow can cover the complete stable CLI history for every official lane.
+Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional official API snapshots pin `claude-fable-5-1` in `official-fable-5-1`, `claude-fable-5` in `official-fable`, `claude-opus-5[1m]` in `official-opus`, `claude-opus-4-8[1m]` in `official-opus-4-8`, `claude-opus-4-7[1m]` in `official-opus-4-7`, `claude-sonnet-5` in `official`, and `claude-haiku-4-5` in `official-haiku`; all seven use transparent forward-proxy capture so `ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead of calling the model provider. Historical entries in these lanes run each old CLI against the same explicit Fable 5.1, Fable 5, Opus 5 1M, Opus 4.8 1M, Opus 4.7 1M, Sonnet 5, or Haiku 4.5 model; they do not reconstruct the model that was the official default when that CLI was released. The history recapture workflow can cover the complete stable CLI history for every official lane.
 
 Claude Code captures deliberately set `DISABLE_GROWTHBOOK=1` and `DISABLE_TELEMETRY=1` so remote feature assignments are not fetched, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off` so the internal rolling task-budget reminder does not enter archived prompts. These snapshots use a deterministic, documented baseline rather than the rollout state at capture time; the baseline is recorded in `meta.json`.
 
@@ -46,7 +46,7 @@ uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigr
 uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5
 
 # Capture Claude Code's non-official default and all official API model snapshots.
-uv run phistory capture --latest --agents claude-code --variants default,official-fable,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku
+uv run phistory capture --latest --agents claude-code --variants default,official-fable-5-1,official-fable,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku
 
 # Capture a historical version range for one agent.
 uv run phistory backfill claude-code --from 2.1.113 --to latest
@@ -85,11 +85,11 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-09-01 07:59 UTC
+Last capture update: 2026-09-02 03:01 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.252 - 2026-08-31](captures/claude-code/2.1.252/variants/default/prompt.md) | 409 | 2723 | 2026-09-01 07:57 UTC |
+| Claude Code | [2.1.258 - 2026-09-01](captures/claude-code/2.1.258/variants/official-fable-5-1/prompt.md) | 410 | 2724 | 2026-09-02 03:01 UTC |
 | Codex CLI | [0.152.0 - 2026-09-01](captures/codex/0.152.0/variants/default/prompt.md) | 81 | 181 | 2026-09-01 07:58 UTC |
 | DeepSeek Harness | [0.1.1-rc.2 - 2026-08-21](captures/dsh/0.1.1-rc.2/variants/default/prompt.md) | 8 | 39 | 2026-08-21 13:43 UTC |
 | Antigravity CLI | [1.1.23 - 2026-09-01](captures/antigravity/1.1.23/variants/default/prompt.md) | 37 | 37 | 2026-09-01 07:58 UTC |
