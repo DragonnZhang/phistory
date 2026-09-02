@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - claude-code
           - codex
           - qwen-code
           - qoder
@@ -84,9 +85,9 @@ jobs:
           if [ -n "$VARIANTS" ]; then
             args+=(--variants "$VARIANTS")
           fi
-          if [ "$AGENT" = "codex" ]; then
+          if [ "$AGENT" = "codex" ] || [ "$AGENT" = "claude-code" ]; then
             if [ -z "$VARIANTS" ]; then
-              echo "::error title=Missing Codex variants::Codex history backfills must select one or more explicit variants."
+              echo "::error title=Missing capture variants::$AGENT history backfills must select one or more explicit variants."
               status=1
             fi
             args+=(--newest-first --skip-static --prune-installs)
