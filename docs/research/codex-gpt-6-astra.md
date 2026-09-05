@@ -25,7 +25,9 @@ The catalog configures Astra with `tool_mode=code_mode_only`, `multi_agent_versi
 
 At CLI 0.153.1, the archived [Astra request](../../captures/codex/0.153.1/variants/gpt-6-astra/trace.jsonl) exposes 11 tools after expanding namespaces, versus 9 in the [Sol request](../../captures/codex/0.153.1/variants/gpt-5.6-sol/trace.jsonl). Astra adds `functions / request_user_input_async` and `clock / sleep`. Phistory metadata counts the top-level tool entries instead (3 versus 2); the trace atlas retains that count mismatch and displays the expanded tool surface.
 
-Using the trace atlas's normalized system/developer text metric, Astra has 28,126 characters versus Sol's 23,122: a net increase of 5,004. The section diff adds 18,252 and removes 13,248 characters across three sections. These are character counts for the captured CLI prompts, not token counts or API model limits.
+Using the trace atlas's normalized system/developer text metric, Astra has 28,118 characters versus Sol's 23,114: a net increase of 5,004. The section diff adds 18,252 and removes 13,248 characters across three sections. These are character counts for the captured CLI prompts, not token counts or API model limits.
+
+All six lanes at 0.153.1–0.153.4 were captured together on Linux x86_64 in [GitHub Actions](https://github.com/DragonnZhang/phistory/actions/runs/33978692330). The recorded shell is Bash and normalized workspace/Skills paths have no macOS `/private` prefix. At 0.153.4, default Astra and pinned Astra produce identical normalized prompts. The `capture_host` field in each `meta.json` identifies the actual platform and CI run; binary catalog inspection above is separate from request collection.
 
 Reproduce the stable captures on Linux GitHub Actions:
 
