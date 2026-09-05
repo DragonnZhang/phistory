@@ -175,7 +175,7 @@ A plugin is a local bundle of skills, MCP servers, and apps.
 ### Skills
 A skill is a set of local instructions to follow that is stored in a `SKILL.md` file. Below is the list of skills that can be used. Each entry includes a name, description, and a short path that can be expanded into an absolute path using the skill roots table.
 #### Skill roots
-- `r0` = `/private$PHISTORY_HOME/.codex/skills/.system`
+- `r0` = `$PHISTORY_HOME/.codex/skills/.system`
 #### Available skills
 - imagegen: Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas. (file: r0/imagegen/SKILL.md)
 - openai-docs: Use for Codex models/pricing, scheduled tasks, skills, settings, setup, troubleshooting, customization, automations, and self-knowledge—including 'you,' 'your,' 'this app,' or 'this coding agent' when they refer to Codex—and for OpenAI APIs/products and ChatGPT Work. Also use for model choice/migration, prompting, SDKs, Responses, Realtime, agents, evals, and Chat/Work/Codex comparisons. Do not use for generic app/software tasks that merely mention Codex. (file: r0/openai-docs/SKILL.md)
@@ -248,11 +248,11 @@ Full-history forks (`fork_turns` omitted or `"all"`) inherit the parent model an
 # User Message
 
 <environment_context>
-  <cwd>/private$PHISTORY_WORKSPACE</cwd>
-  <shell>zsh</shell>
+  <cwd>$PHISTORY_WORKSPACE</cwd>
+  <shell>bash</shell>
   <current_date>$PHISTORY_DATE</current_date>
   <timezone>$PHISTORY_TIMEZONE</timezone>
-  <filesystem><workspace_roots><root>/private$PHISTORY_WORKSPACE</root></workspace_roots><permission_profile type="managed"><file_system type="restricted"><entry access="read"><special>:root</special></entry></file_system></permission_profile></filesystem>
+  <filesystem><workspace_roots><root>$PHISTORY_WORKSPACE</root></workspace_roots><permission_profile type="managed"><file_system type="restricted"><entry access="read"><special>:root</special></entry></file_system></permission_profile></filesystem>
 </environment_context>
 
 Reply with one short sentence.

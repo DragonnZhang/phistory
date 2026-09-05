@@ -18,13 +18,23 @@
     "tool_count": 14
   },
   "published_at": "2026-09-04T23:31:18.513Z",
-  "tarball_url": "https://registry.npmjs.org/@openai/codex/-/codex-0.153.4.tgz",
+  "tarball_url": null,
   "binary_version": "codex-cli 0.153.4",
-  "captured_at": "2026-09-05T07:06:02.239725+00:00",
+  "captured_at": "2026-09-05T16:43:04.433132+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Backfill prompt history",
+    "run_id": "33978692330",
+    "run_attempt": "1",
+    "job": "backfill",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/33978692330"
+  },
   "tap_client": "codex",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 2.272,
+  "duration_seconds": 2.206,
   "command": [
     "python",
     "-m",
