@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
   workflow_run:
-    workflows: ["Capture prompts", "Recapture Claude Code history"]
+    workflows: ["Capture prompts", "Backfill prompt history", "Recapture Claude Code history"]
     types: [completed]
     branches: [main]
 

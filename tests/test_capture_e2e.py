@@ -7,6 +7,7 @@ from pathlib import Path
 from phistory.capture import (
     _binary_version,
     _capture_env,
+    _capture_host,
     _sanitize_text,
     _sanitize_trace,
     _without_parent_env,
@@ -31,6 +32,7 @@ def _target(agent: AgentSpec, version: VersionInfo, root: Path) -> CaptureTarget
 
 
 def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     fake_codex = bin_dir / "codex"
@@ -74,6 +76,8 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
     assert meta["target"] == "claude-tap capture-only"
     assert meta["observed"] == {"model": "fake-model", "tool_count": 1}
     assert meta["capture_environment"] == {"TEST_CAPTURE_BASELINE": "code-defaults"}
+    assert meta["capture_host"]["runner"] == "local"
+    assert "run_url" not in meta["capture_host"]
     assert "-t" not in meta["command"]
 
     trace_records = [json.loads(line) for line in target.trace_path.read_text(encoding="utf-8").splitlines()]
@@ -84,6 +88,32 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
     prompt = target.prompt_path.read_text(encoding="utf-8")
     assert "Fake system prompt" in prompt
     assert str(tmp_path) not in prompt
+
+
+def test_capture_host_records_actual_github_runner(monkeypatch):
+    monkeypatch.setattr("phistory.capture.platform.system", lambda: "Linux")
+    monkeypatch.setattr("phistory.capture.platform.machine", lambda: "x86_64")
+    for key, value in {
+        "GITHUB_ACTIONS": "true",
+        "GITHUB_SERVER_URL": "https://github.com",
+        "GITHUB_REPOSITORY": "owner/phistory",
+        "GITHUB_WORKFLOW": "Backfill prompt history",
+        "GITHUB_RUN_ID": "123",
+        "GITHUB_RUN_ATTEMPT": "2",
+        "GITHUB_JOB": "backfill",
+    }.items():
+        monkeypatch.setenv(key, value)
+
+    assert _capture_host() == {
+        "platform": "Linux",
+        "architecture": "x86_64",
+        "runner": "github-actions",
+        "workflow": "Backfill prompt history",
+        "run_id": "123",
+        "run_attempt": "2",
+        "job": "backfill",
+        "run_url": "https://github.com/owner/phistory/actions/runs/123",
+    }
 
 
 def test_sanitize_text_normalizes_volatile_claude_headers():

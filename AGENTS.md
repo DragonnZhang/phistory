@@ -18,7 +18,7 @@ This file is for future coding agents. Read it before changing the project.
 - `phistory/cli.py`: CLI entrypoint for `capture`, `backfill`, `extract-static`, `render-index`, and `render-site`.
 - `tests/`: focused unit and local integration tests for package sources, registry contracts, capture behavior, and rendering.
 - `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest smoke capture for all agents, real latest capture, Claude Code static prompt extraction for the latest captured versions, renders artifacts, and commits updates.
-- `.github/workflows/backfill.yml`: manually triggered stable-history backfill for Qwen Code and Qoder CLI with explicit version ranges.
+- `.github/workflows/backfill.yml`: manually triggered stable-history backfill for Claude Code, Codex, Qwen Code, and Qoder CLI with explicit version ranges and variants.
 - `.github/workflows/recapture-claude-history.yml`: manually triggered, sharded Linux recapture for the complete Claude Code history with remote experiment fetching disabled.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
 
@@ -46,10 +46,14 @@ captures/claude-code/<version>/static/prompts.md
 
 Phistory does not call the real model provider when exporting prompts. It relies on `claude-tap --export-prompt`, which captures the request body and returns a protocol-specific dummy response.
 
-Typical latest capture:
+Run all real CLI captures, recaptures, backfills, and smoke captures in Linux GitHub Actions (`ubuntu-latest`). This is the user's standing preference. Local machines may run lint, unit tests with fake CLIs, rendering, and read-only analysis; do not publish locally captured snapshots. macOS paths and shells differ from Linux and must not be interpreted as model or version changes.
+
+New request captures record the actual host platform and GitHub Actions run link in `meta.json.capture_host`. The child CLI's `CI` / `GITHUB_ACTIONS` flags are also set for local probes, so those flags alone are not evidence of CI provenance. Keep the raw trace from the actual Linux run; do not edit a Mac trace to look like Linux.
+
+Dispatch the latest capture on the repository's main branch:
 
 ```bash
-uv run phistory capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+gh workflow run capture.yml -R DragonnZhang/phistory --ref main
 ```
 
 For each agent/version/variant, the flow is:
@@ -124,10 +128,10 @@ uv run ruff check phistory tests
 uv run pytest
 ```
 
-For capture-affecting changes, also run a local latest smoke:
+For capture-affecting changes, validate the affected agents through the Linux CI capture or backfill workflow. `Capture prompts` includes the full latest smoke when manually dispatched:
 
 ```bash
-uv run phistory --root /tmp/phistory-smoke --cache-dir /tmp/phistory-smoke-cache capture --latest --agents claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp --force
+gh workflow run capture.yml -R DragonnZhang/phistory --ref main
 ```
 
 For generated artifacts:
@@ -145,10 +149,11 @@ uv run phistory extract-static claude-code --latest-captured 10
 
 Use `--refresh-candidates` only when the extractor/filtering logic changed and the raw candidate archives should be regenerated from installed packages.
 
-For a targeted historical check:
+For a targeted historical check, use the Linux backfill workflow (select explicit variants for Codex and Claude Code):
 
 ```bash
-uv run phistory backfill <agent> --from <version> --to <version> --force
+gh workflow run backfill.yml -R DragonnZhang/phistory --ref main \
+  -f agent=codex -f variants=gpt-6-astra -f from=0.153.1 -f to=0.153.4 -f force=true
 ```
 
 Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1`, `DISABLE_TELEMETRY=1`, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`; their metadata records this deterministic baseline.
@@ -162,7 +167,7 @@ reconstruction of the model that was the official default at the time. For older
 the oneshot driver detects the CLI capability and temporarily strips claude-tap's redundant settings argument while keeping
 the same forward-proxy and CA environment; affected metadata records this compatibility adjustment.
 
-If you push changes that affect CI capture, verify the `Capture prompts` workflow and the Pages deployment with `gh run list` / `gh run watch`.
+After dispatch, wait for completion and verify the capture/backfill result and Pages deployment with `gh run list` / `gh run watch`, always specifying `-R DragonnZhang/phistory`. Fetch the committed CI artifacts before refreshing downstream trace atlases. Workflow dispatch alone does not complete a capture task.
 
 ## Known Failure Semantics
 

@@ -27,12 +27,11 @@ At CLI 0.153.1, the archived [Astra request](../../captures/codex/0.153.1/varian
 
 Using the trace atlas's normalized system/developer text metric, Astra has 28,126 characters versus Sol's 23,122: a net increase of 5,004. The section diff adds 18,252 and removes 13,248 characters across three sections. These are character counts for the captured CLI prompts, not token counts or API model limits.
 
-Reproduce the stable captures with:
+Reproduce the stable captures on Linux GitHub Actions:
 
 ```bash
-uv run phistory backfill codex --from 0.153.1 --to 0.153.4 --variants gpt-6-astra --skip-static
-uv run phistory render-index
-uv run phistory render-site
+gh workflow run backfill.yml -R DragonnZhang/phistory --ref main \
+  -f agent=codex -f variants=gpt-6-astra -f from=0.153.1 -f to=0.153.4 -f force=true
 ```
 
 Each capture runs the normal `codex exec --model gpt-6-astra` command through `claude-tap` with isolated fake ChatGPT auth. The raw request is archived without calling a real model provider. The `default` lane continues to omit an explicit model override.

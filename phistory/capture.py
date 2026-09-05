@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import platform
 import re
 import time
 from collections.abc import Iterable, Iterator, Mapping
@@ -185,6 +186,7 @@ def capture_target(
                 "tarball_url": target.version.tarball_url,
                 "binary_version": _replace_many(binary_version, replacements) if binary_version else None,
                 "captured_at": _iso_now(),
+                "capture_host": _capture_host(),
                 "tap_client": target.agent.tap_client,
                 "target": "claude-tap capture-only",
                 "client_exit_code": result.returncode,
@@ -224,6 +226,23 @@ def capture_target(
             exc = RuntimeError(f"{exc}\nfailed capture kept under {staging_root}")
         error = _redact_secrets(str(exc), tuple(inherited_env.values()))
         return CaptureResult(target.agent.id, target.version.version, target.variant.id, "failed", error=error)
+
+
+def _capture_host() -> dict[str, str]:
+    # Read the parent environment: _capture_env sets CI flags even for local probes.
+    host = {
+        "platform": platform.system(),
+        "architecture": platform.machine(),
+        "runner": "github-actions" if os.environ.get("GITHUB_ACTIONS") == "true" else "local",
+    }
+    if host["runner"] == "github-actions":
+        for name in ("GITHUB_WORKFLOW", "GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "GITHUB_JOB"):
+            if value := os.environ.get(name):
+                host[name.removeprefix("GITHUB_").lower()] = value
+        if (repository := os.environ.get("GITHUB_REPOSITORY")) and (run_id := host.get("run_id")):
+            server = os.environ.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
+            host["run_url"] = f"{server}/{repository}/actions/runs/{run_id}"
+    return host
 
 
 def _remove_empty_capture_parents(target: CaptureTarget) -> None:
