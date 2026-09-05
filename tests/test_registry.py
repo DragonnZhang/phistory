@@ -42,12 +42,14 @@ def test_get_agent_has_capture_contract():
     assert "--" in agent.default_variant.run_args
     assert "--model" not in agent.default_variant.run_args
     assert [(variant.id, variant.dimensions) for variant in agent.variants] == [
+        ("gpt-6-astra", {"model": "gpt-6-astra"}),
         ("gpt-5.6-sol", {"model": "gpt-5.6-sol"}),
         ("gpt-5.6-terra", {"model": "gpt-5.6-terra"}),
         ("gpt-5.6-luna", {"model": "gpt-5.6-luna"}),
         ("gpt-5.5", {"model": "gpt-5.5"}),
     ]
     assert {variant.id: variant.min_version for variant in agent.variants} == {
+        "gpt-6-astra": "0.153.1",
         "gpt-5.6-sol": "0.144.0",
         "gpt-5.6-terra": "0.144.0",
         "gpt-5.6-luna": "0.144.0",
@@ -56,6 +58,10 @@ def test_get_agent_has_capture_contract():
     for variant in agent.variants:
         model_index = variant.run_args.index("--model")
         assert variant.run_args[model_index + 1] == variant.dimensions["model"]
+    astra = agent.variant("gpt-6-astra")
+    assert not astra.supports_version("0.153.0")
+    assert astra.supports_version("0.153.1")
+    assert astra.supports_version("0.153.4")
 
 
 def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():

@@ -1,0 +1,50 @@
+{
+  "agent_id": "codex",
+  "agent": "Codex CLI",
+  "package": "@openai/codex",
+  "version": "0.153.3",
+  "variant": {
+    "id": "gpt-5.6-luna",
+    "label": "GPT-5.6 Luna",
+    "dimensions": {
+      "model": "gpt-5.6-luna"
+    }
+  },
+  "requested": {
+    "model": "gpt-5.6-luna"
+  },
+  "observed": {
+    "model": "gpt-5.6-luna",
+    "tool_count": 1
+  },
+  "published_at": "2026-09-04T19:07:16.079Z",
+  "tarball_url": null,
+  "binary_version": "codex-cli 0.153.3",
+  "captured_at": "2026-09-05T15:45:44.470286+00:00",
+  "tap_client": "codex",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 13.589,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "codex",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "exec",
+    "Reply with one short sentence.",
+    "--model",
+    "gpt-5.6-luna",
+    "--skip-git-repo-check",
+    "--json"
+  ]
+}

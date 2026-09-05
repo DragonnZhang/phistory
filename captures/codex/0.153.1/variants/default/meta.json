@@ -1,0 +1,44 @@
+{
+  "agent_id": "codex",
+  "agent": "Codex CLI",
+  "package": "@openai/codex",
+  "version": "0.153.1",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "gpt-5.6-sol",
+    "tool_count": 2
+  },
+  "published_at": "2026-09-03T21:09:57.109Z",
+  "tarball_url": null,
+  "binary_version": "codex-cli 0.153.1",
+  "captured_at": "2026-09-05T15:41:56.606512+00:00",
+  "tap_client": "codex",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 31.74,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "codex",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "exec",
+    "Reply with one short sentence.",
+    "--skip-git-repo-check",
+    "--json"
+  ]
+}

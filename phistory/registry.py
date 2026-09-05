@@ -206,6 +206,22 @@ CODEX = AgentSpec(
     ),
     variants=(
         _variant(
+            "gpt-6-astra",
+            "GPT-6 Astra",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-6-astra",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-6-astra"},
+            min_version="0.153.1",
+        ),
+        _variant(
             "gpt-5.6-sol",
             "GPT-5.6 Sol",
             (
