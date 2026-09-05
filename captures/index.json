@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-09-05T16:51:11.678393Z",
+  "updated_at": "2026-09-05T16:52:23.083861Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -59143,7 +59143,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-26T19:43:31.702Z",
-      "captured_at": "2026-08-28T08:10:20.380498+00:00",
+      "captured_at": "2026-09-05T16:52:23.083861+00:00",
       "prompt": "captures/codex/0.150.0/variants/gpt-5.5/prompt.md",
       "trace": "captures/codex/0.150.0/variants/gpt-5.5/trace.jsonl",
       "meta": "captures/codex/0.150.0/variants/gpt-5.5/meta.json"
