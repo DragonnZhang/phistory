@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-09-05T16:43:54.625598Z",
+  "updated_at": "2026-09-05T16:47:48.998423Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -58983,7 +58983,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-27T02:01:46.851Z",
-      "captured_at": "2026-08-28T07:20:41.712130+00:00",
+      "captured_at": "2026-09-05T16:45:10.490814+00:00",
       "prompt": "captures/codex/0.150.1/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.150.1/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.150.1/variants/gpt-5.6-terra/meta.json"
@@ -59003,7 +59003,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-27T02:01:46.851Z",
-      "captured_at": "2026-08-28T07:20:29.741019+00:00",
+      "captured_at": "2026-09-05T16:45:08.142862+00:00",
       "prompt": "captures/codex/0.150.1/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.150.1/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.150.1/variants/gpt-5.6-sol/meta.json"
@@ -59023,7 +59023,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-27T02:01:46.851Z",
-      "captured_at": "2026-08-28T07:20:50.434768+00:00",
+      "captured_at": "2026-09-05T16:45:13.786276+00:00",
       "prompt": "captures/codex/0.150.1/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.150.1/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.150.1/variants/gpt-5.6-luna/meta.json"
@@ -59083,7 +59083,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-26T19:43:31.702Z",
-      "captured_at": "2026-08-28T07:31:20.303303+00:00",
+      "captured_at": "2026-09-05T16:45:22.231816+00:00",
       "prompt": "captures/codex/0.150.0/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.150.0/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.150.0/variants/gpt-5.6-terra/meta.json"
@@ -59103,7 +59103,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-26T19:43:31.702Z",
-      "captured_at": "2026-08-28T07:31:12.994887+00:00",
+      "captured_at": "2026-09-05T16:45:19.942841+00:00",
       "prompt": "captures/codex/0.150.0/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.150.0/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.150.0/variants/gpt-5.6-sol/meta.json"
@@ -59123,7 +59123,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-26T19:43:31.702Z",
-      "captured_at": "2026-08-28T07:31:28.822300+00:00",
+      "captured_at": "2026-09-05T16:45:24.691486+00:00",
       "prompt": "captures/codex/0.150.0/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.150.0/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.150.0/variants/gpt-5.6-luna/meta.json"
@@ -59181,7 +59181,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-24T00:32:45.066Z",
-      "captured_at": "2026-08-28T07:32:24.321084+00:00",
+      "captured_at": "2026-09-05T16:45:32.690646+00:00",
       "prompt": "captures/codex/0.149.1/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.149.1/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.149.1/variants/gpt-5.6-terra/meta.json"
@@ -59201,7 +59201,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-24T00:32:45.066Z",
-      "captured_at": "2026-08-28T07:32:15.522090+00:00",
+      "captured_at": "2026-09-05T16:45:30.509709+00:00",
       "prompt": "captures/codex/0.149.1/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.149.1/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.149.1/variants/gpt-5.6-sol/meta.json"
@@ -59221,7 +59221,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-24T00:32:45.066Z",
-      "captured_at": "2026-08-28T07:32:32.177364+00:00",
+      "captured_at": "2026-09-05T16:45:35.042178+00:00",
       "prompt": "captures/codex/0.149.1/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.149.1/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.149.1/variants/gpt-5.6-luna/meta.json"
@@ -59299,7 +59299,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-20T21:09:05.284Z",
-      "captured_at": "2026-08-28T07:33:27.892789+00:00",
+      "captured_at": "2026-09-05T16:45:43.087321+00:00",
       "prompt": "captures/codex/0.149.0/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.149.0/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.149.0/variants/gpt-5.6-terra/meta.json"
@@ -59319,7 +59319,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-20T21:09:05.284Z",
-      "captured_at": "2026-08-28T07:33:20.338184+00:00",
+      "captured_at": "2026-09-05T16:45:40.763304+00:00",
       "prompt": "captures/codex/0.149.0/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.149.0/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.149.0/variants/gpt-5.6-sol/meta.json"
@@ -59339,7 +59339,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-20T21:09:05.284Z",
-      "captured_at": "2026-08-28T07:33:37.278034+00:00",
+      "captured_at": "2026-09-05T16:45:45.343617+00:00",
       "prompt": "captures/codex/0.149.0/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.149.0/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.149.0/variants/gpt-5.6-luna/meta.json"
@@ -59417,7 +59417,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-18T22:30:14.842Z",
-      "captured_at": "2026-08-28T07:34:29.447513+00:00",
+      "captured_at": "2026-09-05T16:45:55.115348+00:00",
       "prompt": "captures/codex/0.148.0/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.148.0/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.148.0/variants/gpt-5.6-terra/meta.json"
@@ -59437,7 +59437,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-18T22:30:14.842Z",
-      "captured_at": "2026-08-28T07:34:22.009360+00:00",
+      "captured_at": "2026-09-05T16:45:51.164196+00:00",
       "prompt": "captures/codex/0.148.0/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.148.0/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.148.0/variants/gpt-5.6-sol/meta.json"
@@ -59457,7 +59457,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-18T22:30:14.842Z",
-      "captured_at": "2026-08-28T07:34:37.694898+00:00",
+      "captured_at": "2026-09-05T16:45:57.876306+00:00",
       "prompt": "captures/codex/0.148.0/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.148.0/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.148.0/variants/gpt-5.6-luna/meta.json"
@@ -59535,7 +59535,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-07T01:47:21.081Z",
-      "captured_at": "2026-08-28T07:35:29.627634+00:00",
+      "captured_at": "2026-09-05T16:46:05.892081+00:00",
       "prompt": "captures/codex/0.147.0/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.147.0/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.147.0/variants/gpt-5.6-terra/meta.json"
@@ -59555,7 +59555,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-07T01:47:21.081Z",
-      "captured_at": "2026-08-28T07:35:22.118753+00:00",
+      "captured_at": "2026-09-05T16:46:03.400049+00:00",
       "prompt": "captures/codex/0.147.0/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.147.0/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.147.0/variants/gpt-5.6-sol/meta.json"
@@ -59575,7 +59575,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-07T01:47:21.081Z",
-      "captured_at": "2026-08-28T07:35:41.423622+00:00",
+      "captured_at": "2026-09-05T16:46:08.080121+00:00",
       "prompt": "captures/codex/0.147.0/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.147.0/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.147.0/variants/gpt-5.6-luna/meta.json"
@@ -59652,7 +59652,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-05T16:00:31.441Z",
-      "captured_at": "2026-08-28T07:36:44.644498+00:00",
+      "captured_at": "2026-09-05T16:46:17.012638+00:00",
       "prompt": "captures/codex/0.146.1/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.146.1/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.146.1/variants/gpt-5.6-terra/meta.json"
@@ -59672,7 +59672,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-05T16:00:31.441Z",
-      "captured_at": "2026-08-28T07:36:36.301938+00:00",
+      "captured_at": "2026-09-05T16:46:14.648961+00:00",
       "prompt": "captures/codex/0.146.1/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.146.1/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.146.1/variants/gpt-5.6-sol/meta.json"
@@ -59692,7 +59692,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-08-05T16:00:31.441Z",
-      "captured_at": "2026-08-28T07:36:52.510187+00:00",
+      "captured_at": "2026-09-05T16:46:21.532477+00:00",
       "prompt": "captures/codex/0.146.1/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.146.1/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.146.1/variants/gpt-5.6-luna/meta.json"
@@ -59769,7 +59769,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-29T01:45:57.696Z",
-      "captured_at": "2026-08-28T07:37:13.351516+00:00",
+      "captured_at": "2026-09-05T16:46:29.748677+00:00",
       "prompt": "captures/codex/0.146.0/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.146.0/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.146.0/variants/gpt-5.6-terra/meta.json"
@@ -59789,7 +59789,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-29T01:45:57.696Z",
-      "captured_at": "2026-08-28T07:37:04.330637+00:00",
+      "captured_at": "2026-09-05T16:46:27.553807+00:00",
       "prompt": "captures/codex/0.146.0/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.146.0/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.146.0/variants/gpt-5.6-sol/meta.json"
@@ -59809,7 +59809,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-29T01:45:57.696Z",
-      "captured_at": "2026-08-28T07:37:21.668896+00:00",
+      "captured_at": "2026-09-05T16:46:32.155494+00:00",
       "prompt": "captures/codex/0.146.0/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.146.0/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.146.0/variants/gpt-5.6-luna/meta.json"
@@ -59886,7 +59886,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-21T18:24:11.494Z",
-      "captured_at": "2026-08-28T07:38:15.653957+00:00",
+      "captured_at": "2026-09-05T16:46:39.957929+00:00",
       "prompt": "captures/codex/0.145.0/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.145.0/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.145.0/variants/gpt-5.6-terra/meta.json"
@@ -59906,7 +59906,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-21T18:24:11.494Z",
-      "captured_at": "2026-08-28T07:38:09.340823+00:00",
+      "captured_at": "2026-09-05T16:46:37.823876+00:00",
       "prompt": "captures/codex/0.145.0/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.145.0/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.145.0/variants/gpt-5.6-sol/meta.json"
@@ -59926,7 +59926,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-21T18:24:11.494Z",
-      "captured_at": "2026-08-28T07:38:21.512600+00:00",
+      "captured_at": "2026-09-05T16:46:42.049947+00:00",
       "prompt": "captures/codex/0.145.0/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.145.0/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.145.0/variants/gpt-5.6-luna/meta.json"
@@ -59983,7 +59983,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-18T13:54:50.572Z",
-      "captured_at": "2026-08-28T07:39:17.937581+00:00",
+      "captured_at": "2026-09-05T16:46:49.939361+00:00",
       "prompt": "captures/codex/0.144.6/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.144.6/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.144.6/variants/gpt-5.6-terra/meta.json"
@@ -60003,7 +60003,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-18T13:54:50.572Z",
-      "captured_at": "2026-08-28T07:39:08.877300+00:00",
+      "captured_at": "2026-09-05T16:46:48.008340+00:00",
       "prompt": "captures/codex/0.144.6/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.144.6/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.144.6/variants/gpt-5.6-sol/meta.json"
@@ -60023,7 +60023,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-18T13:54:50.572Z",
-      "captured_at": "2026-08-28T07:39:26.732074+00:00",
+      "captured_at": "2026-09-05T16:46:51.830219+00:00",
       "prompt": "captures/codex/0.144.6/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.144.6/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.144.6/variants/gpt-5.6-luna/meta.json"
@@ -60080,7 +60080,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-16T02:57:51.857Z",
-      "captured_at": "2026-08-28T07:40:20.277518+00:00",
+      "captured_at": "2026-09-05T16:46:59.358270+00:00",
       "prompt": "captures/codex/0.144.5/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.144.5/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.144.5/variants/gpt-5.6-terra/meta.json"
@@ -60100,7 +60100,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-16T02:57:51.857Z",
-      "captured_at": "2026-08-28T07:40:13.189731+00:00",
+      "captured_at": "2026-09-05T16:46:57.441494+00:00",
       "prompt": "captures/codex/0.144.5/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.144.5/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.144.5/variants/gpt-5.6-sol/meta.json"
@@ -60120,7 +60120,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-16T02:57:51.857Z",
-      "captured_at": "2026-08-28T07:40:27.425422+00:00",
+      "captured_at": "2026-09-05T16:47:01.347639+00:00",
       "prompt": "captures/codex/0.144.5/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.144.5/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.144.5/variants/gpt-5.6-luna/meta.json"
@@ -60177,7 +60177,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-14T05:10:51.485Z",
-      "captured_at": "2026-08-28T07:40:42.688466+00:00",
+      "captured_at": "2026-09-05T16:47:08.952289+00:00",
       "prompt": "captures/codex/0.144.4/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.144.4/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.144.4/variants/gpt-5.6-terra/meta.json"
@@ -60197,7 +60197,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-14T05:10:51.485Z",
-      "captured_at": "2026-08-28T07:40:36.884076+00:00",
+      "captured_at": "2026-09-05T16:47:06.982372+00:00",
       "prompt": "captures/codex/0.144.4/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.144.4/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.144.4/variants/gpt-5.6-sol/meta.json"
@@ -60217,7 +60217,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-14T05:10:51.485Z",
-      "captured_at": "2026-08-28T07:40:49.628216+00:00",
+      "captured_at": "2026-09-05T16:47:10.886858+00:00",
       "prompt": "captures/codex/0.144.4/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.144.4/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.144.4/variants/gpt-5.6-luna/meta.json"
@@ -60274,7 +60274,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-13T06:15:20.670Z",
-      "captured_at": "2026-08-28T07:41:37.511320+00:00",
+      "captured_at": "2026-09-05T16:47:18.474629+00:00",
       "prompt": "captures/codex/0.144.3/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.144.3/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.144.3/variants/gpt-5.6-terra/meta.json"
@@ -60294,7 +60294,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-13T06:15:20.670Z",
-      "captured_at": "2026-08-28T07:41:31.282359+00:00",
+      "captured_at": "2026-09-05T16:47:16.530269+00:00",
       "prompt": "captures/codex/0.144.3/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.144.3/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.144.3/variants/gpt-5.6-sol/meta.json"
@@ -60314,7 +60314,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-13T06:15:20.670Z",
-      "captured_at": "2026-08-28T07:41:43.916073+00:00",
+      "captured_at": "2026-09-05T16:47:20.456687+00:00",
       "prompt": "captures/codex/0.144.3/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.144.3/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.144.3/variants/gpt-5.6-luna/meta.json"
@@ -60371,7 +60371,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-13T04:42:46.190Z",
-      "captured_at": "2026-08-28T07:42:35.652522+00:00",
+      "captured_at": "2026-09-05T16:47:28.103670+00:00",
       "prompt": "captures/codex/0.144.2/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.144.2/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.144.2/variants/gpt-5.6-terra/meta.json"
@@ -60391,7 +60391,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-13T04:42:46.190Z",
-      "captured_at": "2026-08-28T07:42:29.766213+00:00",
+      "captured_at": "2026-09-05T16:47:26.164133+00:00",
       "prompt": "captures/codex/0.144.2/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.144.2/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.144.2/variants/gpt-5.6-sol/meta.json"
@@ -60411,7 +60411,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-13T04:42:46.190Z",
-      "captured_at": "2026-08-28T07:42:42.134312+00:00",
+      "captured_at": "2026-09-05T16:47:30.029559+00:00",
       "prompt": "captures/codex/0.144.2/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.144.2/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.144.2/variants/gpt-5.6-luna/meta.json"
@@ -60468,7 +60468,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-09T23:05:40.041Z",
-      "captured_at": "2026-08-28T07:42:57.527501+00:00",
+      "captured_at": "2026-09-05T16:47:37.681338+00:00",
       "prompt": "captures/codex/0.144.1/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.144.1/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.144.1/variants/gpt-5.6-terra/meta.json"
@@ -60488,7 +60488,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-09T23:05:40.041Z",
-      "captured_at": "2026-08-28T07:42:51.189018+00:00",
+      "captured_at": "2026-09-05T16:47:35.693705+00:00",
       "prompt": "captures/codex/0.144.1/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.144.1/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.144.1/variants/gpt-5.6-sol/meta.json"
@@ -60508,7 +60508,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-09T23:05:40.041Z",
-      "captured_at": "2026-08-28T07:43:02.913228+00:00",
+      "captured_at": "2026-09-05T16:47:39.597317+00:00",
       "prompt": "captures/codex/0.144.1/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.144.1/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.144.1/variants/gpt-5.6-luna/meta.json"
@@ -60565,7 +60565,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-09T16:50:26.998Z",
-      "captured_at": "2026-08-28T07:43:54.216650+00:00",
+      "captured_at": "2026-09-05T16:47:47.095962+00:00",
       "prompt": "captures/codex/0.144.0/variants/gpt-5.6-terra/prompt.md",
       "trace": "captures/codex/0.144.0/variants/gpt-5.6-terra/trace.jsonl",
       "meta": "captures/codex/0.144.0/variants/gpt-5.6-terra/meta.json"
@@ -60585,7 +60585,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-09T16:50:26.998Z",
-      "captured_at": "2026-08-28T07:43:48.302231+00:00",
+      "captured_at": "2026-09-05T16:47:45.155348+00:00",
       "prompt": "captures/codex/0.144.0/variants/gpt-5.6-sol/prompt.md",
       "trace": "captures/codex/0.144.0/variants/gpt-5.6-sol/trace.jsonl",
       "meta": "captures/codex/0.144.0/variants/gpt-5.6-sol/meta.json"
@@ -60605,7 +60605,7 @@
       },
       "capture_status": "captured",
       "published_at": "2026-07-09T16:50:26.998Z",
-      "captured_at": "2026-08-28T07:44:00.262763+00:00",
+      "captured_at": "2026-09-05T16:47:48.998423+00:00",
       "prompt": "captures/codex/0.144.0/variants/gpt-5.6-luna/prompt.md",
       "trace": "captures/codex/0.144.0/variants/gpt-5.6-luna/trace.jsonl",
       "meta": "captures/codex/0.144.0/variants/gpt-5.6-luna/meta.json"
