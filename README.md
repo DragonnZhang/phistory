@@ -8,7 +8,7 @@ Open the web viewer to compare prompt snapshots across versions and see how agen
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-09-05 16:47 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-09-05 16:51 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -85,7 +85,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-09-05 16:47 UTC
+Last capture update: 2026-09-05 16:51 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |

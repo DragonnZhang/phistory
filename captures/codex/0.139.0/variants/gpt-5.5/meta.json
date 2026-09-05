@@ -20,11 +20,21 @@
   "published_at": "2026-06-09T20:17:25.855Z",
   "tarball_url": null,
   "binary_version": "codex-cli 0.139.0",
-  "captured_at": "2026-08-28T08:17:33.503592+00:00",
+  "captured_at": "2026-09-05T16:50:37.194171+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Backfill prompt history",
+    "run_id": "33978833614",
+    "run_attempt": "1",
+    "job": "backfill",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/33978833614"
+  },
   "tap_client": "codex",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 114.171,
+  "duration_seconds": 4.331,
   "command": [
     "python",
     "-m",
