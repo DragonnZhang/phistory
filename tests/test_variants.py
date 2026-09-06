@@ -161,7 +161,7 @@ def test_dsh_web_default_does_not_override_mode(monkeypatch, tmp_path: Path):
     payloads = []
     monkeypatch.setattr(
         "phistory.drivers.dsh_web._rpc_when_ready",
-        lambda _port, _method, payload, _process: payloads.append(payload) or {"sessionId": "session"},
+        lambda _port, _method, payload, *_args: payloads.append(payload) or {"sessionId": "session"},
     )
     monkeypatch.setattr("phistory.drivers.dsh_web._rpc", lambda *_args: {})
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import http.cookiejar
 import json
 import os
+import re
 import signal
 import socket
 import subprocess
@@ -56,7 +58,8 @@ def _create_and_prompt_session(context: CaptureRunContext, port: int, process: s
     mode = context.target.variant.dimensions.get("mode")
     if mode:
         payload["agentPreset"] = mode
-    created = _rpc_when_ready(port, "session.create", payload, process)
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    created = _rpc_when_ready(port, "session.create", payload, process, opener, context.tap_output_dir / "client.log")
     session_id = str(created["sessionId"])
     _rpc(
         port,
@@ -66,6 +69,7 @@ def _create_and_prompt_session(context: CaptureRunContext, port: int, process: s
             "mode": "queue",
             "content": [{"type": "text", "text": PROMPT}],
         },
+        opener,
     )
 
 
@@ -74,6 +78,8 @@ def _rpc_when_ready(
     method: str,
     payload: dict[str, object],
     process: subprocess.Popen,
+    opener: urllib.request.OpenerDirector,
+    log_path: Path,
 ) -> dict[str, object]:
     deadline = time.monotonic() + SERVER_TIMEOUT_SECONDS
     last_error: Exception | None = None
@@ -81,14 +87,31 @@ def _rpc_when_ready(
         if process.poll() is not None:
             raise RuntimeError(f"DSH Web exited before becoming ready ({process.returncode})")
         try:
-            return _rpc(port, method, payload)
+            return _rpc(port, method, payload, opener)
         except (OSError, urllib.error.URLError, TimeoutError) as exc:
             last_error = exc
+            if isinstance(exc, urllib.error.HTTPError) and exc.code == 401:
+                _authenticate(port, opener, log_path)
             time.sleep(0.25)
     raise RuntimeError(f"DSH Web did not become ready: {last_error}")
 
 
-def _rpc(port: int, method: str, payload: dict[str, object]) -> dict[str, object]:
+def _authenticate(port: int, opener: urllib.request.OpenerDirector, log_path: Path) -> None:
+    if not log_path.exists():
+        return
+    log = log_path.read_text(encoding="utf-8", errors="replace")
+    match = re.search(rf"dsh web: (http://127\.0\.0\.1:{port}/\?token=[A-Za-z0-9_-]+)(?=\s|$)", log)
+    if match:
+        with opener.open(match[1], timeout=5) as response:
+            response.read()
+
+
+def _rpc(
+    port: int,
+    method: str,
+    payload: dict[str, object],
+    opener: urllib.request.OpenerDirector,
+) -> dict[str, object]:
     envelope = {
         "type": "client-request",
         "rpcId": f"phistory-{method}",
@@ -101,7 +124,7 @@ def _rpc(port: int, method: str, payload: dict[str, object]) -> dict[str, object
         headers={"content-type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=5) as response:
+    with opener.open(request, timeout=5) as response:
         body = json.loads(response.read())
     result = body.get("result") or {}
     if not result.get("ok"):
