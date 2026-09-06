@@ -13,7 +13,8 @@ from phistory.registry import get_agent
 
 
 @pytest.mark.parametrize("requires_auth", [False, True])
-def test_web_session_authenticates_and_reuses_cookie(tmp_path: Path, requires_auth: bool):
+@pytest.mark.parametrize("remote_api", [False, True])
+def test_web_session_authenticates_and_reuses_cookie(tmp_path: Path, requires_auth: bool, remote_api: bool):
     methods = []
     exchanges = []
 
@@ -40,7 +41,19 @@ def test_web_session_authenticates_and_reuses_cookie(tmp_path: Path, requires_au
                 self.send_response(401)
                 self.end_headers()
                 return
-            methods.append(envelope["method"])
+            endpoint = envelope["method"]
+            assert self.path == f"/api/{endpoint}"
+            if ("/" in endpoint) != remote_api:
+                self.send_response(404)
+                self.end_headers()
+                return
+            payload = envelope["payload"]
+            if remote_api:
+                assert set(payload) == {"args"}
+                assert set(payload["args"]) == {"request"}
+                payload = payload["args"]["request"]
+            assert "sessionId" in payload
+            methods.append(endpoint.replace("/", "."))
             self.send_response(200)
             self.end_headers()
             self.wfile.write(json.dumps({"result": {"ok": True, "value": {"sessionId": "session"}}}).encode())

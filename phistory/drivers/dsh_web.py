@@ -112,20 +112,30 @@ def _rpc(
     payload: dict[str, object],
     opener: urllib.request.OpenerDirector,
 ) -> dict[str, object]:
-    envelope = {
-        "type": "client-request",
-        "rpcId": f"phistory-{method}",
-        "method": method,
-        "payload": payload,
-    }
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{port}/api/{method}",
-        data=json.dumps(envelope).encode("utf-8"),
-        headers={"content-type": "application/json"},
-        method="POST",
+    endpoints = (
+        (method.replace(".", "/"), {"args": {"request": payload}}),
+        (method, payload),
     )
-    with opener.open(request, timeout=5) as response:
-        body = json.loads(response.read())
+    for index, (endpoint, wire_payload) in enumerate(endpoints):
+        envelope = {
+            "type": "client-request",
+            "rpcId": f"phistory-{method}",
+            "method": endpoint,
+            "payload": wire_payload,
+        }
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{port}/api/{endpoint}",
+            data=json.dumps(envelope).encode("utf-8"),
+            headers={"content-type": "application/json"},
+            method="POST",
+        )
+        try:
+            with opener.open(request, timeout=5) as response:
+                body = json.loads(response.read())
+            break
+        except urllib.error.HTTPError as exc:
+            if exc.code != 404 or index == len(endpoints) - 1:
+                raise
     result = body.get("result") or {}
     if not result.get("ok"):
         raise RuntimeError(f"DSH {method} failed: {result.get('error')}")
