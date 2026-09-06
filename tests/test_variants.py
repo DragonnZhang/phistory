@@ -171,7 +171,7 @@ def test_dsh_web_default_does_not_override_mode(monkeypatch, tmp_path: Path):
         _create_and_prompt_session(context, 1234, object())
 
     assert "agentPreset" not in payloads[0]
-    assert payloads[1]["agentPreset"] == "code"
+    assert payloads[1]["agentPreset"] == "ptc"
 
 
 def test_dsh_web_accepts_a_prompt_request_without_tools(tmp_path: Path):

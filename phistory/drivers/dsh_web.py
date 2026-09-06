@@ -112,9 +112,15 @@ def _rpc(
     payload: dict[str, object],
     opener: urllib.request.OpenerDirector,
 ) -> dict[str, object]:
+    remote_payload = dict(payload)
+    legacy_payload = dict(payload)
+    if method == "session.prompt":
+        remote_payload["requestId"] = f"phistory-{payload['sessionId']}"
+    if method == "session.create" and payload.get("agentPreset") == "ptc":
+        legacy_payload["agentPreset"] = "code"
     endpoints = (
-        (method.replace(".", "/"), {"args": {"request": payload}}),
-        (method, payload),
+        (method.replace(".", "/"), {"args": {"request": remote_payload}}),
+        (method, legacy_payload),
     )
     for index, (endpoint, wire_payload) in enumerate(endpoints):
         envelope = {

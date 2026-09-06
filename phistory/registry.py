@@ -358,7 +358,7 @@ DSH = AgentSpec(
             "PTC",
             ("--no-yolo", "--", "web"),
             driver="dsh-web",
-            dimensions={"surface": "web", "mode": "code"},
+            dimensions={"surface": "web", "mode": "ptc"},
         ),
         _variant(
             "minimal",

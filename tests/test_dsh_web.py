@@ -14,7 +14,10 @@ from phistory.registry import get_agent
 
 @pytest.mark.parametrize("requires_auth", [False, True])
 @pytest.mark.parametrize("remote_api", [False, True])
-def test_web_session_authenticates_and_reuses_cookie(tmp_path: Path, requires_auth: bool, remote_api: bool):
+@pytest.mark.parametrize("variant_id", ["default", "code"])
+def test_web_session_authenticates_and_reuses_cookie(
+    tmp_path: Path, requires_auth: bool, remote_api: bool, variant_id: str
+):
     methods = []
     exchanges = []
 
@@ -53,6 +56,14 @@ def test_web_session_authenticates_and_reuses_cookie(tmp_path: Path, requires_au
                 assert set(payload["args"]) == {"request"}
                 payload = payload["args"]["request"]
             assert "sessionId" in payload
+            if endpoint.replace("/", ".") == "session.prompt":
+                assert bool(payload.get("requestId")) == remote_api
+                assert payload["mode"] == "queue"
+                assert payload["content"][0]["type"] == "text"
+            elif variant_id == "code":
+                assert payload["agentPreset"] == ("ptc" if remote_api else "code")
+            else:
+                assert "agentPreset" not in payload
             methods.append(endpoint.replace("/", "."))
             self.send_response(200)
             self.end_headers()
@@ -63,7 +74,7 @@ def test_web_session_authenticates_and_reuses_cookie(tmp_path: Path, requires_au
     thread.start()
     port = server.server_port
     agent = get_agent("dsh")
-    target = CaptureTarget(agent, VersionInfo("0.1.2-rc.1"), agent.default_variant, tmp_path)
+    target = CaptureTarget(agent, VersionInfo("0.1.2-rc.1"), agent.variant(variant_id), tmp_path)
     context = CaptureRunContext(target, target.prompt_path, tmp_path, tmp_path, {})
     (tmp_path / "client.log").write_text(f"dsh web: http://127.0.0.1:{port}/?token=test-launch-token\n")
     try:
