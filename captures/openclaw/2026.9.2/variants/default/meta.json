@@ -1,0 +1,59 @@
+{
+  "agent_id": "openclaw",
+  "agent": "OpenClaw",
+  "package": "openclaw",
+  "version": "2026.9.2",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "phistory-dummy",
+    "tool_count": 54
+  },
+  "published_at": "2026-09-05T19:13:07.937Z",
+  "tarball_url": "https://registry.npmjs.org/openclaw/-/openclaw-2026.9.2.tgz",
+  "binary_version": "OpenClaw 2026.9.2 (3928bad)",
+  "captured_at": "2026-09-06T07:22:54.962757+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "34018705251",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/34018705251"
+  },
+  "tap_client": "openclaw",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 21.921,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "openclaw",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "agent",
+    "--local",
+    "--agent",
+    "main",
+    "--message",
+    "Reply with one short sentence.",
+    "--json",
+    "--timeout",
+    "20"
+  ]
+}
