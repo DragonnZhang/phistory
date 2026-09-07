@@ -206,6 +206,21 @@ CODEX = AgentSpec(
     ),
     variants=(
         _variant(
+            "non-official",
+            "Non-official · Qwen3 Coder Plus",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "qwen3-coder-plus",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "qwen3-coder-plus", "model_family": "non-official"},
+        ),
+        _variant(
             "gpt-6-astra",
             "GPT-6 Astra",
             (
