@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-09-07T07:31:12.118444Z",
+  "updated_at": "2026-09-07T08:27:03.751389Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -19,7 +19,7 @@
       "latest_published_at": "2026-09-04T23:31:18.513Z",
       "latest_captured_at": "2026-09-05T16:42:52.292672+00:00",
       "versions": 87,
-      "snapshots": 216
+      "snapshots": 303
     },
     {
       "agent_id": "dsh",
@@ -58275,6 +58275,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.153.4",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-04T23:31:18.513Z",
+      "captured_at": "2026-09-07T08:20:22.759182+00:00",
+      "prompt": "captures/codex/0.153.4/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.153.4/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.153.4/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.153.4",
       "variant_id": "gpt-6-astra",
       "variant_label": "GPT-6 Astra",
       "variant_dimensions": {
@@ -58388,6 +58409,27 @@
       "prompt": "captures/codex/0.153.3/variants/default/prompt.md",
       "trace": "captures/codex/0.153.3/variants/default/trace.jsonl",
       "meta": "captures/codex/0.153.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.153.3",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-04T19:07:16.079Z",
+      "captured_at": "2026-09-07T08:20:29.484317+00:00",
+      "prompt": "captures/codex/0.153.3/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.153.3/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.153.3/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -58511,6 +58553,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.153.2",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-03T23:57:21.074Z",
+      "captured_at": "2026-09-07T08:20:35.532773+00:00",
+      "prompt": "captures/codex/0.153.2/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.153.2/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.153.2/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.153.2",
       "variant_id": "gpt-6-astra",
       "variant_label": "GPT-6 Astra",
       "variant_dimensions": {
@@ -58624,6 +58687,27 @@
       "prompt": "captures/codex/0.153.1/variants/default/prompt.md",
       "trace": "captures/codex/0.153.1/variants/default/trace.jsonl",
       "meta": "captures/codex/0.153.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.153.1",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-03T21:09:57.109Z",
+      "captured_at": "2026-09-07T08:20:41.405650+00:00",
+      "prompt": "captures/codex/0.153.1/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.153.1/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.153.1/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -58747,6 +58831,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.153.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-03T01:42:05.774Z",
+      "captured_at": "2026-09-07T08:20:47.154064+00:00",
+      "prompt": "captures/codex/0.153.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.153.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.153.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.153.0",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -58840,6 +58945,27 @@
       "prompt": "captures/codex/0.152.1/variants/default/prompt.md",
       "trace": "captures/codex/0.152.1/variants/default/trace.jsonl",
       "meta": "captures/codex/0.152.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.152.1",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-01T22:36:50.784Z",
+      "captured_at": "2026-09-07T08:20:52.879615+00:00",
+      "prompt": "captures/codex/0.152.1/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.152.1/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.152.1/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -58943,6 +59069,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.152.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-01T02:02:46.635Z",
+      "captured_at": "2026-09-07T08:20:58.503568+00:00",
+      "prompt": "captures/codex/0.152.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.152.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.152.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.152.0",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -59041,6 +59188,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.151.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-08-29T09:59:26.300Z",
+      "captured_at": "2026-09-07T08:21:04.384662+00:00",
+      "prompt": "captures/codex/0.151.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.151.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.151.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.151.0",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -59134,6 +59302,27 @@
       "prompt": "captures/codex/0.150.1/variants/default/prompt.md",
       "trace": "captures/codex/0.150.1/variants/default/trace.jsonl",
       "meta": "captures/codex/0.150.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.150.1",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-08-27T02:01:46.851Z",
+      "captured_at": "2026-09-07T08:21:09.989253+00:00",
+      "prompt": "captures/codex/0.150.1/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.150.1/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.150.1/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -59257,6 +59446,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.150.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-08-26T19:43:31.702Z",
+      "captured_at": "2026-09-07T08:21:15.659883+00:00",
+      "prompt": "captures/codex/0.150.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.150.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.150.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.150.0",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -59350,6 +59560,27 @@
       "prompt": "captures/codex/0.149.1/variants/default/prompt.md",
       "trace": "captures/codex/0.149.1/variants/default/trace.jsonl",
       "meta": "captures/codex/0.149.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.149.1",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-08-24T00:32:45.066Z",
+      "captured_at": "2026-09-07T08:21:21.375038+00:00",
+      "prompt": "captures/codex/0.149.1/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.149.1/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.149.1/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -59473,6 +59704,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.149.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-08-20T21:09:05.284Z",
+      "captured_at": "2026-09-07T08:21:27.078260+00:00",
+      "prompt": "captures/codex/0.149.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.149.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.149.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.149.0",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -59586,6 +59838,27 @@
       "prompt": "captures/codex/0.148.0/variants/default/prompt.md",
       "trace": "captures/codex/0.148.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.148.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.148.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-08-18T22:30:14.842Z",
+      "captured_at": "2026-09-07T08:21:32.607434+00:00",
+      "prompt": "captures/codex/0.148.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.148.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.148.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -59709,6 +59982,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.147.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-08-07T01:47:21.081Z",
+      "captured_at": "2026-09-07T08:21:38.177698+00:00",
+      "prompt": "captures/codex/0.147.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.147.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.147.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.147.0",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -59821,6 +60115,27 @@
       "prompt": "captures/codex/0.146.1/variants/default/prompt.md",
       "trace": "captures/codex/0.146.1/variants/default/trace.jsonl",
       "meta": "captures/codex/0.146.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.146.1",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-08-05T16:00:31.441Z",
+      "captured_at": "2026-09-07T08:21:44.062602+00:00",
+      "prompt": "captures/codex/0.146.1/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.146.1/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.146.1/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -59943,6 +60258,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.146.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-29T01:45:57.696Z",
+      "captured_at": "2026-09-07T08:21:50.032098+00:00",
+      "prompt": "captures/codex/0.146.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.146.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.146.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.146.0",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -60060,6 +60396,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.145.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-21T18:24:11.494Z",
+      "captured_at": "2026-09-07T08:21:55.597899+00:00",
+      "prompt": "captures/codex/0.145.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.145.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.145.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.145.0",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -60152,6 +60509,27 @@
       "prompt": "captures/codex/0.144.6/variants/default/prompt.md",
       "trace": "captures/codex/0.144.6/variants/default/trace.jsonl",
       "meta": "captures/codex/0.144.6/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.144.6",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-18T13:54:50.572Z",
+      "captured_at": "2026-09-07T08:22:01.075079+00:00",
+      "prompt": "captures/codex/0.144.6/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.144.6/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.144.6/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -60254,6 +60632,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.144.5",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-16T02:57:51.857Z",
+      "captured_at": "2026-09-07T08:22:06.496053+00:00",
+      "prompt": "captures/codex/0.144.5/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.144.5/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.144.5/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.144.5",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -60346,6 +60745,27 @@
       "prompt": "captures/codex/0.144.4/variants/default/prompt.md",
       "trace": "captures/codex/0.144.4/variants/default/trace.jsonl",
       "meta": "captures/codex/0.144.4/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.144.4",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-14T05:10:51.485Z",
+      "captured_at": "2026-09-07T08:22:12.109005+00:00",
+      "prompt": "captures/codex/0.144.4/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.144.4/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.144.4/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -60448,6 +60868,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.144.3",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-13T06:15:20.670Z",
+      "captured_at": "2026-09-07T08:22:17.646010+00:00",
+      "prompt": "captures/codex/0.144.3/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.144.3/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.144.3/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.144.3",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -60540,6 +60981,27 @@
       "prompt": "captures/codex/0.144.2/variants/default/prompt.md",
       "trace": "captures/codex/0.144.2/variants/default/trace.jsonl",
       "meta": "captures/codex/0.144.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.144.2",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-13T04:42:46.190Z",
+      "captured_at": "2026-09-07T08:22:23.134990+00:00",
+      "prompt": "captures/codex/0.144.2/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.144.2/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.144.2/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -60642,6 +61104,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.144.1",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-09T23:05:40.041Z",
+      "captured_at": "2026-09-07T08:22:28.543949+00:00",
+      "prompt": "captures/codex/0.144.1/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.144.1/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.144.1/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.144.1",
       "variant_id": "gpt-5.6-terra",
       "variant_label": "GPT-5.6 Terra",
       "variant_dimensions": {
@@ -60734,6 +61217,27 @@
       "prompt": "captures/codex/0.144.0/variants/default/prompt.md",
       "trace": "captures/codex/0.144.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.144.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.144.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-09T16:50:26.998Z",
+      "captured_at": "2026-09-07T08:22:34.057111+00:00",
+      "prompt": "captures/codex/0.144.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.144.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.144.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -60837,6 +61341,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.143.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-08T01:34:38.318Z",
+      "captured_at": "2026-09-07T08:22:39.561278+00:00",
+      "prompt": "captures/codex/0.143.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.143.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.143.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.143.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -60870,6 +61395,27 @@
       "prompt": "captures/codex/0.142.5/variants/default/prompt.md",
       "trace": "captures/codex/0.142.5/variants/default/trace.jsonl",
       "meta": "captures/codex/0.142.5/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.142.5",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-01T01:18:19.998Z",
+      "captured_at": "2026-09-07T08:22:44.268728+00:00",
+      "prompt": "captures/codex/0.142.5/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.142.5/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.142.5/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -60913,6 +61459,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.142.4",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-29T05:07:05.914Z",
+      "captured_at": "2026-09-07T08:22:49.054361+00:00",
+      "prompt": "captures/codex/0.142.4/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.142.4/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.142.4/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.142.4",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -60946,6 +61513,27 @@
       "prompt": "captures/codex/0.142.3/variants/default/prompt.md",
       "trace": "captures/codex/0.142.3/variants/default/trace.jsonl",
       "meta": "captures/codex/0.142.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.142.3",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-26T21:32:08.704Z",
+      "captured_at": "2026-09-07T08:22:53.862666+00:00",
+      "prompt": "captures/codex/0.142.3/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.142.3/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.142.3/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -60989,6 +61577,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.142.2",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-25T07:34:58.281Z",
+      "captured_at": "2026-09-07T08:22:58.661039+00:00",
+      "prompt": "captures/codex/0.142.2/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.142.2/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.142.2/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.142.2",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61022,6 +61631,27 @@
       "prompt": "captures/codex/0.142.1/variants/default/prompt.md",
       "trace": "captures/codex/0.142.1/variants/default/trace.jsonl",
       "meta": "captures/codex/0.142.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.142.1",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-25T00:38:54.309Z",
+      "captured_at": "2026-09-07T08:23:03.556775+00:00",
+      "prompt": "captures/codex/0.142.1/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.142.1/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.142.1/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61065,6 +61695,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.142.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-22T22:22:41.166Z",
+      "captured_at": "2026-09-07T08:23:08.324401+00:00",
+      "prompt": "captures/codex/0.142.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.142.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.142.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.142.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61098,6 +61749,27 @@
       "prompt": "captures/codex/0.141.0/variants/default/prompt.md",
       "trace": "captures/codex/0.141.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.141.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.141.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-18T04:45:39.921Z",
+      "captured_at": "2026-09-07T08:23:13.175446+00:00",
+      "prompt": "captures/codex/0.141.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.141.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.141.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61141,6 +61813,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.140.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-15T21:09:21.790Z",
+      "captured_at": "2026-09-07T08:23:17.741482+00:00",
+      "prompt": "captures/codex/0.140.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.140.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.140.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.140.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61174,6 +61867,27 @@
       "prompt": "captures/codex/0.139.0/variants/default/prompt.md",
       "trace": "captures/codex/0.139.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.139.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.139.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-09T20:17:25.855Z",
+      "captured_at": "2026-09-07T08:23:22.157009+00:00",
+      "prompt": "captures/codex/0.139.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.139.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.139.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61217,6 +61931,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.138.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-08T23:03:39.681Z",
+      "captured_at": "2026-09-07T08:23:26.930884+00:00",
+      "prompt": "captures/codex/0.138.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.138.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.138.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.138.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61250,6 +61985,27 @@
       "prompt": "captures/codex/0.137.0/variants/default/prompt.md",
       "trace": "captures/codex/0.137.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.137.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.137.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-04T01:41:31.275Z",
+      "captured_at": "2026-09-07T08:23:31.327727+00:00",
+      "prompt": "captures/codex/0.137.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.137.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.137.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61293,6 +62049,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.136.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-06-01T18:53:55.315Z",
+      "captured_at": "2026-09-07T08:23:35.676130+00:00",
+      "prompt": "captures/codex/0.136.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.136.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.136.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.136.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61326,6 +62103,27 @@
       "prompt": "captures/codex/0.135.0/variants/default/prompt.md",
       "trace": "captures/codex/0.135.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.135.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.135.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-28T19:08:37.797Z",
+      "captured_at": "2026-09-07T08:23:39.899084+00:00",
+      "prompt": "captures/codex/0.135.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.135.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.135.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61369,6 +62167,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.134.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-26T19:33:51.389Z",
+      "captured_at": "2026-09-07T08:23:44.162072+00:00",
+      "prompt": "captures/codex/0.134.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.134.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.134.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.134.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61402,6 +62221,27 @@
       "prompt": "captures/codex/0.133.0/variants/default/prompt.md",
       "trace": "captures/codex/0.133.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.133.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.133.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-21T17:13:06.253Z",
+      "captured_at": "2026-09-07T08:23:48.512665+00:00",
+      "prompt": "captures/codex/0.133.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.133.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.133.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61445,6 +62285,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.132.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-20T02:39:00.388Z",
+      "captured_at": "2026-09-07T08:23:52.745907+00:00",
+      "prompt": "captures/codex/0.132.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.132.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.132.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.132.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61478,6 +62339,27 @@
       "prompt": "captures/codex/0.131.0/variants/default/prompt.md",
       "trace": "captures/codex/0.131.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.131.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.131.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-18T18:08:19.710Z",
+      "captured_at": "2026-09-07T08:23:56.970297+00:00",
+      "prompt": "captures/codex/0.131.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.131.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.131.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61521,6 +62403,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.130.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-08T23:12:58.744Z",
+      "captured_at": "2026-09-07T08:24:01.165856+00:00",
+      "prompt": "captures/codex/0.130.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.130.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.130.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.130.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61554,6 +62457,27 @@
       "prompt": "captures/codex/0.129.0/variants/default/prompt.md",
       "trace": "captures/codex/0.129.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.129.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.129.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-05-07T17:05:37.553Z",
+      "captured_at": "2026-09-07T08:24:05.359204+00:00",
+      "prompt": "captures/codex/0.129.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.129.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.129.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61597,6 +62521,27 @@
       "agent_id": "codex",
       "agent": "Codex CLI",
       "version": "0.128.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-30T16:43:46.064Z",
+      "captured_at": "2026-09-07T08:24:09.576241+00:00",
+      "prompt": "captures/codex/0.128.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.128.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.128.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.128.0",
       "variant_id": "gpt-5.5",
       "variant_label": "GPT-5.5",
       "variant_dimensions": {
@@ -61630,6 +62575,27 @@
       "prompt": "captures/codex/0.125.0/variants/default/prompt.md",
       "trace": "captures/codex/0.125.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.125.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.125.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-24T18:01:41.002Z",
+      "captured_at": "2026-09-07T08:24:13.649182+00:00",
+      "prompt": "captures/codex/0.125.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.125.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.125.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61672,6 +62638,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.124.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-23T18:30:45.892Z",
+      "captured_at": "2026-09-07T08:24:17.835925+00:00",
+      "prompt": "captures/codex/0.124.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.124.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.124.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.123.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61686,6 +62673,27 @@
       "prompt": "captures/codex/0.123.0/variants/default/prompt.md",
       "trace": "captures/codex/0.123.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.123.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.123.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-23T01:27:03.972Z",
+      "captured_at": "2026-09-07T08:24:22.002134+00:00",
+      "prompt": "captures/codex/0.123.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.123.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.123.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61708,6 +62716,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.122.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-20T18:39:33.583Z",
+      "captured_at": "2026-09-07T08:24:26.226383+00:00",
+      "prompt": "captures/codex/0.122.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.122.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.122.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.121.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61722,6 +62751,27 @@
       "prompt": "captures/codex/0.121.0/variants/default/prompt.md",
       "trace": "captures/codex/0.121.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.121.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.121.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-15T20:46:45.517Z",
+      "captured_at": "2026-09-07T08:24:30.313939+00:00",
+      "prompt": "captures/codex/0.121.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.121.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.121.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61744,6 +62794,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.120.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-11T02:54:37.375Z",
+      "captured_at": "2026-09-07T08:24:34.182251+00:00",
+      "prompt": "captures/codex/0.120.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.120.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.120.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.119.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61758,6 +62829,27 @@
       "prompt": "captures/codex/0.119.0/variants/default/prompt.md",
       "trace": "captures/codex/0.119.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.119.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.119.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-04-10T22:45:06.804Z",
+      "captured_at": "2026-09-07T08:24:38.601044+00:00",
+      "prompt": "captures/codex/0.119.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.119.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.119.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61780,6 +62872,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.118.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-31T17:03:18.490Z",
+      "captured_at": "2026-09-07T08:24:42.507068+00:00",
+      "prompt": "captures/codex/0.118.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.118.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.118.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.117.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61794,6 +62907,27 @@
       "prompt": "captures/codex/0.117.0/variants/default/prompt.md",
       "trace": "captures/codex/0.117.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.117.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.117.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-26T22:28:43.427Z",
+      "captured_at": "2026-09-07T08:24:46.591716+00:00",
+      "prompt": "captures/codex/0.117.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.117.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.117.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61816,6 +62950,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.116.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-19T17:52:17.991Z",
+      "captured_at": "2026-09-07T08:24:50.241778+00:00",
+      "prompt": "captures/codex/0.116.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.116.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.116.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.115.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61830,6 +62985,27 @@
       "prompt": "captures/codex/0.115.0/variants/default/prompt.md",
       "trace": "captures/codex/0.115.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.115.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.115.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-16T19:38:16.363Z",
+      "captured_at": "2026-09-07T08:24:53.788556+00:00",
+      "prompt": "captures/codex/0.115.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.115.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.115.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61852,6 +63028,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.114.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-11T00:29:28.692Z",
+      "captured_at": "2026-09-07T08:24:57.098853+00:00",
+      "prompt": "captures/codex/0.114.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.114.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.114.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.113.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61866,6 +63063,27 @@
       "prompt": "captures/codex/0.113.0/variants/default/prompt.md",
       "trace": "captures/codex/0.113.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.113.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.113.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-10T05:25:37.995Z",
+      "captured_at": "2026-09-07T08:25:00.403757+00:00",
+      "prompt": "captures/codex/0.113.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.113.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.113.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61888,6 +63106,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.112.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-08T20:44:58.047Z",
+      "captured_at": "2026-09-07T08:25:03.734728+00:00",
+      "prompt": "captures/codex/0.112.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.112.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.112.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.111.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61902,6 +63141,27 @@
       "prompt": "captures/codex/0.111.0/variants/default/prompt.md",
       "trace": "captures/codex/0.111.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.111.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.111.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-05T19:13:00.697Z",
+      "captured_at": "2026-09-07T08:25:07.081574+00:00",
+      "prompt": "captures/codex/0.111.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.111.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.111.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61924,6 +63184,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.110.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-05T02:23:39.861Z",
+      "captured_at": "2026-09-07T08:25:10.184068+00:00",
+      "prompt": "captures/codex/0.110.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.110.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.110.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.107.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61938,6 +63219,27 @@
       "prompt": "captures/codex/0.107.0/variants/default/prompt.md",
       "trace": "captures/codex/0.107.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.107.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.107.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-03-02T18:00:55.212Z",
+      "captured_at": "2026-09-07T08:25:13.073102+00:00",
+      "prompt": "captures/codex/0.107.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.107.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.107.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61960,6 +63262,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.106.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-26T23:12:45.073Z",
+      "captured_at": "2026-09-07T08:25:16.104972+00:00",
+      "prompt": "captures/codex/0.106.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.106.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.106.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.105.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -61974,6 +63297,27 @@
       "prompt": "captures/codex/0.105.0/variants/default/prompt.md",
       "trace": "captures/codex/0.105.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.105.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.105.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-25T17:22:34.496Z",
+      "captured_at": "2026-09-07T08:25:19.010001+00:00",
+      "prompt": "captures/codex/0.105.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.105.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.105.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -61996,6 +63340,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.104.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-18T07:13:25.235Z",
+      "captured_at": "2026-09-07T08:25:22.045519+00:00",
+      "prompt": "captures/codex/0.104.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.104.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.104.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.103.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62010,6 +63375,27 @@
       "prompt": "captures/codex/0.103.0/variants/default/prompt.md",
       "trace": "captures/codex/0.103.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.103.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.103.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-17T23:03:50.048Z",
+      "captured_at": "2026-09-07T08:25:24.882023+00:00",
+      "prompt": "captures/codex/0.103.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.103.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.103.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62032,6 +63418,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.102.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-17T20:03:25.029Z",
+      "captured_at": "2026-09-07T08:25:28.102842+00:00",
+      "prompt": "captures/codex/0.102.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.102.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.102.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.101.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62046,6 +63453,27 @@
       "prompt": "captures/codex/0.101.0/variants/default/prompt.md",
       "trace": "captures/codex/0.101.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.101.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.101.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-12T20:06:40.829Z",
+      "captured_at": "2026-09-07T08:25:31.013862+00:00",
+      "prompt": "captures/codex/0.101.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.101.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.101.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62068,6 +63496,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.100.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-12T18:30:51.007Z",
+      "captured_at": "2026-09-07T08:25:33.931585+00:00",
+      "prompt": "captures/codex/0.100.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.100.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.100.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.99.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62082,6 +63531,27 @@
       "prompt": "captures/codex/0.99.0/variants/default/prompt.md",
       "trace": "captures/codex/0.99.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.99.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.99.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-11T20:43:52.809Z",
+      "captured_at": "2026-09-07T08:25:36.902931+00:00",
+      "prompt": "captures/codex/0.99.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.99.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.99.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62104,6 +63574,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.98.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-05T17:01:54.850Z",
+      "captured_at": "2026-09-07T08:25:42.169898+00:00",
+      "prompt": "captures/codex/0.98.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.98.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.98.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.97.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62118,6 +63609,27 @@
       "prompt": "captures/codex/0.97.0/variants/default/prompt.md",
       "trace": "captures/codex/0.97.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.97.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.97.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-05T05:12:14.841Z",
+      "captured_at": "2026-09-07T08:25:48.395209+00:00",
+      "prompt": "captures/codex/0.97.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.97.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.97.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62140,6 +63652,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.96.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-04T18:24:44.133Z",
+      "captured_at": "2026-09-07T08:25:54.441983+00:00",
+      "prompt": "captures/codex/0.96.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.96.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.96.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.95.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62154,6 +63687,27 @@
       "prompt": "captures/codex/0.95.0/variants/default/prompt.md",
       "trace": "captures/codex/0.95.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.95.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.95.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 8
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-04T04:55:36.663Z",
+      "captured_at": "2026-09-07T08:25:59.909124+00:00",
+      "prompt": "captures/codex/0.95.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.95.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.95.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62176,6 +63730,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.94.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 8
+      },
+      "capture_status": "captured",
+      "published_at": "2026-02-02T18:28:42.990Z",
+      "captured_at": "2026-09-07T08:26:05.220246+00:00",
+      "prompt": "captures/codex/0.94.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.94.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.94.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.93.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62190,6 +63765,27 @@
       "prompt": "captures/codex/0.93.0/variants/default/prompt.md",
       "trace": "captures/codex/0.93.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.93.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.93.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 7
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-31T07:00:56.838Z",
+      "captured_at": "2026-09-07T08:26:10.391063+00:00",
+      "prompt": "captures/codex/0.93.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.93.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.93.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62212,6 +63808,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.92.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 7
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-27T11:51:59.692Z",
+      "captured_at": "2026-09-07T08:26:15.106959+00:00",
+      "prompt": "captures/codex/0.92.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.92.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.92.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.91.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62226,6 +63843,27 @@
       "prompt": "captures/codex/0.91.0/variants/default/prompt.md",
       "trace": "captures/codex/0.91.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.91.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.91.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-25T17:34:45.939Z",
+      "captured_at": "2026-09-07T08:26:20.149154+00:00",
+      "prompt": "captures/codex/0.91.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.91.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.91.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62248,6 +63886,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.90.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-25T16:38:42.443Z",
+      "captured_at": "2026-09-07T08:26:25.357089+00:00",
+      "prompt": "captures/codex/0.90.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.90.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.90.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.89.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62262,6 +63921,27 @@
       "prompt": "captures/codex/0.89.0/variants/default/prompt.md",
       "trace": "captures/codex/0.89.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.89.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.89.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-22T21:36:53.306Z",
+      "captured_at": "2026-09-07T08:26:30.116705+00:00",
+      "prompt": "captures/codex/0.89.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.89.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.89.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62284,6 +63964,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.88.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-21T19:20:16.986Z",
+      "captured_at": "2026-09-07T08:26:35.151722+00:00",
+      "prompt": "captures/codex/0.88.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.88.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.88.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.87.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62298,6 +63999,27 @@
       "prompt": "captures/codex/0.87.0/variants/default/prompt.md",
       "trace": "captures/codex/0.87.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.87.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.87.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-16T15:39:11.925Z",
+      "captured_at": "2026-09-07T08:26:39.741957+00:00",
+      "prompt": "captures/codex/0.87.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.87.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.87.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62320,6 +64042,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.86.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-16T01:20:07.494Z",
+      "captured_at": "2026-09-07T08:26:44.406564+00:00",
+      "prompt": "captures/codex/0.86.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.86.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.86.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.85.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62334,6 +64077,27 @@
       "prompt": "captures/codex/0.85.0/variants/default/prompt.md",
       "trace": "captures/codex/0.85.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.85.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.85.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-15T18:39:58.034Z",
+      "captured_at": "2026-09-07T08:26:49.701206+00:00",
+      "prompt": "captures/codex/0.85.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.85.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.85.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "codex",
@@ -62356,6 +64120,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.84.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-15T01:30:11.748Z",
+      "captured_at": "2026-09-07T08:26:54.760163+00:00",
+      "prompt": "captures/codex/0.84.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.84.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.84.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.81.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62374,6 +64159,27 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.81.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-14T18:13:47.226Z",
+      "captured_at": "2026-09-07T08:26:59.229352+00:00",
+      "prompt": "captures/codex/0.81.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.81.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.81.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.80.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -62388,6 +64194,27 @@
       "prompt": "captures/codex/0.80.0/variants/default/prompt.md",
       "trace": "captures/codex/0.80.0/variants/default/trace.jsonl",
       "meta": "captures/codex/0.80.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.80.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-01-09T19:49:15.685Z",
+      "captured_at": "2026-09-07T08:27:03.751389+00:00",
+      "prompt": "captures/codex/0.80.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.80.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.80.0/variants/non-official/meta.json"
     },
     {
       "agent_id": "dsh",
