@@ -1,0 +1,58 @@
+{
+  "agent_id": "antigravity",
+  "agent": "Antigravity CLI",
+  "package": "google-antigravity/antigravity-cli",
+  "version": "1.1.28",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "MODEL_PLACEHOLDER_M50"
+  },
+  "published_at": "2026-09-09T00:43:52Z",
+  "tarball_url": "https://github.com/google-antigravity/antigravity-cli/releases/download/1.1.28/agy_cli_linux_x64.tar.gz",
+  "binary_version": "1.1.28",
+  "captured_at": "2026-09-09T07:32:56.767906+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "34324342850",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/34324342850"
+  },
+  "tap_client": "agy",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 3.318,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "agy",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--print",
+    "Reply with one short sentence.",
+    "--print-timeout",
+    "1s",
+    "--dangerously-skip-permissions",
+    "--model",
+    "MODEL_GOOGLE_GEMINI_2_5_FLASH"
+  ]
+}
