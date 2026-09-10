@@ -1,0 +1,59 @@
+{
+  "agent_id": "omp",
+  "agent": "Oh My Pi",
+  "package": "@oh-my-pi/pi-coding-agent",
+  "version": "18.1.16",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 11
+  },
+  "published_at": "2026-09-09T19:10:36.391Z",
+  "tarball_url": "https://registry.npmjs.org/@oh-my-pi/pi-coding-agent/-/pi-coding-agent-18.1.16.tgz",
+  "binary_version": "omp/18.1.16",
+  "captured_at": "2026-09-10T07:31:47.174463+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "34450135405",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/34450135405"
+  },
+  "tap_client": "omp",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 5.165,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "omp",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--print",
+    "--mode",
+    "text",
+    "--no-session",
+    "--approval-mode",
+    "yolo",
+    "--model",
+    "phistory/gpt-4.1",
+    "Reply with one short sentence."
+  ]
+}
