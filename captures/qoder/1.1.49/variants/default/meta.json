@@ -1,0 +1,54 @@
+{
+  "agent_id": "qoder",
+  "agent": "Qoder CLI",
+  "package": "@qoder-ai/qodercli",
+  "version": "1.1.49",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "tool_count": 31
+  },
+  "published_at": "2026-09-10T10:44:45.449Z",
+  "tarball_url": "https://registry.npmjs.org/@qoder-ai/qodercli/-/qodercli-1.1.49.tgz",
+  "binary_version": "1.1.49",
+  "captured_at": "2026-09-11T07:28:08.759634+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "34574404571",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/34574404571"
+  },
+  "tap_client": "qoder",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 9.168,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "qoder",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--print",
+    "--no-session-persistence",
+    "Reply with one short sentence."
+  ]
+}
