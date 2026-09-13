@@ -52,17 +52,7 @@ jobs:
       - name: Verify Qoder secret is not archived
         env:
           QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
-        run: |
-          if [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ]; then
-            exit 0
-          fi
-          if [ ! -d captures/qoder ]; then
-            exit 0
-          fi
-          if rg --files-with-matches --fixed-strings -- "$QODER_PERSONAL_ACCESS_TOKEN" captures/qoder; then
-            echo "::error title=Qoder credential leak detected::Refusing to render or commit capture artifacts."
-            exit 1
-          fi
+        run: bash .github/scripts/verify-qoder-secret.sh
       - name: Extract Claude Code static prompts
         id: static
         run: |
