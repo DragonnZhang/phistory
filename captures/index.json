@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-09-20T07:55:01.004955Z",
+  "updated_at": "2026-09-21T08:11:31.757519Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -42,11 +42,11 @@
     {
       "agent_id": "grok",
       "agent": "Grok Build",
-      "latest_version": "1.0.34",
-      "latest_published_at": "2026-09-16T04:15:07.803Z",
-      "latest_captured_at": "2026-09-17T07:57:26.002070+00:00",
-      "versions": 135,
-      "snapshots": 135
+      "latest_version": "1.0.40",
+      "latest_published_at": "2026-09-20T23:48:33.620Z",
+      "latest_captured_at": "2026-09-21T08:10:41.703614+00:00",
+      "versions": 136,
+      "snapshots": 136
     },
     {
       "agent_id": "minimax-code",
@@ -69,20 +69,20 @@
     {
       "agent_id": "qwen-code",
       "agent": "Qwen Code",
-      "latest_version": "0.24.1",
-      "latest_published_at": "2026-09-19T08:28:42.511Z",
-      "latest_captured_at": "2026-09-20T07:54:30.890767+00:00",
-      "versions": 130,
-      "snapshots": 130
+      "latest_version": "0.24.2",
+      "latest_published_at": "2026-09-20T14:28:21.292Z",
+      "latest_captured_at": "2026-09-21T08:10:54.648768+00:00",
+      "versions": 131,
+      "snapshots": 131
     },
     {
       "agent_id": "qoder",
       "agent": "Qoder CLI",
-      "latest_version": "1.1.58",
-      "latest_published_at": "2026-09-19T15:59:50.430Z",
-      "latest_captured_at": "2026-09-20T07:55:01.004955+00:00",
-      "versions": 168,
-      "snapshots": 168
+      "latest_version": "1.1.59",
+      "latest_published_at": "2026-09-20T11:26:41.812Z",
+      "latest_captured_at": "2026-09-21T08:11:31.757519+00:00",
+      "versions": 169,
+      "snapshots": 169
     },
     {
       "agent_id": "mimo",
@@ -132,20 +132,20 @@
     {
       "agent_id": "pi",
       "agent": "Pi",
-      "latest_version": "0.86.0",
-      "latest_published_at": "2026-09-19T23:14:16.198Z",
-      "latest_captured_at": "2026-09-20T07:54:46.255879+00:00",
-      "versions": 46,
-      "snapshots": 46
+      "latest_version": "0.86.1",
+      "latest_published_at": "2026-09-20T11:16:39.121Z",
+      "latest_captured_at": "2026-09-21T08:11:09.991399+00:00",
+      "versions": 47,
+      "snapshots": 47
     },
     {
       "agent_id": "omp",
       "agent": "Oh My Pi",
-      "latest_version": "18.2.6",
-      "latest_published_at": "2026-09-18T18:17:53.560Z",
-      "latest_captured_at": "2026-09-19T07:32:47.558439+00:00",
-      "versions": 92,
-      "snapshots": 92
+      "latest_version": "18.2.7",
+      "latest_published_at": "2026-09-21T03:12:39.903Z",
+      "latest_captured_at": "2026-09-21T08:11:18.372469+00:00",
+      "versions": 93,
+      "snapshots": 93
     }
   ],
   "captures": [
@@ -68308,6 +68308,24 @@
     {
       "agent_id": "grok",
       "agent": "Grok Build",
+      "version": "1.0.40",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "grok-4.6",
+        "tool_count": 1
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-20T23:48:33.620Z",
+      "captured_at": "2026-09-21T08:10:41.703614+00:00",
+      "prompt": "captures/grok/1.0.40/variants/default/prompt.md",
+      "trace": "captures/grok/1.0.40/variants/default/trace.jsonl",
+      "meta": "captures/grok/1.0.40/variants/default/meta.json"
+    },
+    {
+      "agent_id": "grok",
+      "agent": "Grok Build",
       "version": "1.0.34",
       "variant_id": "default",
       "variant_label": "Default",
@@ -72772,6 +72790,24 @@
     {
       "agent_id": "qwen-code",
       "agent": "Qwen Code",
+      "version": "0.24.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "qwen3.8-max",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-20T14:28:21.292Z",
+      "captured_at": "2026-09-21T08:10:54.648768+00:00",
+      "prompt": "captures/qwen-code/0.24.2/variants/default/prompt.md",
+      "trace": "captures/qwen-code/0.24.2/variants/default/trace.jsonl",
+      "meta": "captures/qwen-code/0.24.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qwen-code",
+      "agent": "Qwen Code",
       "version": "0.24.1",
       "variant_id": "default",
       "variant_label": "Default",
@@ -75108,6 +75144,23 @@
       "prompt": "captures/qwen-code/0.0.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qoder",
+      "agent": "Qoder CLI",
+      "version": "1.1.59",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "tool_count": 31
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-20T11:26:41.812Z",
+      "captured_at": "2026-09-21T08:11:31.757519+00:00",
+      "prompt": "captures/qoder/1.1.59/variants/default/prompt.md",
+      "trace": "captures/qoder/1.1.59/variants/default/trace.jsonl",
+      "meta": "captures/qoder/1.1.59/variants/default/meta.json"
     },
     {
       "agent_id": "qoder",
@@ -82669,6 +82722,24 @@
     {
       "agent_id": "pi",
       "agent": "Pi",
+      "version": "0.86.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 4
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-20T11:16:39.121Z",
+      "captured_at": "2026-09-21T08:11:09.991399+00:00",
+      "prompt": "captures/pi/0.86.1/variants/default/prompt.md",
+      "trace": "captures/pi/0.86.1/variants/default/trace.jsonl",
+      "meta": "captures/pi/0.86.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "pi",
+      "agent": "Pi",
       "version": "0.86.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -83493,6 +83564,24 @@
       "prompt": "captures/pi/0.74.0/variants/default/prompt.md",
       "trace": "captures/pi/0.74.0/variants/default/trace.jsonl",
       "meta": "captures/pi/0.74.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "omp",
+      "agent": "Oh My Pi",
+      "version": "18.2.7",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-09-21T03:12:39.903Z",
+      "captured_at": "2026-09-21T08:11:18.372469+00:00",
+      "prompt": "captures/omp/18.2.7/variants/default/prompt.md",
+      "trace": "captures/omp/18.2.7/variants/default/trace.jsonl",
+      "meta": "captures/omp/18.2.7/variants/default/meta.json"
     },
     {
       "agent_id": "omp",
