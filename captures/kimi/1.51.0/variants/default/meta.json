@@ -1,0 +1,57 @@
+{
+  "agent_id": "kimi",
+  "agent": "Kimi CLI",
+  "package": "MoonshotAI/kimi-cli",
+  "version": "1.51.0",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 15
+  },
+  "published_at": "2026-09-21T16:02:35Z",
+  "tarball_url": "https://github.com/MoonshotAI/kimi-cli/releases/tag/1.51.0",
+  "binary_version": "kimi, version 1.51.0",
+  "captured_at": "2026-09-22T07:56:17.730459+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "35701996603",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/35701996603"
+  },
+  "tap_client": "kimi",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 8.098,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "kimi",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--print",
+    "--prompt",
+    "Reply with one short sentence.",
+    "--model",
+    "phistory-dummy",
+    "--output-format",
+    "text"
+  ]
+}
