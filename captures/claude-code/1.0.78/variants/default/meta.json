@@ -1,0 +1,59 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "1.0.78",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "claude-sonnet-4-20250514",
+    "tool_count": 16
+  },
+  "published_at": "2025-08-13T18:08:07.253Z",
+  "tarball_url": null,
+  "binary_version": "1.0.78 (Claude Code)",
+  "captured_at": "2026-09-23T02:55:18.590334+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Recapture Claude Code history",
+    "run_id": "35812161030",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/35812161030"
+  },
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 5.889,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  }
+}
