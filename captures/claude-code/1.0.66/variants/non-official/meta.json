@@ -1,0 +1,56 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "1.0.66",
+  "variant": {
+    "id": "non-official",
+    "label": "Non-official API",
+    "dimensions": {
+      "api": "non-official"
+    }
+  },
+  "requested": {},
+  "observed": {
+    "model": "claude-sonnet-4-20250514",
+    "tool_count": 15
+  },
+  "published_at": "2025-08-01T21:36:21.666Z",
+  "tarball_url": null,
+  "binary_version": "1.0.66 (Claude Code)",
+  "captured_at": "2026-08-25T06:20:02.908714+00:00",
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 5.627,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  },
+  "reclassified_from": {
+    "variant": {
+      "id": "default",
+      "label": "Default",
+      "dimensions": {}
+    },
+    "requested": {}
+  }
+}

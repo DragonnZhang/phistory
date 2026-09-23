@@ -129,11 +129,12 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             ),
             "",
             (
-                "Claude Code keeps the non-official/custom-API path as its `default` snapshot. Its additional official "
+                "Claude Code's `default` snapshot uses the official API path without pinning a model; the previous "
+                "custom-API capture is preserved as `non-official`. Its additional fixed-model official "
                 "API snapshots pin `claude-fable-5-1` in `official-fable-5-1`, `claude-fable-5` in `official-fable`, "
                 "`claude-opus-5-5[1m]` in `official-opus-5-5`, `claude-opus-5[1m]` in `official-opus`, "
                 "`claude-opus-4-8[1m]` in `official-opus-4-8`, `claude-opus-4-7[1m]` in `official-opus-4-7`, "
-                "`claude-sonnet-5` in `official`, and `claude-haiku-4-5` in `official-haiku`; all eight use "
+                "`claude-sonnet-5` in `official`, and `claude-haiku-4-5` in `official-haiku`; default and all eight use "
                 "transparent forward-proxy capture so "
                 "`ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead "
                 "of calling the model provider. Historical entries in these lanes run each old CLI against the "
@@ -174,8 +175,8 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "# Capture only selected Codex snapshots.",
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5",
             "",
-            "# Capture Claude Code's non-official default and all official API model snapshots.",
-            "uv run phistory capture --latest --agents claude-code --variants default,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku",
+            "# Capture Claude Code's actual default, custom-API, and fixed-model official snapshots.",
+            "uv run phistory capture --latest --agents claude-code --variants default,non-official,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -292,12 +293,13 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             ),
             "",
             (
-                "Claude Code 的 `default` 快照保留非官方／自定义 API 路径；八个官方 API 快照按 Fable、Opus、Sonnet、Haiku 排列："
+                "Claude Code 的 `default` 快照使用官方 API 路径且不指定模型；旧的非官方／自定义 API 路径保留为 `non-official`。"
+                "八个固定模型的官方 API 快照按 Fable、Opus、Sonnet、Haiku 排列："
                 "在 `official-fable-5-1` 中固定使用 `claude-fable-5-1`，在 `official-fable` 中固定使用 `claude-fable-5`，"
                 "在 `official-opus-5-5` 中固定使用 `claude-opus-5-5[1m]`，在 `official-opus` 中固定使用 `claude-opus-5[1m]`，"
                 "在 `official-opus-4-8` 中固定使用 `claude-opus-4-8[1m]`，在 `official-opus-4-7` 中固定使用 "
                 "`claude-opus-4-7[1m]`，在 `official` 中固定使用 `claude-sonnet-5`，在 `official-haiku` 中固定使用 "
-                "`claude-haiku-4-5`。八者都通过透明正向代理抓取，"
+                "`claude-haiku-4-5`。默认线路与八条固定模型线路都通过透明正向代理抓取，"
                 "使 `ANTHROPIC_BASE_URL` 保持未设置。capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。"
                 "这些通道的历史条目会让每个旧版 CLI 显式使用同一个 Fable 5.1、Fable 5、Opus 5.5 1M、Opus 5 1M、Opus 4.8 1M、Opus 4.7 1M、Sonnet 5 或 Haiku 4.5 模型，并不还原该版本发布时的官方默认模型。"
                 "历史回捕工作流可以覆盖每条官方线路的完整稳定版 CLI 历史。"
@@ -333,8 +335,8 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "# 只抓取 Codex 的指定快照。",
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5",
             "",
-            "# 抓取 Claude Code 的非官方默认快照和全部官方 API 模型快照。",
-            "uv run phistory capture --latest --agents claude-code --variants default,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku",
+            "# 抓取 Claude Code 的真实默认、非官方与全部固定模型官方快照。",
+            "uv run phistory capture --latest --agents claude-code --variants default,non-official,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",

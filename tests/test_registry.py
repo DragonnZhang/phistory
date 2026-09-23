@@ -71,13 +71,15 @@ def test_get_agent_has_capture_contract():
 def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
     agent = get_agent("claude-code")
 
-    assert agent.default_variant.label == "Non-official API"
-    assert agent.default_variant.dimensions == {"api": "non-official"}
-    assert agent.default_variant.tap_mode is None
+    assert agent.default_variant.label == "Default"
+    assert agent.default_variant.dimensions == {}
+    assert agent.default_variant.tap_mode == "forward"
+    assert "--model" not in agent.default_variant.run_args
     assert "--no-session-persistence" in agent.default_variant.run_args
     assert "--bare" not in agent.default_variant.run_args
     assert "--exclude-dynamic-system-prompt-sections" not in agent.default_variant.run_args
     assert [(variant.id, variant.label, variant.dimensions) for variant in agent.variants] == [
+        ("non-official", "Non-official API", {"api": "non-official"}),
         (
             "official-fable-5-1",
             "Official API · Fable 5.1",
@@ -121,14 +123,20 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
     ]
 
 
-def test_claude_code_official_variants_use_forward_capture_without_changing_default_mode(tmp_path: Path):
+def test_claude_code_default_uses_forward_capture_without_pinning_a_model(tmp_path: Path):
     agent = get_agent("claude-code")
     default = CaptureTarget(agent, VersionInfo("1.0.0"), agent.default_variant, tmp_path / "captures")
     default_command = tap_command(default, default.prompt_path, default.variant_dir / ".tap")
 
     assert agent.tap_mode == "auto"
-    assert "--mode" not in default_command
+    assert default_command[default_command.index("--mode") + 1] == "forward"
     assert "--export-prompt" in default_command
+    assert "--model" not in default_command
+
+    non_official = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant("non-official"), tmp_path / "captures")
+    non_official_command = tap_command(non_official, non_official.prompt_path, non_official.variant_dir / ".tap")
+    assert "--mode" not in non_official_command
+    assert non_official.variant.run_args == default.variant.run_args
 
     for variant_id, model in (
         ("official-fable-5-1", "claude-fable-5-1"),

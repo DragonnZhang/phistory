@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - default
+          - non-official
           - official-fable-5-1
           - official-fable
           - official-opus-5-5
@@ -276,6 +277,16 @@ jobs:
                       raise SystemExit(f"requested dimensions mismatch in {variant_dir / 'meta.json'}")
                   if meta.get("capture_environment") != expected_environment:
                       raise SystemExit(f"unexpected capture environment in {variant_dir / 'meta.json'}")
+                  if variant_id == "default":
+                      if "--model" in meta.get("command", []):
+                          raise SystemExit(f"default capture pins a model in {variant_dir / 'meta.json'}")
+                      if "--mode" not in meta.get("command", []) or "forward" not in meta.get("command", []):
+                          raise SystemExit(f"default capture is not forwarded in {variant_dir / 'meta.json'}")
+                  if variant_id == "default" or variant.dimensions.get("api") == "official":
+                      for line in (variant_dir / "trace.jsonl").read_text(encoding="utf-8").splitlines():
+                          record = json.loads(line)
+                          if record.get("upstream_base_url") != "https://api.anthropic.com:443":
+                              raise SystemExit(f"non-official upstream found in {variant_dir / 'trace.jsonl'}")
                   if variant.dimensions.get("api") == "official":
                       model_selector = variant.dimensions.get("model")
                       if not isinstance(model_selector, str):
@@ -296,8 +307,6 @@ jobs:
                           if not isinstance(body, dict) or not isinstance(body.get("model"), str):
                               continue
                           trace_models.append(body["model"])
-                          if record.get("upstream_base_url") != "https://api.anthropic.com:443":
-                              raise SystemExit(f"non-official upstream found in {variant_dir / 'trace.jsonl'}")
                       if model_selector not in trace_models and expected_model not in trace_models:
                           raise SystemExit(f"official model request missing in {variant_dir / 'trace.jsonl'}")
                   prompt = (variant_dir / "prompt.md").read_text(encoding="utf-8")

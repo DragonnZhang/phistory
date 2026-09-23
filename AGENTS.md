@@ -75,9 +75,10 @@ Static prompt extraction is separate from request capture. It parses installed p
 
 Current agents are defined in `phistory/registry.py`:
 
-- `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`; the `default` variant captures
-  the non-official/custom-base-URL compatibility path, while `official` pins `claude-sonnet-5` and uses
-  transparent forward capture so `ANTHROPIC_BASE_URL` remains unset without calling the real provider; the official
+- `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`; `default` uses transparent
+  forward capture with no explicit model or `ANTHROPIC_BASE_URL` override, while `non-official` preserves
+  the historical custom-base-URL compatibility path. Both avoid calling the real provider. `official` pins
+  `claude-sonnet-5` with forward capture; the fixed-model official
   variants are ordered Fable, Opus, Sonnet, then Haiku: `official-fable-5-1`, `official-fable`, `official-opus-5-5`, `official-opus`,
   `official-opus-4-8`, `official-opus-4-7`, `official`, and `official-haiku` use `claude-fable-5-1`,
   `claude-fable-5`, `claude-opus-5-5[1m]`, `claude-opus-5[1m]`, `claude-opus-4-8[1m]`, `claude-opus-4-7[1m]`, `claude-sonnet-5`,
@@ -106,7 +107,7 @@ When adding another CLI, prefer extending the existing abstractions:
 - Add a `HomeProfile` only when the CLI needs isolated config files. Keep config minimal and deterministic.
 - Add a `TapMode` only when the existing `auto`, `reverse`, or `forward` modes are insufficient.
 - Keep each `CaptureVariant.run_args` as the normal user-facing CLI command that makes the tool send one prompt-bearing request.
-- Every agent must keep a real `default` variant with no explicit model or mode override. Add named variants only for stable, meaningful prompt surfaces.
+- Every agent must keep a real `default` variant with no explicit CLI model or user-facing mode override. Capture transport may be configured separately. Add named variants only for stable, meaningful prompt surfaces.
 
 ## Design Rules
 
@@ -159,7 +160,12 @@ gh workflow run backfill.yml -R DragonnZhang/phistory --ref main \
 
 Large historical recaptures can add `--skip-static --prune-installs` and split the stable version list with paired zero-based `--shard-index` / `--shard-count` arguments. Claude Code captures set `DISABLE_GROWTHBOOK=1`, `DISABLE_TELEMETRY=1`, and `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`; their metadata records this deterministic baseline.
 
-The dedicated Claude Code history recapture workflow accepts `default`, `official-fable-5-1`, `official-fable`,
+Historical Claude Code custom-API `default` snapshots were moved to `non-official` with
+`python -m phistory.migrate_claude_non_official` before collecting the new default history. The migration changes
+the directory and variant classification, retaining the original variant/requested fields in `reclassified_from`;
+raw traces, capture times, and available host provenance stay intact. Early archives did not yet annotate the API path.
+
+The dedicated Claude Code history recapture workflow accepts `default`, `non-official`, `official-fable-5-1`, `official-fable`,
 `official-opus-5-5`, `official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official`, or `official-haiku` and defaults to `default`.
 Select `official-fable-5-1` for Fable 5.1, `official-fable` for Fable 5, `official-opus-5-5` for Opus 5.5 1M, `official-opus` for Opus 5 1M, `official-opus-4-8` for Opus 4.8 1M,
 `official-opus-4-7` for Opus 4.7 1M, `official` for Sonnet 5, or `official-haiku` for Haiku 4.5.

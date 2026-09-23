@@ -69,10 +69,21 @@ CLAUDE_CODE = AgentSpec(
             "-p",
             "Reply with one short sentence.",
         ),
-        label="Non-official API",
-        dimensions={"api": "non-official"},
+        tap_mode="forward",
     ),
     variants=(
+        _variant(
+            "non-official",
+            "Non-official API",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "non-official"},
+        ),
         _variant(
             "official-fable-5-1",
             "Official API · Fable 5.1",
