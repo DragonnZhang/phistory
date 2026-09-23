@@ -104,6 +104,21 @@ CLAUDE_CODE = AgentSpec(
             tap_mode="forward",
         ),
         _variant(
+            "official-opus-5-5",
+            "Official API · Opus 5.5",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-opus-5-5[1m]",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-opus-5-5[1m]"},
+            tap_mode="forward",
+        ),
+        _variant(
             "official-opus",
             "Official API · Opus 5",
             (
@@ -235,6 +250,22 @@ CODEX = AgentSpec(
             ),
             dimensions={"model": "gpt-6-astra"},
             min_version="0.153.1",
+        ),
+        _variant(
+            "gpt-6-sol",
+            "GPT-6 Sol",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-6-sol",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-6-sol"},
+            min_version="0.157.0-alpha.10",
         ),
         _variant(
             "gpt-5.6-sol",

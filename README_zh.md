@@ -23,11 +23,13 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 Phistory 会安装每个受支持的具体 CLI 版本，再通过 [`claude-tap`](https://github.com/WEIFENG2333/claude-tap) 分别运行每个已配置快照，抓取包含系统提示词的 HTTP 请求，不调用真实模型服务，然后把结果保存到 `captures/<agent>/<version>/variants/<variant>/`，里面包含 `prompt.md`、`trace.jsonl` 和 `meta.json`。抓取配置以 `default` 快照为基线，显式选择的模型或模式会作为额外变体保存。
 
-Claude Code 的 `default` 快照保留非官方／自定义 API 路径；七个官方 API 快照按 Fable、Opus、Sonnet、Haiku 排列：在 `official-fable-5-1` 中固定使用 `claude-fable-5-1`，在 `official-fable` 中固定使用 `claude-fable-5`，在 `official-opus` 中固定使用 `claude-opus-5[1m]`，在 `official-opus-4-8` 中固定使用 `claude-opus-4-8[1m]`，在 `official-opus-4-7` 中固定使用 `claude-opus-4-7[1m]`，在 `official` 中固定使用 `claude-sonnet-5`，在 `official-haiku` 中固定使用 `claude-haiku-4-5`。七者都通过透明正向代理抓取，使 `ANTHROPIC_BASE_URL` 保持未设置。capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。这些通道的历史条目会让每个旧版 CLI 显式使用同一个 Fable 5.1、Fable 5、Opus 5 1M、Opus 4.8 1M、Opus 4.7 1M、Sonnet 5 或 Haiku 4.5 模型，并不还原该版本发布时的官方默认模型。历史回捕工作流可以覆盖每条官方线路的完整稳定版 CLI 历史。
+Claude Code 的 `default` 快照保留非官方／自定义 API 路径；八个官方 API 快照按 Fable、Opus、Sonnet、Haiku 排列：在 `official-fable-5-1` 中固定使用 `claude-fable-5-1`，在 `official-fable` 中固定使用 `claude-fable-5`，在 `official-opus-5-5` 中固定使用 `claude-opus-5-5[1m]`，在 `official-opus` 中固定使用 `claude-opus-5[1m]`，在 `official-opus-4-8` 中固定使用 `claude-opus-4-8[1m]`，在 `official-opus-4-7` 中固定使用 `claude-opus-4-7[1m]`，在 `official` 中固定使用 `claude-sonnet-5`，在 `official-haiku` 中固定使用 `claude-haiku-4-5`。八者都通过透明正向代理抓取，使 `ANTHROPIC_BASE_URL` 保持未设置。capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。这些通道的历史条目会让每个旧版 CLI 显式使用同一个 Fable 5.1、Fable 5、Opus 5.5 1M、Opus 5 1M、Opus 4.8 1M、Opus 4.7 1M、Sonnet 5 或 Haiku 4.5 模型，并不还原该版本发布时的官方默认模型。历史回捕工作流可以覆盖每条官方线路的完整稳定版 CLI 历史。
 
 Claude Code 抓取会固定设置 `DISABLE_GROWTHBOOK=1` 和 `DISABLE_TELEMETRY=1`，避免拉取远程灰度配置。同时设置 `CLAUDE_CODE_TOTAL_TOKENS_REMINDER=off`，避免内部滚动任务预算提醒进入归档提示词。因此快照采用明确记录的确定性基线，而不是抓取当天的灰度状态；该基线会记录在 `meta.json` 中。
 
 Phistory 还会从近期 Claude Code 安装包里提取疑似静态 prompt 的字符串，并从退役 Qoder 版本的精确官方可执行文件中提取 prompt 内容，保存在 `captures/<agent>/<version>/static/`。候选文件会保留原始内容，方便以后改进匹配规则时不用重新安装所有历史包。
+
+Codex GPT-6 Sol 从已发布的 `0.157.0-alpha.10` 预览版开始归档；稳定版 `0.156.0` 尚未内置其模型元数据，详见[采集边界](docs/research/opus-5-5-gpt-6-sol.md)。
 
 GitHub Actions 每天检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。
 
@@ -46,7 +48,7 @@ uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigr
 uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5
 
 # 抓取 Claude Code 的非官方默认快照和全部官方 API 模型快照。
-uv run phistory capture --latest --agents claude-code --variants default,official-fable-5-1,official-fable,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku
+uv run phistory capture --latest --agents claude-code --variants default,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku
 
 # 回填某个 agent 的历史版本区间。
 uv run phistory backfill claude-code --from 2.1.113 --to latest

@@ -28,8 +28,13 @@ _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
 _VERSION_PART_RE = re.compile(r"\d+|[A-Za-z]+")
 
 
-def _version_key(version: str) -> tuple[tuple[int, int | str], ...]:
-    return tuple((1, int(part)) if part.isdigit() else (0, part) for part in _VERSION_PART_RE.findall(version))
+def _version_key(version: str) -> tuple:
+    release, _, prerelease = version.split("+", 1)[0].partition("-")
+    if prerelease and prerelease.split(".", 1)[0].isdigit():
+        release, prerelease = f"{release}-{prerelease}", ""
+    release_key = tuple((1, int(part)) if part.isdigit() else (0, part) for part in _VERSION_PART_RE.findall(release))
+    prerelease_key = tuple((0, int(part)) if part.isdigit() else (1, part) for part in prerelease.split("."))
+    return release_key, not prerelease, prerelease_key
 
 
 @dataclass(frozen=True)

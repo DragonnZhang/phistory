@@ -44,6 +44,7 @@ def test_get_agent_has_capture_contract():
     assert [(variant.id, variant.dimensions) for variant in agent.variants] == [
         ("non-official", {"model": "qwen3-coder-plus", "model_family": "non-official"}),
         ("gpt-6-astra", {"model": "gpt-6-astra"}),
+        ("gpt-6-sol", {"model": "gpt-6-sol"}),
         ("gpt-5.6-sol", {"model": "gpt-5.6-sol"}),
         ("gpt-5.6-terra", {"model": "gpt-5.6-terra"}),
         ("gpt-5.6-luna", {"model": "gpt-5.6-luna"}),
@@ -52,6 +53,7 @@ def test_get_agent_has_capture_contract():
     assert {variant.id: variant.min_version for variant in agent.variants} == {
         "non-official": None,
         "gpt-6-astra": "0.153.1",
+        "gpt-6-sol": "0.157.0-alpha.10",
         "gpt-5.6-sol": "0.144.0",
         "gpt-5.6-terra": "0.144.0",
         "gpt-5.6-luna": "0.144.0",
@@ -85,6 +87,11 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             "official-fable",
             "Official API · Fable 5",
             {"api": "official", "model": "claude-fable-5"},
+        ),
+        (
+            "official-opus-5-5",
+            "Official API · Opus 5.5",
+            {"api": "official", "model": "claude-opus-5-5[1m]"},
         ),
         (
             "official-opus",
@@ -126,6 +133,7 @@ def test_claude_code_official_variants_use_forward_capture_without_changing_defa
     for variant_id, model in (
         ("official-fable-5-1", "claude-fable-5-1"),
         ("official-fable", "claude-fable-5"),
+        ("official-opus-5-5", "claude-opus-5-5[1m]"),
         ("official-opus", "claude-opus-5[1m]"),
         ("official-opus-4-8", "claude-opus-4-8[1m]"),
         ("official-opus-4-7", "claude-opus-4-7[1m]"),

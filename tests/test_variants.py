@@ -5,7 +5,7 @@ import pytest
 
 from phistory.drivers import CaptureRunContext
 from phistory.drivers.dsh_web import PROMPT, _create_and_prompt_session, _has_prompt_request
-from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo
+from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo, _version_key
 from phistory.registry import AGENTS, get_agent
 from phistory.site import _build_manifest
 from phistory.storage import write_meta
@@ -40,6 +40,23 @@ def test_agent_rejects_duplicate_variant_ids():
             fake_env={},
             variants=(CaptureVariant("default", "Duplicate"),),
         )
+
+
+def test_prerelease_capture_floor_allows_the_following_stable_release():
+    sol = get_agent("codex").variant("gpt-6-sol")
+    assert not sol.supports_version("0.156.0")
+    assert not sol.supports_version("0.157.0-alpha.9")
+    assert sol.supports_version("0.157.0-alpha.10")
+    assert sol.supports_version("0.157.0")
+    assert sol.supports_version("0.158.0")
+    assert _version_key("2026.7.1-2") > _version_key("2026.7.1")
+    assert not CaptureVariant("stable", "Stable", min_version="0.157.0").supports_version("0.157.0-alpha.10")
+    assert sorted(["0.157.0", "0.157.0-alpha.10", "0.156.0", "0.157.0-alpha.9"], key=_version_key) == [
+        "0.156.0",
+        "0.157.0-alpha.9",
+        "0.157.0-alpha.10",
+        "0.157.0",
+    ]
 
 
 def test_agent_rejects_active_hidden_variant_overlap():

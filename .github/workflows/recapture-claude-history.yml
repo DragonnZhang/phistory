@@ -12,6 +12,7 @@ on:
           - default
           - official-fable-5-1
           - official-fable
+          - official-opus-5-5
           - official-opus
           - official-opus-4-8
           - official-opus-4-7
