@@ -1,0 +1,54 @@
+{
+  "agent_id": "kimi-code",
+  "agent": "Kimi Code",
+  "package": "@moonshot-ai/kimi-code",
+  "version": "2.1.1",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "kimi-for-coding",
+    "tool_count": 25
+  },
+  "published_at": "2026-09-24T07:27:15.480Z",
+  "tarball_url": "https://registry.npmjs.org/@moonshot-ai/kimi-code/-/kimi-code-2.1.1.tgz",
+  "binary_version": "2.1.1",
+  "captured_at": "2026-09-24T07:48:03.242260+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "35971420667",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/35971420667"
+  },
+  "tap_client": "kimi-code",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 9.348,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "kimi-code",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--prompt",
+    "Reply with one short sentence.",
+    "--output-format",
+    "text"
+  ]
+}

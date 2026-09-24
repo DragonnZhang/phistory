@@ -1,0 +1,63 @@
+{
+  "agent_id": "dsh",
+  "agent": "DeepSeek Harness",
+  "package": "@deepseek-ai/dsh",
+  "version": "0.1.5-rc.3",
+  "variant": {
+    "id": "standard",
+    "label": "Standard",
+    "dimensions": {
+      "surface": "web",
+      "mode": "standard"
+    }
+  },
+  "requested": {
+    "surface": "web",
+    "mode": "standard"
+  },
+  "observed": {
+    "model": "deepseek-flash",
+    "tool_count": 27
+  },
+  "published_at": "2026-09-22T05:55:20.869Z",
+  "tarball_url": "https://registry.npmjs.org/@deepseek-ai/dsh/-/dsh-0.1.5-rc.3.tgz",
+  "binary_version": "0.1.5-rc.3",
+  "captured_at": "2026-09-24T07:47:30.470665+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "35971420667",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/35971420667"
+  },
+  "tap_client": "dsh",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 5.821,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "dsh",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "web",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "48461"
+  ]
+}
