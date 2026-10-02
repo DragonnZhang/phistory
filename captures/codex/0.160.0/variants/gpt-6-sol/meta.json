@@ -1,0 +1,60 @@
+{
+  "agent_id": "codex",
+  "agent": "Codex CLI",
+  "package": "@openai/codex",
+  "version": "0.160.0",
+  "variant": {
+    "id": "gpt-6-sol",
+    "label": "GPT-6 Sol",
+    "dimensions": {
+      "model": "gpt-6-sol"
+    }
+  },
+  "requested": {
+    "model": "gpt-6-sol"
+  },
+  "observed": {
+    "model": "gpt-6-sol",
+    "tool_count": 3
+  },
+  "published_at": "2026-10-01T20:26:19.286Z",
+  "tarball_url": "https://registry.npmjs.org/@openai/codex/-/codex-0.160.0.tgz",
+  "binary_version": "codex-cli 0.160.0",
+  "captured_at": "2026-10-02T08:54:09.747994+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "36986592752",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/36986592752"
+  },
+  "tap_client": "codex",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 2.158,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "codex",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "exec",
+    "Reply with one short sentence.",
+    "--model",
+    "gpt-6-sol",
+    "--skip-git-repo-check",
+    "--json"
+  ]
+}
