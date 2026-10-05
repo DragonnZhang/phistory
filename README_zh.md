@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每天自动检查新版本，归档最近更新于 **2026-10-04 08:43 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-10-05 09:34 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -87,16 +87,16 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-10-04 08:43 UTC
+最近抓取更新：2026-10-05 09:34 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
 | Claude Code | [2.1.289 - 2026-10-03](captures/claude-code/2.1.289/variants/default/prompt.md) | 439 | 3385 | 2026-10-04 08:42 UTC |
 | Codex CLI | [0.160.0 - 2026-10-01](captures/codex/0.160.0/variants/default/prompt.md) | 100 | 402 | 2026-10-02 08:54 UTC |
 | DeepSeek Harness | [0.2.0-rc.2 - 2026-09-29](captures/dsh/0.2.0-rc.2/variants/default/prompt.md) | 14 | 75 | 2026-09-30 08:57 UTC |
-| Antigravity CLI | [1.2.16 - 2026-10-03](captures/antigravity/1.2.16/variants/default/prompt.md) | 58 | 58 | 2026-10-03 08:31 UTC |
+| Antigravity CLI | [1.2.17 - 2026-10-05](captures/antigravity/1.2.17/variants/default/prompt.md) | 59 | 59 | 2026-10-05 09:33 UTC |
 | Grok Build | [1.0.46 - 2026-09-30](captures/grok/1.0.46/variants/default/prompt.md) | 139 | 139 | 2026-10-01 09:21 UTC |
-| MiniMax Code | [3.1.0 - 2026-09-29](captures/minimax-code/3.1.0/variants/default/prompt.md) | 39 | 39 | 2026-09-30 08:58 UTC |
+| MiniMax Code | [3.1.1 - 2026-10-04](captures/minimax-code/3.1.1/variants/default/prompt.md) | 40 | 40 | 2026-10-05 09:33 UTC |
 | Kimi Code | [2.1.1 - 2026-09-24](captures/kimi-code/2.1.1/variants/default/prompt.md) | 77 | 77 | 2026-09-24 07:48 UTC |
 | Qwen Code | [0.24.7 - 2026-09-29](captures/qwen-code/0.24.7/variants/default/prompt.md) | 136 | 136 | 2026-09-30 08:58 UTC |
 | Qoder CLI | [1.1.65 - 2026-09-30](captures/qoder/1.1.65/variants/default/prompt.md) | 175 | 175 | 2026-10-01 09:23 UTC |
@@ -105,8 +105,8 @@ uv run phistory render-site
 | Hermes Agent | [v2026.9.24 - 2026-09-24](captures/hermes/v2026.9.24/variants/default/prompt.md) | 34 | 34 | 2026-09-25 08:09 UTC |
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
 | opencode | [1.18.34 - 2026-09-30](captures/opencode/1.18.34/variants/default/prompt.md) | 117 | 117 | 2026-10-01 09:21 UTC |
-| Pi | [1.0.2 - 2026-10-04](captures/pi/1.0.2/variants/default/prompt.md) | 53 | 53 | 2026-10-04 08:42 UTC |
-| Oh My Pi | [18.6.0 - 2026-10-03](captures/omp/18.6.0/variants/default/prompt.md) | 107 | 107 | 2026-10-04 08:43 UTC |
+| Pi | [1.0.3 - 2026-10-05](captures/pi/1.0.3/variants/default/prompt.md) | 54 | 54 | 2026-10-05 09:34 UTC |
+| Oh My Pi | [18.6.1 - 2026-10-04](captures/omp/18.6.1/variants/default/prompt.md) | 108 | 108 | 2026-10-05 09:34 UTC |
 
 ## 项目趋势
 
