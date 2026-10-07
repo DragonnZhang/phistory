@@ -24,11 +24,12 @@ def test_parse_default_agents():
         "mimo",
         "openclaw",
         "hermes",
-        "kimi",
         "opencode",
         "pi",
         "omp",
     ]
+    assert "kimi" in AGENT_ORDER
+    assert parse_agent_ids("kimi,kimi-code") == ["kimi", "kimi-code"]
 
 
 def test_get_agent_has_capture_contract():

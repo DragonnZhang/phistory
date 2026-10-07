@@ -151,7 +151,11 @@ def capture_target(
                 *execution.compatibility_patches,
             )
         if not prompt_path.exists():
-            detail = (result.stderr or result.stdout).strip()[-4000:]
+            detail = "\n".join(
+                f"{name}:\n{output.strip()[-4000:]}"
+                for name, output in (("stdout", result.stdout), ("stderr", result.stderr))
+                if output.strip()
+            )
             raise RuntimeError(f"capture command failed ({result.returncode})\n{detail}")
 
         if not working_target.trace_path.exists():

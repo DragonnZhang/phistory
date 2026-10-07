@@ -679,7 +679,7 @@ def test_capture_failure_removes_partial_version_dir(tmp_path: Path, monkeypatch
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     fake_codex = bin_dir / "codex"
-    fake_codex.write_text("#!/bin/sh\nexit 2\n", encoding="utf-8")
+    fake_codex.write_text("#!/bin/sh\necho 'This CLI is no longer maintained.'\nexit 2\n", encoding="utf-8")
     fake_codex.chmod(fake_codex.stat().st_mode | stat.S_IXUSR)
 
     monkeypatch.setattr("phistory.packages.install_agent", lambda *_args, **_kwargs: bin_dir)
@@ -697,6 +697,10 @@ def test_capture_failure_removes_partial_version_dir(tmp_path: Path, monkeypatch
     result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
 
     assert result.status == "failed"
+    assert "This CLI is no longer maintained." in result.error
+    assert "no valid records found in trace file" in result.error
+    assert "stdout:\n" in result.error
+    assert "stderr:\n" in result.error
     assert not target.version_dir.exists()
 
 

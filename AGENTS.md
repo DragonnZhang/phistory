@@ -17,7 +17,7 @@ This file is for future coding agents. Read it before changing the project.
 - `phistory/static_prompts/`: static prompt extraction for package-embedded prompt strings. It currently targets Claude Code and is structured so other agents can be added later.
 - `phistory/cli.py`: CLI entrypoint for `capture`, `backfill`, `extract-static`, `render-index`, and `render-site`.
 - `tests/`: focused unit and local integration tests for package sources, registry contracts, capture behavior, and rendering.
-- `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest smoke capture for all agents, real latest capture, Claude Code static prompt extraction for the latest captured versions, renders artifacts, and commits updates.
+- `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest captures for actively tracked agents, Claude Code static prompt extraction, rendering, and commits updates. Manual dispatch also runs a fresh smoke capture after committing archives.
 - `.github/workflows/backfill.yml`: manually triggered stable-history backfill for all eight downstream atlas agents with explicit version ranges and variants.
 - `.github/workflows/recapture-claude-history.yml`: manually triggered, sharded Linux recapture for the complete Claude Code history with remote experiment fetching disabled.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
@@ -97,7 +97,7 @@ Current agents are defined in `phistory/registry.py`:
 - `mimo`: npm package `@mimo-ai/cli`, tap client `mimo`, reverse tap mode with OpenAI-compatible provider config.
 - `openclaw`: npm package `openclaw`, tap client `openclaw`, Node 24 wrapper, isolated OpenClaw config.
 - `hermes`: GitHub release source `NousResearch/hermes-agent`, tap client `hermes`, OpenRouter provider path.
-- `kimi`: GitHub release source `MoonshotAI/kimi-cli`, tap client `kimi`, isolated Kimi TOML config.
+- `kimi`: archived GitHub release source `MoonshotAI/kimi-cli`, tap client `kimi`, isolated Kimi TOML config. Historical captures end at `1.51.0`. The final `1.52.0` release replaced the CLI entry point with a migration notice ([upstream change](https://github.com/MoonshotAI/kimi-cli/pull/2666)), so `track_latest=False` excludes it from default latest capture and CI. Keep its history and explicit backfill support; its successor is `kimi-code`.
 - `opencode`: npm package `opencode-ai`, tap client `opencode`, reverse tap mode so opencode can fetch its model registry while the model request is redirected locally.
 - `pi`: npm package `@earendil-works/pi-coding-agent`, tap client `pi`, isolated Pi provider config.
 - `omp`: npm package `@oh-my-pi/pi-coding-agent` for version discovery, official `can1357/oh-my-pi` release binary for installation, tap client `omp`, isolated Oh My Pi provider config.

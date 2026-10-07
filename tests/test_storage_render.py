@@ -68,7 +68,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "do not reconstruct the model that was the official default" in text
     assert "deterministic, documented baseline rather than the rollout state" in text
     assert "## Local Development" in text
-    assert "# Capture the latest release and every configured snapshot for each CLI." in text
+    assert "# Capture the latest release and every configured snapshot for each active CLI (Linux CI)." in text
     assert "--variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5" in text
     assert (
         "--agents claude-code --variants "
@@ -104,7 +104,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "并不还原该版本发布时的官方默认模型" in zh_text
     assert "明确记录的确定性基线" in zh_text
     assert "## 本地开发" in zh_text
-    assert "# 抓取每个 CLI 的最新版本及其全部已配置快照。" in zh_text
+    assert "# 在 Linux CI 中抓取每个仍在追踪的 CLI 的最新版本及其全部已配置快照。" in zh_text
     assert "## Web UI" not in zh_text
     assert "## 给 AI Agent" not in zh_text
     assert "## 抓取状态" in zh_text

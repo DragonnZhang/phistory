@@ -33,6 +33,8 @@ Codex GPT-6 Sol 从已发布的 `0.157.0-alpha.10` 预览版开始归档；稳�
 
 GitHub Actions 每天检查一次已自动追踪的 CLI 版本；发现新版本后，会自动抓取并提交新的提示词快照。
 
+旧 Kimi CLI 的历史归档保留到 `1.51.0`。最终版 `1.52.0` 只输出迁移提示（[上游变更](https://github.com/MoonshotAI/kimi-cli/pull/2666)），因此已退出自动最新版本采集；新版 Kimi Code 继续独立追踪。
+
 ## 本地开发
 
 日常查看直接使用托管网页：[phistory.cc](https://phistory.cc/)。下面这些命令主要用于本地开发、复现抓取、回填历史版本，以及重新生成项目里的生成文件。
@@ -41,8 +43,8 @@ GitHub Actions 每天检查一次已自动追踪的 CLI 版本；发现新版本
 # 安装锁定的开发环境。
 uv sync --all-groups
 
-# 抓取每个 CLI 的最新版本及其全部已配置快照。
-uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+# 在 Linux CI 中抓取每个仍在追踪的 CLI 的最新版本及其全部已配置快照。
+uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,opencode,pi,omp
 
 # 只抓取 Codex 的指定快照。
 uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5
@@ -80,7 +82,7 @@ uv run phistory render-site
 - MiMo Code (`@mimo-ai/cli`)
 - OpenClaw (`openclaw`)
 - Hermes Agent (`hermes-agent`)
-- Kimi CLI (`MoonshotAI/kimi-cli`)
+- Kimi CLI（`MoonshotAI/kimi-cli`，历史归档保留到 `1.51.0`）
 - opencode (`opencode-ai`)
 - Pi (`@earendil-works/pi-coding-agent`)
 - Oh My Pi (`@oh-my-pi/pi-coding-agent`)

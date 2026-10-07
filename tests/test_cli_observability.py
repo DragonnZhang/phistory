@@ -30,7 +30,11 @@ def test_print_results_writes_github_summary_and_annotations(tmp_path: Path, mon
     assert "`codex`" in text
     assert "`claude-code`" in text
     assert "first line second line" in text
-    assert "::error title=claude-code unknown default capture failed::first line second line" in capsys.readouterr().err
+    output = capsys.readouterr()
+    assert "codex 1.0.0 [default]: captured" in output.out
+    assert "claude-code" not in output.out
+    assert "claude-code unknown [default]: failed\n  error:  first line\nsecond line" in output.err
+    assert "::error title=claude-code unknown default capture failed::first line second line" in output.err
 
 
 def test_capture_latest_reports_version_lookup_failure(monkeypatch, tmp_path: Path):

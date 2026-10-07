@@ -717,6 +717,8 @@ KIMI = AgentSpec(
     display_name="Kimi CLI",
     package="MoonshotAI/kimi-cli",
     source="github-release",
+    # 1.52.0 replaced the CLI with a migration notice: MoonshotAI/kimi-cli#2666.
+    track_latest=False,
     tap_client="kimi",
     fake_env={
         "OPENAI_API_KEY": "phistory-fake-api-key",
@@ -857,6 +859,7 @@ AGENTS: dict[str, AgentSpec] = {
     )
 }
 AGENT_ORDER = tuple(AGENTS)
+LATEST_AGENT_IDS = tuple(agent.id for agent in AGENTS.values() if agent.track_latest)
 
 
 def agent_sort_key(agent_id: str) -> tuple[int, str]:
@@ -876,7 +879,7 @@ def get_agent(agent_id: str) -> AgentSpec:
 
 def parse_agent_ids(value: str | None) -> list[str]:
     if not value:
-        return list(AGENT_ORDER)
+        return list(LATEST_AGENT_IDS)
     ids = [item.strip() for item in value.split(",") if item.strip()]
     for agent_id in ids:
         get_agent(agent_id)

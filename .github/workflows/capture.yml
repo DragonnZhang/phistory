@@ -15,7 +15,8 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   GH_TOKEN: ${{ github.token }}
-  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+  # Legacy kimi ended at 1.51.0; 1.52.0 only prints a migration notice (kimi-cli#2666).
+  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,opencode,pi,omp
 
 jobs:
   capture:

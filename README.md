@@ -33,6 +33,8 @@ Codex GPT-6 Sol starts at the published `0.157.0-alpha.10` preview; stable `0.15
 
 GitHub Actions checks automatically tracked CLI releases every day and commits new snapshots when they appear.
 
+Legacy Kimi CLI is archived through `1.51.0`. Its final `1.52.0` release only prints a migration notice ([upstream change](https://github.com/MoonshotAI/kimi-cli/pull/2666)), so it is excluded from automatic latest captures. Kimi Code continues to be tracked separately.
+
 ## Local Development
 
 Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are for local development, capture reproduction, historical backfills, and regenerating generated files.
@@ -41,8 +43,8 @@ Use the hosted viewer at [phistory.cc](https://phistory.cc/). These commands are
 # Install the locked development environment.
 uv sync --all-groups
 
-# Capture the latest release and every configured snapshot for each CLI.
-uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,kimi,opencode,pi,omp
+# Capture the latest release and every configured snapshot for each active CLI (Linux CI).
+uv run phistory capture --latest --agents claude-code,codex,qwen-code,dsh,antigravity,grok,minimax-code,kimi-code,mimo,openclaw,hermes,opencode,pi,omp
 
 # Capture only selected Codex snapshots.
 uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5
@@ -80,7 +82,7 @@ uv run phistory render-site
 - MiMo Code (`@mimo-ai/cli`)
 - OpenClaw (`openclaw`)
 - Hermes Agent (`hermes-agent`)
-- Kimi CLI (`MoonshotAI/kimi-cli`)
+- Kimi CLI (`MoonshotAI/kimi-cli`, historical archive through `1.51.0`)
 - opencode (`opencode-ai`)
 - Pi (`@earendil-works/pi-coding-agent`)
 - Oh My Pi (`@oh-my-pi/pi-coding-agent`)

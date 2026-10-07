@@ -7,7 +7,7 @@ from pathlib import Path
 
 from phistory import __version__, packages
 from phistory.models import CaptureTarget
-from phistory.registry import AGENT_ORDER, AGENTS, parse_agent_ids
+from phistory.registry import AGENTS, LATEST_AGENT_IDS, parse_agent_ids
 from phistory.render import render_index
 from phistory.site import render_site
 from phistory.static_prompts.archive import archive_qoder_static_prompt
@@ -26,7 +26,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     capture = sub.add_parser("capture", help="capture current versions")
     capture.add_argument("--latest", action="store_true", help="capture latest package version for each agent")
-    capture.add_argument("--agents", default=None, help=f"comma-separated agent ids (default: {','.join(AGENT_ORDER)})")
+    capture.add_argument(
+        "--agents", default=None, help=f"comma-separated agent ids (default: {','.join(LATEST_AGENT_IDS)})"
+    )
     capture.add_argument(
         "--variants", default=None, help="comma-separated variant ids (default: every configured variant)"
     )
@@ -298,13 +300,15 @@ def _print_results(results, summary_title: str = "Capture results") -> int:
 
 
 def _print_result(result) -> bool:
-    print(f"{result.agent_id} {result.version} [{result.variant_id}]: {result.status}", flush=True)
+    lines = [f"{result.agent_id} {result.version} [{result.variant_id}]: {result.status}"]
     if result.prompt_path:
-        print(f"  prompt: {result.prompt_path}", flush=True)
+        lines.append(f"  prompt: {result.prompt_path}")
     if result.trace_path:
-        print(f"  trace:  {result.trace_path}", flush=True)
+        lines.append(f"  trace:  {result.trace_path}")
     if result.error:
-        print(f"  error:  {result.error}", file=sys.stderr, flush=True)
+        lines.append(f"  error:  {result.error}")
+    print("\n".join(lines), file=sys.stderr if result.error else sys.stdout, flush=True)
+    if result.error:
         _print_github_error(result)
         return True
     return False
