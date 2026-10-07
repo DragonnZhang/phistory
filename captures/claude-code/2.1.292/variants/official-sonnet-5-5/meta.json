@@ -1,0 +1,68 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.292",
+  "variant": {
+    "id": "official-sonnet-5-5",
+    "label": "Official API · Sonnet 5.5",
+    "dimensions": {
+      "api": "official",
+      "model": "claude-sonnet-5-5"
+    }
+  },
+  "requested": {
+    "api": "official",
+    "model": "claude-sonnet-5-5"
+  },
+  "observed": {
+    "model": "claude-sonnet-5-5",
+    "tool_count": 12
+  },
+  "published_at": "2026-10-06T17:10:31.715Z",
+  "tarball_url": "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.292.tgz",
+  "binary_version": "2.1.292 (Claude Code)",
+  "captured_at": "2026-10-07T13:12:46.412147+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "37626635381",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/37626635381"
+  },
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 4.034,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--no-session-persistence",
+    "--model",
+    "claude-sonnet-5-5",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  }
+}
