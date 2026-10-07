@@ -85,7 +85,7 @@ Current agents are defined in `phistory/registry.py`:
   and `claude-haiku-4-5`, respectively. `official-sonnet-5-5` adds `claude-sonnet-5-5` from `2.1.284`, before the preserved Sonnet 5 lane.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives the real default, a `non-official` Qwen3 Coder Plus model-ID lane, plus pinned GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 Sol, GPT-5.6 Terra, GPT-5.6 Luna, and GPT-5.5 variants. The retired `gpt-5.6` alias capture remains archived but is hidden from the site because the CLI treated it as unknown local model metadata.
   GPT-6.1 Sol begins at stable `0.159.1`; GPT-6 Luna begins at the already-published `0.157.0-alpha.10` preview. Their support evidence is recorded in `docs/research/trace-atlas-models-2026-10-07.md`.
-  The non-official lane pins `qwen3-coder-plus` under the same capture-only transport/auth setup; it measures Codex's non-GPT model fallback, not a live third-party service or a distinct authentication mode. It is ordered after default and before Astra.
+  The non-official lane pins `qwen3-coder-plus` under the same capture-only transport/auth setup; it measures Codex's non-GPT model fallback, not a live third-party service or a distinct authentication mode. It is ordered after default and before the fixed GPT-model lanes.
   Fixed GPT-model lanes begin at the first Codex CLI release whose bundled model catalog includes that model: 0.125.0 for GPT-5.5, 0.144.0 for the GPT-5.6 family, and 0.153.1 for GPT-6 Astra. GPT-6 Sol begins at the published `0.157.0-alpha.10` preview; stable `0.156.0` has no Sol entry and must not be captured as a valid Sol lane. Use explicit `--include-prerelease` for that initial capture; normal latest captures pick it up once a supporting stable release ships.
 - `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode; uses a Web RPC driver for default, Standard, PTC, Minimal, and Creator snapshots, plus the headless snapshot.
 - `antigravity`: GitHub release asset source `google-antigravity/antigravity-cli`, tap client `agy`, isolated Antigravity config and forward capture mode.
@@ -169,7 +169,7 @@ raw traces, capture times, and available host provenance stay intact. Early arch
 The dedicated Claude Code history recapture workflow accepts `default`, `non-official`, `official-fable-5-1`, `official-fable`,
 `official-opus-5-5`, `official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official-sonnet-5-5`, `official`, or `official-haiku` and defaults to `default`.
 Select `official-fable-5-1` for Fable 5.1, `official-fable` for Fable 5, `official-opus-5-5` for Opus 5.5 1M, `official-opus` for Opus 5 1M, `official-opus-4-8` for Opus 4.8 1M,
-`official-opus-4-7` for Opus 4.7 1M, `official` for Sonnet 5, or `official-haiku` for Haiku 4.5.
+`official-opus-4-7` for Opus 4.7 1M, `official-sonnet-5-5` for Sonnet 5.5, `official` for Sonnet 5, or `official-haiku` for Haiku 4.5.
 Each official lane is a compatibility snapshot of every historical CLI explicitly targeting its configured model, not a
 reconstruction of the model that was the official default at the time. For older releases that cannot consume inline `--settings` JSON,
 the oneshot driver detects the CLI capability and temporarily strips claude-tap's redundant settings argument while keeping
