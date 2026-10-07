@@ -59,6 +59,20 @@ def test_prerelease_capture_floor_allows_the_following_stable_release():
     ]
 
 
+@pytest.mark.parametrize(
+    ("agent_id", "variant_id", "before", "first"),
+    [
+        ("claude-code", "official-sonnet-5-5", "2.1.283", "2.1.284"),
+        ("codex", "gpt-6.1-sol", "0.159.0", "0.159.1"),
+        ("codex", "gpt-6-luna", "0.156.0", "0.157.0-alpha.10"),
+    ],
+)
+def test_new_model_lanes_start_at_published_support_boundary(agent_id, variant_id, before, first):
+    variant = get_agent(agent_id).variant(variant_id)
+    assert not variant.supports_version(before)
+    assert variant.supports_version(first)
+
+
 def test_agent_rejects_active_hidden_variant_overlap():
     with pytest.raises(ValueError, match="cannot also be hidden"):
         AgentSpec(

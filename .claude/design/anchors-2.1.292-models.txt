@@ -1,0 +1,35 @@
+Claude Code 2.1.292 — scoped Sonnet 5.5 model baseline
+Verified: 2026-10-07 Asia/Singapore
+
+[binary-meta]
+wrapper: @anthropic-ai/claude-code@2.1.292
+platform: @anthropic-ai/claude-code-darwin-arm64@2.1.292
+tarball: https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.292.tgz
+binary_size_bytes: 235017328
+binary_sha256: 97a01e5bc74a199e67189435d0331ea3a24eac2e07db4b76d9148c5b0386138f
+build_time: 2026-10-06T05:25:12Z
+git_sha: 37832d0b7cad7b40bac7c82dff58629313913edf
+prior_baseline: anchors-2.1.283-arena-comparison.txt (claude-reverse .claude/design)
+prior_baseline_sha256: 7943f80e827fce877b48530b0a527f797f197af135953e187d32f3e26b022910
+prior_binary_sha256: d8cb1e5c79684cc12a8bfc813e3a2073406921b6245744b3009be3ab5651d21e
+binary_size_delta: +9981296
+
+[diff-summary vs 2.1.283]
+Scope: model discovery for Phistory, not a full release census.
+Model catalog: adds explicit claude-sonnet-5-5, family sonnet.
+Slash registry, hooks, telemetry, environment gates, codename flags,
+GrowthBook callsites, billing fields and app-state deltas: not re-audited.
+
+[model-anchors-confirmed]
+claude-sonnet-5-5 absent from exact 2.1.283 binary.
+2.1.284 catalog offset: 178320681; exact first-party ID; native 1M window; lean_prompt.
+2.1.292 catalog offset: 183493900; latest_per_family.sonnet selects claude-sonnet-5-5.
+Latest model capabilities include mid_conv_tool_change and per_turn_timing;
+2.1.284 instead declared mid_conv_system. Both include lean_prompt.
+Model-specialized branch also accepts claude-sonnet-5-5[1m].
+
+[validation-boundary]
+Confirmed facts come from exact platform binaries with verified npm integrity.
+No old-source inference and no local prompt request capture.
+Wire tools and prompt metrics require Linux CI artifacts.
+Detailed evidence and capture status: docs/research/trace-atlas-models-2026-10-07.md.

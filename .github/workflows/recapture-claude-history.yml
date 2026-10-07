@@ -17,6 +17,7 @@ on:
           - official-opus
           - official-opus-4-8
           - official-opus-4-7
+          - official-sonnet-5-5
           - official
           - official-haiku
       from:

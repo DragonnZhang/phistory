@@ -43,8 +43,10 @@ def test_get_agent_has_capture_contract():
     assert "--model" not in agent.default_variant.run_args
     assert [(variant.id, variant.dimensions) for variant in agent.variants] == [
         ("non-official", {"model": "qwen3-coder-plus", "model_family": "non-official"}),
+        ("gpt-6.1-sol", {"model": "gpt-6.1-sol"}),
         ("gpt-6-astra", {"model": "gpt-6-astra"}),
         ("gpt-6-sol", {"model": "gpt-6-sol"}),
+        ("gpt-6-luna", {"model": "gpt-6-luna"}),
         ("gpt-5.6-sol", {"model": "gpt-5.6-sol"}),
         ("gpt-5.6-terra", {"model": "gpt-5.6-terra"}),
         ("gpt-5.6-luna", {"model": "gpt-5.6-luna"}),
@@ -52,8 +54,10 @@ def test_get_agent_has_capture_contract():
     ]
     assert {variant.id: variant.min_version for variant in agent.variants} == {
         "non-official": None,
+        "gpt-6.1-sol": "0.159.1",
         "gpt-6-astra": "0.153.1",
         "gpt-6-sol": "0.157.0-alpha.10",
+        "gpt-6-luna": "0.157.0-alpha.10",
         "gpt-5.6-sol": "0.144.0",
         "gpt-5.6-terra": "0.144.0",
         "gpt-5.6-luna": "0.144.0",
@@ -111,6 +115,11 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             {"api": "official", "model": "claude-opus-4-7[1m]"},
         ),
         (
+            "official-sonnet-5-5",
+            "Official API · Sonnet 5.5",
+            {"api": "official", "model": "claude-sonnet-5-5"},
+        ),
+        (
             "official",
             "Official API · Sonnet 5",
             {"api": "official", "model": "claude-sonnet-5"},
@@ -145,6 +154,7 @@ def test_claude_code_default_uses_forward_capture_without_pinning_a_model(tmp_pa
         ("official-opus", "claude-opus-5[1m]"),
         ("official-opus-4-8", "claude-opus-4-8[1m]"),
         ("official-opus-4-7", "claude-opus-4-7[1m]"),
+        ("official-sonnet-5-5", "claude-sonnet-5-5"),
         ("official", "claude-sonnet-5"),
         ("official-haiku", "claude-haiku-4-5"),
     ):

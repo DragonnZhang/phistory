@@ -175,6 +175,22 @@ CLAUDE_CODE = AgentSpec(
             tap_mode="forward",
         ),
         _variant(
+            "official-sonnet-5-5",
+            "Official API · Sonnet 5.5",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-sonnet-5-5",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-sonnet-5-5"},
+            tap_mode="forward",
+            min_version="2.1.284",
+        ),
+        _variant(
             "official",
             "Official API · Sonnet 5",
             (
@@ -247,6 +263,22 @@ CODEX = AgentSpec(
             dimensions={"model": "qwen3-coder-plus", "model_family": "non-official"},
         ),
         _variant(
+            "gpt-6.1-sol",
+            "GPT-6.1 Sol",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-6.1-sol",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-6.1-sol"},
+            min_version="0.159.1",
+        ),
+        _variant(
             "gpt-6-astra",
             "GPT-6 Astra",
             (
@@ -276,6 +308,22 @@ CODEX = AgentSpec(
                 "--json",
             ),
             dimensions={"model": "gpt-6-sol"},
+            min_version="0.157.0-alpha.10",
+        ),
+        _variant(
+            "gpt-6-luna",
+            "GPT-6 Luna",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-6-luna",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-6-luna"},
             min_version="0.157.0-alpha.10",
         ),
         _variant(

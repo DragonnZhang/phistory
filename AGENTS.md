@@ -18,7 +18,7 @@ This file is for future coding agents. Read it before changing the project.
 - `phistory/cli.py`: CLI entrypoint for `capture`, `backfill`, `extract-static`, `render-index`, and `render-site`.
 - `tests/`: focused unit and local integration tests for package sources, registry contracts, capture behavior, and rendering.
 - `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest smoke capture for all agents, real latest capture, Claude Code static prompt extraction for the latest captured versions, renders artifacts, and commits updates.
-- `.github/workflows/backfill.yml`: manually triggered stable-history backfill for Claude Code, Codex, Qwen Code, and Qoder CLI with explicit version ranges and variants.
+- `.github/workflows/backfill.yml`: manually triggered stable-history backfill for all eight downstream atlas agents with explicit version ranges and variants.
 - `.github/workflows/recapture-claude-history.yml`: manually triggered, sharded Linux recapture for the complete Claude Code history with remote experiment fetching disabled.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
 
@@ -82,8 +82,9 @@ Current agents are defined in `phistory/registry.py`:
   variants are ordered Fable, Opus, Sonnet, then Haiku: `official-fable-5-1`, `official-fable`, `official-opus-5-5`, `official-opus`,
   `official-opus-4-8`, `official-opus-4-7`, `official`, and `official-haiku` use `claude-fable-5-1`,
   `claude-fable-5`, `claude-opus-5-5[1m]`, `claude-opus-5[1m]`, `claude-opus-4-8[1m]`, `claude-opus-4-7[1m]`, `claude-sonnet-5`,
-  and `claude-haiku-4-5`, respectively.
-- `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives the real default, a `non-official` Qwen3 Coder Plus model-ID lane, plus pinned GPT-6 Astra, GPT-6 Sol, GPT-5.6 Sol, GPT-5.6 Terra, GPT-5.6 Luna, and GPT-5.5 variants. The retired `gpt-5.6` alias capture remains archived but is hidden from the site because the CLI treated it as unknown local model metadata.
+  and `claude-haiku-4-5`, respectively. `official-sonnet-5-5` adds `claude-sonnet-5-5` from `2.1.284`, before the preserved Sonnet 5 lane.
+- `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives the real default, a `non-official` Qwen3 Coder Plus model-ID lane, plus pinned GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 Sol, GPT-5.6 Terra, GPT-5.6 Luna, and GPT-5.5 variants. The retired `gpt-5.6` alias capture remains archived but is hidden from the site because the CLI treated it as unknown local model metadata.
+  GPT-6.1 Sol begins at stable `0.159.1`; GPT-6 Luna begins at the already-published `0.157.0-alpha.10` preview. Their support evidence is recorded in `docs/research/trace-atlas-models-2026-10-07.md`.
   The non-official lane pins `qwen3-coder-plus` under the same capture-only transport/auth setup; it measures Codex's non-GPT model fallback, not a live third-party service or a distinct authentication mode. It is ordered after default and before Astra.
   Fixed GPT-model lanes begin at the first Codex CLI release whose bundled model catalog includes that model: 0.125.0 for GPT-5.5, 0.144.0 for the GPT-5.6 family, and 0.153.1 for GPT-6 Astra. GPT-6 Sol begins at the published `0.157.0-alpha.10` preview; stable `0.156.0` has no Sol entry and must not be captured as a valid Sol lane. Use explicit `--include-prerelease` for that initial capture; normal latest captures pick it up once a supporting stable release ships.
 - `dsh`: npm package `@deepseek-ai/dsh`, tap client `dsh`, isolated DSH home and forward capture mode; uses a Web RPC driver for default, Standard, PTC, Minimal, and Creator snapshots, plus the headless snapshot.
@@ -166,7 +167,7 @@ the directory and variant classification, retaining the original variant/request
 raw traces, capture times, and available host provenance stay intact. Early archives did not yet annotate the API path.
 
 The dedicated Claude Code history recapture workflow accepts `default`, `non-official`, `official-fable-5-1`, `official-fable`,
-`official-opus-5-5`, `official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official`, or `official-haiku` and defaults to `default`.
+`official-opus-5-5`, `official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official-sonnet-5-5`, `official`, or `official-haiku` and defaults to `default`.
 Select `official-fable-5-1` for Fable 5.1, `official-fable` for Fable 5, `official-opus-5-5` for Opus 5.5 1M, `official-opus` for Opus 5 1M, `official-opus-4-8` for Opus 4.8 1M,
 `official-opus-4-7` for Opus 4.7 1M, `official` for Sonnet 5, or `official-haiku` for Haiku 4.5.
 Each official lane is a compatibility snapshot of every historical CLI explicitly targeting its configured model, not a
