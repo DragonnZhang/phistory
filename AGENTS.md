@@ -115,7 +115,7 @@ When adding another CLI, prefer extending the existing abstractions:
 - Do not patch around broken historical releases with bespoke compatibility hacks. If a package cannot install or start far enough to emit a request, let that version fail and move on.
 - Do not add one-off version maps unless there is a stable upstream rule behind them.
 - Prefer official release metadata: npm registry for npm packages, PyPI JSON for Python packages, GitHub Releases for release-tagged projects.
-- Keep raw traces raw. Normalize only `prompt.md` via the sanitizer in `capture.py`.
+- Keep raw traces raw. Normalize `prompt.md` via the sanitizer in `capture.py`; browser diff normalization is display-only and must never rewrite capture artifacts.
 - Keep generated files deterministic enough for CI and GitHub Pages. After changing capture, render, registry, or package logic, run both render commands.
 - Avoid “insert-only” changes. If a new agent exposes a weakness in the architecture, refactor the shared abstraction cleanly instead of stacking special cases.
 - Keep the CLI boring and scriptable. The GitHub Action depends on predictable exit codes and printed result lines.
@@ -195,6 +195,8 @@ The site is a single generated `index.html` using manifest data embedded by `phi
 When modifying UI:
 
 - Keep the diff view as the primary experience.
+- Compare the main request's top-level prompts and ordered messages, including user, system, and developer roles. `scope=system` must include injected system/developer messages and exclude user messages and tool declarations; `scope=messages` includes all message roles. Keep captured raw values available in Trace detail.
+- Regression-check message-only changes and runtime-only noise, including Claude Code non-official `2.1.222` → `2.1.223` (removed review skill) and `2.1.291` → `2.1.292` (unchanged system context).
 - Preserve mobile usability.
 - Do not add frameworks or build steps unless there is a strong reason.
 - Regenerate `index.html` with `uv run phistory render-site`.

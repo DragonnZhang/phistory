@@ -18,6 +18,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 - 看到新工具、权限检查、默认模型行为和用户确认规则是什么时候加入的。
 - 对比不同 CLI 如何组织 agent 行为、工具调用和面向开发者的约束。
 - 在文章、研究笔记、审计或排障记录里引用稳定的提示词快照。
+- 默认对比主请求中的提示词、全部角色消息和工具；**System** 筛选顶层提示词及 system/developer 消息，**Messages** 按请求顺序对比全部消息。链接支持 `scope=system` / `scope=messages`。对比时归一化采集路径和明确标注的运行环境值，**Trace** 保留原始请求。版本选择器的变化条仅反映归档 `prompt.md`。
 
 ## 工作原理
 

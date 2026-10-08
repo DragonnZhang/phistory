@@ -402,6 +402,28 @@ a:hover { text-decoration: none; }
   .loading-spinner { animation: none; }
 }
 #diff { position: absolute; inset: 0; }
+.shell > .editor { min-width: 0; }
+.diff-toolbar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+.diff-toolbar select {
+  font: inherit;
+  color: var(--text);
+  background: var(--control-bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+.diff-toolbar span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell[data-view="diff"] .diff-toolbar { display: flex; }
+.shell[data-view="diff"] #diff { top: 44px; }
 .shell[data-view="static"] #diff {
   left: 270px;
 }
@@ -1463,6 +1485,14 @@ a:hover { text-decoration: none; }
     </div>
   </header>
   <main class="editor">
+    <div class="diff-toolbar">
+      <select id="diff-scope" aria-label="Comparison content">
+        <option value="all">All content</option>
+        <option value="system">System</option>
+        <option value="messages">Messages</option>
+      </select>
+      <span id="diff-scope-note" role="status"></span>
+    </div>
     <div id="diff"><div class="empty">Loading diff viewer...</div></div>
     <div id="static-outline" class="static-outline"></div>
     <div id="trace" class="trace-view"><div class="empty">Loading trace detail...</div></div>
@@ -1495,6 +1525,8 @@ const els = {
   viewToggle: document.getElementById('view-toggle'),
   theme: document.getElementById('theme'),
   diff: document.getElementById('diff'),
+  diffScope: document.getElementById('diff-scope'),
+  diffScopeNote: document.getElementById('diff-scope-note'),
   editor: document.querySelector('.editor'),
   staticOutline: document.getElementById('static-outline'),
   trace: document.getElementById('trace'),
@@ -1514,6 +1546,7 @@ function storedTheme() {
 }
 const state = {
   view: 'diff',
+  diffScope: 'all',
   agent: manifest.agents[0]?.id || '',
   fromVariant: '',
   toVariant: '',
@@ -1558,6 +1591,7 @@ function boot() {
 function readQuery() {
   const params = new URLSearchParams(location.search);
   state.view = ['trace', 'static'].includes(params.get('view')) ? params.get('view') : 'diff';
+  state.diffScope = ['system', 'messages'].includes(params.get('scope')) ? params.get('scope') : 'all';
   const agentId = params.get('agent');
   if (agentId && agents.has(agentId)) state.agent = agentId;
   const agent = currentAgent();
@@ -1626,6 +1660,7 @@ function rangeQueryParams() {
   if (state.fromVariant !== defaultVariant) params.set('from_variant', state.fromVariant);
   if (state.toVariant !== defaultVariant) params.set('to_variant', state.toVariant);
   if (state.view === 'static') params.set('view', 'static');
+  if (state.view === 'diff' && state.diffScope !== 'all') params.set('scope', state.diffScope);
   return params;
 }
 
@@ -1640,6 +1675,10 @@ function bindEvents() {
   els.from.addEventListener('click', () => togglePicker('from', els.from));
   els.to.addEventListener('click', () => togglePicker('to', els.to));
   els.viewToggle.addEventListener('click', toggleView);
+  els.diffScope.addEventListener('change', () => {
+    state.diffScope = els.diffScope.value;
+    refresh();
+  });
   els.theme.addEventListener('click', toggleTheme);
   els.diff.addEventListener('focusin', guardMobileEditorFocus);
   els.staticOutline.addEventListener('click', event => {
@@ -1708,6 +1747,7 @@ function renderControls() {
   const from = snapshotInfo('from');
   const to = snapshotInfo('to');
   document.querySelector('.shell')?.setAttribute('data-view', state.view);
+  els.diffScope.value = state.diffScope;
   els.agent.innerHTML = `${agentIconHtml(agent)}<strong>${agentControlNameHtml(agent)}</strong>`;
   els.agent.title = agent.name;
   els.agent.setAttribute('aria-label', `Select agent: ${agent.name}`);
@@ -1842,7 +1882,7 @@ function miniDiffstatHtml(change) {
   const scale = Math.max(0, Math.min(100, Number(change?.scale || 0)));
   const title = change?.comparable === false
     ? 'Static and live prompt sources are not directly comparable'
-    : (changed ? `${changed} changed lines from previous version` : 'No prompt change from previous version');
+    : (changed ? `${changed} changed lines in archived prompt from previous version` : 'No archived prompt change; messages may differ');
   return `<span class="mini-diffstat${changed ? '' : ' no-change'}" style="--fill-width:${scale.toFixed(2)}%;--removed-part:${removePct.toFixed(2)}%;--added-part:${addPct.toFixed(2)}%;" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"><span class="diffstat-fill"><i class="removed"></i><i class="added"></i></span></span>`;
 }
 
@@ -2092,9 +2132,148 @@ function loadMonaco() {
 async function renderDiff(sequence) {
   if (!state.monaco) return;
   const [from, to] = [snapshotInfo('from'), snapshotInfo('to')];
-  const [original, modified] = await Promise.all([loadPrompt(from), loadPrompt(to)]);
+  const scope = state.diffScope;
+  els.diffScopeNote.textContent = '';
+  const [original, modified] = await Promise.all([loadDiffSnapshot(from, scope), loadDiffSnapshot(to, scope)]);
   if (!isCurrentRender(sequence)) return;
-  renderMonacoDiff(original, modified);
+  const notes = {
+    all: 'Prompts, messages and tools',
+    system: 'System prompt and system/developer messages',
+    messages: 'All message roles, in request order'
+  };
+  const warnings = [original.warning, modified.warning].filter(Boolean);
+  els.diffScopeNote.textContent = warnings.length ? warnings.join(' · ') : notes[scope];
+  els.diffScopeNote.title = els.diffScopeNote.textContent;
+  renderMonacoDiff(original.text, modified.text);
+  const editor = state.editor;
+  const reveal = () => {
+    if (!isCurrentRender(sequence) || state.editor !== editor) return;
+    const changes = editor.getLineChanges();
+    if (!changes) return;
+    const change = changes[0];
+    if (!change) {
+      if (!warnings.length) els.diffScopeNote.textContent = notes[scope] + ' · No changes';
+      listener.dispose();
+      return;
+    }
+    editor.getOriginalEditor().revealLineInCenter(Math.max(1, change.originalStartLineNumber));
+    editor.getModifiedEditor().revealLineInCenter(Math.max(1, change.modifiedStartLineNumber));
+    listener.dispose();
+  };
+  const listener = editor.onDidUpdateDiff(reveal);
+  reveal();
+}
+
+async function loadDiffSnapshot(item, scope) {
+  let reason = '';
+  if (item.capture_status !== 'static-only') {
+    try {
+      const selected = selectMainTraceRecord(await loadTrace(item));
+      if (!selected) throw new Error('No prompt-bearing request');
+      return { text: requestDiffMarkdown(requestBody(selected.record), scope), warning: '' };
+    } catch (error) {
+      reason = String(error.message || error);
+    }
+  } else {
+    reason = 'Static-only snapshot';
+  }
+  if (scope !== 'all') throw new Error(`${item.version}: ${reason}. Message comparison is unavailable; select All content to read the archived prompt.`);
+  return {
+    text: normalizeDiffText(await loadPrompt(item)),
+    warning: `${item.version}: archived prompt only; messages unavailable (${reason})`
+  };
+}
+
+function requestDiffMarkdown(body, scope = 'all') {
+  const blocks = [];
+  if (scope !== 'messages') {
+    for (const [key, title] of [['system', 'System Prompt'], ['instructions', 'Instructions'],
+      ['system_instruction', 'System Instruction'], ['systemInstruction', 'System Instruction']]) {
+      if (body[key] !== undefined) blocks.push({ title, text: diffContentText(body[key]) });
+    }
+  }
+  for (const key of ['messages', 'input', 'contents']) {
+    const messages = typeof body[key] === 'string'
+      ? [{ role: 'user', content: body[key] }] : messageItems(body[key]);
+    const counts = new Map();
+    for (const message of messages) {
+      if (message.type === 'additional_tools') continue;
+      const role = String(message.role || message.type || 'user').toLowerCase();
+      if (scope === 'system' && !['system', 'developer'].includes(role)) continue;
+      const ordinal = (counts.get(role) || 0) + 1;
+      counts.set(role, ordinal);
+      const title = `${role[0].toUpperCase() + role.slice(1)} Message (${key} · ${ordinal})`;
+      const content = message.content ?? message.parts ?? message.text;
+      const metadata = Object.fromEntries(Object.entries(message).filter(([name]) =>
+        !['role', 'type', 'content', 'parts', 'text', 'cache_control'].includes(name)));
+      const parts = [diffContentText(content)];
+      if (Object.keys(metadata).length) parts.push(diffJson(metadata));
+      // Keep non-text input items (calls/results/images), including their type.
+      blocks.push({ title, text: parts.filter(Boolean).join('\n\n') });
+    }
+  }
+  if (scope === 'all') {
+    for (const key of ['tools', 'toolConfig', 'tool_config']) {
+      if (body[key] !== undefined) blocks.push({ title: `Tools (${key})`, text: diffJson(body[key]) });
+    }
+    for (const item of messageItems(body.input)) {
+      if (item.type === 'additional_tools') blocks.push({ title: 'Tools (additional_tools)', text: diffJson(item) });
+    }
+  }
+  return blocks.map(({ title, text }) => ({ title, text: normalizeDiffText(text) }))
+    .filter(block => block.text)
+    .map(block => `# ${block.title}\n\n${block.text}`).join('\n\n');
+}
+
+function diffContentText(value) {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) return value.map(diffContentText).filter(Boolean).join('\n\n');
+  if (typeof value !== 'object') return String(value);
+  if (typeof value.text === 'string' && (!value.type || ['text', 'input_text', 'output_text'].includes(value.type))) return value.text;
+  if (value.parts) return diffContentText(value.parts);
+  return diffJson(value);
+}
+
+function diffJson(value) {
+  const canonical = item => {
+    if (Array.isArray(item)) return item.map(canonical);
+    if (!item || typeof item !== 'object') return typeof item === 'string' ? normalizeDiffText(item) : item;
+    return Object.fromEntries(Object.keys(item).sort().map(key => [key, canonical(item[key])]));
+  };
+  return '```json\n' + JSON.stringify(canonical(value), null, 2) + '\n```';
+}
+
+function normalizeDiffText(text) {
+  return text.replace(/\r\n?/g, '\n')
+    .replace(/\u00a0/g, ' ')
+    .replace(/^[ \t]*x-anthropic-billing-header:[^\n]*(?:\n|$)/gim, '')
+    .replace(/[ \t]*<total_tokens>[^]*?<\/total_tokens>[ \t]*(?:\n|$)/gi, '')
+    .replace(/(?:\/(?:private\/)?tmp\/|\/(?:private\/)?var\/folders\/[^/\s]+\/[^/\s]+\/T\/|\.\.\/)phistory-(home|work)-[A-Za-z0-9_-]+(?=\/|$|[\s`"'<>])/g,
+      (_, kind) => kind === 'home' ? '$PHISTORY_HOME' : '$PHISTORY_WORKSPACE')
+    .replace(/(?:\/[A-Za-z0-9_.-]+)+\/\.phistory-cache\/installs\/[a-z0-9-]+\/[^/\s`"'<>\\]+/g, () => '$PHISTORY_INSTALL')
+    .replace(/(\$PHISTORY_HOME\/\.claude\/projects\/)-tmp-phistory-work-[^/\s`]+/g, (_, prefix) => prefix + '$PHISTORY_PROJECT')
+    .replace(/(\$PHISTORY_HOME\/\.qwen\/projects\/)[A-Za-z0-9_-]+/g, (_, prefix) => prefix + '$PHISTORY_PROJECT')
+    .replace(/(\$PHISTORY_HOME\/\.gemini\/antigravity-cli\/brain\/)[0-9a-f-]{36}/g, (_, prefix) => prefix + '$PHISTORY_CONVERSATION')
+    .replace(/(\$PHISTORY_HOME\/\.local\/share\/mimocode\/memory\/sessions\/)ses_[A-Za-z0-9_]+/g, (_, prefix) => prefix + '$PHISTORY_SESSION')
+    .replace(/(Today's date is )\d{4}[-/]\d{2}[-/]\d{2}(\.)/g, (_, prefix, end) => prefix + '$PHISTORY_DATE' + end)
+    .replace(/(Today's date: )(?:\d{4}[-/]\d{2}[-/]\d{2}|\d{1,2}\/\d{1,2}\/\d{4}|(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\w* [^\n\\]+)/g,
+      (_, prefix) => prefix + '$PHISTORY_DATE')
+    .replace(/^(Current date: )\d{4}-\d{2}-\d{2}$/gm, (_, prefix) => prefix + '$PHISTORY_DATE')
+    .replace(/^(Current date and time: |Conversation started: )[^\n\\]+$/gm, (_, prefix) => prefix + '$PHISTORY_DATETIME')
+    .replace(/(The current date and time in ISO format is `)[^`]+(`)/g, (_, prefix, end) => prefix + '$PHISTORY_DATETIME' + end)
+    .replace(/The current local time is: [^\n]+/g, () => 'The current local time is: $PHISTORY_DATETIME.')
+    .replace(/Conversation ID: [0-9a-f-]{36}/g, () => 'Conversation ID: $PHISTORY_CONVERSATION')
+    .replace(/^(  YOUR SESSION ID:) mvs_[A-Za-z0-9_]+$/gm, (_, prefix) => prefix + ' $PHISTORY_SESSION')
+    .replace(/^(  YOUR SCRATCHPAD: .*\/scratchpads\/)mvs_[A-Za-z0-9_]+(\/scratchpad\.md)$/gm, (_, prefix, end) => prefix + '$PHISTORY_SESSION' + end)
+    .replace(/^(  daemonPort:) \d+$/gm, (_, prefix) => prefix + ' $PHISTORY_PORT')
+    .replace(/^(  date:) (?:\d{4}-\d{2}-\d{2} .+ \(UTC, UTC[+-]\d+(?::\d+)?\)|(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) .+ GMT[+-]\d{4} \([^)]+\))$/gm, (_, prefix) => prefix + ' $PHISTORY_DATETIME')
+    .replace(/http:\/\/(?:127\.0\.0\.1|localhost):\d+/g, () => 'http://127.0.0.1:$PHISTORY_PORT')
+    .replace(/<timezone>[^<]+<\/timezone>/g, () => '<timezone>$PHISTORY_TIMEZONE</timezone>')
+    .replace(/(<current_date>)\d{4}-\d{2}-\d{2}(<\/current_date>)/g, (_, prefix, end) => prefix + '$PHISTORY_DATE' + end)
+    .replace(/((?:^|\\n)[ \t]*(?:- )?OS Version: )[^\n\\]+/gm, (_, prefix) => prefix + '$PHISTORY_OS_VERSION')
+    .replace(/^Runtime: [^\n]+$/gm, line => line.replace(/\b(host|os|node|sessionId)=([^|\n]+?)(?= \||$)/g,
+      (_, field) => field + '=' + ({ host: '$PHISTORY_HOST', os: '$PHISTORY_OS_VERSION', node: '$PHISTORY_NODE_VERSION', sessionId: '$PHISTORY_SESSION' })[field]))
+    .replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 function renderMonacoDiff(original, modified) {
@@ -3174,6 +3353,7 @@ function compactSnapshotLabel(item, variant) {
 }
 
 function showError(error) {
+  if (state.view !== 'trace') disposeEditor();
   const target = state.view === 'trace' ? els.trace : els.diff;
   target.innerHTML = `<div class="empty">${escapeHtml(error.message || error)}</div>`;
 }
