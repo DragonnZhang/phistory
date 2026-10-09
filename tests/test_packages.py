@@ -303,7 +303,8 @@ def test_install_github_release_asset_extracts_binary(monkeypatch, tmp_path):
     assert (bin_dir / "x").read_text(encoding="utf-8") == "#!/bin/sh\nprintf tool\n"
 
 
-def test_install_github_release_can_use_editable_source(monkeypatch, tmp_path):
+@pytest.mark.parametrize("python_pin", [None, "3.14"])
+def test_install_github_release_can_use_editable_source(monkeypatch, tmp_path, python_pin):
     agent = AgentSpec(
         id="hermes",
         display_name="Hermes",
@@ -320,6 +321,8 @@ def test_install_github_release_can_use_editable_source(monkeypatch, tmp_path):
             "hermes-v1/hermes.py": b"",
             "hermes-v1/pm/pyproject.toml": b"[project]\nname='nested-manager'\nversion='1.0.0'\n",
         }
+        if python_pin:
+            files["hermes-v1/.python-version"] = f"{python_pin}\n".encode()
         with tarfile.open(output, "w:gz") as archive:
             for name, payload in files.items():
                 info = tarfile.TarInfo(name)
@@ -345,6 +348,12 @@ def test_install_github_release_can_use_editable_source(monkeypatch, tmp_path):
 
     editable = next(command for command in commands if "--editable" in command)
     assert Path(editable[-1]).name == "hermes-v1"
+    venv = next(command for command in commands if command[:2] == ["uv", "venv"])
+    assert "--allow-existing" in venv
+    if python_pin:
+        assert venv[venv.index("--python") + 1] == python_pin
+    else:
+        assert "--python" not in venv
     assert (bin_dir / "hermes").exists()
 
 

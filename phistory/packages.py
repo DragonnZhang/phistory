@@ -285,7 +285,6 @@ def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -
     if install_dir.exists():
         shutil.rmtree(install_dir)
     install_dir.mkdir(parents=True, exist_ok=True)
-    run(["uv", "venv", str(install_dir)], timeout=120)
     package_ref = f"https://github.com/{agent.package}/archive/refs/tags/{version}.tar.gz"
     if agent.github_release_install == "editable":
         archive_path = install_dir / "source.tar.gz"
@@ -294,11 +293,17 @@ def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -
         source_dir.mkdir()
         _extract_archive(archive_path, source_dir)
         source_root = _find_source_root(source_dir)
+        venv_args = ["uv", "venv", str(install_dir), "--allow-existing"]
+        python_version = source_root / ".python-version"
+        if python_version.is_file():
+            venv_args.extend(["--python", python_version.read_text(encoding="utf-8").strip()])
+        run(venv_args, timeout=120)
         run(
             ["uv", "pip", "install", "--python", str(bin_dir / "python"), "--editable", str(source_root)],
             timeout=INSTALL_TIMEOUT_SECONDS,
         )
     else:
+        run(["uv", "venv", str(install_dir)], timeout=120)
         run(
             ["uv", "pip", "install", "--python", str(bin_dir / "python"), package_ref],
             timeout=INSTALL_TIMEOUT_SECONDS,
