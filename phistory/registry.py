@@ -206,6 +206,22 @@ CLAUDE_CODE = AgentSpec(
             tap_mode="forward",
         ),
         _variant(
+            "official-haiku-5-5",
+            "Official API · Haiku 5.5",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-haiku-5-5",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-haiku-5-5"},
+            tap_mode="forward",
+            min_version="2.1.293",
+        ),
+        _variant(
             "official-haiku",
             "Official API · Haiku 4.5",
             (

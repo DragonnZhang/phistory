@@ -19,6 +19,7 @@ on:
           - official-opus-4-7
           - official-sonnet-5-5
           - official
+          - official-haiku-5-5
           - official-haiku
       from:
         description: First stable Claude Code version to recapture

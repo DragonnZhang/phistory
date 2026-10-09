@@ -63,6 +63,7 @@ def test_prerelease_capture_floor_allows_the_following_stable_release():
     ("agent_id", "variant_id", "before", "first"),
     [
         ("claude-code", "official-sonnet-5-5", "2.1.283", "2.1.284"),
+        ("claude-code", "official-haiku-5-5", "2.1.292", "2.1.293"),
         ("codex", "gpt-6.1-sol", "0.159.0", "0.159.1"),
         ("codex", "gpt-6-luna", "0.156.0", "0.157.0-alpha.10"),
     ],

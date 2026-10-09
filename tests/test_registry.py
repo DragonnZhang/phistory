@@ -126,6 +126,11 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             {"api": "official", "model": "claude-sonnet-5"},
         ),
         (
+            "official-haiku-5-5",
+            "Official API · Haiku 5.5",
+            {"api": "official", "model": "claude-haiku-5-5"},
+        ),
+        (
             "official-haiku",
             "Official API · Haiku 4.5",
             {"api": "official", "model": "claude-haiku-4-5"},
@@ -157,6 +162,7 @@ def test_claude_code_default_uses_forward_capture_without_pinning_a_model(tmp_pa
         ("official-opus-4-7", "claude-opus-4-7[1m]"),
         ("official-sonnet-5-5", "claude-sonnet-5-5"),
         ("official", "claude-sonnet-5"),
+        ("official-haiku-5-5", "claude-haiku-5-5"),
         ("official-haiku", "claude-haiku-4-5"),
     ):
         target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant(variant_id), tmp_path / "captures")

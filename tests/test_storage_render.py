@@ -63,7 +63,8 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "`claude-fable-5-1` in `official-fable-5-1`" in text
     assert "`claude-fable-5` in `official-fable`" in text
     assert "`claude-haiku-4-5` in `official-haiku`" in text
-    assert "history recapture workflow can cover the complete stable CLI history" in text
+    assert "`claude-haiku-5-5` in `official-haiku-5-5`" in text
+    assert "Each lane keeps its verified model-support floor" in text
     assert "`ANTHROPIC_BASE_URL` remains unset" in text
     assert "do not reconstruct the model that was the official default" in text
     assert "deterministic, documented baseline rather than the rollout state" in text
@@ -72,7 +73,7 @@ def test_capture_paths_and_index(tmp_path: Path):
     assert "--variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5" in text
     assert (
         "--agents claude-code --variants "
-        "default,non-official,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official,official-haiku"
+        "default,non-official,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official-sonnet-5-5,official,official-haiku-5-5,official-haiku"
     ) in text
     assert "--agents claude-code,codex,qwen-code,dsh,antigravity" in text
     assert "## Web UI" not in text
