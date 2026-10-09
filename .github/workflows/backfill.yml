@@ -167,7 +167,7 @@ jobs:
           uv run phistory --root /tmp/phistory-backfill-smoke --cache-dir /tmp/phistory-backfill-smoke-cache backfill "${args[@]}" --force --summary-title "$AGENT selected history smoke"
           status=$?
           set -e
-          (cd /tmp/phistory-backfill-smoke && bash "$GITHUB_WORKSPACE/.github/scripts/verify-qoder-secret.sh")
+          bash "$GITHUB_WORKSPACE/.github/scripts/verify-qoder-secret.sh" /tmp/phistory-backfill-smoke/qoder
           echo "safe_to_upload=true" >> "$GITHUB_OUTPUT"
           exit "$status"
       - uses: actions/upload-artifact@v7

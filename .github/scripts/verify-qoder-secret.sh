@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -eu
 
-if [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ] || [ ! -d captures/qoder ]; then
+scan_dir="${1:-captures/qoder}"
+if [ -z "${QODER_PERSONAL_ACCESS_TOKEN:-}" ] || [ ! -d "$scan_dir" ]; then
   exit 0
 fi
 
 status=0
-grep -ralF -- "$QODER_PERSONAL_ACCESS_TOKEN" captures/qoder || status=$?
+grep -ralF -- "$QODER_PERSONAL_ACCESS_TOKEN" "$scan_dir" || status=$?
 case "$status" in
   0)
     echo "::error title=Qoder credential leak detected::Refusing to render or commit capture artifacts."
