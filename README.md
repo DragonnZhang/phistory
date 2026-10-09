@@ -9,7 +9,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-10-09 04:51 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-10-09 05:00 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,7 +90,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-10-09 04:51 UTC
+Last capture update: 2026-10-09 05:00 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -105,7 +105,7 @@ Last capture update: 2026-10-09 04:51 UTC
 | Qoder CLI | [1.1.66 - 2026-10-08](captures/qoder/1.1.66/variants/default/prompt.md) | 176 | 176 | 2026-10-09 04:44 UTC |
 | MiMo Code | [0.1.15 - 2026-09-22](captures/mimo/0.1.15/variants/default/prompt.md) | 15 | 15 | 2026-09-23 02:08 UTC |
 | OpenClaw | [2026.9.9 - 2026-10-08](captures/openclaw/2026.9.9/variants/default/prompt.md) | 80 | 80 | 2026-10-09 04:43 UTC |
-| Hermes Agent | [v2026.9.24 - 2026-09-24](captures/hermes/v2026.9.24/variants/default/prompt.md) | 34 | 34 | 2026-09-25 08:09 UTC |
+| Hermes Agent | [v0.21.6 - 2026-10-08](captures/hermes/v0.21.6/variants/default/prompt.md) | 35 | 35 | 2026-10-09 05:00 UTC |
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
 | opencode | [1.18.35 - 2026-10-06](captures/opencode/1.18.35/variants/default/prompt.md) | 118 | 118 | 2026-10-07 09:10 UTC |
 | Pi | [1.1.0 - 2026-10-07](captures/pi/1.1.0/variants/default/prompt.md) | 56 | 56 | 2026-10-08 09:25 UTC |
