@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每天自动检查新版本，归档最近更新于 **2026-10-09 04:44 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-10-09 04:51 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,11 +90,11 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-10-09 04:44 UTC
+最近抓取更新：2026-10-09 04:51 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.295 - 2026-10-08](captures/claude-code/2.1.295/variants/default/prompt.md) | 444 | 3447 | 2026-10-09 04:41 UTC |
+| Claude Code | [2.1.295 - 2026-10-08](captures/claude-code/2.1.295/variants/default/prompt.md) | 445 | 3460 | 2026-10-09 04:41 UTC |
 | Codex CLI | [0.162.0 - 2026-10-08](captures/codex/0.162.0/variants/default/prompt.md) | 104 | 453 | 2026-10-09 04:42 UTC |
 | DeepSeek Harness | [0.2.0-rc.2 - 2026-09-29](captures/dsh/0.2.0-rc.2/variants/default/prompt.md) | 14 | 75 | 2026-09-30 08:57 UTC |
 | Antigravity CLI | [1.3.2 - 2026-10-08](captures/antigravity/1.3.2/variants/default/prompt.md) | 62 | 62 | 2026-10-09 04:42 UTC |
