@@ -309,7 +309,8 @@ def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -
 
 
 def _find_source_root(extract_dir: Path) -> Path:
-    roots = [path.parent for path in extract_dir.rglob("pyproject.toml") if path.parent != extract_dir]
+    projects = {path.parent for path in extract_dir.rglob("pyproject.toml")}
+    roots = sorted(path for path in projects if not any(parent in projects for parent in path.parents))
     if len(roots) != 1:
         found = ", ".join(str(path) for path in roots) or "none"
         raise RuntimeError(f"expected one Python project in release archive, found: {found}")

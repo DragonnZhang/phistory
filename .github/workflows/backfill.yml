@@ -45,6 +45,11 @@ on:
         required: false
         default: false
         type: boolean
+      smoke:
+        description: Repeat the selected range with a fresh capture root and install cache
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -114,6 +119,7 @@ jobs:
             echo "::error title=Missing Qoder credential::Configure the QODER_PERSONAL_ACCESS_TOKEN repository secret."
             status=1
           else
+            printf '%s\0' "${args[@]}" > "$RUNNER_TEMP/phistory-backfill-args"
             set +e
             if [ "$STATIC_ONLY" = "true" ]; then
               unset QODER_PERSONAL_ACCESS_TOKEN
@@ -146,6 +152,30 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Backfill $AGENT prompts from $BACKFILL_FROM to $BACKFILL_TO"
           git push
+      - name: Smoke selected history
+        id: smoke
+        if: inputs.smoke && !inputs.static_only && steps.backfill.outputs.status == '0'
+        env:
+          AGENT: ${{ inputs.agent }}
+          QODER_PERSONAL_ACCESS_TOKEN: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
+        run: |
+          mapfile -d '' -t args < "$RUNNER_TEMP/phistory-backfill-args"
+          if [ "$AGENT" != "qoder" ]; then
+            unset QODER_PERSONAL_ACCESS_TOKEN
+          fi
+          set +e
+          uv run phistory --root /tmp/phistory-backfill-smoke --cache-dir /tmp/phistory-backfill-smoke-cache backfill "${args[@]}" --force --summary-title "$AGENT selected history smoke"
+          status=$?
+          set -e
+          (cd /tmp/phistory-backfill-smoke && bash "$GITHUB_WORKSPACE/.github/scripts/verify-qoder-secret.sh")
+          echo "safe_to_upload=true" >> "$GITHUB_OUTPUT"
+          exit "$status"
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.smoke.outputs.safe_to_upload == 'true'
+        with:
+          name: backfill-smoke-captures
+          path: /tmp/phistory-backfill-smoke
+          retention-days: 7
       - name: Report backfill failures
         if: always() && steps.backfill.outputs.status != '0'
         run: |

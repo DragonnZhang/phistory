@@ -34,3 +34,11 @@ The Codex [0.162.0 release catalog](https://github.com/openai/codex/blob/rust-v0
 ## Scoped anchor baseline
 
 Compared with the verified 2.1.293 TaskStop baseline (`anchors-2.1.293-task-stop.txt`), the latest binary is 3,365,280 bytes larger. This investigation tracks only model catalog identity and capture support. It does not enumerate unrelated hooks, slash commands, telemetry or feature gates. The old Claude source snapshot was not used to claim current behavior. Request-level model and prompt verification must come from the Linux captures below; binary capabilities alone do not prove wire tool exposure.
+
+## Linux capture and Hermes repair
+
+Latest run [37885033077](https://github.com/DragonnZhang/phistory/actions/runs/37885033077) committed Claude Code 2.1.295 (all 12 lanes), Codex 0.162.0 (all 10 lanes), Qoder 1.1.66 and OpenClaw 2026.9.9. Its fresh smoke produced 38 valid captures, including 26 within the atlas scope. Hermes alone failed in both capture and smoke before emitting a request: the v0.21.6 archive contains a root `pyproject.toml` plus a nested `pm/pyproject.toml`, while the installer required exactly one project anywhere in the archive. Official tagged Git blobs confirm both files (`648a597cad21b14c94782dca09d9d0db3bf54c2a` and `4c62dcff35ed795eba0eac29027e3ace6758ec25`).
+
+The general fix selects a single outermost Python project and still rejects ambiguous sibling projects. A fake archive installation test covers the nested layout. The optional `backfill.yml` smoke input repeats only the selected range using a fresh root/cache, so this repair can be verified without retrying successful agents. Release/site ordering also uses publication chronology for GitHub release sources; regression coverage ensures that Hermes v0.21.6 follows v2026.9.24 and becomes the latest comparison endpoint.
+
+Claude backfill [37885095068](https://github.com/DragonnZhang/phistory/actions/runs/37885095068) succeeded, adding all 12 lanes at 2.1.294 plus Haiku 5.5 at 2.1.293. Earlier valid 2.1.293 captures were reused. Recent Claude wrapper packages still contain no source supported by the static extractor; the explicit skip is unchanged, and the atlas uses the actual captured request prompts and tools.

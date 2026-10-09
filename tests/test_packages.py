@@ -7,6 +7,7 @@ import pytest
 from phistory.models import AgentSpec, CaptureVariant, VersionInfo
 from phistory.packages import (
     _apply_npm_compatibility_patches,
+    _find_source_root,
     _github_headers,
     agent_executable,
     all_versions,
@@ -317,6 +318,7 @@ def test_install_github_release_can_use_editable_source(monkeypatch, tmp_path):
         files = {
             "hermes-v1/pyproject.toml": b"[project]\nname='hermes'\nversion='1.0.0'\n",
             "hermes-v1/hermes.py": b"",
+            "hermes-v1/pm/pyproject.toml": b"[project]\nname='nested-manager'\nversion='1.0.0'\n",
         }
         with tarfile.open(output, "w:gz") as archive:
             for name, payload in files.items():
@@ -344,6 +346,14 @@ def test_install_github_release_can_use_editable_source(monkeypatch, tmp_path):
     editable = next(command for command in commands if "--editable" in command)
     assert Path(editable[-1]).name == "hermes-v1"
     assert (bin_dir / "hermes").exists()
+
+
+def test_source_root_rejects_ambiguous_sibling_projects(tmp_path):
+    for name in ("one", "two"):
+        (tmp_path / name).mkdir()
+        (tmp_path / name / "pyproject.toml").touch()
+    with pytest.raises(RuntimeError, match="expected one Python project"):
+        _find_source_root(tmp_path)
 
 
 def test_github_headers_can_skip_auth(monkeypatch):

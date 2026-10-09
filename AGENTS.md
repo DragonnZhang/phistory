@@ -178,6 +178,8 @@ the same forward-proxy and CA environment; affected metadata records this compat
 
 After dispatch, wait for completion and verify the capture/backfill result and Pages deployment with `gh run list` / `gh run watch`, always specifying `-R DragonnZhang/phistory`. Fetch the committed CI artifacts before refreshing downstream trace atlases. Workflow dispatch alone does not complete a capture task.
 
+For a targeted repair, `backfill.yml` accepts `smoke=true` to repeat just the selected version range and variants with a fresh capture root and install cache, then upload the checked smoke artifacts. This avoids rerunning every agent after an isolated failure.
+
 ## Known Failure Semantics
 
 Backfill can legitimately fail for some historical versions. Examples seen in this project:

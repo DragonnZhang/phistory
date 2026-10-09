@@ -2,8 +2,9 @@ import json
 from pathlib import Path
 
 from phistory.models import AgentSpec, CaptureTarget, CaptureVariant, VersionInfo
+from phistory.registry import get_agent
 from phistory.render import render_index
-from phistory.site import AGENT_ICONS, AGENT_SHORT_NAMES, _change_summary, render_site
+from phistory.site import AGENT_ICONS, AGENT_SHORT_NAMES, _build_manifest, _change_summary, render_site
 from phistory.storage import is_captured, write_meta
 
 
@@ -168,6 +169,24 @@ def test_render_index_sorts_versions_numerically(tmp_path: Path):
     assert "[2.1.99]" not in text
     capture_doc_text = (tmp_path / "docs/captures.md").read_text(encoding="utf-8")
     assert capture_doc_text.index("`2.1.146`") < capture_doc_text.index("`2.1.99`")
+
+
+def test_release_numbering_restart_keeps_the_newest_publication_latest(tmp_path: Path):
+    agent = get_agent("hermes")
+    for version, published in [("v2026.9.24", "2026-09-24T10:09:38Z"), ("v0.21.6", "2026-10-08T11:51:57Z")]:
+        target = _target(agent, VersionInfo(version), tmp_path / "captures")
+        target.variant_dir.mkdir(parents=True)
+        target.prompt_path.write_text(f"# System Prompt\n\nRules for {version}\n", encoding="utf-8")
+        target.trace_path.write_text("{}\n", encoding="utf-8")
+        write_meta(target, {"agent_id": "hermes", "version": version, "published_at": published})
+    render_index(tmp_path / "captures", tmp_path / "README.md")
+    index = json.loads((tmp_path / "captures/index.json").read_text())
+    assert index["agents"][0]["latest_version"] == "v0.21.6"
+    manifest = _build_manifest(tmp_path / "captures")
+    lane = manifest["agents"][0]["variants"][0]
+    assert lane["latest"]["version"] == "v0.21.6"
+    assert [v["version"] for v in lane["versions"]] == ["v0.21.6", "v2026.9.24"]
+    assert lane["latest"]["change"]["previous_version"] == "v2026.9.24"
 
 
 def test_render_site_writes_static_html_manifest(tmp_path: Path):

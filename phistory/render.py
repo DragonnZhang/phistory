@@ -577,7 +577,7 @@ def _agent_status_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         by_agent.setdefault(row["agent_id"], []).append(row)
     status = []
     for agent_id, agent_rows in by_agent.items():
-        latest_version = max(agent_rows, key=lambda item: _version_key(item["version"]))["version"]
+        latest_version = max(agent_rows, key=_release_order_key)["version"]
         latest_rows = [row for row in agent_rows if row["version"] == latest_version]
         latest = next((row for row in latest_rows if row["variant_id"] == "default"), latest_rows[0])
         status.append(
@@ -591,6 +591,13 @@ def _agent_status_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(status, key=lambda item: agent_sort_key(item["agent_id"]))
 
 
+def _release_order_key(row: dict[str, Any]) -> tuple:
+    agent = AGENTS.get(row["agent_id"])
+    published = _parse_time(row.get("published_at", ""))
+    chronology = published.timestamp() if agent and agent.source == "github-release" and published else 0
+    return chronology, _version_key(row["version"])
+
+
 def _sorted_capture_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ordered = []
     for agent_id in sorted({row["agent_id"] for row in rows}, key=agent_sort_key):
@@ -598,7 +605,7 @@ def _sorted_capture_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             sorted(
                 (row for row in rows if row["agent_id"] == agent_id),
                 key=lambda item: (
-                    _version_key(item["version"]),
+                    _release_order_key(item),
                     item["variant_id"] == "default",
                     item["variant_id"],
                 ),
