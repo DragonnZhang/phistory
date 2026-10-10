@@ -84,6 +84,7 @@ Current agents are defined in `phistory/registry.py`:
   `claude-fable-5`, `claude-opus-5-5[1m]`, `claude-opus-5[1m]`, `claude-opus-4-8[1m]`, `claude-opus-4-7[1m]`, `claude-sonnet-5`,
   and `claude-haiku-4-5`, respectively. `official-sonnet-5-5` adds `claude-sonnet-5-5` from `2.1.284`, before the preserved Sonnet 5 lane.
   `official-haiku-5-5` adds `claude-haiku-5-5` from the earliest verified release `2.1.293`, before the preserved Haiku 4.5 lane. Evidence is in `docs/research/trace-atlas-models-2026-10-09.md`.
+  `official-mythos-5-1` and `official-mythos` pin `claude-mythos-5-1` and `claude-mythos-5` from the earliest verified `2.1.296`. Both carry `availability=verification-required`; captures do not verify provider account access. See `docs/research/trace-atlas-models-2026-10-10.md`.
 - `codex`: npm package `@openai/codex`, tap client `codex`, fake ChatGPT auth enabled; archives the real default, a `non-official` Qwen3 Coder Plus model-ID lane, plus pinned GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 Sol, GPT-5.6 Terra, GPT-5.6 Luna, and GPT-5.5 variants. The retired `gpt-5.6` alias capture remains archived but is hidden from the site because the CLI treated it as unknown local model metadata.
   GPT-6.1 Sol begins at stable `0.159.1`; GPT-6 Luna begins at the already-published `0.157.0-alpha.10` preview. Their support evidence is recorded in `docs/research/trace-atlas-models-2026-10-07.md`.
   The non-official lane pins `qwen3-coder-plus` under the same capture-only transport/auth setup; it measures Codex's non-GPT model fallback, not a live third-party service or a distinct authentication mode. It is ordered after default and before the fixed GPT-model lanes.
@@ -168,9 +169,9 @@ the directory and variant classification, retaining the original variant/request
 raw traces, capture times, and available host provenance stay intact. Early archives did not yet annotate the API path.
 
 The dedicated Claude Code history recapture workflow accepts `default`, `non-official`, `official-fable-5-1`, `official-fable`,
-`official-opus-5-5`, `official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official-sonnet-5-5`, `official`, `official-haiku-5-5`, or `official-haiku` and defaults to `default`.
+`official-opus-5-5`, `official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official-sonnet-5-5`, `official`, `official-haiku-5-5`, `official-haiku`, `official-mythos-5-1`, or `official-mythos` and defaults to `default`.
 Select `official-fable-5-1` for Fable 5.1, `official-fable` for Fable 5, `official-opus-5-5` for Opus 5.5 1M, `official-opus` for Opus 5 1M, `official-opus-4-8` for Opus 4.8 1M,
-`official-opus-4-7` for Opus 4.7 1M, `official-sonnet-5-5` for Sonnet 5.5, `official` for Sonnet 5, `official-haiku-5-5` for Haiku 5.5, or `official-haiku` for Haiku 4.5.
+`official-opus-4-7` for Opus 4.7 1M, `official-sonnet-5-5` for Sonnet 5.5, `official` for Sonnet 5, `official-haiku-5-5` for Haiku 5.5, `official-haiku` for Haiku 4.5, `official-mythos-5-1` for Mythos 5.1, or `official-mythos` for the same-CLI Mythos 5 comparison.
 Each official lane is a compatibility snapshot of every historical CLI explicitly targeting its configured model, not a
 reconstruction of the model that was the official default at the time. For older releases that cannot consume inline `--settings` JSON,
 the oneshot driver detects the CLI capability and temporarily strips claude-tap's redundant settings argument while keeping

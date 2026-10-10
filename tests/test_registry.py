@@ -135,6 +135,16 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             "Official API · Haiku 4.5",
             {"api": "official", "model": "claude-haiku-4-5"},
         ),
+        (
+            "official-mythos-5-1",
+            "Official API · Mythos 5.1 (verification required)",
+            {"api": "official", "model": "claude-mythos-5-1", "availability": "verification-required"},
+        ),
+        (
+            "official-mythos",
+            "Official API · Mythos 5 (verification required)",
+            {"api": "official", "model": "claude-mythos-5", "availability": "verification-required"},
+        ),
     ]
 
 
@@ -164,6 +174,8 @@ def test_claude_code_default_uses_forward_capture_without_pinning_a_model(tmp_pa
         ("official", "claude-sonnet-5"),
         ("official-haiku-5-5", "claude-haiku-5-5"),
         ("official-haiku", "claude-haiku-4-5"),
+        ("official-mythos-5-1", "claude-mythos-5-1"),
+        ("official-mythos", "claude-mythos-5"),
     ):
         target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant(variant_id), tmp_path / "captures")
         command = tap_command(target, target.prompt_path, target.variant_dir / ".tap")
@@ -173,6 +185,16 @@ def test_claude_code_default_uses_forward_capture_without_pinning_a_model(tmp_pa
         assert "--export-prompt" in command
         assert target.variant.tap_mode == "forward"
         assert target.variant.run_args[target.variant.run_args.index("--model") + 1] == model
+
+
+def test_mythos_capture_starts_at_verified_release_without_claiming_account_access():
+    agent = get_agent("claude-code")
+    for variant_id in ("official-mythos-5-1", "official-mythos"):
+        variant = agent.variant(variant_id)
+        assert not variant.supports_version("2.1.295")
+        assert variant.supports_version("2.1.296")
+        assert variant.supports_version("2.1.297")
+        assert variant.dimensions["availability"] == "verification-required"
 
 
 def test_claude_code_uses_deterministic_capture_environment(tmp_path: Path):

@@ -236,6 +236,38 @@ CLAUDE_CODE = AgentSpec(
             dimensions={"api": "official", "model": "claude-haiku-4-5"},
             tap_mode="forward",
         ),
+        _variant(
+            "official-mythos-5-1",
+            "Official API · Mythos 5.1 (verification required)",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-mythos-5-1",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-mythos-5-1", "availability": "verification-required"},
+            tap_mode="forward",
+            min_version="2.1.296",
+        ),
+        _variant(
+            "official-mythos",
+            "Official API · Mythos 5 (verification required)",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-mythos-5",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-mythos-5", "availability": "verification-required"},
+            tap_mode="forward",
+            min_version="2.1.296",
+        ),
     ),
 )
 

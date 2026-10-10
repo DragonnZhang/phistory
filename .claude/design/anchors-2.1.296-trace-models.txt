@@ -1,0 +1,29 @@
+Claude Code 2.1.296 — scoped trace model baseline
+Verified: 2026-10-10 Asia/Singapore
+
+[binary-meta]
+package: @anthropic-ai/claude-code-darwin-arm64@2.1.296
+sha256: c9b5341637becbd423ddffc5b254afb645682a3868cb708bbc6cc0e7bb419937
+binary_size_bytes: 240664432
+build_time: 2026-10-09T01:31:52Z
+git_sha: fdb6c17a97b6e0e3cf15e3566663fca58e7c43a9
+prior: docs/research/trace-atlas-models-2026-10-09.md (2.1.295)
+prior_sha256: 1ced74400d578b6d37657e9785ed081f183991d01937d19309a58f91092aaef7
+binary_size_delta: 968544
+runtime_probe: none; static extraction only
+
+[diff-summary vs 2.1.295]
+Scope: model identity and capture coverage only.
+The four general current model IDs remain archived. Two specialized Mythos IDs now receive explicit atlas coverage; this is not a claim they were introduced in 2.1.296.
+Slash commands, hooks, telemetry, feature gates, billing fields and app state were not enumerated in this scoped investigation.
+
+[confirmed-catalog-anchors]
+claude-haiku-5-5: object_byte_offset=187328745
+claude-sonnet-5-5: object_byte_offset=187333490
+claude-opus-5-5: object_byte_offset=187339670
+claude-fable-5-1: object_byte_offset=187341599
+claude-mythos-5: object_byte_offset=187342646
+claude-mythos-5-1: object_byte_offset=187343093
+
+[limits]
+Catalog identity and capabilities establish dedicated CLI metadata, not live provider access. Both Mythos models require organization verification. Linux capture-only artifacts establish the actual request surface. min_version=2.1.296 is the earliest verified baseline here, not an exhaustive first-support result. Old source mappings were not needed.

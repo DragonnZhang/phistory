@@ -141,7 +141,9 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
                 "`ANTHROPIC_BASE_URL` remains unset; capture-only mode returns a dummy response locally instead "
                 "of calling the model provider. Historical entries in these lanes run each old CLI against the "
                 "same explicit model; they do not reconstruct the model that was the official default "
-                "when that CLI was released. Each lane keeps its verified model-support floor; Haiku 5.5 starts at the earliest verified release 2.1.293."
+                "when that CLI was released. Each lane keeps its verified model-support floor; Haiku 5.5 starts at the earliest verified release 2.1.293. "
+                "The verification-required Mythos 5.1 and Mythos 5 lanes pin `claude-mythos-5-1` and `claude-mythos-5` "
+                "from the earliest verified release 2.1.296. These capture-only archives do not verify account access."
             ),
             "",
             (
@@ -180,7 +182,7 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5",
             "",
             "# Capture Claude Code's actual default, custom-API, and fixed-model official snapshots.",
-            "uv run phistory capture --latest --agents claude-code --variants default,non-official,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official-sonnet-5-5,official,official-haiku-5-5,official-haiku",
+            "uv run phistory capture --latest --agents claude-code --variants default,non-official,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official-sonnet-5-5,official,official-haiku-5-5,official-haiku,official-mythos-5-1,official-mythos",
             "",
             "# Capture a historical version range for one agent.",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
@@ -309,6 +311,8 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
                 "使 `ANTHROPIC_BASE_URL` 保持未设置。capture-only 模式会在本地返回虚拟响应，不会调用真实模型服务。"
                 "这些通道的历史条目会让每个旧版 CLI 显式使用同一个模型，并不还原该版本发布时的官方默认模型。"
                 "每条线路保留已验证的模型支持起点；Haiku 5.5 从最早已验证的 2.1.293 开始。"
+                "另有需要组织验证的 Mythos 5.1 与 Mythos 5 线路，分别固定 `claude-mythos-5-1` 与 `claude-mythos-5`，"
+                "从最早已验证的 2.1.296 开始；这些仅捕获请求的归档不验证账号访问资格。"
             ),
             "",
             (
@@ -344,7 +348,7 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
             "uv run phistory capture --latest --agents codex --variants default,gpt-5.6-sol,gpt-5.6-terra,gpt-5.6-luna,gpt-5.5",
             "",
             "# 抓取 Claude Code 的真实默认、非官方与全部固定模型官方快照。",
-            "uv run phistory capture --latest --agents claude-code --variants default,non-official,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official-sonnet-5-5,official,official-haiku-5-5,official-haiku",
+            "uv run phistory capture --latest --agents claude-code --variants default,non-official,official-fable-5-1,official-fable,official-opus-5-5,official-opus,official-opus-4-8,official-opus-4-7,official-sonnet-5-5,official,official-haiku-5-5,official-haiku,official-mythos-5-1,official-mythos",
             "",
             "# 回填某个 agent 的历史版本区间。",
             "uv run phistory backfill claude-code --from 2.1.113 --to latest",
