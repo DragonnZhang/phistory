@@ -1,0 +1,70 @@
+{
+  "agent_id": "claude-code",
+  "agent": "Claude Code",
+  "package": "@anthropic-ai/claude-code",
+  "version": "2.1.296",
+  "variant": {
+    "id": "official-mythos-5-1",
+    "label": "Official API · Mythos 5.1 (verification required)",
+    "dimensions": {
+      "api": "official",
+      "model": "claude-mythos-5-1",
+      "availability": "verification-required"
+    }
+  },
+  "requested": {
+    "api": "official",
+    "model": "claude-mythos-5-1",
+    "availability": "verification-required"
+  },
+  "observed": {
+    "model": "claude-mythos-5-1",
+    "tool_count": 12
+  },
+  "published_at": "2026-10-09T16:58:10.924Z",
+  "tarball_url": null,
+  "binary_version": "2.1.296 (Claude Code)",
+  "captured_at": "2026-10-10T04:46:37.234515+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Backfill prompt history",
+    "run_id": "38025197853",
+    "run_attempt": "1",
+    "job": "backfill",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/38025197853"
+  },
+  "tap_client": "claude",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 4.274,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "claude",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--no-session-persistence",
+    "--model",
+    "claude-mythos-5-1",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "CLAUDE_CODE_TOTAL_TOKENS_REMINDER": "off",
+    "DISABLE_GROWTHBOOK": "1",
+    "DISABLE_TELEMETRY": "1"
+  }
+}
