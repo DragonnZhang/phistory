@@ -2,7 +2,9 @@ import base64
 import hashlib
 import json
 import zipfile
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 
 import pytest
 
@@ -29,6 +31,7 @@ def test_parse_manifest_selects_arm64_zip():
         "release_date": "2026-07-30T09:39:06.016Z",
         "url": ("https://file.cdn.minimax.io/public/minimax-agent-prod/release/MiniMax%20Code-3.0.57-arm64-mac.zip"),
         "sha512": "YXJtNjQ=",
+        "size": "2",
     }
 
 
@@ -96,7 +99,7 @@ def test_install_builds_headless_launcher_and_linux_native_module(monkeypatch, t
         },
     )
 
-    def fake_download(_url: str, output: Path) -> None:
+    def fake_download(_url: str, output: Path, **_kwargs) -> None:
         with zipfile.ZipFile(output, "w") as archive:
             archive.writestr("MiniMax Code.app/Contents/Resources/app.asar", b"asar")
             archive.writestr(
@@ -156,7 +159,7 @@ def test_install_supports_bundled_legacy_daemon(monkeypatch, tmp_path):
         },
     )
 
-    def fake_download(_url: str, output: Path) -> None:
+    def fake_download(_url: str, output: Path, **_kwargs) -> None:
         with zipfile.ZipFile(output, "w") as archive:
             archive.writestr("MiniMax Code.app/Contents/Resources/app.asar", b"asar")
             archive.writestr(
@@ -214,3 +217,149 @@ def test_verify_sha512_accepts_electron_updater_base64(tmp_path):
 
 def test_http_date_is_normalized_to_utc():
     assert minimax_code._http_date_to_iso("Thu, 30 Jul 2026 09:54:09 GMT") == "2026-07-30T09:54:09Z"
+
+
+@pytest.fixture
+def download_server(monkeypatch):
+    servers = []
+    monkeypatch.setattr(minimax_code.time, "sleep", lambda _seconds: None)
+
+    def start(responses):
+        requests = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                requests.append(dict(self.headers))
+                status, headers, payload = responses[len(requests) - 1]
+                self.send_response(status)
+                for key, value in headers.items():
+                    self.send_header(key, value)
+                self.end_headers()
+                self.wfile.write(payload)
+
+            def log_message(self, *_args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
+        thread.start()
+        servers.append((server, thread))
+        return f"http://127.0.0.1:{server.server_port}/artifact.zip", requests
+
+    yield start
+    for server, thread in servers:
+        server.shutdown()
+        server.server_close()
+        thread.join()
+
+
+@pytest.mark.parametrize("use_manifest", [False, True])
+def test_download_resumes_early_eof_with_validated_range(download_server, tmp_path, use_manifest):
+    payload = b"0123456789"
+    url, requests = download_server(
+        [
+            (200, {"Content-Length": "10", "ETag": '"release"'}, payload[:4]),
+            (206, {"Content-Length": "6", "Content-Range": "bytes 4-9/10"}, payload[4:]),
+        ]
+    )
+    output = tmp_path / "artifact.zip"
+    kwargs = {"sha512": base64.b64encode(hashlib.sha512(payload).digest()).decode(), "size": 10} if use_manifest else {}
+
+    minimax_code._download(url, output, **kwargs)
+
+    assert output.read_bytes() == payload
+    assert requests[1]["Range"] == "bytes=4-"
+    assert requests[1]["If-Range"] == '"release"'
+    assert not output.with_suffix(".zip.part").exists()
+
+
+def test_download_restarts_when_server_ignores_range(download_server, tmp_path):
+    url, requests = download_server(
+        [(200, {"Content-Length": "10"}, b"old"), (200, {"Content-Length": "10"}, b"0123456789")]
+    )
+    output = tmp_path / "artifact.zip"
+
+    minimax_code._download(url, output)
+
+    assert requests[1]["Range"] == "bytes=3-"
+    assert output.read_bytes() == b"0123456789"
+
+
+@pytest.mark.parametrize(
+    "status,headers",
+    [
+        (206, {"Content-Range": "bytes 0-5/10", "Content-Length": "6"}),
+        (206, {"Content-Range": "bytes 4-9/11", "Content-Length": "6"}),
+        (206, {"Content-Range": "bytes 4-9/10", "Content-Length": "5"}),
+        (206, {"Content-Length": "6"}),
+        (416, {"Content-Range": "bytes */4", "Content-Length": "0"}),
+    ],
+)
+def test_download_restarts_after_untrustworthy_range(download_server, tmp_path, status, headers):
+    url, requests = download_server(
+        [
+            (200, {"Content-Length": "10"}, b"0123"),
+            (status, headers, b""),
+            (200, {"Content-Length": "10"}, b"0123456789"),
+        ]
+    )
+    output = tmp_path / "artifact.zip"
+
+    minimax_code._download(url, output)
+
+    assert requests[1]["Range"] == "bytes=4-"
+    assert "Range" not in requests[2]
+    assert output.read_bytes() == b"0123456789"
+
+
+def test_download_retries_checksum_mismatch_from_scratch(download_server, tmp_path):
+    payload = b"good"
+    url, requests = download_server([(200, {"Content-Length": "4"}, b"bad!"), (200, {"Content-Length": "4"}, payload)])
+    output = tmp_path / "artifact.zip"
+    expected = base64.b64encode(hashlib.sha512(payload).digest()).decode()
+
+    minimax_code._download(url, output, sha512=expected, size=4)
+
+    assert "Range" not in requests[1]
+    assert output.read_bytes() == payload
+
+
+def test_download_never_publishes_persistent_checksum_mismatch(download_server, tmp_path):
+    url, requests = download_server([(200, {"Content-Length": "4"}, b"bad!")] * 3)
+    output = tmp_path / "artifact.zip"
+    output.write_bytes(b"previous verified archive")
+    expected = base64.b64encode(hashlib.sha512(b"good").digest()).decode()
+
+    with pytest.raises(RuntimeError, match="sha512 mismatch"):
+        minimax_code._download(url, output, sha512=expected, size=4)
+
+    assert len(requests) == 3
+    assert output.read_bytes() == b"previous verified archive"
+    assert not output.with_suffix(".zip.part").exists()
+
+
+def test_download_never_publishes_repeated_truncation(download_server, tmp_path):
+    url, requests = download_server(
+        [
+            (200, {"Content-Length": "10"}, b"01"),
+            (206, {"Content-Length": "8", "Content-Range": "bytes 2-9/10"}, b"23"),
+            (206, {"Content-Length": "6", "Content-Range": "bytes 4-9/10"}, b"45"),
+        ]
+    )
+    output = tmp_path / "artifact.zip"
+
+    with pytest.raises(OSError, match="incomplete response"):
+        minimax_code._download(url, output)
+
+    assert len(requests) == 3
+    assert not output.exists()
+
+
+def test_download_enforces_manifest_size_without_content_length(download_server, tmp_path):
+    url, requests = download_server([(200, {}, b"0123"), (206, {"Content-Range": "bytes 4-9/10"}, b"456789")])
+    output = tmp_path / "artifact.zip"
+
+    minimax_code._download(url, output, size=10)
+
+    assert requests[1]["Range"] == "bytes=4-"
+    assert output.read_bytes() == b"0123456789"

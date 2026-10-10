@@ -18,7 +18,7 @@ This file is for future coding agents. Read it before changing the project.
 - `phistory/cli.py`: CLI entrypoint for `capture`, `backfill`, `extract-static`, `render-index`, and `render-site`.
 - `tests/`: focused unit and local integration tests for package sources, registry contracts, capture behavior, and rendering.
 - `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest captures for actively tracked agents, Claude Code static prompt extraction, rendering, and commits updates. Manual dispatch also runs a fresh smoke capture after committing archives.
-- `.github/workflows/backfill.yml`: manually triggered stable-history backfill for all eight downstream atlas agents with explicit version ranges and variants.
+- `.github/workflows/backfill.yml`: manually triggered stable-history backfill for all eight downstream atlas agents and MiniMax Code, with explicit version ranges and variants.
 - `.github/workflows/recapture-claude-history.yml`: manually triggered, sharded Linux recapture for the complete Claude Code history with remote experiment fetching disabled.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
 

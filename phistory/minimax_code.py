@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import logging
 import re
 import shutil
 import time
@@ -11,6 +12,7 @@ import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timezone
 from email.utils import parsedate_to_datetime
+from http.client import HTTPException
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
@@ -30,7 +32,7 @@ HISTORY_GAP_LIMIT = 8
 _VERSION_RE = re.compile(r"^version:\s*([^\s]+)\s*$", re.MULTILINE)
 _RELEASE_DATE_RE = re.compile(r"^releaseDate:\s*['\"]?([^'\"\s]+)['\"]?\s*$", re.MULTILINE)
 _FILE_RE = re.compile(
-    r"^\s*-\s+url:\s*(.+?)\s*$\n\s+sha512:\s*([^\s]+)\s*$",
+    r"^\s*-\s+url:\s*(.+?)\s*$\n\s+sha512:\s*([^\s]+)\s*$\n\s+size:\s*(\d+)\s*$",
     re.MULTILINE,
 )
 
@@ -76,9 +78,13 @@ def install(version: str, install_dir: Path) -> Path:
     manifest = _fetch_manifest()
     archive = install_dir / f"MiniMax-Code-{version}-arm64-mac.zip"
     url = manifest["url"] if manifest["version"] == version else _asset_url(version)
-    _download(url, archive)
-    if manifest["version"] == version:
-        _verify_sha512(archive, manifest["sha512"])
+    current = manifest["version"] == version
+    _download(
+        url,
+        archive,
+        sha512=manifest["sha512"] if current else None,
+        size=int(manifest["size"]) if current else None,
+    )
 
     resources_dir = install_dir / "resources"
     _extract_app_resources(archive, resources_dir)
@@ -156,7 +162,7 @@ def _fetch_manifest() -> dict[str, str]:
 def _parse_manifest(text: str) -> dict[str, str]:
     version_match = _VERSION_RE.search(text)
     date_match = _RELEASE_DATE_RE.search(text)
-    files = [(url.strip(), sha512) for url, sha512 in _FILE_RE.findall(text)]
+    files = [(url.strip(), sha512, size) for url, sha512, size in _FILE_RE.findall(text)]
     asset = next((item for item in files if item[0].endswith("-arm64-mac.zip")), None)
     if not version_match or not date_match or asset is None:
         raise RuntimeError("unexpected MiniMax Code updater manifest")
@@ -165,6 +171,7 @@ def _parse_manifest(text: str) -> dict[str, str]:
         "release_date": date_match.group(1),
         "url": f"{RELEASE_ROOT}{quote(asset[0])}",
         "sha512": asset[1],
+        "size": asset[2],
     }
 
 
@@ -192,32 +199,74 @@ def _probe_version(version: str) -> VersionInfo | None:
     return None
 
 
-def _download(url: str, output: Path) -> None:
+def _download(url: str, output: Path, *, sha512: str | None = None, size: int | None = None) -> None:
     partial = output.with_suffix(f"{output.suffix}.part")
+    # Resume only bytes from this call, whose response metadata we still have.
+    partial.unlink(missing_ok=True)
+    validator = None
+    total = size
     for attempt in range(DOWNLOAD_ATTEMPTS):
         offset = partial.stat().st_size if partial.exists() else 0
         headers = {"User-Agent": "phistory"}
         if offset:
             headers["Range"] = f"bytes={offset}-"
+            if validator:
+                headers["If-Range"] = validator
         request = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=300) as response:
-                mode = "ab" if offset and response.status == 206 else "wb"
+                length_header = response.headers.get("Content-Length")
+                length = int(length_header) if length_header is not None else None
+                if response.status == 206:
+                    match = re.fullmatch(r"bytes (\d+)-(\d+)/(\d+)", response.headers.get("Content-Range", ""))
+                    if match is None:
+                        raise RuntimeError("missing or invalid Content-Range")
+                    start, end, response_total = map(int, match.groups())
+                    if start != offset or not start <= end < response_total:
+                        raise RuntimeError("unexpected Content-Range offsets")
+                    if total is not None and total != response_total:
+                        raise RuntimeError("download size changed during resume")
+                    if length is not None and length != end - start + 1:
+                        raise RuntimeError("Content-Length disagrees with Content-Range")
+                    total = response_total
+                    length = end - start + 1
+                elif response.status == 200:
+                    offset = 0
+                    total = size if size is not None else length
+                    if size is not None and length is not None and size != length:
+                        raise RuntimeError(f"manifest size {size} disagrees with Content-Length {length}")
+                else:
+                    raise RuntimeError(f"unexpected download status {response.status}")
+                validator = response.headers.get("ETag")
+                if not validator or validator.startswith("W/"):
+                    validator = response.headers.get("Last-Modified")
+                mode = "ab" if offset else "wb"
                 with partial.open(mode) as file:
                     shutil.copyfileobj(response, file)
+                received = partial.stat().st_size - offset
+                if length is not None and received != length:
+                    raise OSError(f"incomplete response: received {received} of {length} bytes")
+                if total is not None and partial.stat().st_size != total:
+                    raise OSError(f"incomplete archive: received {partial.stat().st_size} of {total} bytes")
+            if sha512 is not None:
+                _verify_sha512(partial, sha512)
             partial.replace(output)
             return
         except HTTPError as exc:
-            if exc.code == 416 and partial.exists():
-                partial.replace(output)
-                return
-            if exc.code < 500 or attempt + 1 == DOWNLOAD_ATTEMPTS:
+            if exc.code == 416:
+                partial.unlink(missing_ok=True)
+                total = size
+            if (exc.code < 500 and exc.code != 416) or attempt + 1 == DOWNLOAD_ATTEMPTS:
                 raise
-            time.sleep(attempt + 1)
-        except (TimeoutError, URLError, OSError):
+            logging.getLogger(__name__).warning("Download attempt %s failed: %s", attempt + 1, exc)
+        except (RuntimeError, HTTPException, TimeoutError, URLError, OSError) as exc:
+            if isinstance(exc, RuntimeError):
+                partial.unlink(missing_ok=True)
+                total = size
             if attempt + 1 == DOWNLOAD_ATTEMPTS:
                 raise
-            time.sleep(attempt + 1)
+            logging.getLogger(__name__).warning("Download attempt %s failed: %s", attempt + 1, exc)
+        time.sleep(attempt + 1)
 
 
 def _extract_app_resources(archive: Path, output: Path) -> None:

@@ -16,6 +16,7 @@ on:
           - openclaw
           - hermes
           - opencode
+          - minimax-code
       variants:
         description: Optional comma-separated capture variant ids
         required: false
