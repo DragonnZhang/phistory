@@ -40,4 +40,8 @@ The [Codex 0.162.1 tagged model catalog](https://github.com/openai/codex/blob/ru
 
 ## Linux validation
 
-The registry commit is a prerequisite for the targeted Mythos capture and fresh-cache smoke. Request-level results and final committed artifacts are recorded here after those runs complete; binary catalog evidence alone does not prove wire exposure or provider access.
+Registry commit `82b2ad73` passed formatting, lint, 148 tests, package build and both renderers. Latest run [38024660398](https://github.com/DragonnZhang/phistory/actions/runs/38024660398) committed all 23 requested endpoint captures in `736fe869`; Qoder's credentialed capture and archive check passed. Its overall result is failure only because the out-of-atlas MiniMax Code 3.1.1 fresh-cache smoke rejected the upstream archive's SHA-512 checksum. All 27 in-scope smoke captures are valid. Do not retry already successful targets or report the full workflow as successful.
+
+Targeted backfill and fresh-cache smoke [38025197853](https://github.com/DragonnZhang/phistory/actions/runs/38025197853) succeeded for both Mythos variants at 2.1.296, committing them in `e7357299`. Both archives and both smoke requests use the exact configured model ID and contain twelve tools; no account access or live inference was tested. Together, all 25 new in-scope records have nonempty prompt/trace/meta files, valid main requests and genuine Linux GitHub Actions provenance. Their files match committed artifacts byte-for-byte; no prior raw trace was rewritten.
+
+Claude's latest wrapper still contains no source supported by the static extractor, so the workflow explicitly skips static extraction; request prompts and tools are captured normally. The current model baseline is therefore based on verified platform binaries and Linux request traces, not a claim of a complete static string archive.
