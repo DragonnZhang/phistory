@@ -9,7 +9,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-10-11 04:39 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-10-11 09:14 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,7 +90,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-10-11 04:39 UTC
+Last capture update: 2026-10-11 09:14 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -109,7 +109,7 @@ Last capture update: 2026-10-11 04:39 UTC
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
 | opencode | [1.19.0 - 2026-10-11](captures/opencode/1.19.0/variants/default/prompt.md) | 119 | 119 | 2026-10-11 04:38 UTC |
 | Pi | [1.1.0 - 2026-10-07](captures/pi/1.1.0/variants/default/prompt.md) | 56 | 56 | 2026-10-08 09:25 UTC |
-| Oh My Pi | [18.8.9 - 2026-10-10](captures/omp/18.8.9/variants/default/prompt.md) | 113 | 113 | 2026-10-11 04:38 UTC |
+| Oh My Pi | [18.9.0 - 2026-10-11](captures/omp/18.9.0/variants/default/prompt.md) | 114 | 114 | 2026-10-11 09:14 UTC |
 
 ## Project Trend
 

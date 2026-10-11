@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每天自动检查新版本，归档最近更新于 **2026-10-11 04:39 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-10-11 09:14 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,7 +90,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-10-11 04:39 UTC
+最近抓取更新：2026-10-11 09:14 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -109,7 +109,7 @@ uv run phistory render-site
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
 | opencode | [1.19.0 - 2026-10-11](captures/opencode/1.19.0/variants/default/prompt.md) | 119 | 119 | 2026-10-11 04:38 UTC |
 | Pi | [1.1.0 - 2026-10-07](captures/pi/1.1.0/variants/default/prompt.md) | 56 | 56 | 2026-10-08 09:25 UTC |
-| Oh My Pi | [18.8.9 - 2026-10-10](captures/omp/18.8.9/variants/default/prompt.md) | 113 | 113 | 2026-10-11 04:38 UTC |
+| Oh My Pi | [18.9.0 - 2026-10-11](captures/omp/18.9.0/variants/default/prompt.md) | 114 | 114 | 2026-10-11 09:14 UTC |
 
 ## 项目趋势
 
