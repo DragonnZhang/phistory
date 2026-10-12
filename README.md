@@ -9,7 +9,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-10-11 09:14 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-10-12 04:38 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,7 +90,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-10-11 09:14 UTC
+Last capture update: 2026-10-12 04:38 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -101,7 +101,7 @@ Last capture update: 2026-10-11 09:14 UTC
 | Grok Build | [1.0.50 - 2026-10-06](captures/grok/1.0.50/variants/default/prompt.md) | 140 | 140 | 2026-10-09 04:42 UTC |
 | MiniMax Code | [3.1.1 - 2026-10-04](captures/minimax-code/3.1.1/variants/default/prompt.md) | 40 | 40 | 2026-10-05 09:33 UTC |
 | Kimi Code | [2.1.1 - 2026-09-24](captures/kimi-code/2.1.1/variants/default/prompt.md) | 78 | 78 | 2026-09-24 07:48 UTC |
-| Qwen Code | [0.25.0 - 2026-10-05](captures/qwen-code/0.25.0/variants/default/prompt.md) | 137 | 137 | 2026-10-06 09:19 UTC |
+| Qwen Code | [0.25.1 - 2026-10-11](captures/qwen-code/0.25.1/variants/default/prompt.md) | 138 | 138 | 2026-10-12 04:38 UTC |
 | Qoder CLI | [1.1.68 - 2026-10-10](captures/qoder/1.1.68/variants/default/prompt.md) | 178 | 178 | 2026-10-11 04:39 UTC |
 | MiMo Code | [0.1.15 - 2026-09-22](captures/mimo/0.1.15/variants/default/prompt.md) | 15 | 15 | 2026-09-23 02:08 UTC |
 | OpenClaw | [2026.10.1 - 2026-10-10](captures/openclaw/2026.10.1/variants/default/prompt.md) | 81 | 81 | 2026-10-11 04:38 UTC |
@@ -109,7 +109,7 @@ Last capture update: 2026-10-11 09:14 UTC
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
 | opencode | [1.19.0 - 2026-10-11](captures/opencode/1.19.0/variants/default/prompt.md) | 119 | 119 | 2026-10-11 04:38 UTC |
 | Pi | [1.1.0 - 2026-10-07](captures/pi/1.1.0/variants/default/prompt.md) | 56 | 56 | 2026-10-08 09:25 UTC |
-| Oh My Pi | [18.9.0 - 2026-10-11](captures/omp/18.9.0/variants/default/prompt.md) | 114 | 114 | 2026-10-11 09:14 UTC |
+| Oh My Pi | [18.10.0 - 2026-10-12](captures/omp/18.10.0/variants/default/prompt.md) | 115 | 115 | 2026-10-12 04:38 UTC |
 
 ## Project Trend
 
