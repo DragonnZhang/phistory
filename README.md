@@ -9,7 +9,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-10-13 04:38 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-10-13 09:42 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,14 +90,14 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-10-13 04:38 UTC
+Last capture update: 2026-10-13 09:42 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
 | Claude Code | [2.1.296 - 2026-10-09](captures/claude-code/2.1.296/variants/default/prompt.md) | 446 | 3474 | 2026-10-10 04:37 UTC |
 | Codex CLI | [0.162.1 - 2026-10-09](captures/codex/0.162.1/variants/default/prompt.md) | 105 | 463 | 2026-10-10 04:37 UTC |
 | DeepSeek Harness | [0.2.0-rc.2 - 2026-09-29](captures/dsh/0.2.0-rc.2/variants/default/prompt.md) | 14 | 75 | 2026-09-30 08:57 UTC |
-| Antigravity CLI | [1.3.3 - 2026-10-10](captures/antigravity/1.3.3/variants/default/prompt.md) | 63 | 63 | 2026-10-10 04:38 UTC |
+| Antigravity CLI | [1.3.4 - 2026-10-13](captures/antigravity/1.3.4/variants/default/prompt.md) | 64 | 64 | 2026-10-13 09:42 UTC |
 | Grok Build | [1.0.52 - 2026-10-11](captures/grok/1.0.52/variants/default/prompt.md) | 141 | 141 | 2026-10-13 04:37 UTC |
 | MiniMax Code | [3.1.1 - 2026-10-04](captures/minimax-code/3.1.1/variants/default/prompt.md) | 40 | 40 | 2026-10-05 09:33 UTC |
 | Kimi Code | [2.1.1 - 2026-09-24](captures/kimi-code/2.1.1/variants/default/prompt.md) | 78 | 78 | 2026-09-24 07:48 UTC |
