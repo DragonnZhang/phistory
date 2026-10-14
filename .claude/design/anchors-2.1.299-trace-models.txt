@@ -1,0 +1,57 @@
+Claude Code 2.1.299 — scoped trace model baseline
+Verified: 2026-10-14 Asia/Singapore
+
+[binary-meta]
+package: @anthropic-ai/claude-code-darwin-arm64@2.1.299
+tarball: https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.299.tgz
+npm_integrity_verified: true
+sha256: ba5ab7b8c195fa03ab8d5bf3915c76153b576a2c40e79a5c46e265e7ed9744b3
+binary_size_bytes: 247931696
+binary_size_delta: 7267264
+build_time: 2026-10-13T21:37:33Z
+git_sha: c416f56ec7eca27e49747c35af51d5c92c856ba1
+prior: anchors-2.1.296-trace-models.txt
+prior_anchor_sha256: ed467a94241f03138488fa720d780a2beb925a5976b9efe9629ecda033592b5e
+runtime_probe: none; static extraction only
+
+[diff-summary vs 2.1.296]
+Scope: model identity and capture coverage only.
+Catalog: 22 IDs in both releases, +0 added / -0 removed; 11 objects changed.
+All object changes are confined to image_limits and effort_cost_index. Model IDs, family, provider IDs, context configuration, capability flags and other catalog fields are unchanged.
+Slash commands, hooks, telemetry, feature gates, billing fields and app state were not enumerated in this scoped investigation.
+
+[confirmed-catalog-changes]
+11 models now declare image_limits={maxWidth:2576,maxHeight:2576,maxImageTokens:4784}: Haiku 5.5; Sonnet 5 and 5.5; Opus 4.7, 4.8, 5 and 5.5; Fable 5 and 5.1; Mythos 5 and 5.1.
+Haiku 5.5 had no image_limits property in the prior catalog; the other ten previously declared maxWidth:2000,maxHeight:2000 without maxImageTokens.
+New effort_cost_index entries (low, medium, high, xhigh, max):
+- Haiku 5.5: 0.41, 0.68, 1, 1.58, 3.24
+- Sonnet 5.5: 0.45, 0.56, 1, 1.8, 4.59
+- Opus 5.5: 0.44, 0.69, 1, 1.53, 2.81
+These are confirmed embedded metadata values, not measured model prices, image performance, or wire-visible tool changes.
+
+[confirmed-catalog-anchors]
+claude-3-5-haiku: object_byte_offset=194547404
+claude-haiku-4-5: object_byte_offset=194547925
+claude-haiku-5-5: object_byte_offset=194548575
+claude-3-5-sonnet: object_byte_offset=194549530
+claude-3-7-sonnet: object_byte_offset=194550031
+claude-sonnet-4-0: object_byte_offset=194550531
+claude-sonnet-4-5: object_byte_offset=194551169
+claude-sonnet-4-6: object_byte_offset=194551877
+claude-sonnet-5: object_byte_offset=194552594
+claude-sonnet-5-5: object_byte_offset=194553472
+claude-opus-4-0: object_byte_offset=194554550
+claude-opus-4-1: object_byte_offset=194555115
+claude-opus-4-5: object_byte_offset=194555694
+claude-opus-4-6: object_byte_offset=194556354
+claude-opus-4-7: object_byte_offset=194557036
+claude-opus-4-8: object_byte_offset=194557865
+claude-opus-5: object_byte_offset=194558809
+claude-opus-5-5: object_byte_offset=194559799
+claude-fable-5: object_byte_offset=194560866
+claude-fable-5-1: object_byte_offset=194561836
+claude-mythos-5: object_byte_offset=194562903
+claude-mythos-5-1: object_byte_offset=194563370
+
+[limits]
+The current official model lineup and both Mythos IDs already have atlas lanes. No support or display boundary changes are needed. Catalog metadata establishes CLI configuration, not provider access. All actual prompt requests are captured separately in Linux CI through claude-tap. Old source mappings were not needed.
