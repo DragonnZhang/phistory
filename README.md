@@ -9,7 +9,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-10-13 09:42 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-10-14 04:38 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,26 +90,26 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-10-13 09:42 UTC
+Last capture update: 2026-10-14 04:38 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.296 - 2026-10-09](captures/claude-code/2.1.296/variants/default/prompt.md) | 446 | 3474 | 2026-10-10 04:37 UTC |
+| Claude Code | [2.1.299 - 2026-10-14](captures/claude-code/2.1.299/variants/default/prompt.md) | 447 | 3488 | 2026-10-14 04:36 UTC |
 | Codex CLI | [0.162.1 - 2026-10-09](captures/codex/0.162.1/variants/default/prompt.md) | 105 | 463 | 2026-10-10 04:37 UTC |
 | DeepSeek Harness | [0.2.0-rc.2 - 2026-09-29](captures/dsh/0.2.0-rc.2/variants/default/prompt.md) | 14 | 75 | 2026-09-30 08:57 UTC |
-| Antigravity CLI | [1.3.4 - 2026-10-13](captures/antigravity/1.3.4/variants/default/prompt.md) | 64 | 64 | 2026-10-13 09:42 UTC |
+| Antigravity CLI | [1.3.5 - 2026-10-14](captures/antigravity/1.3.5/variants/default/prompt.md) | 65 | 65 | 2026-10-14 04:36 UTC |
 | Grok Build | [1.0.52 - 2026-10-11](captures/grok/1.0.52/variants/default/prompt.md) | 141 | 141 | 2026-10-13 04:37 UTC |
 | MiniMax Code | [3.1.1 - 2026-10-04](captures/minimax-code/3.1.1/variants/default/prompt.md) | 40 | 40 | 2026-10-05 09:33 UTC |
 | Kimi Code | [2.1.1 - 2026-09-24](captures/kimi-code/2.1.1/variants/default/prompt.md) | 78 | 78 | 2026-09-24 07:48 UTC |
 | Qwen Code | [0.25.1 - 2026-10-11](captures/qwen-code/0.25.1/variants/default/prompt.md) | 138 | 138 | 2026-10-12 04:38 UTC |
-| Qoder CLI | [1.1.69 - 2026-10-12](captures/qoder/1.1.69/variants/default/prompt.md) | 179 | 179 | 2026-10-13 04:38 UTC |
+| Qoder CLI | [1.1.70 - 2026-10-13](captures/qoder/1.1.70/variants/default/prompt.md) | 180 | 180 | 2026-10-14 04:38 UTC |
 | MiMo Code | [0.1.15 - 2026-09-22](captures/mimo/0.1.15/variants/default/prompt.md) | 15 | 15 | 2026-09-23 02:08 UTC |
-| OpenClaw | [2026.10.2 - 2026-10-12](captures/openclaw/2026.10.2/variants/default/prompt.md) | 82 | 82 | 2026-10-12 09:40 UTC |
-| Hermes Agent | [v0.21.7 - 2026-10-12](captures/hermes/v0.21.7/variants/default/prompt.md) | 36 | 36 | 2026-10-12 09:41 UTC |
+| OpenClaw | [2026.10.3 - 2026-10-13](captures/openclaw/2026.10.3/variants/default/prompt.md) | 83 | 83 | 2026-10-14 04:37 UTC |
+| Hermes Agent | [v0.22.0 - 2026-10-14](captures/hermes/v0.22.0/variants/default/prompt.md) | 37 | 37 | 2026-10-14 04:37 UTC |
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
 | opencode | [1.19.0 - 2026-10-11](captures/opencode/1.19.0/variants/default/prompt.md) | 119 | 119 | 2026-10-11 04:38 UTC |
 | Pi | [1.2.0 - 2026-10-12](captures/pi/1.2.0/variants/default/prompt.md) | 57 | 57 | 2026-10-13 04:38 UTC |
-| Oh My Pi | [18.10.3 - 2026-10-12](captures/omp/18.10.3/variants/default/prompt.md) | 117 | 117 | 2026-10-13 04:38 UTC |
+| Oh My Pi | [18.10.4 - 2026-10-13](captures/omp/18.10.4/variants/default/prompt.md) | 118 | 118 | 2026-10-14 04:38 UTC |
 
 ## Project Trend
 
