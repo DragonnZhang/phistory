@@ -1,0 +1,55 @@
+Claude Code 2.1.300 — scoped trace model baseline
+Verified: 2026-10-15 UTC
+
+[binary-meta]
+package: @anthropic-ai/claude-code-darwin-arm64@2.1.300
+tarball: https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.300.tgz
+npm_integrity_verified: true
+sha256: 475517caa611e3318a2f298fa071287ec98955538df78c58f709ecc01e5ae2d3
+binary_size_bytes: 249556880
+binary_size_delta: 1625184
+build_time: 2026-10-14T12:54:55Z
+git_sha: c6733ae1276880507ca0c5b053ae18fb0df090d6
+prior: anchors-2.1.299-trace-models.txt
+prior_anchor_sha256: a6ef869e84fa942225c663604722c40ae318c650874f7bd6fe2a2e30d6d2057e
+runtime_probe: none; static extraction only
+
+[diff-summary vs 2.1.299]
+Scope: model identity and capture coverage only.
+Catalog: 22 IDs in both releases, +0 added / -0 removed; 3 objects changed.
+All object changes are confined to effort_cost_index. Image limits, model IDs, family, provider IDs, context configuration, capability flags and all other catalog fields are unchanged.
+Slash commands, hooks, telemetry, feature gates, billing fields and app state were not enumerated in this scoped investigation.
+
+[confirmed-catalog-changes]
+Effort cost indices (low, medium, high, xhigh, max), old -> new:
+- Haiku 5.5: 0.41, 0.68, 1, 1.58, 3.24 -> 0.38, 0.52, 1, 2.03, 4.34
+- Sonnet 5.5: 0.45, 0.56, 1, 1.8, 4.59 -> 0.49, 0.54, 1, 1.87, 5.5
+- Opus 5.5: 0.44, 0.69, 1, 1.53, 2.81 -> 0.48, 0.66, 1, 1.66, 3.44
+These are embedded metadata values, not measured provider prices or wire-visible tool changes.
+
+[confirmed-catalog-anchors]
+claude-3-5-haiku: object_byte_offset=194765999
+claude-haiku-4-5: object_byte_offset=194766520
+claude-haiku-5-5: object_byte_offset=194767170
+claude-3-5-sonnet: object_byte_offset=194768125
+claude-3-7-sonnet: object_byte_offset=194768626
+claude-sonnet-4-0: object_byte_offset=194769126
+claude-sonnet-4-5: object_byte_offset=194769764
+claude-sonnet-4-6: object_byte_offset=194770472
+claude-sonnet-5: object_byte_offset=194771189
+claude-sonnet-5-5: object_byte_offset=194772067
+claude-opus-4-0: object_byte_offset=194773145
+claude-opus-4-1: object_byte_offset=194773710
+claude-opus-4-5: object_byte_offset=194774289
+claude-opus-4-6: object_byte_offset=194774949
+claude-opus-4-7: object_byte_offset=194775631
+claude-opus-4-8: object_byte_offset=194776460
+claude-opus-5: object_byte_offset=194777404
+claude-opus-5-5: object_byte_offset=194778394
+claude-fable-5: object_byte_offset=194779461
+claude-fable-5-1: object_byte_offset=194780431
+claude-mythos-5: object_byte_offset=194781498
+claude-mythos-5-1: object_byte_offset=194781965
+
+[limits]
+The official current model lineup and both Mythos IDs already have atlas lanes. No support or display boundary changes are needed. Catalog metadata establishes CLI configuration, not provider access. Actual requests are captured separately in Linux CI through claude-tap. Old source mappings were not needed.
