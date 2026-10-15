@@ -58,3 +58,17 @@ Raw traces retain collection paths and runtime values. Metrics use the existing 
 [Pages run 38683239427](https://github.com/DragonnZhang/phistory/actions/runs/38683239427) succeeded. The online `captures/index.json` was fetched and compared byte for byte with the clean committed archive. SHA-256: `958207400c1c4575bdc62560b5e603e12219531ea5846da79ae4c441988dcc9e`.
 
 The downstream atlas can now add 17 records to its previous 4,522 while retaining all 30 lanes and all support/display boundaries. Its methodology records the final source commit containing this research, generation results and browser validation.
+
+## 12:35 UTC recheck — Hermes v0.22.2
+
+All eight official package sources were checked again at `2026-10-15T12:35:24.693491+00:00`. [Hermes v0.22.2](https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.2), published at `2026-10-15T08:21:32Z`, was the only newer stable release. The intervening scheduled [capture run 38700431635](https://github.com/DragonnZhang/phistory/actions/runs/38700431635) had already succeeded without archive changes before that release.
+
+The official OpenAI API catalog, Codex availability, Claude model overview, release notes and model configuration linked above were read again. No additional supported model or boundary change was found. Exact npm metadata still resolves Claude Code to 2.1.300 and Codex to 0.162.1, so the morning exact-binary evidence remains applicable. The freshly fetched Codex release catalog retains SHA-256 `943ca7fe1d19ed019054158303f0dbbd80b3bef43b3aa425a71aa7cb3fb52c2b` and the same eight visible model IDs. All 30 atlas lanes remain in scope.
+
+[Capture run 38736169856](https://github.com/DragonnZhang/phistory/actions/runs/38736169856) succeeded, including formatting, lint, 160 tests, build, latest captures, Qoder checks, rendering and full fresh-cache smoke. It committed [6f6237da6173e30a12cdcdc3daab12c15385af51](https://github.com/DragonnZhang/phistory/commit/6f6237da6173e30a12cdcdc3daab12c15385af51), adding only the Hermes v0.22.2 capture and regenerated indexes. No existing capture file changed. Recent Claude Code wrappers retain the explicitly reported static-extraction limitation described above.
+
+The new nonempty prompt/trace/meta files match committed bytes. The main request, observed `phistory-dummy` model, 20 tools, successful CLI exit and actual Linux GitHub Actions host/run URL were verified. All 29 in-scope smoke records have valid requests and the correct Linux provenance; their ordered tool-name lists and normalized system text each match the corresponding committed archive. The nine previously explained Codex count-level differences remain unchanged.
+
+Hermes v0.22.1 → v0.22.2 restores exactly the `teams-meeting-pipeline` entry removed in the previous release. System control rises from 2,656 to 2,674 tokens, with +18 / −0 full-text tokens. The 20 ordered tool names are unchanged. Fresh-cache smoke independently reproduces the restored catalog entry; raw traces retain their actual runtime values.
+
+[Pages run 38737161039](https://github.com/DragonnZhang/phistory/actions/runs/38737161039) succeeded. The online manifest matches the committed bytes, SHA-256 `5cdcab314171ee5a21793398609cdae53060a6cdd10eac50b90c92fc2fdcbb37`. The downstream refresh adds one record to the morning 4,539 while preserving every prior record, lane and display boundary.
