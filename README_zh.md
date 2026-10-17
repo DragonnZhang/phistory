@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每天自动检查新版本，归档最近更新于 **2026-10-17 07:03 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-10-17 07:09 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,7 +90,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-10-17 07:03 UTC
+最近抓取更新：2026-10-17 07:09 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -107,7 +107,7 @@ uv run phistory render-site
 | OpenClaw | [2026.10.4 - 2026-10-15](captures/openclaw/2026.10.4/variants/default/prompt.md) | 84 | 84 | 2026-10-16 07:30 UTC |
 | Hermes Agent | [v0.22.2 - 2026-10-15](captures/hermes/v0.22.2/variants/default/prompt.md) | 39 | 39 | 2026-10-15 12:39 UTC |
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
-| opencode | [1.19.3 - 2026-10-16](captures/opencode/1.19.3/variants/default/prompt.md) | 121 | 121 | 2026-10-17 07:02 UTC |
+| opencode | [1.19.3 - 2026-10-16](captures/opencode/1.19.3/variants/default/prompt.md) | 122 | 122 | 2026-10-17 07:02 UTC |
 | Pi | [1.3.0 - 2026-10-15](captures/pi/1.3.0/variants/default/prompt.md) | 58 | 58 | 2026-10-16 07:31 UTC |
 | Oh My Pi | [18.11.3 - 2026-10-16](captures/omp/18.11.3/variants/default/prompt.md) | 121 | 121 | 2026-10-17 07:02 UTC |
 
