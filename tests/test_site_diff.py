@@ -47,8 +47,8 @@ def run_browser_js(assertions: str, data=None) -> None:
     assert result.returncode == 0, result.stderr or result.stdout
 
 
-def capture_records(version: str) -> list[dict]:
-    path = ROOT / "captures" / "claude-code" / version / "variants" / "non-official" / "trace.jsonl"
+def capture_records(version: str, agent="claude-code", variant="non-official") -> list[dict]:
+    path = ROOT / "captures" / agent / version / "variants" / variant / "trace.jsonl"
     if not path.exists():
         pytest.skip("Archived corpus is not included in the source distribution")
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -162,6 +162,44 @@ OS Version: Linux 6.17
         assert.notEqual(normalizeDiffText(old), normalizeDiffText(old.replace('model-one', 'model-two')));
         assert.notEqual(requestDiffMarkdown(make(old)), requestDiffMarkdown(make(old.replace('/review/', '/security-review/'))));
         """
+    )
+
+
+def test_labelled_kernel_and_node_versions_preserve_rules_and_raw_evidence():
+    run_browser_js(
+        r"""
+        const old = '## Hermes runtime environment\nHost: Linux (6.17.0-1022-azure)\n- Node.js version: v24.21.0\nKeep this rule.';
+        const changed = old.replace('6.17.0-1022-azure', '7.0.0-1017-azure').replace('v24.21.0', 'v24.22.0');
+        const normalized = normalizeDiffText(old);
+        assert.equal(normalized, normalizeDiffText(changed));
+        assert.equal(normalized, normalizeDiffText(normalized));
+        assert.equal(normalizeDiffText(JSON.stringify(old)), normalizeDiffText(JSON.stringify(changed)));
+        const body = { messages: [{ role: 'system', content: old }] };
+        const raw = JSON.stringify(body);
+        assert.equal(requestDiffMarkdown(body, 'system'), requestDiffMarkdown({ messages: [{ role: 'system', content: changed }] }, 'system'));
+        assert.equal(JSON.stringify(body), raw);
+        for (const other of [old.replace('Linux', 'Darwin'), old.replace('- Node.js version: v24.21.0\n', ''), old.replace('Keep this rule.', 'Require Node.js v24.22.0 and Linux 7.0.0.')]) {
+          assert.notEqual(normalized, normalizeDiffText(other));
+        }
+        const rule = 'Use Node.js version: v24.21.0.\nRequire Linux (6.17.0-1022-azure).';
+        assert.equal(rule, normalizeDiffText(rule));
+        """
+    )
+
+
+def test_qoder_node_upgrade_is_unchanged_but_image_edit_schema_is_visible():
+    run_browser_js(
+        r"""
+        const bodies = data.map(records => requestBody(selectMainTraceRecord(records).record));
+        assert.equal(requestDiffMarkdown(bodies[0], 'system'), requestDiffMarkdown(bodies[1], 'system'));
+        assert.equal(requestDiffMarkdown(bodies[1], 'system'), requestDiffMarkdown(bodies[2], 'system'));
+        const before = requestDiffMarkdown(bodies[0]);
+        const after = requestDiffMarkdown(bodies[1]);
+        assert.notEqual(before, after);
+        assert.ok(!before.includes('image-to-image'));
+        assert.ok(after.includes('image-to-image'));
+        """,
+        [capture_records(version, "qoder", "default") for version in ["1.1.73", "1.1.74", "1.1.75"]],
     )
 
 

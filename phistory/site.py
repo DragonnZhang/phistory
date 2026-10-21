@@ -2532,6 +2532,8 @@ function normalizeDiffText(text) {
     .replace(/<timezone>[^<]+<\/timezone>/g, () => '<timezone>$PHISTORY_TIMEZONE</timezone>')
     .replace(/(<current_date>)\d{4}-\d{2}-\d{2}(<\/current_date>)/g, (_, prefix, end) => prefix + '$PHISTORY_DATE' + end)
     .replace(/((?:^|\\n)[ \t]*(?:- )?OS Version: )[^\n\\]+/gm, (_, prefix) => prefix + '$PHISTORY_OS_VERSION')
+    .replace(/((?:^|\\n)[ \t]*(?:- )?Node\.js version: )v?\d+(?:\.\d+)+(?:[-+][\w.-]+)?/gm, (_, prefix) => prefix + '$PHISTORY_NODE_VERSION')
+    .replace(/((?:^|\\n)Host: (?:Linux|Darwin|Windows) \()[^\n\\]+(\))(?=\n|\\n|$)/gm, (_, prefix, end) => prefix + '$PHISTORY_OS_VERSION' + end)
     .replace(/^Runtime: [^\n]+$/gm, line => line.replace(/\b(host|os|node|sessionId)=([^|\n]+?)(?= \||$)/g,
       (_, field) => field + '=' + ({ host: '$PHISTORY_HOST', os: '$PHISTORY_OS_VERSION', node: '$PHISTORY_NODE_VERSION', sessionId: '$PHISTORY_SESSION' })[field]))
     .replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
