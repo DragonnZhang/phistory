@@ -1,0 +1,61 @@
+{
+  "agent_id": "hermes",
+  "agent": "Hermes Agent",
+  "package": "NousResearch/hermes-agent",
+  "version": "v0.22.4",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "phistory-dummy",
+    "tool_count": 20
+  },
+  "published_at": "2026-10-21T18:49:24Z",
+  "tarball_url": "https://github.com/NousResearch/hermes-agent/releases/tag/v0.22.4",
+  "binary_version": "v0.22.4",
+  "captured_at": "2026-10-22T07:55:13.820454+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "39743677500",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/39743677500"
+  },
+  "tap_client": "hermes",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 29.262,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "hermes",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--",
+    "chat",
+    "-q",
+    "Reply with one short sentence.",
+    "--yolo",
+    "-Q",
+    "--provider",
+    "openrouter",
+    "--model",
+    "phistory-dummy"
+  ]
+}
