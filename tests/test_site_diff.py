@@ -187,6 +187,44 @@ def test_labelled_kernel_and_node_versions_preserve_rules_and_raw_evidence():
     )
 
 
+def test_python_toolchain_versions_preserve_capabilities_and_raw_evidence():
+    run_browser_js(
+        r"""
+        const old = '## Runtime\nPython toolchain: python3=3.14.8 (no pip module), python=3.10.1, pip→python3.12 (mismatch), PEP 668=yes (use venv or uv), uv=installed.\nRequire Python 3.12 or later.';
+        const changed = old.replace('3.14.8', '3.15.0rc2').replace('pip→python3.12', 'pip→python3.13').replace('3.10.1', '3.11.2');
+        const normalized = normalizeDiffText(old);
+        assert.equal(normalized, normalizeDiffText(changed));
+        assert.equal(normalized, normalizeDiffText(normalized));
+        assert.equal(normalizeDiffText(JSON.stringify(old)), normalizeDiffText(JSON.stringify(changed)));
+        const body = { system: old, messages: [{ role: 'developer', content: old }] };
+        const raw = JSON.stringify(body);
+        assert.equal(requestDiffMarkdown(body, 'system'), requestDiffMarkdown({ system: changed, messages: [{ role: 'developer', content: changed }] }, 'system'));
+        assert.equal(JSON.stringify(body), raw);
+        for (const [from, to] of [[' (mismatch)', ''], ['no pip module', 'pip module available'], ['python=3.10.1, ', ''], ['PEP 668=yes', 'PEP 668=no'], ['uv=installed', 'uv=missing'], ['Require Python 3.12', 'Require Python 3.13']]) {
+          assert.notEqual(normalized, normalizeDiffText(old.replace(from, to)));
+        }
+        assert.notEqual(normalized, normalizeDiffText(old.replace(old.split('\n')[1] + '\n', '')));
+        const instruction = 'Use Python toolchain: python3=3.14.8 and pip→python3.12.';
+        assert.equal(instruction, normalizeDiffText(instruction));
+        """
+    )
+
+
+def test_hermes_python_upgrade_retains_only_the_actual_skill_removal():
+    run_browser_js(
+        r"""
+        const bodies = data.map(records => requestBody(selectMainTraceRecord(records).record));
+        const original = JSON.stringify(bodies);
+        const texts = bodies.map(body => requestDiffMarkdown(body, 'system'));
+        const removed = '    - teams-meeting-pipeline: Teams meeting summaries, job replay, Graph subscriptions.\n';
+        assert.ok(texts[0].includes(removed));
+        assert.equal(texts[0].replace(removed, ''), texts[1]);
+        assert.equal(JSON.stringify(bodies), original);
+        """,
+        [capture_records(version, "hermes", "default") for version in ["v0.22.2", "v0.22.4"]],
+    )
+
+
 def test_qoder_node_upgrade_is_unchanged_but_image_edit_schema_is_visible():
     run_browser_js(
         r"""
