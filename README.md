@@ -9,7 +9,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-10-23 04:58 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-10-23 07:53 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,17 +90,17 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-10-23 04:58 UTC
+Last capture update: 2026-10-23 07:53 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
 | Claude Code | [2.1.309 - 2026-10-22](captures/claude-code/2.1.309/variants/default/prompt.md) | 457 | 3628 | 2026-10-23 04:41 UTC |
-| Codex CLI | [0.163.0 - 2026-10-15](captures/codex/0.163.0/variants/default/prompt.md) | 106 | 473 | 2026-10-16 07:29 UTC |
+| Codex CLI | [0.164.0 - 2026-10-23](captures/codex/0.164.0/variants/default/prompt.md) | 107 | 483 | 2026-10-23 07:52 UTC |
 | DeepSeek Harness | [0.2.1-rc.2 - 2026-10-17](captures/dsh/0.2.1-rc.2/variants/default/prompt.md) | 15 | 81 | 2026-10-19 08:04 UTC |
 | Antigravity CLI | [1.4.6 - 2026-10-23](captures/antigravity/1.4.6/variants/default/prompt.md) | 71 | 71 | 2026-10-23 04:42 UTC |
 | Grok Build | [1.0.67 - 2026-10-21](captures/grok/1.0.67/variants/default/prompt.md) | 144 | 144 | 2026-10-22 07:54 UTC |
 | MiniMax Code | [3.1.4 - 2026-10-19](captures/minimax-code/3.1.4/variants/default/prompt.md) | 43 | 43 | 2026-10-20 07:54 UTC |
-| Kimi Code | [2.3.0 - 2026-10-21](captures/kimi-code/2.3.0/variants/default/prompt.md) | 80 | 80 | 2026-10-21 07:57 UTC |
+| Kimi Code | [2.3.1 - 2026-10-23](captures/kimi-code/2.3.1/variants/default/prompt.md) | 81 | 81 | 2026-10-23 07:53 UTC |
 | Qwen Code | [0.26.0 - 2026-10-21](captures/qwen-code/0.26.0/variants/default/prompt.md) | 141 | 141 | 2026-10-22 07:54 UTC |
 | Qoder CLI | [1.1.77 - 2026-10-22](captures/qoder/1.1.77/variants/default/prompt.md) | 187 | 187 | 2026-10-23 04:42 UTC |
 | MiMo Code | [0.1.15 - 2026-09-22](captures/mimo/0.1.15/variants/default/prompt.md) | 15 | 15 | 2026-09-23 02:08 UTC |
