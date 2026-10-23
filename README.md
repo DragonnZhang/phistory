@@ -9,7 +9,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
-> Checks for new releases daily. Archive last updated: **2026-10-23 04:42 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-10-23 04:49 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,11 +90,11 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-10-23 04:42 UTC
+Last capture update: 2026-10-23 04:49 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.309 - 2026-10-22](captures/claude-code/2.1.309/variants/default/prompt.md) | 456 | 3614 | 2026-10-23 04:41 UTC |
+| Claude Code | [2.1.309 - 2026-10-22](captures/claude-code/2.1.309/variants/default/prompt.md) | 457 | 3628 | 2026-10-23 04:41 UTC |
 | Codex CLI | [0.163.0 - 2026-10-15](captures/codex/0.163.0/variants/default/prompt.md) | 106 | 473 | 2026-10-16 07:29 UTC |
 | DeepSeek Harness | [0.2.1-rc.2 - 2026-10-17](captures/dsh/0.2.1-rc.2/variants/default/prompt.md) | 15 | 81 | 2026-10-19 08:04 UTC |
 | Antigravity CLI | [1.4.6 - 2026-10-23](captures/antigravity/1.4.6/variants/default/prompt.md) | 71 | 71 | 2026-10-23 04:42 UTC |
