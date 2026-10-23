@@ -8,7 +8,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
-> 每天自动检查新版本，归档最近更新于 **2026-10-23 04:49 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-10-23 04:56 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -90,7 +90,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-10-23 04:49 UTC
+最近抓取更新：2026-10-23 04:56 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -104,7 +104,7 @@ uv run phistory render-site
 | Qwen Code | [0.26.0 - 2026-10-21](captures/qwen-code/0.26.0/variants/default/prompt.md) | 141 | 141 | 2026-10-22 07:54 UTC |
 | Qoder CLI | [1.1.77 - 2026-10-22](captures/qoder/1.1.77/variants/default/prompt.md) | 187 | 187 | 2026-10-23 04:42 UTC |
 | MiMo Code | [0.1.15 - 2026-09-22](captures/mimo/0.1.15/variants/default/prompt.md) | 15 | 15 | 2026-09-23 02:08 UTC |
-| OpenClaw | [2026.10.5 - 2026-10-18](captures/openclaw/2026.10.5/variants/default/prompt.md) | 85 | 85 | 2026-10-19 04:39 UTC |
+| OpenClaw | [2026.10.6 - 2026-10-22](captures/openclaw/2026.10.6/variants/default/prompt.md) | 86 | 86 | 2026-10-23 04:56 UTC |
 | Hermes Agent | [v0.22.4 - 2026-10-21](captures/hermes/v0.22.4/variants/default/prompt.md) | 40 | 40 | 2026-10-22 07:55 UTC |
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
 | opencode | [1.19.4 - 2026-10-22](captures/opencode/1.19.4/variants/default/prompt.md) | 123 | 123 | 2026-10-23 04:42 UTC |
