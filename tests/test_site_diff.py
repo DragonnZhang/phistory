@@ -140,6 +140,80 @@ def test_responses_gemini_nested_requests_and_non_text_messages():
     )
 
 
+def test_responses_item_ids_are_display_noise_but_content_and_call_references_remain():
+    run_browser_js(
+        r"""
+        const body = { input: [
+          { type: 'message', role: 'developer', id: 'msg_first', content: 'Keep msg_rule and at_rule.' },
+          { type: 'message', role: 'user', id: 'msg_second', content: 'USER' },
+          { type: 'additional_tools', role: 'developer', id: 'at_first', tools: [{ name: 'TOOL', description: 'Use msg_rule.' }] },
+          { type: 'function_call', id: 'fc_first', call_id: 'call_first', name: 'TOOL', arguments: '{}' },
+          { type: 'function_call_output', call_id: 'call_first', output: 'RESULT' }
+        ] };
+        const raw = JSON.stringify(body);
+        const other = JSON.parse(raw);
+        other.input[0].id = 'msg_new';
+        other.input[1].id = 'msg_next';
+        other.input[2].id = 'at_new';
+        for (const scope of ['all', 'system', 'messages']) {
+          const text = requestDiffMarkdown(body, scope);
+          assert.equal(text, requestDiffMarkdown(other, scope));
+          assert.ok(text.includes('Keep msg_rule and at_rule.'));
+          other.input[0].content = 'Changed instruction.';
+          assert.notEqual(text, requestDiffMarkdown(other, scope));
+          other.input[0].content = body.input[0].content;
+        }
+        assert.equal(JSON.stringify(body), raw, 'display normalization must not mutate raw evidence');
+        other.input[2].tools[0].description = 'Use msg_changed_rule.';
+        assert.notEqual(requestDiffMarkdown(body), requestDiffMarkdown(other));
+        assert.equal(requestDiffMarkdown(body, 'system'), requestDiffMarkdown(other, 'system'));
+        for (const [index, field, value] of [[3, 'id', 'fc_next'], [3, 'call_id', 'call_next'], [4, 'call_id', 'call_next']]) {
+          const changed = JSON.parse(raw);
+          changed.input[index][field] = value;
+          for (const scope of ['all', 'messages']) {
+            assert.notEqual(requestDiffMarkdown(body, scope), requestDiffMarkdown(changed, scope));
+          }
+        }
+        const changed = JSON.parse(raw);
+        changed.input[0].id = 'custom-identifier';
+        assert.ok(requestDiffMarkdown(changed, 'system').includes('custom-identifier'));
+        delete changed.input[0].id;
+        assert.notEqual(requestDiffMarkdown(body, 'system'), requestDiffMarkdown(changed, 'system'));
+        """
+    )
+
+
+@pytest.mark.parametrize(
+    "variant",
+    [
+        "default",
+        "non-official",
+        "gpt-6.1-sol",
+        "gpt-6-astra",
+        "gpt-6-sol",
+        "gpt-6-luna",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "gpt-5.6-luna",
+        "gpt-5.5",
+    ],
+)
+def test_codex_0164_message_ids_do_not_create_content_diffs(variant):
+    run_browser_js(
+        r"""
+        const bodies = data.map(records => requestBody(selectMainTraceRecord(records).record));
+        const raw = JSON.stringify(bodies);
+        const ids = body => body.input.filter(item => item.type === 'message').map(item => item.id);
+        assert.notEqual(JSON.stringify(ids(bodies[0])), JSON.stringify(ids(bodies[1])));
+        for (const scope of ['all', 'system', 'messages']) {
+          assert.equal(requestDiffMarkdown(bodies[0], scope), requestDiffMarkdown(bodies[1], scope));
+        }
+        assert.equal(JSON.stringify(bodies), raw);
+        """,
+        [capture_records(version, "codex", variant) for version in ["0.163.0", "0.164.0"]],
+    )
+
+
 def test_normalization_keeps_instructions_and_normalizes_every_display_layer():
     run_browser_js(
         r"""

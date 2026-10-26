@@ -2457,7 +2457,8 @@ function requestDiffMarkdown(body, scope = 'all') {
     const messages = typeof body[key] === 'string'
       ? [{ role: 'user', content: body[key] }] : messageItems(body[key]);
     const counts = new Map();
-    for (const message of messages) {
+    for (const rawMessage of messages) {
+      const message = normalizeDiffItem(rawMessage);
       if (message.type === 'additional_tools') continue;
       const role = String(message.role || message.type || 'user').toLowerCase();
       if (scope === 'system' && !['system', 'developer'].includes(role)) continue;
@@ -2478,12 +2479,19 @@ function requestDiffMarkdown(body, scope = 'all') {
       if (body[key] !== undefined) blocks.push({ title: `Tools (${key})`, text: diffJson(body[key]) });
     }
     for (const item of messageItems(body.input)) {
-      if (item.type === 'additional_tools') blocks.push({ title: 'Tools (additional_tools)', text: diffJson(item) });
+      if (item.type === 'additional_tools') blocks.push({ title: 'Tools (additional_tools)', text: diffJson(normalizeDiffItem(item)) });
     }
   }
   return blocks.map(({ title, text }) => ({ title, text: normalizeDiffText(text) }))
     .filter(block => block.text)
     .map(block => `# ${block.title}\n\n${block.text}`).join('\n\n');
+}
+
+function normalizeDiffItem(item) {
+  const prefix = { message: 'msg_', additional_tools: 'at_' }[item.type];
+  return prefix && typeof item.id === 'string' && item.id.startsWith(prefix)
+    ? { ...item, id: '$PHISTORY_ITEM_ID' }
+    : item;
 }
 
 function diffContentText(value) {

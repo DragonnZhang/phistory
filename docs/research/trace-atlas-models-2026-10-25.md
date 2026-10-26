@@ -52,7 +52,13 @@ All thirty additions have nonempty prompt/trace/meta files, valid primary reques
 - Qwen Code 0.26.1, Qoder 1.1.78 and OpenClaw 2026.10.7 retain their complete tool declarations and normalized system text. OpenCode remains at 1.19.4.
 - Hermes v0.22.5 retains all twenty complete tool definitions. Its captured Python toolchain diagnostic no longer reports a pip/interpreter mismatch: the earlier runner reported python3 3.14.9 with pip bound to Python 3.12; the new runner reports python3 3.14.4 with pip bound to Python 3.14. Version values remain normalized, but the meaningful diagnostic is preserved. This changes system control from 2,655 to 2,652 tokens (+1 / −4). It is a collection-environment diagnostic change, not a changed model rule.
 
-The static extraction step explicitly skipped recent Claude Code wrapper packages that lack extractable source, including 2.1.310. This existing limitation remains: latest wire prompts/tools and the scoped binary model catalog are verified, but a complete latest static prompt library is not claimed. No normalization rules or earlier capture artifacts were changed in this refresh.
+The static extraction step explicitly skipped recent Claude Code wrapper packages that lack extractable source, including 2.1.310. This existing limitation remains: latest wire prompts/tools and the scoped binary model catalog are verified, but a complete latest static prompt library is not claimed. Atlas text normalization and earlier capture artifacts remain unchanged.
+
+## Comparison page repair and acceptance
+
+Browser acceptance exposed a display-only discrepancy: the Codex 0.163.0 to 0.164.0 System comparison included randomly generated Responses message IDs even though the content was unchanged. Comparisons now normalize `msg_` IDs on `message` envelopes and `at_` IDs on `additional_tools` envelopes. The rule is structural: identifiers inside instructions or tool schemas, function-call IDs and call references remain visible. It preserves whether an ID field exists and never mutates raw requests or the Trace view.
+
+Regression tests compare the actual two releases across all ten Codex lanes and all three content scopes. A synthetic case also checks genuine instruction/schema changes, call references, unexpected ID formats and raw-data preservation. All 176 tests, formatting, lint, distribution builds and both renders passed. Browser checks confirmed Codex's unchanged comparison, Claude's Monitor addition, Kimi's authorization condition, Hermes's retained diagnostic difference, the historical review-skill deletion and runtime-noise regression, same-CLI Fable 5 to 5.1 comparison, first-capture Trace link, and System/Messages/All boundaries.
 
 ## Published capture source
 
@@ -60,4 +66,4 @@ Capture source: [`c61a5303330c5bd8972002983050c37da1d4f3b6`](https://github.com/
 
 `a47bf865b762f7c52bc67ab6b4730b772f6ca73e7807bcfa8657e5dbcfe3de33`
 
-Since the October 23 atlas source, only `captures/index.json` changes among previously tracked capture files; all other capture changes are additions. Raw traces and host metadata remain unchanged. The subsequent evidence commit retains this manifest; qwen methodology pins that final source commit and its Pages deployment.
+Since the October 23 atlas source, only `captures/index.json` changes among previously tracked capture files; all other capture changes are additions. Raw traces and host metadata remain unchanged. The subsequent evidence and comparison-page commits retain this manifest; qwen methodology pins the final source commit and its Pages deployment.
