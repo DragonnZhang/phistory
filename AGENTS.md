@@ -125,6 +125,8 @@ When adding another CLI, prefer extending the existing abstractions:
 
 ## Validation
 
+The project's `.python-version` pins Python 3.13 for local development and all uv-based CI jobs. The pinned claude-tap dependency's `backports-zstd` does not support Python 3.14. Agent installations still follow their own release's Python pin. Editable GitHub releases with `uv.lock` are synced from that lock, including upstream dependency overrides, into their isolated install environment without development groups; releases without a lock retain the editable pip path.
+
 Before committing code changes, run:
 
 ```bash

@@ -298,10 +298,26 @@ def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -
         if python_version.is_file():
             venv_args.extend(["--python", python_version.read_text(encoding="utf-8").strip()])
         run(venv_args, timeout=120)
-        run(
-            ["uv", "pip", "install", "--python", str(bin_dir / "python"), "--editable", str(source_root)],
-            timeout=INSTALL_TIMEOUT_SECONDS,
-        )
+        if (source_root / "uv.lock").is_file():
+            run(
+                [
+                    "uv",
+                    "sync",
+                    "--project",
+                    str(source_root),
+                    "--frozen",
+                    "--no-default-groups",
+                    "--python",
+                    str(bin_dir / "python"),
+                ],
+                env={"UV_PROJECT_ENVIRONMENT": str(install_dir.resolve())},
+                timeout=INSTALL_TIMEOUT_SECONDS,
+            )
+        else:
+            run(
+                ["uv", "pip", "install", "--python", str(bin_dir / "python"), "--editable", str(source_root)],
+                timeout=INSTALL_TIMEOUT_SECONDS,
+            )
     else:
         run(["uv", "venv", str(install_dir)], timeout=120)
         run(
