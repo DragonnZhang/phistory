@@ -43,12 +43,12 @@ process.env.MAVIS_BUILD_ENV = "prod";
 process.env.MAVIS_ELECTRON_LOCALE = "en";
 process.env.MAVIS_SQLITE3_MODULE_PATH = nativeRoot;
 process.env.MAVIS_BUILTIN_AGENTS_DIR = join(
-  appRoot,
-  "node_modules/@mavis/local-runtime/assets/agents",
+  dirname(dirname(modernRuntimePath)),
+  "assets/agents",
 );
 process.env.MAVIS_BUILTIN_SKILLS_DIR = join(
-  appRoot,
-  "node_modules/@mavis/local-runtime/assets/skills",
+  dirname(dirname(modernRuntimePath)),
+  "assets/skills",
 );
 process.env.LOG_LEVEL ??= "fatal";
 

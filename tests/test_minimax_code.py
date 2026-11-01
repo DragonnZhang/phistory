@@ -1,6 +1,9 @@
 import base64
 import hashlib
 import json
+import os
+import shutil
+import subprocess
 import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -86,7 +89,8 @@ def test_package_dispatches_minimax_code_source(monkeypatch, tmp_path):
     assert install_agent(agent, version.version, tmp_path) == tmp_path / "bin"
 
 
-def test_install_builds_headless_launcher_and_linux_native_module(monkeypatch, tmp_path):
+@pytest.mark.parametrize("runtime_package", ["local-runtime", "local-runtime-v2"])
+def test_install_builds_headless_launcher_and_linux_native_module(monkeypatch, tmp_path, runtime_package):
     version = "3.0.56"
     monkeypatch.setattr(
         minimax_code,
@@ -114,7 +118,7 @@ def test_install_builds_headless_launcher_and_linux_native_module(monkeypatch, t
             files = {
                 "package.json": {"version": version},
                 "node_modules/@mavis/config/dist/index.js": {},
-                "node_modules/@mavis/local-runtime/dist/index.js": {},
+                f"node_modules/@mavis/{runtime_package}/dist/index.js": {},
                 "node_modules/better-sqlite3/package.json": {"version": "12.11.1"},
             }
             for name, content in files.items():
@@ -144,6 +148,65 @@ def test_install_builds_headless_launcher_and_linux_native_module(monkeypatch, t
     assert 'npm: "@ai-sdk/anthropic"' in executable.read_text(encoding="utf-8")
     assert not (install_dir / f"MiniMax-Code-{version}-arm64-mac.zip").exists()
     assert not (install_dir / "resources").exists()
+
+
+@pytest.mark.parametrize("runtime_package", ["local-runtime", "local-runtime-v2"])
+def test_launcher_uses_selected_runtime_assets_and_api_without_network(tmp_path, runtime_package):
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node.js is required for the fake runtime test")
+    app = tmp_path / "app"
+    runtime = app / "node_modules" / "@mavis" / runtime_package
+    config = app / "node_modules" / "@mavis" / "config"
+    for package in (runtime, config):
+        (package / "dist").mkdir(parents=True)
+        (package / "package.json").write_text('{"type":"module"}')
+    (app / "package.json").write_text('{"version":"test"}')
+    for kind in ("agents", "skills"):
+        path = runtime / "assets" / kind
+        path.mkdir(parents=True)
+        (path / "fixture").write_text(kind)
+    (config / "dist/index.js").write_text("export const getConfig = () => ({});")
+    (runtime / "dist/index.js").write_text(
+        """import { readFile } from 'node:fs/promises';
+export async function createLocalRuntimeHost() {
+  for (const [key, kind] of [['MAVIS_BUILTIN_AGENTS_DIR', 'agents'], ['MAVIS_BUILTIN_SKILLS_DIR', 'skills']]) {
+    if (await readFile(`${process.env[key]}/fixture`, 'utf8') !== kind) throw new Error('Wrong runtime assets');
+  }
+  const prefix = import.meta.url.includes('/local-runtime-v2/') ? '/minimax-desktop/api/v1' : '/mavis/api';
+  return { ready: Promise.resolve(), apiHost: {
+    async ensureBuiltinAgents() {},
+    async handleRequest(request) {
+      const path = new URL(request.url).pathname;
+      if (path === `${prefix}/agent/mavis/session/root`) return Response.json({session: {id: 'fixture'}});
+      if (path === `${prefix}/session/fixture/message` && request.method === 'POST') {
+        if ((await request.json()).content !== 'Reply with one short sentence.') throw new Error('Wrong message');
+        console.log('fake-runtime-captured');
+        return Response.json({ok: true});
+      }
+      throw new Error(`Unexpected local request: ${path}`);
+    }
+  }};
+}
+"""
+    )
+    executable = tmp_path / "bin/minimax-code"
+    executable.parent.mkdir()
+    shutil.copyfile(Path(minimax_code.__file__).with_name("launchers") / "minimax_code.mjs", executable)
+    result = subprocess.run(
+        [node, str(executable)],
+        cwd=tmp_path,
+        env={
+            **os.environ,
+            "MINIMAX_CODE_BASE_URL": "http://127.0.0.1:9",
+            "MINIMAX_CODE_DATA_DIR": str(tmp_path / "data"),
+        },
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=True,
+    )
+    assert "fake-runtime-captured" in result.stdout
 
 
 def test_install_supports_bundled_legacy_daemon(monkeypatch, tmp_path):

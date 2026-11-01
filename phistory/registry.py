@@ -327,6 +327,22 @@ CODEX = AgentSpec(
             min_version="0.159.1",
         ),
         _variant(
+            "gpt-6.1-terra",
+            "GPT-6.1 Terra",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-6.1-terra",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-6.1-terra"},
+            min_version="0.165.0",
+        ),
+        _variant(
             "gpt-6-astra",
             "GPT-6 Astra",
             (

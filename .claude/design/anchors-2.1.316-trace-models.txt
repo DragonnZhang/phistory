@@ -1,0 +1,49 @@
+Claude Code 2.1.316 — scoped trace model baseline
+Verified: 2026-11-01 UTC (October 31 refresh)
+
+[binary-meta]
+package: @anthropic-ai/claude-code-darwin-arm64@2.1.316
+tarball: https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.316.tgz
+npm_integrity_verified: true
+sha256: 64c327e92b2c5e0f78c0a980c5a518121e1f0d140ca771ca5dd4488d1a2dcb3f
+binary_size_bytes: 310114176
+binary_size_delta_vs_2.1.310: 36045952
+build_time: 2026-10-30T23:28:13Z
+build_time_delta_vs_2.1.310: 7 days, 5:44:41
+git_sha: cd7ceb459c6864567b16a11f60101b24421475c1
+prior: anchors-2.1.310-trace-models.txt
+prior_anchor_sha256: 8445390a20ccc611f6a38a8e8ceb84fb956a401d9f6563594b56d5ec08db1329
+runtime_probe: none; static inspection only
+
+[diff-summary vs 2.1.310]
+Scope: model identity and capture coverage only.
+Catalog IDs: 22 in both releases, +0 added / -0 removed.
+This compares catalog membership, not all catalog fields.
+Slash commands, hooks, telemetry, feature gates, billing fields and app state were not enumerated in this investigation.
+
+[confirmed-catalog-anchors]
+claude-3-5-haiku: object_byte_offset=251436889
+claude-haiku-4-5: object_byte_offset=251437452
+claude-haiku-5-5: object_byte_offset=251438145
+claude-3-5-sonnet: object_byte_offset=251439143
+claude-3-7-sonnet: object_byte_offset=251439686
+claude-sonnet-4-0: object_byte_offset=251440228
+claude-sonnet-4-5: object_byte_offset=251440963
+claude-sonnet-4-6: object_byte_offset=251441768
+claude-sonnet-5: object_byte_offset=251442547
+claude-sonnet-5-5: object_byte_offset=251443468
+claude-opus-4-0: object_byte_offset=251444565
+claude-opus-4-1: object_byte_offset=251445173
+claude-opus-4-5: object_byte_offset=251445795
+claude-opus-4-6: object_byte_offset=251446498
+claude-opus-4-7: object_byte_offset=251447242
+claude-opus-4-8: object_byte_offset=251448114
+claude-opus-5: object_byte_offset=251449101
+claude-opus-5-5: object_byte_offset=251450134
+claude-fable-5: object_byte_offset=251451220
+claude-fable-5-1: object_byte_offset=251452233
+claude-mythos-5: object_byte_offset=251453343
+claude-mythos-5-1: object_byte_offset=251453852
+
+[limits]
+The current general models and both Mythos IDs already have atlas lanes. No Claude model-support or display boundary is introduced. Provider availability is separate from capture-only compatibility. Actual requests are captured in Linux CI through claude-tap; the older source dictionary was not needed.

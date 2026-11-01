@@ -45,6 +45,7 @@ def test_get_agent_has_capture_contract():
     assert [(variant.id, variant.dimensions) for variant in agent.variants] == [
         ("non-official", {"model": "qwen3-coder-plus", "model_family": "non-official"}),
         ("gpt-6.1-sol", {"model": "gpt-6.1-sol"}),
+        ("gpt-6.1-terra", {"model": "gpt-6.1-terra"}),
         ("gpt-6-astra", {"model": "gpt-6-astra"}),
         ("gpt-6-sol", {"model": "gpt-6-sol"}),
         ("gpt-6-luna", {"model": "gpt-6-luna"}),
@@ -56,6 +57,7 @@ def test_get_agent_has_capture_contract():
     assert {variant.id: variant.min_version for variant in agent.variants} == {
         "non-official": None,
         "gpt-6.1-sol": "0.159.1",
+        "gpt-6.1-terra": "0.165.0",
         "gpt-6-astra": "0.153.1",
         "gpt-6-sol": "0.157.0-alpha.10",
         "gpt-6-luna": "0.157.0-alpha.10",
@@ -71,6 +73,9 @@ def test_get_agent_has_capture_contract():
     assert not astra.supports_version("0.153.0")
     assert astra.supports_version("0.153.1")
     assert astra.supports_version("0.153.4")
+    terra = agent.variant("gpt-6.1-terra")
+    assert not terra.supports_version("0.164.0")
+    assert terra.supports_version("0.165.0")
 
 
 def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
