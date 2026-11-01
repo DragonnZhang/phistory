@@ -39,4 +39,21 @@ Inspection of the exact official `3.1.9` updater archive, verified against its m
 
 The installer now accepts either supported runtime layout. The launcher derives asset paths from the selected runtime package. Version-specific exceptions and changes to upstream package code are unnecessary. Fake-package installation regressions cover v1-only and v2-only layouts; fake-runtime Node tests load real fixture assets and exercise both local request routes without network access. Existing legacy-daemon support remains covered.
 
-Linux capture, fresh-cache smoke, artifact checks and deployment results are recorded after the prerequisite code is published.
+## Linux capture and artifact acceptance
+
+The prerequisite change passed 179 tests, Ruff formatting/lint, package build and both render commands before publication. All four Linux workflows completed successfully; each ran the same 179 tests and fresh-cache smoke for its selected scope.
+
+| Workflow | Captures used for this refresh | Independent smoke |
+| --- | --- | --- |
+| [Latest capture](https://github.com/DragonnZhang/phistory/actions/runs/41278727331) | GPT-6.1 Terra `0.166.0`, Qwen Code `0.26.5`, MiniMax Code `3.1.9`; existing latest records reused | Full latest scope, including 30 atlas records and MiniMax `3.1.9` |
+| [Claude Code backfill](https://github.com/DragonnZhang/phistory/actions/runs/41279158125) | All fourteen variants at `2.1.315` | All fourteen variants |
+| [Terra backfill](https://github.com/DragonnZhang/phistory/actions/runs/41279381714) | `gpt-6.1-terra` at `0.165.0` | The same variant and version |
+| [MiniMax repair verification](https://github.com/DragonnZhang/phistory/actions/runs/41279560121) | Previously failing `3.1.8` | Fresh-cache `3.1.8` |
+
+The atlas consumes 105 additional records relative to its previous source: 70 Claude Code, 22 Codex, three Kimi Code, four Qwen Code, three Qoder, two OpenClaw and one OpenCode. Of these, 88 were already committed by the scheduled Linux runs and 17 were added by this refresh. Hermes remains at its verified latest release. All 106 release/variant targets, including the unchanged Hermes latest record, are present; there are no missing intervening stable releases in this refresh's scope.
+
+Every additional record was checked for a valid main request, matching model and variant, successful client exit, nonempty artifacts, exact Git blob contents and a real Linux GitHub Actions run. All pre-existing raw capture files remain unchanged. The 45 atlas smoke records have identical complete tool definitions and normalized system/developer text to their committed counterparts. This includes tools inside Codex `input` items of type `additional_tools`; namespace containers and their expanded tools retain their distinct counts and existing mismatch markers.
+
+Both MiniMax versions now install and emit valid prompt-bearing requests. Their smoke tool definitions match exactly. The only remaining normalized-text difference is the fresh runtime's random `mvs_...` session directory in the labeled primary working directory; comparing that specific session component confirms identical instructions. This is a reviewed collection-environment difference, and the original paths and traces are preserved. MiniMax remains outside the atlas's eight-agent scope.
+
+The accepted captures are committed at [`888f220adaf6`](https://github.com/DragonnZhang/phistory/commit/888f220adaf6f343e14d630bcbe5179091318e07), with manifest SHA-256 `a3c446d7541ccf41222e9cb627b372234c6c43c2332f1fd209879ec63d0f112c`. Rendering those artifacts again produces no differences. The atlas is generated from the clean published source containing this record; its methodology records that final source commit and deployment verification.
