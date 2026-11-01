@@ -1,0 +1,51 @@
+{
+  "agent_id": "minimax-code",
+  "agent": "MiniMax Code",
+  "package": "MiniMax Code desktop app",
+  "version": "3.1.8",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "minimax-code-capture",
+    "tool_count": 23
+  },
+  "published_at": "2026-10-31T07:15:25Z",
+  "tarball_url": "https://file.cdn.minimax.io/public/minimax-agent-prod/release/MiniMax%20Code-3.1.8-arm64-mac.zip",
+  "binary_version": "MiniMax Code 3.1.8",
+  "captured_at": "2026-11-01T06:08:50.078420+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Backfill prompt history",
+    "run_id": "41279560121",
+    "run_attempt": "1",
+    "job": "backfill",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/41279560121"
+  },
+  "tap_client": "minimax-code",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 17.195,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "minimax-code",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--"
+  ]
+}
