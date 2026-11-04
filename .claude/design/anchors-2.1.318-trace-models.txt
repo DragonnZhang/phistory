@@ -1,0 +1,54 @@
+Claude Code 2.1.318 — scoped trace model baseline
+Verified: 2026-11-04 UTC
+
+[binary-meta]
+package: @anthropic-ai/claude-code-darwin-arm64@2.1.318
+tarball: https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.318.tgz
+npm_integrity_verified: true
+sha256: 677a2ea7bf576cedd20e191d973914ed8a41796f53a63b1923381ddc4d5b5e7d
+binary_size_bytes: 319598464
+binary_size_delta_vs_2.1.316: 9484288
+build_time: 2026-11-03T18:52:53Z
+build_time_delta_vs_2.1.316: 3 days, 19:24:40
+git_sha: ca1fa9dea62c1027756786c841c548788644560d
+prior: anchors-2.1.316-trace-models.txt
+prior_anchor_sha256: 70e47d7d5294c305cd87ccf74f7998ea976b3b0e5dae5ec36e63828d13f6bd2b
+runtime_probe: none; static inspection only
+
+[diff-summary vs 2.1.316]
+Scope: model identity and capture coverage only.
+Catalog IDs: 22 in both releases, +0 added / -0 removed.
+This compares catalog membership, not every catalog field.
+Slash commands, hooks, telemetry, feature gates, billing fields and app state were not enumerated in this investigation.
+
+[confirmed-catalog-anchors]
+claude-3-5-haiku: object_byte_offset=259057060
+claude-haiku-4-5: object_byte_offset=259057623
+claude-haiku-5-5: object_byte_offset=259058316
+claude-3-5-sonnet: object_byte_offset=259059314
+claude-3-7-sonnet: object_byte_offset=259059857
+claude-sonnet-4-0: object_byte_offset=259060399
+claude-sonnet-4-5: object_byte_offset=259061134
+claude-sonnet-4-6: object_byte_offset=259061939
+claude-sonnet-5: object_byte_offset=259062718
+claude-sonnet-5-5: object_byte_offset=259063639
+claude-opus-4-0: object_byte_offset=259064736
+claude-opus-4-1: object_byte_offset=259065344
+claude-opus-4-5: object_byte_offset=259065966
+claude-opus-4-6: object_byte_offset=259066669
+claude-opus-4-7: object_byte_offset=259067413
+claude-opus-4-8: object_byte_offset=259068285
+claude-opus-5: object_byte_offset=259069272
+claude-opus-5-5: object_byte_offset=259070305
+claude-fable-5: object_byte_offset=259071391
+claude-fable-5-1: object_byte_offset=259072404
+claude-mythos-5: object_byte_offset=259073514
+claude-mythos-5-1: object_byte_offset=259074023
+
+[candidate-triage]
+claude-code-side-query-2026-09-29 is a protocol beta identifier, not a model catalog entry.
+New security, sandbox and ultrareview strings are feature/path anchors, not model IDs.
+claude-haiku-3-55 is an unbounded byte-match artifact: the length-prefixed string has 16 bytes (claude-haiku-3-5); the final 5 is the next string record length.
+
+[limits]
+The current general models and both Mythos IDs already have atlas lanes. No Claude model-support or display boundary is introduced. Provider availability is separate from capture-only compatibility. Actual requests are captured in Linux CI through claude-tap; the older source dictionary was not needed.
