@@ -6,6 +6,7 @@ import platform
 import re
 from dataclasses import replace
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from urllib.parse import urlsplit
 
 from phistory import capture, packages
@@ -14,6 +15,7 @@ from phistory.drivers.common import tap_command
 from phistory.drivers.oneshot import _run
 from phistory.models import CaptureTarget
 from phistory.registry import get_agent
+from phistory.subprocesses import run
 
 INSTALL_AGENT = packages.install_agent
 
@@ -76,38 +78,44 @@ def main() -> int:
     if platform.system() != "Linux" or os.environ.get("GITHUB_ACTIONS") != "true":
         raise SystemExit("Qoder diagnostics run only in Linux GitHub Actions")
     capture.run_capture = diagnose
-    packages.install_agent = diagnostic_install
     agent = get_agent("qoder")
     variant = replace(
         agent.default_variant,
-        run_args=(*agent.default_variant.run_args[:-1], "--debug", agent.default_variant.run_args[-1]),
-    )
-    agent = replace(
-        agent,
-        default_variant=variant,
-        extra_env={**agent.extra_env, "QODER_E2E_MODEL_DIAGNOSTICS": "1"},
+        run_args=(
+            *agent.default_variant.run_args[:-1],
+            "--output-format", "json",
+            agent.default_variant.run_args[-1],
+        ),
     )
     directory = Path(os.environ["RUNNER_TEMP"]) / "qoder-diagnostics"
-    results = []
     version = packages.versions_between(agent, "1.1.82", "1.1.82")[0]
-    for case in ("baseline", "pat-only"):
-        selected_agent = (
-            agent
-            if case == "baseline"
-            else replace(agent, inherited_env={"QODER_PERSONAL_ACCESS_TOKEN": "QODER_PERSONAL_ACCESS_TOKEN"})
+    target = CaptureTarget(agent, version, variant, directory / "captures")
+    inherited = capture._resolve_inherited_env(agent.id, agent.inherited_env)
+    with capture._without_parent_env(agent.inherited_env.values()):
+        bin_dir = packages.install_agent(
+            agent, version.version,
+            directory / "cache" / "installs" / agent.id / version.version,
         )
-        print(f"Diagnosing qoder {version.version} {case} with non-published model-selection observation", flush=True)
-        result = capture.capture_target(
-            CaptureTarget(selected_agent, version, variant, directory / case / "captures"),
-            cache_dir=directory / "cache",
-            force=True,
-            keep_tap=True,
-            extract_static=False,
+    with TemporaryDirectory(prefix="qoder-model-list-") as temporary:
+        home = Path(temporary) / "home"
+        work = Path(temporary) / "work"
+        work.mkdir()
+        env = capture._capture_env(target, bin_dir, home, inherited_env=inherited)
+        listing = run(
+            [str(bin_dir / packages.agent_executable(agent)), "--list-models"],
+            cwd=work, env=env, timeout=120, check=False, inherit_env=False,
         )
-        results.append({"version": version.version, "case": case, "status": result.status})
-        print(json.dumps(results[-1]), flush=True)
-    print(json.dumps({"results": results}), flush=True)
-    return int(any(result["status"] != "captured" for result in results))
+        print(json.dumps({"probe": "native --list-models (no prompt)", "exit_code": listing.returncode}), flush=True)
+        for stream, output in (("stdout", listing.stdout), ("stderr", listing.stderr)):
+            for line in output.splitlines()[-120:]:
+                print(stream + ": " + safe_text(line), flush=True)
+    print(f"Diagnosing qoder {version.version} with unmodified CLI and JSON output", flush=True)
+    result = capture.capture_target(
+        target, cache_dir=directory / "cache", force=True,
+        keep_tap=True, extract_static=False,
+    )
+    print(json.dumps({"version": version.version, "status": result.status}), flush=True)
+    return int(result.status != "captured")
 
 
 if __name__ == "__main__":
