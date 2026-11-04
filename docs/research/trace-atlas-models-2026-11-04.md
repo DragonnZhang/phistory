@@ -1,6 +1,6 @@
 # November 4 trace refresh
 
-Official release discovery at `2026-11-04T04:50:29.995718+00:00` checked the eight agents already present in the atlas. The target set contains 47 release/variant pairs, including unchanged latest lanes. Existing scheduled Linux captures are reused. This refresh accepts 46 targets and adds 33 records to the atlas; Qoder `1.1.82` remains an unresolved capture target, so this is a partial release.
+Official release discovery at `2026-11-04T04:50:29.995718+00:00` checked the eight agents already present in the atlas. The target set contains 47 release/variant pairs, including unchanged latest lanes. Existing scheduled Linux captures are reused. With the Qoder startup repair and its successful targeted capture and smoke, this refresh accepts all 47 targets and adds 34 records to the atlas.
 
 | Agent | Previous atlas | Latest stable | Intervening stable releases |
 | --- | --- | --- | --- |
@@ -13,7 +13,7 @@ Official release discovery at `2026-11-04T04:50:29.995718+00:00` checked the eig
 | hermes | `v0.22.5` | `v0.22.7` | `v0.22.6`, `v0.22.7` |
 | opencode | `1.19.5` | `1.19.5` | — |
 
-The sources are the registered official npm packages and the [Hermes release feed](https://github.com/NousResearch/hermes-agent/releases). Every published stable release between the previous atlas endpoint and the latest target is checked. The only missing target is Qoder `1.1.82`; its last valid atlas point remains `1.1.81`. Qoder static-only archives and the retired Codex `gpt-5.6` fallback alias remain excluded. The atlas scope is unchanged.
+The sources are the registered official npm packages and the [Hermes release feed](https://github.com/NousResearch/hermes-agent/releases). Every published stable release between the previous atlas endpoint and the latest target is checked. Qoder `1.1.82` completes the target set after the capture-only startup repair described below. Qoder static-only archives and the retired Codex `gpt-5.6` fallback alias remain excluded. The atlas scope is unchanged.
 
 ## Model verification
 
@@ -29,7 +29,7 @@ Each of those 33 records passed individual manifest, nonempty main request, requ
 
 Ruff formatting/lint, all 179 unit tests, package build, main latest capture and smoke succeeded. The manual workflow is nevertheless **failed**, because its separate Qoder step failed. The Claude Code static extraction step completed with the existing explicit binary-only-package skips for the latest ten releases; no static prompt archive was substituted for runtime evidence. All fourteen Claude request lanes have valid runtime captures.
 
-## Unresolved Qoder target
+## Qoder startup failure and capture repair
 
 The initial `1.1.82` attempt reported TLS handshake timeouts for `api1.qoder.sh`, `center.qoder.sh` and `api2.qoder.sh`, plus a failed HTTPDNS connection to `203.107.1.1:443`, before producing any valid prompt request. The [targeted backfill retry](https://github.com/DragonnZhang/phistory/actions/runs/41777281458) used only `qoder/default`, exact range `1.1.82` to `1.1.82`, `force=false`, and `smoke=true`. It also completed with failure: the CLI exited with code 1, `api_calls: 0`, and `no valid records found in trace file`. It committed no new capture; its independent smoke was correctly skipped after the archive failed.
 
@@ -51,10 +51,16 @@ The model request has always been intercepted by claude-tap and answered with a 
 
 The preload requires both `PHISTORY_QODER_CAPTURE_BOOTSTRAP=model-availability` and claude-tap's capture-only marker. It records the mock before applying it; successful capture metadata includes the mode in `capture_environment` and the applied condition in `compatibility_patches`. Model generation still terminates at the local capture proxy. This models an available Auto entry for prompt extraction and does not establish account access to the real model. BYOK configuration and a real provider API key are unnecessary for this capture path.
 
-Local fake-CLI tests verify the capture-only gate, exact preservation of other catalog fields, no absent-model fallback, ordinary JSON parser behavior, quoted preload paths, and explicit provenance in saved metadata. The exact Linux capture and independent fresh-cache smoke must pass before accepting `1.1.82`; until then it remains outside the atlas and `1.1.81` remains the last valid point.
+Local fake-CLI tests verify the capture-only gate, exact preservation of other catalog fields, no absent-model fallback, ordinary JSON parser behavior, quoted preload paths, and explicit provenance in saved metadata. All 196 tests pass locally and in the [successful Linux backfill](https://github.com/DragonnZhang/phistory/actions/runs/41788747150), triggered from repair commit [`a9d2a1fb`](https://github.com/DragonnZhang/phistory/commit/a9d2a1fb23a34a13e4e6ea0082cd445aba8f96fd). Ruff, package build, and both renderers pass; the built wheel includes the preload. The workflow also passes the credential archive check.
+
+That run uses `qoder/default`, exact range `1.1.81` to `1.1.82`, `force=false`, and `smoke=true`. It reuses the existing `1.1.81` archive, captures `1.1.82`, and independently captures both releases with fresh caches. All three new executions exit successfully. Commit [`52238447`](https://github.com/DragonnZhang/phistory/commit/52238447b009cbdfb8a62e907c5ffc3d9867e322) adds only the new `1.1.82` capture and generated files; existing raw archives remain unchanged.
+
+The `1.1.82` archive and smoke contain the same 31 complete tool definitions and normalized system/developer text. The `1.1.81` control preserves its archived `model_config.key=qfmodel` selection, while `1.1.82` selects `auto`; neither invocation adds a model override. The control's system text is unchanged, and its only tool-definition difference is WebSearch's explicitly labeled current month, October to November 2026. This is capture-time context, not a CLI rule change, and the original values remain in the raw traces.
+
+Both archived releases and both smoke traces contain the intercepted generation request answered with `chatcmpl_claude_tap_capture`, zero token usage, and the dummy content `captured`. Their plaintext prompt records retain `capture_source=qoder-pre-encode`. The new archive and smoke metadata record the startup mock and actual Linux run `41788747150`. This accepts the previously missing Qoder target and brings the complete refresh to 34 new records. The earlier failed runs retain their failure status; this targeted successful run validates the repair.
 
 ## Committed source and downstream generation
 
-The accepted capture commit is `8103bbae16ced5dad6aced1aac0eb15cb96bfcbb`, manifest SHA-256 `52c0378c426b2efab9264271081f84651bab951b3d1a1608d508849c88b7c7d4`. Its [Pages deployment](https://github.com/DragonnZhang/phistory/actions/runs/41777510770) succeeded. The qwen methodology records the final clean published source including this verification note and the separately verified online manifest.
+The final accepted capture commit is `52238447b009cbdfb8a62e907c5ffc3d9867e322`, manifest SHA-256 `ccbcc5cf7658c871c451929055ca7a97c2f2dd1ca60c4badf734aafd8eca169a`. Its [Pages deployment](https://github.com/DragonnZhang/phistory/actions/runs/41788942918) succeeded. The qwen methodology records the final clean published source including this verification note and the separately verified online manifest.
 
 The external generator's usual directory is absent. Generation reuses the existing clean clone at `/private/tmp/agent-trace-nov1/generator`, commit `1b69f743e84d43f713253fb1aa39a435deb40272`, with `scripts/build_history.py` SHA-256 `92a2f7ee2e6c534b894ca3a95cafe247400f1f83dcf59ef87b73496ef42b462f`. No generator-repository changes are made. Model identities, historical display boundaries and same-CLI comparisons are retained; the qwen release records its historical reconstruction, curve, build and browser checks separately.
