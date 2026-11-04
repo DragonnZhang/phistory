@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-04T04:55:06.307591Z",
+  "updated_at": "2026-11-04T06:56:26.627736Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -78,11 +78,11 @@
     {
       "agent_id": "qoder",
       "agent": "Qoder CLI",
-      "latest_version": "1.1.81",
-      "latest_published_at": "2026-10-29T12:13:06.225Z",
-      "latest_captured_at": "2026-10-30T08:57:53.764655+00:00",
-      "versions": 191,
-      "snapshots": 191
+      "latest_version": "1.1.82",
+      "latest_published_at": "2026-11-03T13:57:35.460Z",
+      "latest_captured_at": "2026-11-04T06:56:26.627736+00:00",
+      "versions": 192,
+      "snapshots": 192
     },
     {
       "agent_id": "mimo",
@@ -98778,6 +98778,23 @@
       "prompt": "captures/qwen-code/0.0.1/variants/default/prompt.md",
       "trace": "captures/qwen-code/0.0.1/variants/default/trace.jsonl",
       "meta": "captures/qwen-code/0.0.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qoder",
+      "agent": "Qoder CLI",
+      "version": "1.1.82",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "tool_count": 31
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-03T13:57:35.460Z",
+      "captured_at": "2026-11-04T06:56:26.627736+00:00",
+      "prompt": "captures/qoder/1.1.82/variants/default/prompt.md",
+      "trace": "captures/qoder/1.1.82/variants/default/trace.jsonl",
+      "meta": "captures/qoder/1.1.82/variants/default/meta.json"
     },
     {
       "agent_id": "qoder",
