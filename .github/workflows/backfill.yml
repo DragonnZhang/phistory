@@ -127,7 +127,7 @@ jobs:
               unset QODER_PERSONAL_ACCESS_TOKEN
               uv run phistory archive-static "${args[@]}"
             else
-              uv run phistory backfill "${args[@]}" --summary-title "$AGENT history backfill"
+              uv run python .github/scripts/diagnose-qoder.py
             fi
             status=$?
             set -e
