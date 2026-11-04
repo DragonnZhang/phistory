@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from phistory import capture
+from phistory.cli import _print_results
 from phistory.models import CaptureTarget, CommandResult, VersionInfo
 from phistory.registry import get_agent
 
@@ -41,7 +42,9 @@ def _write_prompt(argv):
 
 
 @pytest.mark.parametrize("model", ["auto", SECRET])
-def test_model_unavailable_fails_once_with_safe_reason_and_preserves_archive(target, tmp_path, monkeypatch, model):
+def test_model_unavailable_fails_once_with_safe_reason_and_preserves_archive(
+    target, tmp_path, monkeypatch, model, capsys
+):
     target.variant_dir.mkdir(parents=True)
     previous = {path: f"original {path.name}\n" for path in (target.prompt_path, target.trace_path, target.meta_path)}
     for path, text in previous.items():
@@ -58,7 +61,9 @@ def test_model_unavailable_fails_once_with_safe_reason_and_preserves_archive(tar
             + f"INFO authorization: Bearer {SECRET}\nINFO access_token: exchanged-credential\n",
             encoding="utf-8",
         )
-        return CommandResult(tuple(argv), 1, "", "Error: no valid records found in trace file")
+        return CommandResult(
+            tuple(argv), 1, "verbose capture setup\n" * 1000, "Error: no valid records found in trace file"
+        )
 
     monkeypatch.setattr("phistory.drivers.oneshot.run", fake_run)
     result = capture.capture_target(target, cache_dir=tmp_path / "cache", force=True)
@@ -67,7 +72,8 @@ def test_model_unavailable_fails_once_with_safe_reason_and_preserves_archive(tar
     assert len(attempts) == 1
     assert "--no-session-persistence" in attempts[0]
     assert "--model" not in attempts[0]
-    assert 'main model "' + ("<redacted>" if model == SECRET else model) + '" is unavailable.' in result.error
+    safe_model = "<redacted>" if model == SECRET else model
+    assert result.error == f'Qoder CLI model selection failed: main model "{safe_model}" is unavailable.'
     assert SECRET not in result.error
     assert "exchanged-credential" not in result.error
     assert "debug padding" not in result.error
@@ -75,6 +81,13 @@ def test_model_unavailable_fails_once_with_safe_reason_and_preserves_archive(tar
     assert all(not home.exists() for home in homes)
     assert all(path.read_text(encoding="utf-8") == text for path, text in previous.items())
     assert not list(target.root.glob(".phistory-capture-*"))
+
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    assert _print_results([result], "Qoder capture") == 1
+    assert f"capture failed::{result.error}" in capsys.readouterr().err
+    assert result.error in summary.read_text(encoding="utf-8")
 
 
 def test_transient_failure_retries_without_reusing_a_stale_native_error(target, tmp_path, monkeypatch):

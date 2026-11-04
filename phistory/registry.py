@@ -665,7 +665,9 @@ QODER = AgentSpec(
         "DISABLE_AUTOUPDATER": "1",
         "DISABLE_UPDATES": "1",
         "CI": "1",
+        "PHISTORY_QODER_CAPTURE_BOOTSTRAP": "model-availability",
     },
+    recorded_env=("PHISTORY_QODER_CAPTURE_BOOTSTRAP",),
     tap_mode="forward",
     default_variant=_default(
         (
