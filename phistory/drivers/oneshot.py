@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sys
 import time
@@ -8,12 +9,17 @@ from pathlib import Path
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
 from phistory.drivers.common import effective_tap_mode, tap_command
+from phistory.models import CommandResult
 from phistory.packages import agent_executable
 from phistory.storage import remove_if_exists
 from phistory.subprocesses import run
 
 CAPTURE_TIMEOUT_SECONDS = 1800
 QODER_CAPTURE_TIMEOUT_SECONDS = 180
+_QODER_MODEL_FAILURE_PREFIX = "Qoder CLI model selection failed: "
+_QODER_MODEL_FAILURE = re.compile(
+    r'\bERROR[^\r\n]*\[ModelNotFoundError\]: ([a-z_]+ model "[^"\r\n]{1,160}" is unavailable\.)'
+)
 LEGACY_CLAUDE_FORWARD_PATCH = (
     "Claude Code does not accept inline --settings JSON; stripped claude-tap's injected forward-proxy settings "
     "argument and relied on the equivalent proxy and CA environment."
@@ -112,8 +118,9 @@ os.execv(executable, [executable, *args])
 """
 
 
-def _run(argv: list[str], context: CaptureRunContext, env: dict[str, str]):
-    return run(
+def _run(argv: list[str], context: CaptureRunContext, env: dict[str, str]) -> CommandResult:
+    log_offsets = _qoder_log_offsets(context)
+    result = run(
         argv,
         cwd=context.work_dir,
         env=env,
@@ -121,6 +128,47 @@ def _run(argv: list[str], context: CaptureRunContext, env: dict[str, str]):
         check=False,
         inherit_env=False,
     )
+    if not context.prompt_path.exists() and (failure := _qoder_model_failure(context, log_offsets)):
+        return CommandResult(
+            tuple(argv),
+            result.returncode,
+            result.stdout,
+            f"{result.stderr.rstrip()}\n{_QODER_MODEL_FAILURE_PREFIX}{failure}\n",
+        )
+    return result
+
+
+def _qoder_log_offsets(context: CaptureRunContext) -> dict[Path, int]:
+    if context.target.agent.id != "qoder" or not (home := context.env.get("HOME")):
+        return {}
+    offsets = {}
+    for path in (Path(home) / ".qoder/logs/runs").glob("*/qodercli.log"):
+        try:
+            if path.is_file() and not path.is_symlink():
+                offsets[path] = path.stat().st_size
+        except OSError:
+            continue
+    return offsets
+
+
+def _qoder_model_failure(context: CaptureRunContext, offsets: dict[Path, int]) -> str | None:
+    for path, size in reversed(list(_qoder_log_offsets(context).items())):
+        start = offsets.get(path, 0)
+        if size == start:
+            continue
+        if size < start:
+            start = 0
+        try:
+            with path.open("rb") as log:
+                log.seek(max(start, size - 65536))
+                tail = log.read(65536).decode("utf-8", errors="replace")
+        except OSError:
+            continue
+        failures = _QODER_MODEL_FAILURE.findall(tail)
+        if failures:
+            # Only the known model error is exposed; native logs may contain account credentials.
+            return failures[-1]
+    return None
 
 
 def _capture_timeout(context: CaptureRunContext) -> int:
@@ -169,7 +217,7 @@ def _needs_qwen_output_format_retry(context: CaptureRunContext, result) -> bool:
 
 
 def _needs_prompt_retry(result, prompt_path) -> bool:
-    if prompt_path.exists():
+    if prompt_path.exists() or _QODER_MODEL_FAILURE_PREFIX in result.stderr:
         return False
     output = f"{result.stderr}\n{result.stdout}"
     return any(
