@@ -1,0 +1,60 @@
+{
+  "agent_id": "qoder",
+  "agent": "Qoder CLI",
+  "package": "@qoder-ai/qodercli",
+  "version": "1.1.83",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "tool_count": 31
+  },
+  "published_at": "2026-11-04T12:00:19.204Z",
+  "tarball_url": null,
+  "binary_version": "1.1.83",
+  "captured_at": "2026-11-07T13:40:52.412496+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Backfill prompt history",
+    "run_id": "42377988862",
+    "run_attempt": "1",
+    "job": "backfill",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/42377988862"
+  },
+  "tap_client": "qoder",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 16.837,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "qoder",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--print",
+    "--no-session-persistence",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "PHISTORY_QODER_CAPTURE_BOOTSTRAP": "model-availability"
+  },
+  "compatibility_patches": [
+    "Capture-only mock: enabled the existing Qoder Auto catalog entry for request construction. The server's other model metadata and the CLI's default model selection were preserved; this does not verify real model access."
+  ]
+}
