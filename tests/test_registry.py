@@ -91,6 +91,11 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
     assert [(variant.id, variant.label, variant.dimensions) for variant in agent.variants] == [
         ("non-official", "Non-official API", {"api": "non-official"}),
         (
+            "official-fable-5-2",
+            "Official API · Fable 5.2",
+            {"api": "official", "model": "claude-fable-5-2"},
+        ),
+        (
             "official-fable-5-1",
             "Official API · Fable 5.1",
             {"api": "official", "model": "claude-fable-5-1"},
@@ -141,6 +146,11 @@ def test_claude_code_uses_full_prompt_surface_with_isolated_sessions():
             {"api": "official", "model": "claude-haiku-4-5"},
         ),
         (
+            "official-mythos-5-2",
+            "Official API · Mythos 5.2 (verification required)",
+            {"api": "official", "model": "claude-mythos-5-2", "availability": "verification-required"},
+        ),
+        (
             "official-mythos-5-1",
             "Official API · Mythos 5.1 (verification required)",
             {"api": "official", "model": "claude-mythos-5-1", "availability": "verification-required"},
@@ -169,6 +179,7 @@ def test_claude_code_default_uses_forward_capture_without_pinning_a_model(tmp_pa
     assert non_official.variant.run_args == default.variant.run_args
 
     for variant_id, model in (
+        ("official-fable-5-2", "claude-fable-5-2"),
         ("official-fable-5-1", "claude-fable-5-1"),
         ("official-fable", "claude-fable-5"),
         ("official-opus-5-5", "claude-opus-5-5[1m]"),
@@ -180,6 +191,7 @@ def test_claude_code_default_uses_forward_capture_without_pinning_a_model(tmp_pa
         ("official-haiku-5-5", "claude-haiku-5-5"),
         ("official-haiku", "claude-haiku-4-5"),
         ("official-mythos-5-1", "claude-mythos-5-1"),
+        ("official-mythos-5-2", "claude-mythos-5-2"),
         ("official-mythos", "claude-mythos-5"),
     ):
         target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.variant(variant_id), tmp_path / "captures")
@@ -200,6 +212,16 @@ def test_mythos_capture_starts_at_verified_release_without_claiming_account_acce
         assert variant.supports_version("2.1.296")
         assert variant.supports_version("2.1.297")
         assert variant.dimensions["availability"] == "verification-required"
+
+
+def test_claude_52_models_start_at_the_verified_catalog_release():
+    agent = get_agent("claude-code")
+    for variant_id in ("official-fable-5-2", "official-mythos-5-2"):
+        variant = agent.variant(variant_id)
+        assert not variant.supports_version("2.1.319")
+        assert variant.supports_version("2.1.321")
+        assert variant.supports_version("2.1.325")
+    assert agent.variant("official-mythos-5-2").dimensions["availability"] == "verification-required"
 
 
 def test_claude_code_uses_deterministic_capture_environment(tmp_path: Path):

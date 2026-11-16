@@ -85,6 +85,22 @@ CLAUDE_CODE = AgentSpec(
             dimensions={"api": "non-official"},
         ),
         _variant(
+            "official-fable-5-2",
+            "Official API · Fable 5.2",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-fable-5-2",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-fable-5-2"},
+            tap_mode="forward",
+            min_version="2.1.321",
+        ),
+        _variant(
             "official-fable-5-1",
             "Official API · Fable 5.1",
             (
@@ -235,6 +251,22 @@ CLAUDE_CODE = AgentSpec(
             ),
             dimensions={"api": "official", "model": "claude-haiku-4-5"},
             tap_mode="forward",
+        ),
+        _variant(
+            "official-mythos-5-2",
+            "Official API · Mythos 5.2 (verification required)",
+            (
+                "--no-yolo",
+                "--",
+                "--no-session-persistence",
+                "--model",
+                "claude-mythos-5-2",
+                "-p",
+                "Reply with one short sentence.",
+            ),
+            dimensions={"api": "official", "model": "claude-mythos-5-2", "availability": "verification-required"},
+            tap_mode="forward",
+            min_version="2.1.321",
         ),
         _variant(
             "official-mythos-5-1",

@@ -75,6 +75,8 @@ Static prompt extraction is separate from request capture. It parses installed p
 
 Current agents are defined in `phistory/registry.py`:
 
+Claude Code also tracks `official-fable-5-2` and `official-mythos-5-2` from `2.1.321`, with the latter retaining `availability=verification-required`. The exact-binary evidence and scoped support boundaries are in `docs/research/trace-atlas-models-2026-11-16.md`.
+
 - `claude-code`: npm package `@anthropic-ai/claude-code`, tap client `claude`; `default` uses transparent
   forward capture with no explicit model or `ANTHROPIC_BASE_URL` override, while `non-official` preserves
   the historical custom-base-URL compatibility path. Both avoid calling the real provider. `official` pins
@@ -171,8 +173,8 @@ Historical Claude Code custom-API `default` snapshots were moved to `non-officia
 the directory and variant classification, retaining the original variant/requested fields in `reclassified_from`;
 raw traces, capture times, and available host provenance stay intact. Early archives did not yet annotate the API path.
 
-The dedicated Claude Code history recapture workflow accepts `default`, `non-official`, `official-fable-5-1`, `official-fable`,
-`official-opus-5-5`, `official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official-sonnet-5-5`, `official`, `official-haiku-5-5`, `official-haiku`, `official-mythos-5-1`, or `official-mythos` and defaults to `default`.
+The dedicated Claude Code history recapture workflow accepts `default`, `non-official`, `official-fable-5-2`, `official-fable-5-1`, `official-fable`,
+`official-opus-5-5`, `official-opus`, `official-opus-4-8`, `official-opus-4-7`, `official-sonnet-5-5`, `official`, `official-haiku-5-5`, `official-haiku`, `official-mythos-5-2`, `official-mythos-5-1`, or `official-mythos` and defaults to `default`.
 Select `official-fable-5-1` for Fable 5.1, `official-fable` for Fable 5, `official-opus-5-5` for Opus 5.5 1M, `official-opus` for Opus 5 1M, `official-opus-4-8` for Opus 4.8 1M,
 `official-opus-4-7` for Opus 4.7 1M, `official-sonnet-5-5` for Sonnet 5.5, `official` for Sonnet 5, `official-haiku-5-5` for Haiku 5.5, `official-haiku` for Haiku 4.5, `official-mythos-5-1` for Mythos 5.1, or `official-mythos` for the same-CLI Mythos 5 comparison.
 Each official lane is a compatibility snapshot of every historical CLI explicitly targeting its configured model, not a

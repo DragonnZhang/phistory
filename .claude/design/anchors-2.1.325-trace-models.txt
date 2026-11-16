@@ -1,0 +1,42 @@
+Claude Code 2.1.325 — scoped trace model baseline
+Verified: 2026-11-16 UTC
+
+[binary-meta]
+package: @anthropic-ai/claude-code-darwin-arm64@2.1.325
+tarball: https://registry.npmjs.org/@anthropic-ai/claude-code-darwin-arm64/-/claude-code-darwin-arm64-2.1.325.tgz
+npm_integrity_verified: true
+sha256: 84590fefe6338be9087f5814b61f9a54c5f21524163a4c127cb5a808e31009f2
+binary_size_bytes: 347406976
+binary_size_delta_vs_2.1.319: 25411776
+build_time: 2026-11-13T18:52:23Z
+git_sha: a360e7297ecfcddeae9ec99fb3c93153ed86aca4
+prior: anchors-2.1.319-trace-models.txt
+prior_anchor_sha256: c0a6397e8df7c2166c71f000a717b5ec0247275435a45eea5bf19d1d1cec8ee4
+runtime_probe: none; static inspection only
+
+[diff-summary vs 2.1.319]
+Scope: model catalog identity and capture coverage only.
+Catalog IDs: 24, +2 added / -0 removed. All 22 prior catalog IDs remain.
+Slash commands: outside this scoped investigation.
+Hooks: outside this scoped investigation.
+Telemetry: outside this scoped investigation.
+Environment and codename gates: outside this scoped investigation.
+Billing fields: outside this scoped investigation.
+App state and protocol events: outside this scoped investigation.
+
+[confirmed-catalog-new]
+claude-fable-5-2: object_byte_offset=278526775; family=fable; first_party=claude-fable-5-2; context.window=1000000; max_output_tokens.default=128000; default_effort=medium; capability=fable_5_2_prompt_bundle
+claude-mythos-5-2: object_byte_offset=278529146; family=mythos; first_party=claude-mythos-5-2; context.window=1000000; max_output_tokens.default=128000; default_effort=medium; capability=fable_5_2_prompt_bundle
+
+[confirmed-boundary]
+First stable release after 2.1.319 is 2.1.321; no 2.1.320 was published on npm.
+Exact 2.1.321 Darwin ARM64 tarball SHA512 verified against live npm metadata.
+2.1.321 binary_sha256: abc9feeeca8091d51b623291e044cf0528c2f6b74e0c1d6ef671d52c73f7cd3c
+2.1.321 binary_size_bytes: 323686048
+2.1.321 claude-fable-5-2 catalog_object_byte_offset: 261031509
+2.1.321 claude-mythos-5-2 catalog_object_byte_offset: 261033861
+Official Claude Code model-config documentation explicitly requires 2.1.321 for Fable 5.2.
+Mythos 5.2 starts at the earliest verified catalog release 2.1.321; provider eligibility remains verification-required.
+
+[limits]
+Catalog membership and model-specific capabilities are confirmed binary facts. Emitted request tools and prompts require Linux CI captures. No local prompt-bearing probe or old-source semantics mapping was used.
