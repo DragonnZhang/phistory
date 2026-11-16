@@ -31,4 +31,20 @@ The exact npm Darwin ARM64 binary passed SHA-512 tarball verification and contai
 
 ## Linux capture and publication
 
-Capture and smoke runs will use the existing Linux GitHub Actions workflows and claude-tap dummy responses. The latest failed Pages run `43701167130` uploaded its artifact successfully but failed to retrieve its metadata during deployment; a fresh deployment is required before downstream publication. Capture outcomes and fixed-source provenance are recorded below after acceptance.
+All five manually dispatched Linux workflows completed successfully. Each passed Ruff and 197 tests; the latest workflow also passed the package build. All model responses came from claude-tap, without live inference.
+
+| Run | Scope | Accepted independent smoke records in atlas scope |
+| --- | --- | ---: |
+| [43796327654](https://github.com/DragonnZhang/phistory/actions/runs/43796327654) | Latest captures and fresh-cache smoke | 32 |
+| [43796672502](https://github.com/DragonnZhang/phistory/actions/runs/43796672502) | Claude Code, all sixteen variants, `2.1.321`–`2.1.325` | 80 |
+| [43797117127](https://github.com/DragonnZhang/phistory/actions/runs/43797117127) | Codex, all eleven variants, `0.168.0` | 11 |
+| [43797476060](https://github.com/DragonnZhang/phistory/actions/runs/43797476060) | Kimi Code `2.6.0` | 1 |
+| [43797667975](https://github.com/DragonnZhang/phistory/actions/runs/43797667975) | Qoder `1.1.86`–`1.1.89`, including credential scan | 4 |
+
+All 128 smoke records match their committed archives in complete tool definitions and normalized system/developer text. Codex now also carries tool declarations in `input[].type=additional_tools`; comparison includes those declarations and excludes only the enclosing message's transient ID. The documented namespace-root versus expanded-tool count difference remains visible. Qoder retains its capture-only Auto-availability bootstrap and does not verify provider entitlement.
+
+The refresh accepts 139 additional atlas records: 89 reused scheduled captures, two latest new-model captures, 36 Claude historical captures, eleven Codex captures and one Kimi capture. All are `captured`, have nonempty prompt/trace/meta artifacts and a valid main request, and retain actual Linux GitHub Actions provenance. Requested model IDs agree with the emitted model after the existing `[1m]` normalization. All 14,700 prompt/trace/meta blobs belonging to the previous 4,900 atlas captures are unchanged.
+
+No stable release in the selected latest line remains missing after the previous atlas endpoints. The complete atlas now has 1,237 default versions and 5,039 records across 33 lanes. Both new model lanes cover all five stable releases from `2.1.321` through `2.1.325`; their predecessor captures at `2.1.321` support same-CLI comparisons. Existing display boundaries remain intact. OpenCode is unchanged; OpenClaw's extended-stable branch and graph-external agents are not new target lines.
+
+The committed manifest has SHA-256 `66266528f03723b329b9e14073e47a47260c329ae24a9f64170d613ea1995544`. The downstream atlas pins the published source commit containing this research record and this same manifest. The November 15 Pages failure `43701167130` occurred after upload, while fetching artifact metadata. A fresh [deployment](https://github.com/DragonnZhang/phistory/actions/runs/43796322486) succeeded, and the [complete capture source deployment](https://github.com/DragonnZhang/phistory/actions/runs/43797824652) also succeeded. The unchanged binary-only Claude static-extraction skips do not affect request captures.
