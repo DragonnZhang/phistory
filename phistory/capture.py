@@ -260,6 +260,9 @@ def capture_target(
                 "requested": target.variant.dimensions,
                 "observed": _trace_observation(working_target.trace_path, snapshot=selected_snapshot),
                 **(
+                    {"host_runtime": json.loads(env["PHISTORY_NATIVE_HOST"])} if env.get("PHISTORY_NATIVE_HOST") else {}
+                ),
+                **(
                     {
                         "capture_selection": {
                             "minimum_tools": target.agent.capture_min_tools,
@@ -438,6 +441,12 @@ def _capture_env(
     if target.agent.id == "qoder":
         # Older releases interpret this as a paid workflow mode instead of ordinary headless CLI execution.
         env.pop("GITHUB_ACTIONS")
+    if target.agent.native_host and prepare_runtime:
+        from phistory.runtime_setup import prepare_npm_host
+
+        host_bin, provenance = prepare_npm_host(bin_dir.parent / "native-host", *target.agent.native_host, env)
+        env["PATH"] = f"{bin_dir}{os.pathsep}{host_bin}{os.pathsep}{os.environ.get('PATH', '')}"
+        env["PHISTORY_NATIVE_HOST"] = json.dumps(provenance)
     if profile == "hermes":
         env["HERMES_HOME"] = str(home / ".hermes")
     if profile == "dsh":

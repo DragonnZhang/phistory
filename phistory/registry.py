@@ -6,6 +6,8 @@ from phistory.task_entries import (
     AGENT_ZERO_PREFETCH,
     AGENT_ZERO_TASK,
     AGENTICSEEK_TASK,
+    AGENTLAS_SETUP,
+    AGENTLAS_TASK,
     AUTOREF_TASK,
     BAMBOOAI_TASK,
     BROWSER_USE_PREFETCH,
@@ -18,7 +20,11 @@ from phistory.task_entries import (
     DEVOPSGPT_TASK,
     GPT_RESEARCHER_TASK,
     INTENTKIT_DATABASE_SETUP,
+    LONG_HORIZON_SETUP,
+    LONG_HORIZON_TASK,
     MINIAGI_TASK,
+    OPENAGENTS_SETUP,
+    OPENAGENTS_TASK,
     OUROBOROS_SERVER,
     QUORUM_TASK,
     SELF_OPERATING_TASK,
@@ -1758,6 +1764,119 @@ INKOS = AgentSpec(
 )
 
 
+AGENTLAS_OS = AgentSpec(
+    id="agentlas-os",
+    display_name="Agentlas OS",
+    package="agentlas-ai/Agentlas-OS",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="readonly",
+    tap_client="python",
+    fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
+    extra_env={"HEPHAESTUS_AUTO_UPDATE": "0", "HEPHAESTUS_UPDATE_CHECK": "0"},
+    recorded_env=("HEPHAESTUS_AUTO_UPDATE", "HEPHAESTUS_UPDATE_CHECK"),
+    native_host=("@anthropic-ai/claude-code", "claude"),
+    bootstrap_args=("-c", AGENTLAS_SETUP),
+    required_user_text=(
+        "# Agentlas Core & Unified Command System",
+        "Single entry point for every Agentlas subsystem and capability.",
+    ),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("claude-core-session",),
+    default_variant=_default(
+        capture_unavailable="The outer runtime needs a real host and verified standalone generation; use its native Claude core host-session lane."
+    ),
+    variants=(
+        _variant(
+            "claude-core-session",
+            "Native verified standalone core / real Claude host",
+            ("--no-yolo", "--", "-c", AGENTLAS_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "native remote-release installer and host session claude",
+                "host": "actual Claude Code / host_runtime provenance",
+                "activation": "/agentlas-os-core:agentlas native skill body required",
+                "features": "native optional defaults; memory retained",
+                "scope": "standalone core activation; no desktop/One workflow claim",
+            },
+        ),
+    ),
+)
+
+LONG_HORIZON = AgentSpec(
+    id="longhorizon-harness",
+    display_name="LongHorizon-Harness",
+    package="lh-harness",
+    source="pypi",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    native_host=("@openai/codex", "codex"),
+    bootstrap_args=("-c", LONG_HORIZON_SETUP),
+    required_user_text=("You are the LongHorizon-Harness manager agent.", "Current management round: 1"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("codex-manager-initial",),
+    default_variant=_default(
+        capture_unavailable="A task needs a configured real host CLI; use the native Codex API-key manager lane."
+    ),
+    variants=(
+        _variant(
+            "codex-manager-initial",
+            "Native initial manager / real Codex host",
+            ("--no-yolo", "--", "-c", LONG_HORIZON_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "native lh-harness run",
+                "host": "actual separately installed Codex / host_runtime provenance",
+                "model": "native harness Codex gpt-5.6-sol",
+                "max_rounds": "1",
+                "scope": "first native outer-manager request; later executor/auditor not claimed",
+            },
+        ),
+    ),
+)
+
+OPENAGENTS = AgentSpec(
+    id="openagents",
+    display_name="OpenAgents",
+    package="OpenAgentsInc/openagents",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="readonly",
+    source_build_commands=(("bash", "coax/build.sh"),),
+    tap_client="python",
+    fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key"},
+    bootstrap_args=("-c", OPENAGENTS_SETUP),
+    required_system_text=("You are Microcoder, a small coding agent.",),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=180,
+    latest_variant_ids=("plain-microcoder",),
+    default_variant=_default(
+        capture_unavailable="The full application and memory/compiler-aware Mammoth modes differ; use the native plain Microcoder task API."
+    ),
+    variants=(
+        _variant(
+            "plain-microcoder",
+            "Native Coax plain Microcoder task API",
+            ("--no-yolo", "--", "-c", OPENAGENTS_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "native mc_init / mc_run_start / mc_run_poll",
+                "provider": "native OpenRouter route",
+                "model": "native google/gemini-4-hydrogen",
+                "environment": "actual Linux architecture and owned cwd",
+                "schema": "native next_action structured response",
+                "scope": "plain Microcoder; not full Mammoth application",
+            },
+        ),
+    ),
+)
+
 MARKUS = AgentSpec(
     id="markus",
     display_name="Markus",
@@ -2805,6 +2924,9 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        AGENTLAS_OS,
+        LONG_HORIZON,
+        OPENAGENTS,
         MARKUS,
         WECHAT_MAC_RPA,
         AUTOREF,

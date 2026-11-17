@@ -48,6 +48,10 @@ on:
           - cuga-agent
           - autoresearchclaw
           - inkos
+          - autoref
+          - critic-training
+          - empryo
+          - atomic-agent
           - hive
           - intentkit
           - mirix
@@ -115,6 +119,21 @@ env:
 jobs:
   backfill:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: ${{ inputs.agent == 'intentkit' && 'postgres:18.1-trixie' || '' }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: phistory-local-db
+          POSTGRES_DB: phistory
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: ${{ inputs.agent == 'intentkit' && 'redis:8.4-bookworm' || '' }}
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v6
         with:

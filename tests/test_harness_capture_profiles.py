@@ -14,6 +14,9 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
+        "agentlas-os",
+        "longhorizon-harness",
+        "openagents",
         "markus",
         "wechat-mac-rpa",
         "agent-s",
@@ -54,6 +57,22 @@ def test_goose_uses_platform_developer_and_provider_default_model(tmp_path):
     assert "--model" not in item.variant.run_args
     assert env["GOOSE_PATH_ROOT"] == str(home / ".goose")
     assert env["GOOSE_CA_CERT_PATH"] == str(home / ".local/share/claude-tap/ca.pem")
+
+
+def test_outer_host_provenance_is_recorded_without_replacing_the_application_task(tmp_path, monkeypatch):
+    from phistory.drivers.common import tap_command
+
+    host_bin = tmp_path / "host/bin"
+    provenance = {"package": "@openai/codex", "version": "test", "executable": "codex", "version_output": "codex test"}
+    monkeypatch.setattr("phistory.runtime_setup.prepare_npm_host", lambda *args: (host_bin, provenance))
+    agent = get_agent("longhorizon-harness")
+    item = CaptureTarget(agent, VersionInfo("test"), agent.variant("codex-manager-initial"), tmp_path)
+    env = _capture_env(item, tmp_path / "bin", tmp_path / "home")
+    assert str(host_bin) in env["PATH"].split(":")
+    assert json.loads(env["PHISTORY_NATIVE_HOST"]) == provenance
+    command = tap_command(item, tmp_path / "prompt", tmp_path / "tap", env)
+    assert command[command.index("run") + 1] == "python"
+    assert "lh-harness" in command[-1] and "codex-manager" not in command[-1]
 
 
 def test_crush_global_config_is_directory_with_explicit_model_selection(tmp_path):

@@ -185,8 +185,19 @@ def test_capture_rejects_helper_only_and_archives_selected_primary_request(tmp_p
     bin_dir.mkdir()
     monkeypatch.setattr("phistory.packages.install_agent", lambda *_: bin_dir)
     monkeypatch.setattr("phistory.capture._binary_version", lambda *args, **kwargs: "test")
+    host_provenance = {"package": "@example/native-host", "version": "1.2.3", "version_output": "native-host 1.2.3"}
+    monkeypatch.setattr(
+        "phistory.runtime_setup.prepare_npm_host", lambda *args: (tmp_path / "host/bin", host_provenance)
+    )
     agent = AgentSpec(
-        "fake", "Fake", "fake", "fake", {}, required_system_text=("Native actor manual",), capture_min_tools=1
+        "fake",
+        "Fake",
+        "fake",
+        "fake",
+        {},
+        required_system_text=("Native actor manual",),
+        capture_min_tools=1,
+        native_host=("@example/native-host", "native-host"),
     )
     helper = {
         "request": {
@@ -225,6 +236,7 @@ def test_capture_rejects_helper_only_and_archives_selected_primary_request(tmp_p
     meta = json.loads(target.meta_path.read_text())
     assert meta["observed"] == {"model": "actor", "tool_count": 1}
     assert meta["capture_selection"]["minimum_tools"] == 1
+    assert meta["host_runtime"] == host_provenance
     assert "native_tool" in target.prompt_path.read_text()
     assert [json.loads(line) for line in target.trace_path.read_text().splitlines()] == records
 

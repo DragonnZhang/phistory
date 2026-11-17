@@ -6,7 +6,19 @@ import shutil
 import urllib.request
 from pathlib import Path
 
+from phistory import packages
+from phistory.models import AgentSpec
 from phistory.subprocesses import run
+
+
+def prepare_npm_host(cache: Path, package: str, executable: str, env: dict[str, str]) -> tuple[Path, dict[str, str]]:
+    host = AgentSpec("native-host", executable, package, executable, {})
+    version = packages.latest_version(host).version
+    bin_dir = packages.install_agent(host, version, cache / executable / version)
+    version_output = run(
+        [str(bin_dir / executable), "--version"], env=env, inherit_env=False, timeout=30
+    ).stdout.strip()
+    return bin_dir, {"package": package, "version": version, "executable": executable, "version_output": version_output}
 
 
 def prepare_octomind_tap(state: Path, repository: str) -> str:

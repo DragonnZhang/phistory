@@ -320,3 +320,77 @@ os.execvp("xvfb-run", ["xvfb-run", "-a", "-s", "-screen 0 1280x800x24", "agent_s
     "--ground_api_key", "phistory-fake-api-key", "--ground_model", "ui-tars-1.5-7b",
     "--grounding_width", "1280", "--grounding_height", "800"])
 """
+
+LONG_HORIZON_SETUP = """
+import subprocess
+subprocess.run(["git", "init", "--quiet"], check=True)
+subprocess.run(["lh-harness", "init"], check=True)
+"""
+
+AGENTLAS_SETUP = """
+import os
+import subprocess
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+subprocess.run(["bash", str(source / "scripts/install-all-runtimes.sh")], cwd=source, check=True)
+launcher = Path(os.environ["PHISTORY_HOME"]) / ".agentlas/os-bin/agentlas-os"
+subprocess.run([str(launcher), "features", "status"], check=True)
+"""
+
+AGENTLAS_TASK = """
+import os
+import subprocess
+from pathlib import Path
+print("Native host provenance:", os.environ["PHISTORY_NATIVE_HOST"], flush=True)
+launcher = str(Path(os.environ["PHISTORY_HOME"]) / ".agentlas/os-bin/agentlas-os")
+subprocess.run([launcher, "host", "status", "claude"], check=False)
+os.execv(launcher, [launcher, "host", "session", "claude", "--", "-p", "/agentlas-os-core:agentlas Reply with one short sentence.", "--output-format", "json"])
+"""
+
+LONG_HORIZON_TASK = """
+import os
+print("Native host provenance:", os.environ["PHISTORY_NATIVE_HOST"], flush=True)
+os.execvp("lh-harness", ["lh-harness", "run", "--task", "Reply with one short sentence.", "--agent", "codex", "--max-rounds", "1", "--api-key", os.environ["OPENAI_API_KEY"], "--base-url", "https://api.openai.com/v1"])
+"""
+
+OPENAGENTS_SETUP = r'''
+import json
+import os
+import platform
+import subprocess
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+state = Path(os.environ["PHISTORY_HOME"]) / "openagents"
+state.mkdir(parents=True, exist_ok=True)
+facts = json.dumps({"os": platform.system(), "architecture": platform.machine(), "app": "OpenAgents", "cwd": str(Path.cwd())})
+includes = [source / path for path in ("coax/lib/microcoder/run.coax", "coax/lib/gateway/plan.coax", "coax/lib/gateway/openrouter.coax")]
+code = '#import "Basic";\n' + ''.join('#load ' + json.dumps(str(path)) + ';\n' for path in includes)
+code += r"""
+main :: () {
+  run: [1] McRun; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;
+  p: [1] GwPlan; pb: [1] GwPlanBuffers; bench: [1] GwBench;
+  gw_plan_init(p[..], pb[..]);
+  h := GW_OPENROUTER_HEADERS;
+  added := gw_plan_add(p[..], gw_openrouter(false), GW_OPENROUTER_FLASH, h[..]);
+  mc_init(run[0].l[..], sb[..], lb[..], FACTS, TASK, "{\"route\":\"other\",\"difficulty\":\"trivial\",\"effort\":\"low\",\"local_work\":0.1}", 0.1);
+  mc_run_start(run[..], p[..], bench[..], WORKDIR, "low");
+  ev: [16] McRunEvent;
+  while !run[0].ended { n := mc_run_poll(run[..], ev[..]); }
+  print("native Microcoder ended\n");
+}
+"""
+code = code.replace('FACTS', json.dumps(facts)).replace('TASK', json.dumps("Reply with one short sentence.")).replace('WORKDIR', json.dumps(str(Path.cwd())))
+driver = state / "task.coax"
+driver.write_text(code)
+c_file = state / "task.c"
+with c_file.open("w") as output:
+    subprocess.run([str(source / "coax/bin/coax"), "c", str(driver)], cwd=source, stdout=output, check=True)
+subprocess.run(["cc", "-std=c11", "-O1", "-g", "-o", str(state / "task"), str(c_file), str(source / "coax/platform/process-native.c"), "-lm"], check=True)
+'''
+
+OPENAGENTS_TASK = """
+import os
+from pathlib import Path
+os.environ["CURL_CA_BUNDLE"] = os.environ["SSL_CERT_FILE"]
+os.execv(str(Path(os.environ["PHISTORY_HOME"]) / "openagents/task"), ["openagents-native-microcoder-task"])
+"""

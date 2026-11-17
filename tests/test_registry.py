@@ -10,6 +10,16 @@ def test_display_order_starts_with_dsh_in_third_position():
     assert AGENT_ORDER[:3] == ("claude-code", "codex", "dsh")
 
 
+def test_daily_capture_list_matches_verified_latest_policy_and_preserves_required_services():
+    workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/capture.yml").read_text()
+    agents = next(
+        line.split(": ", 1)[1].split(",") for line in workflow.splitlines() if line.startswith("  CAPTURE_AGENTS:")
+    )
+    assert agents == [agent for agent in parse_agent_ids(None) if agent != "qoder"]
+    assert "image: postgres:18.1-trixie" in workflow and "image: redis:8.4-bookworm" in workflow
+    assert "phistory render-sources" in workflow
+
+
 def test_parse_default_agents():
     assert parse_agent_ids(None) == [
         "claude-code",

@@ -145,6 +145,7 @@ class AgentSpec:
     capture_min_tools: int = 0
     required_system_text: tuple[str, ...] = ()
     required_user_text: tuple[str, ...] = ()
+    native_host: tuple[str, str] | None = None
 
     def __post_init__(self) -> None:
         if self.capture_min_tools < 0 or any(

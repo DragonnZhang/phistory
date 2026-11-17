@@ -1,5 +1,34 @@
-from phistory.models import CommandResult
-from phistory.runtime_setup import prepare_octomind_tap
+from phistory.models import CommandResult, VersionInfo
+from phistory.runtime_setup import prepare_npm_host, prepare_octomind_tap
+
+
+def test_native_host_is_installed_at_resolved_release_and_records_real_version_without_parent_environment(
+    tmp_path, monkeypatch
+):
+    calls = []
+    monkeypatch.setattr("phistory.runtime_setup.packages.latest_version", lambda _: VersionInfo("1.2.3"))
+
+    def install(agent, version, directory):
+        calls.append((agent.package, version, directory))
+        return directory / "bin"
+
+    def run(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return CommandResult(tuple(argv), 0, "native-host 1.2.3\n", "")
+
+    monkeypatch.setattr("phistory.runtime_setup.packages.install_agent", install)
+    monkeypatch.setattr("phistory.runtime_setup.run", run)
+    env = {"HOME": str(tmp_path / "home"), "PATH": "/usr/bin"}
+    binary, provenance = prepare_npm_host(tmp_path / "cache", "@example/native-host", "native-host", env)
+    assert calls[0] == ("@example/native-host", "1.2.3", tmp_path / "cache/native-host/1.2.3")
+    assert calls[1][0] == [str(binary / "native-host"), "--version"]
+    assert calls[1][1]["env"] == env and calls[1][1]["inherit_env"] is False
+    assert provenance == {
+        "package": "@example/native-host",
+        "version": "1.2.3",
+        "executable": "native-host",
+        "version_output": "native-host 1.2.3",
+    }
 
 
 def test_default_tap_bootstrap_records_real_revision_without_running_agent(tmp_path, monkeypatch):
