@@ -14,9 +14,17 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
-        "openagent",
-        "cheetahclaws",
-        "openmanus",
+        "gpt-researcher",
+        "openevolve",
+        "deer-flow",
+        "omni-rewriter",
+        "agenticseek",
+        "nanomuse",
+        "pr-agent",
+        "deepanalyze",
+        "localgpt",
+        "bambooai",
+        "cowagent",
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates

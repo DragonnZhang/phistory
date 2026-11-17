@@ -1,7 +1,19 @@
 from __future__ import annotations
 
 from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, HomeProfile, TapMode
-from phistory.task_entries import BROWSER_USE_PREFETCH, CTXAGENT_PREFETCH, CTXAGENT_TASK, MINIAGI_TASK, QUORUM_TASK
+from phistory.task_entries import (
+    AGENTICSEEK_TASK,
+    BAMBOOAI_TASK,
+    BROWSER_USE_PREFETCH,
+    COWAGENT_TASK,
+    CTXAGENT_PREFETCH,
+    CTXAGENT_TASK,
+    DEEPANALYZE_TASK,
+    DEERFLOW_TASK,
+    GPT_RESEARCHER_TASK,
+    MINIAGI_TASK,
+    QUORUM_TASK,
+)
 
 
 def _default(
@@ -1461,7 +1473,6 @@ OPENAGENT = AgentSpec(
     recorded_env=("clientId", "casdoorApplication", "casdoorEndpoint", "issuer"),
     home_profile="openagent",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     latest_variant_ids=("store-api",),
     default_variant=_default(
@@ -1513,7 +1524,6 @@ CHEETAHCLAWS = AgentSpec(
     recorded_env=("OLLAMA_BASE_URL",),
     home_profile="cheetah-ollama",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "-p", "Reply with one short sentence.", "--output-format", "json", "--max-turns", "1"),
@@ -1605,7 +1615,6 @@ OPENMANUS = AgentSpec(
     bootstrap_args=("-c", BROWSER_USE_PREFETCH),
     bootstrap_env={"UV_OFFLINE": "0"},
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     default_variant=_default(
         ("--no-yolo", "--", "$PHISTORY_SOURCE_ROOT/main.py", "--prompt", "Reply with one short sentence."),
@@ -1738,6 +1747,357 @@ INKOS = AgentSpec(
 )
 
 
+GPT_RESEARCHER = AgentSpec(
+    id="gpt-researcher",
+    display_name="GPT Researcher",
+    package="assafelovic/gpt-researcher",
+    source="github-source",
+    source_state="isolated",
+    source_extra_requirements=("deep_agents/requirements.txt",),
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("deep-agent",),
+    default_variant=_default(
+        capture_unavailable="The framework requires a task surface; the named Deep Agent uses the surveyed official graph."
+    ),
+    variants=(
+        _variant(
+            "deep-agent",
+            "Native Deep Agent task API",
+            ("--no-yolo", "--", "-c", GPT_RESEARCHER_TASK),
+            dimensions={
+                "entry": "deep_agents.main.run_research_task",
+                "model": "native strategic model",
+                "source": "web",
+            },
+        ),
+    ),
+)
+
+OPENEVOLVE = AgentSpec(
+    id="openevolve",
+    display_name="OpenEvolve",
+    package="algorithmicsuperintelligence/openevolve",
+    source="github-source",
+    source_state="readonly",
+    python_runtime="3.12",
+    tap_client="openevolve-run",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("function-minimization",),
+    default_variant=_default(
+        capture_unavailable="Evolution requires a program, evaluator and model config; use the unchanged official function-minimization example."
+    ),
+    variants=(
+        _variant(
+            "function-minimization",
+            "Official function-minimization example",
+            (
+                "--no-yolo",
+                "--",
+                "$PHISTORY_SOURCE_ROOT/examples/function_minimization/initial_program.py",
+                "$PHISTORY_SOURCE_ROOT/examples/function_minimization/evaluator.py",
+                "--config",
+                "$PHISTORY_SOURCE_ROOT/examples/function_minimization/config.yaml",
+                "--iterations",
+                "1",
+                "--output",
+                "$PHISTORY_HOME/evolution",
+            ),
+            dimensions={
+                "entry": "official example / native controller",
+                "iterations": "1",
+                "model": "native weighted Gemini ensemble",
+            },
+        ),
+    ),
+)
+
+DEERFLOW = AgentSpec(
+    id="deer-flow",
+    display_name="DeerFlow",
+    package="bytedance/deer-flow",
+    source="github-source",
+    source_project="backend",
+    source_state="isolated",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    home_profile="deerflow",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("embedded-openai",),
+    default_variant=_default(
+        capture_unavailable="The native example has no enabled model; use the configured embedded SDK surface."
+    ),
+    variants=(
+        _variant(
+            "embedded-openai",
+            "Configured embedded SDK · OpenAI",
+            ("--no-yolo", "--", "-c", DEERFLOW_TASK),
+            dimensions={
+                "entry": "DeerFlowClient.chat",
+                "model": "gpt-4.1",
+                "config": "complete official example with one enabled model",
+            },
+        ),
+    ),
+)
+
+OMNI_REWRITER = AgentSpec(
+    id="omni-rewriter",
+    display_name="Omni-Rewriter",
+    package="WayneJin0918/Omni-Rewriter",
+    source="github-source",
+    source_state="readonly",
+    python_runtime="3.12",
+    tap_client="omni-rewriter",
+    fake_env={"OMNI_WRITER_BACKEND_API_KEY": "phistory-fake-api-key"},
+    extra_env={"OMNI_WRITER_BACKEND_BASE_URL": "https://api.openai.com/v1", "OMNI_WRITER_BACKEND_MODEL": "gpt-5.6"},
+    recorded_env=("OMNI_WRITER_BACKEND_BASE_URL", "OMNI_WRITER_BACKEND_MODEL"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("api-writer-analysis",),
+    default_variant=_default(
+        capture_unavailable="Native default requires a local Qwen Writer server; use the documented configured API Writer lane."
+    ),
+    variants=(
+        _variant(
+            "api-writer-analysis",
+            "Configured API Writer · initial analysis",
+            ("--no-yolo", "--", "expand", "$PHISTORY_SOURCE_ROOT/examples/requests/t2va_kite.json", "--output", "h3"),
+            dimensions={
+                "entry": "expand pipeline / official text-only fixture",
+                "stage": "initial AnalysisPlan request",
+                "model": "gpt-5.6",
+            },
+        ),
+    ),
+)
+
+AGENTICSEEK = AgentSpec(
+    id="agenticseek",
+    display_name="AgenticSeek",
+    package="Fosowl/agenticSeek",
+    source="github-source",
+    github_source_install="requirements",
+    source_state="isolated",
+    python_runtime="3.11",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("coder-openai",),
+    default_variant=_default(
+        capture_unavailable="The interactive application starts browser/audio/router services; use its actual configured coder task API."
+    ),
+    variants=(
+        _variant(
+            "coder-openai",
+            "Configured OpenAI · Jarvis coder API",
+            ("--no-yolo", "--", "-c", AGENTICSEEK_TASK),
+            dimensions={
+                "entry": "CoderAgent.process",
+                "model": "gpt-4.1",
+                "persona": "Jarvis",
+                "tools": "native fenced text protocol",
+            },
+        ),
+    ),
+)
+
+NANOMUSE = AgentSpec(
+    id="nanomuse",
+    display_name="nanoMuse",
+    package="nano-muse/nanoMuse",
+    source="github-release",
+    github_release_install="editable",
+    python_runtime="3.12",
+    tap_client="nanomuse",
+    fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
+    extra_env={"NANOMUSE_NO_UPDATE_CHECK": "1"},
+    recorded_env=("NANOMUSE_NO_UPDATE_CHECK",),
+    home_profile="nanomuse",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "run", "Reply with one short sentence."),
+        dimensions={"entry": "native app task loop", "model": "native DeepSeek default", "tools": "native auto"},
+    ),
+)
+
+PR_AGENT = AgentSpec(
+    id="pr-agent",
+    display_name="PR-Agent",
+    package="pr-agent",
+    source="pypi",
+    python_runtime="3.12",
+    tap_client="pr-agent",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    home_profile="pr-agent",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("plain-diff-review",),
+    bootstrap_args=("--help",),
+    default_variant=_default(
+        capture_unavailable="A review requires a target; the named local plain-diff provider exercises native review without remote publication."
+    ),
+    variants=(
+        _variant(
+            "plain-diff-review",
+            "Native plain-diff review",
+            (
+                "--no-yolo",
+                "--",
+                "--diff-file",
+                "$PHISTORY_HOME/input.diff",
+                "--output",
+                "$PHISTORY_HOME/review.md",
+                "--json-output",
+                "$PHISTORY_HOME/review.json",
+                "review",
+            ),
+            dimensions={
+                "entry": "PlainDiffProvider / PRAgent review",
+                "model": "native primary and fallback",
+                "publication": "local files only",
+            },
+        ),
+    ),
+)
+
+DEEPANALYZE = AgentSpec(
+    id="deepanalyze",
+    display_name="DeepAnalyze",
+    package="ruc-datalab/DeepAnalyze",
+    source="github-source",
+    github_source_install="requirements",
+    source_state="readonly",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("vllm-client",),
+    default_variant=_default(
+        capture_unavailable="The application requires a local model server; use the actual vLLM client with a capture-only endpoint."
+    ),
+    variants=(
+        _variant(
+            "vllm-client",
+            "Native vLLM client · initial round",
+            ("--no-yolo", "--", "-c", DEEPANALYZE_TASK),
+            dimensions={
+                "entry": "DeepAnalyzeVLLM.generate",
+                "model": "documented DeepAnalyze-8B alias",
+                "max_rounds": "1",
+                "transport": "HTTP capture endpoint",
+            },
+        ),
+    ),
+)
+
+LOCALGPT = AgentSpec(
+    id="localgpt",
+    display_name="localGPT",
+    package="PromtEngineer/localGPT",
+    source="github-source",
+    github_source_install="requirements",
+    source_state="isolated",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={},
+    extra_env={"OLLAMA_HOST": "http://ollama.phistory.invalid"},
+    recorded_env=("OLLAMA_HOST",),
+    home_profile="localgpt",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "-m", "rag_system.main", "chat", "Reply with one short sentence."),
+        dimensions={
+            "entry": "native chat / initial triage",
+            "model": "native Ollama defaults",
+            "transport": "HTTP capture endpoint",
+        },
+    ),
+)
+
+BAMBOOAI = AgentSpec(
+    id="bambooai",
+    display_name="BambooAI",
+    package="bambooai",
+    source="pypi",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key"},
+    home_profile="bambooai",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("sdk-free-quick",),
+    default_variant=_default(
+        capture_unavailable="A caller chooses analysis budget and model tier; use the named native SDK free-tier quick analysis."
+    ),
+    variants=(
+        _variant(
+            "sdk-free-quick",
+            "Native SDK · free tier quick analysis",
+            ("--no-yolo", "--", "-c", BAMBOOAI_TASK),
+            dimensions={
+                "entry": "BambooAI.pd_agent_converse",
+                "budget": "quick",
+                "models": "native free-tier template",
+            },
+        ),
+    ),
+)
+
+COWAGENT = AgentSpec(
+    id="cowagent",
+    display_name="CowAgent",
+    package="zhayujie/CowAgent",
+    source="github-source",
+    github_source_install="requirements",
+    source_state="isolated",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={},
+    home_profile="cowagent",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("bridge-api",),
+    default_variant=_default(
+        capture_unavailable="The channel application requires channel configuration; use its native default-profile Bridge task API."
+    ),
+    variants=(
+        _variant(
+            "bridge-api",
+            "Native Bridge API · default agent profile",
+            ("--no-yolo", "--", "-c", COWAGENT_TASK),
+            dimensions={
+                "entry": "Bridge.fetch_agent_reply",
+                "model": "native DeepSeek default",
+                "config": "complete config template with fake credential",
+            },
+        ),
+    ),
+)
+
+
 AGENTS: dict[str, AgentSpec] = {
     agent.id: agent
     for agent in (
@@ -1788,6 +2148,17 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        GPT_RESEARCHER,
+        OPENEVOLVE,
+        DEERFLOW,
+        OMNI_REWRITER,
+        AGENTICSEEK,
+        NANOMUSE,
+        PR_AGENT,
+        DEEPANALYZE,
+        LOCALGPT,
+        BAMBOOAI,
+        COWAGENT,
     )
 }
 AGENT_ORDER = tuple(AGENTS)

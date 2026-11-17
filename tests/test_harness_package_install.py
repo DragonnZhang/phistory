@@ -190,3 +190,45 @@ def test_source_requirements_use_declared_python_and_retain_importable_source(tm
     assert (packages.installed_source_root(result) / "miniagi.py").read_bytes() == b"native source"
     assert packages.install_agent(agent, "e" * 40, install) == result
     assert len(commands) == 2
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_editable_source_keeps_repository_and_installs_selected_workspace_and_extra_requirements(
+    tmp_path, monkeypatch, nested
+):
+    agent = replace(
+        get_agent("gpt-researcher"),
+        source_project="backend" if nested else ".",
+        source_extra_requirements=("deep_agents/requirements.txt",),
+    )
+    install = tmp_path / "install"
+    commands = []
+    project = "repo/backend" if nested else "repo"
+
+    def download(url, output):
+        assert "/archive/" + "f" * 40 in url
+        with tarfile.open(output, "w:gz") as archive:
+            for name, content in {
+                f"{project}/pyproject.toml": b"[project]\nname='test'\nversion='1'\n",
+                f"{project}/deep_agents/requirements.txt": b"native-extra",
+                "repo/prompts/system.md": b"native resource",
+            }.items():
+                member = tarfile.TarInfo(name)
+                member.size = len(content)
+                archive.addfile(member, io.BytesIO(content))
+
+    def run(command, **kwargs):
+        commands.append(command)
+        if command[:2] == ["uv", "venv"]:
+            (install / "bin").mkdir()
+            (install / "bin/python").touch()
+
+    monkeypatch.setattr(packages, "_download", download)
+    monkeypatch.setattr(packages, "run", run)
+    result = packages.install_agent(agent, "f" * 40, install)
+    editable = next(command for command in commands if "--editable" in command)
+    assert Path(editable[-1]) == install / "source" / project
+    assert commands[-1][-1] == str(install / "source" / project / "deep_agents/requirements.txt")
+    assert (packages.installed_source_root(result) / "prompts/system.md").read_text() == "native resource"
+    assert packages.install_agent(agent, "f" * 40, install) == result
+    assert len(commands) == 3

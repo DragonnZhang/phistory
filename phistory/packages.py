@@ -311,7 +311,7 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
         raise ValueError("GitHub source installations require a full immutable commit SHA")
     url = f"https://github.com/{agent.package}/archive/{revision}.tar.gz"
     if agent.github_source_install == "editable":
-        return _install_github_release(agent, revision, install_dir, archive_url=url)
+        return _install_github_release(agent, revision, install_dir, archive_url=url, editable=True)
     bin_dir = install_dir / "bin"
     complete = install_dir / ".phistory-source-installed"
     if complete.exists() and (bin_dir / agent_executable(agent)).exists():
@@ -372,7 +372,7 @@ def installed_source_root(bin_dir: Path) -> Path:
 
 
 def _install_github_release(
-    agent: AgentSpec, version: str, install_dir: Path, *, archive_url: str | None = None
+    agent: AgentSpec, version: str, install_dir: Path, *, archive_url: str | None = None, editable: bool = False
 ) -> Path:
     bin_dir = install_dir / "bin"
     executable = bin_dir / agent_executable(agent)
@@ -383,13 +383,19 @@ def _install_github_release(
         shutil.rmtree(install_dir)
     install_dir.mkdir(parents=True, exist_ok=True)
     package_ref = archive_url or f"https://github.com/{agent.package}/archive/refs/tags/{version}.tar.gz"
-    if agent.github_release_install == "editable":
+    if editable or agent.github_release_install == "editable":
         archive_path = install_dir / "source.tar.gz"
         source_dir = install_dir / "source"
         _download(package_ref, archive_path)
         source_dir.mkdir()
         _extract_archive(archive_path, source_dir)
-        source_root = _find_source_root(source_dir)
+        if agent.source_project != ".":
+            roots = list(source_dir.iterdir())
+            if len(roots) != 1 or not roots[0].is_dir():
+                raise RuntimeError("source archive must contain exactly one repository root")
+            source_root = roots[0] / agent.source_project
+        else:
+            source_root = _find_source_root(source_dir)
         venv_args = ["uv", "venv", str(install_dir), "--allow-existing"]
         python_version = source_root / ".python-version"
         if agent.python_runtime:
@@ -415,6 +421,11 @@ def _install_github_release(
         else:
             run(
                 ["uv", "pip", "install", "--python", str(bin_dir / "python"), "--editable", str(source_root)],
+                timeout=INSTALL_TIMEOUT_SECONDS,
+            )
+        for requirement in agent.source_extra_requirements:
+            run(
+                ["uv", "pip", "install", "--python", str(bin_dir / "python"), "-r", str(source_root / requirement)],
                 timeout=INSTALL_TIMEOUT_SECONDS,
             )
     else:

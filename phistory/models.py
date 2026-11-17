@@ -50,6 +50,12 @@ HomeProfile = Literal[
     "openmanus",
     "researchclaw",
     "cuga",
+    "deerflow",
+    "nanomuse",
+    "pr-agent",
+    "localgpt",
+    "cowagent",
+    "bambooai",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -120,6 +126,9 @@ class AgentSpec:
     release_tag_prefix: str | None = None
     github_source_install: Literal["editable", "scripts", "requirements"] = "editable"
     python_runtime: str | None = None
+    source_project: str = "."
+    source_extra_requirements: tuple[str, ...] = ()
+    source_state: Literal["none", "readonly", "isolated"] = "none"
 
     def __post_init__(self) -> None:
         if self.capture_timeout_seconds < 1:

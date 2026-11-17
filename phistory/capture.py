@@ -207,6 +207,17 @@ def capture_target(
                 **({"package_layout": "bundle"} if target.agent.release_asset_layout == "bundle" else {}),
                 **(
                     {
+                        "source_runtime": {
+                            "project": target.agent.source_project,
+                            "state": target.agent.source_state,
+                            "extra_requirements": list(target.agent.source_extra_requirements),
+                        }
+                    }
+                    if target.agent.source == "github-source"
+                    else {}
+                ),
+                **(
+                    {
                         "bootstrap": {
                             "arguments": list(target.agent.bootstrap_args),
                             "environment": target.agent.bootstrap_env,
@@ -518,14 +529,16 @@ def _capture_env(
     if profile == "cheetah-ollama":
         (home / ".cheetahclaws").mkdir(parents=True, exist_ok=True)
         env["OLLAMA_BASE_URL"] = "http://ollama.phistory.invalid"
-    if profile in ("trashclaw", "mini-agi", "openmanus", "researchclaw"):
+    if target.agent.source_state != "none" or profile in ("trashclaw", "mini-agi", "openmanus", "researchclaw"):
         source = packages.installed_source_root(bin_dir)
-        if profile in ("openmanus", "researchclaw") and prepare_runtime:
+        if (target.agent.source_state == "isolated" or profile in ("openmanus", "researchclaw")) and prepare_runtime:
             isolated = home / "source"
             shutil.copytree(source, isolated)
             source = isolated
         env["PHISTORY_SOURCE_ROOT"] = str(source)
         env["PYTHONPATH"] = str(source)
+        if (source / "src").is_dir():
+            env["PYTHONPATH"] += os.pathsep + str(source / "src")
         if profile == "openmanus" and prepare_runtime:
             config = source / "config" / "config.toml"
             config.parent.mkdir(parents=True, exist_ok=True)
@@ -542,6 +555,29 @@ def _capture_env(
             path, digest = prepare_cuga_example(home, env["PHISTORY_CUGA_EXAMPLE_SOURCE"])
             env["PHISTORY_CUGA_EXAMPLE"] = str(path)
             env["PHISTORY_CUGA_EXAMPLE_SHA256"] = digest
+    if profile == "deerflow":
+        env["DEER_FLOW_HOME"] = str(home / "deerflow")
+    if profile == "nanomuse":
+        env["NANOMUSE_DATA_DIR"] = str(home / "nanomuse")
+        env["NANOMUSE_WORKSPACE"] = str(home / "work")
+    if profile == "localgpt":
+        env["LANCEDB_PATH"] = str(home / "lancedb")
+    if profile == "bambooai":
+        env["BAMBOO_DATA_DIR"] = str(home / "bambooai" / "data")
+        env["BAMBOO_MEMORY_DIR"] = str(home / "bambooai" / "memory")
+    if profile == "cowagent":
+        state = home / "cowagent"
+        state.mkdir(parents=True, exist_ok=True)
+        env["COW_DATA_DIR"] = str(state)
+        if prepare_runtime:
+            config = json.loads((Path(env["PHISTORY_SOURCE_ROOT"]) / "config-template.json").read_text())
+            config["deepseek_api_key"] = "phistory-fake-api-key"
+            (state / "config.json").write_text(json.dumps(config) + "\n", encoding="utf-8")
+    if profile == "pr-agent":
+        (home / "input.diff").write_text(
+            "diff --git a/example.py b/example.py\n--- a/example.py\n+++ b/example.py\n@@ -1,2 +1,2 @@\n def add(a, b):\n-    return a - b\n+    return a + b\n",
+            encoding="utf-8",
+        )
     if target.agent.node_runtime:
         env["NPM_CONFIG_CACHE"] = str(bin_dir.parents[2] / ".npm-runtime-cache")
     if target.agent.fake_chatgpt_auth:
