@@ -1,0 +1,56 @@
+stdout:
+[claude-tap] 'atomic-agent' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] atomic-agent target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:44597
+[claude-tap] CA cert: /tmp/phistory-home-7lj4h2td/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/atomic-agent/v0.8.0/variants/cloud-openai/.tap/2026-11-17/trace_152851.jsonl
+
+[claude-tap] launching atomic-agent: atomic-agent run --cwd /tmp/phistory-home-7lj4h2td/work --max-steps 1
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:44597
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-7lj4h2td/.local/share/claude-tap/ca.pem
+[atomic-agent] migrated config vnull → v79 at /tmp/phistory-home-7lj4h2td/atomic-agent/config.json
+[2026-11-17T15:28:52.441Z] INFO local completion cap 16384 from config localModels.completionMaxTokens
+[2026-11-17T15:28:52.442Z] INFO local request timeout 300000 ms from config localModels.requestTimeoutMs
+[2026-11-17T15:28:52.443Z] INFO local llama probes skipped; active text provider is not local {"activeTextProvider":"phistory","url":"http://127.0.0.1:9931"}
+[2026-11-17T15:28:52.443Z] INFO slot manager using conservative default (probe deferred) {"slotCount":1}
+[2026-11-17T15:28:55.670Z] INFO starter-skills: installed global skills {"skills":["ad-copy","audio-transcribe","audit","code-graph","currency","docker","email-drafts","ffmpeg","github","gog-workspace","imagemagick","landing-cro-review","lead-research","meeting-notes","mention-monitor","motion","notion","obsidian","pandoc","pdf","plain-writing","post-drafts","pre-push-check","publish-site","release-check","seo-audit","seo-rank-report","skill-creator","traffic-analytics","verify-work","wttr-weather","xlsx"],"sourceDir":"/home/runner/work/phistory/phistory/.phistory-cache/installs/atomic-agent/v0.8.0/extract/linux-x64/starter-skills"}
+[2026-11-17T15:28:55.873Z] INFO vision provider configured {"provider":"phistory","followsLiveRoute":true,"autoDetect":true,"offeredAtBootstrap":true}
+atomic-agent run (chat)
+  cwd:     /tmp/phistory-home-7lj4h2td/work
+  llama:   http://127.0.0.1:9931
+  browser: chrome
+  skills:  32 installed
+  approval: level 1 (paranoid)
+  type /quit to exit, /abort to cancel current turn
+you> » turn 0 started
+[step 0] started
+[2026-11-17T15:28:55.944Z] INFO prompt scaffold {"sessionId":"s-03f4beb4-7c6c-43e1-994f-35d37c258777","compact":false,"reason":"auto: window unknown","stablePrefixTokens":10187,"persona":null}
+  → reply({"text":"captured"})
+  ← reply ok: captured
+[2026-11-17T15:28:56.033Z] INFO tool executed {"sessionId":"s-03f4beb4-7c6c-43e1-994f-35d37c258777","stepIndex":0,"batchIndex":0,"batchSize":1,"tool":"reply","status":"ok","durationMs":1}
+[step 0] captured (99ms)
+» turn 0 reply (1 steps, 104ms)
+captured
+{
+  "sessionId": "s-03f4beb4-7c6c-43e1-994f-35d37c258777",
+  "status": "pending",
+  "turnCount": 1,
+  "stepCount": 1,
+  "lastError": null
+}
+
+[claude-tap] shutting down atomic-agent... (Ctrl+C again to force)
+
+[claude-tap] atomic-agent stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/atomic-agent/v0.8.0/variants/cloud-openai/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/atomic-agent/v0.8.0/variants/cloud-openai/.tap/2026-11-17/trace_152851.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/atomic-agent/v0.8.0/variants/cloud-openai/.tap/2026-11-17/trace_152851.log
+  view:         /home/runner/work/phistory/phistory/captures/atomic-agent/v0.8.0/variants/cloud-openai/.tap/2026-11-17/trace_152851.html
+  prompt:       /home/runner/work/phistory/phistory/captures/atomic-agent/v0.8.0/variants/cloud-openai/prompt.md
+
+stderr:

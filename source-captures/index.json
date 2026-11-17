@@ -1369,7 +1369,7 @@
           "path": "source-captures/agent-zero/88d8ab4923301ac70dab"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "agent-zero"
     },
     {
@@ -2055,7 +2055,7 @@
           "path": "source-captures/atomic-agent/d31b988e7c0d2128ef6e"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "atomic-agent"
     },
     {

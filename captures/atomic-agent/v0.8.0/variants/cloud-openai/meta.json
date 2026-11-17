@@ -1,0 +1,76 @@
+{
+  "agent_id": "atomic-agent",
+  "agent": "Atomic Agent",
+  "package": "AtomicBot-ai/atomic-agent",
+  "package_layout": "bundle",
+  "version": "v0.8.0",
+  "variant": {
+    "id": "cloud-openai",
+    "label": "Native stdin task · configured cloud OpenAI",
+    "dimensions": {
+      "entry": "native piped stdin run",
+      "chat_model": "gpt-4.1",
+      "embedding_model": "text-embedding-3-small",
+      "max_steps": "1",
+      "resources": "complete official SEA bundle"
+    }
+  },
+  "requested": {
+    "entry": "native piped stdin run",
+    "chat_model": "gpt-4.1",
+    "embedding_model": "text-embedding-3-small",
+    "max_steps": "1",
+    "resources": "complete official SEA bundle"
+  },
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 92
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": []
+  },
+  "published_at": "2026-11-17T12:27:23Z",
+  "tarball_url": "https://github.com/AtomicBot-ai/atomic-agent/releases/download/v0.8.0/atomic-agent-linux-x64.tar.gz",
+  "binary_version": "v0.8.0",
+  "captured_at": "2026-11-17T15:28:56.980083+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44114630751",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44114630751"
+  },
+  "tap_client": "atomic-agent",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 8.463,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "atomic-agent",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "run",
+    "--cwd",
+    "$PHISTORY_HOME/work",
+    "--max-steps",
+    "1"
+  ],
+  "stdin": "Reply with one short sentence.\n"
+}
