@@ -1,0 +1,99 @@
+{
+  "agent_id": "orkas",
+  "agent": "Orkas",
+  "package": "Orkas-AI/Orkas",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": [
+      [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund"
+      ],
+      [
+        "node",
+        "scripts/ensure-dev-dependencies.cjs"
+      ]
+    ]
+  },
+  "version": "3163c7ef1c2b03e21e6f85c6301515609361c570",
+  "variant": {
+    "id": "native-electron-commander",
+    "label": "Native Electron / configured Commander",
+    "dimensions": {
+      "entry": "real Electron bootstrap, renderer, preload and native local-user initialization",
+      "model": "native custom OpenAI-compatible gpt-4.1",
+      "task": "actual new-chat UI submission",
+      "runtime": "full official Linux dependencies; D-Bus/Xvfb; owned Electron --no-sandbox --disable-gpu"
+    }
+  },
+  "requested": {
+    "entry": "real Electron bootstrap, renderer, preload and native local-user initialization",
+    "model": "native custom OpenAI-compatible gpt-4.1",
+    "task": "actual new-chat UI submission",
+    "runtime": "full official Linux dependencies; D-Bus/Xvfb; owned Electron --no-sandbox --disable-gpu"
+  },
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 20
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [
+      "You are the **commander** of this group chat:",
+      "## Runtime injection"
+    ],
+    "required_user_text": [],
+    "required_tool_name_fragments": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/Orkas-AI/Orkas/archive/3163c7ef1c2b03e21e6f85c6301515609361c570.tar.gz",
+  "binary_version": "3163c7ef1c2b03e21e6f85c6301515609361c570",
+  "captured_at": "2026-11-17T18:57:30.665086+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44153049669",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44153049669"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 46.442,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--target",
+    "https://api.openai.com",
+    "--port",
+    "46035",
+    "--",
+    "-c",
+    "\nimport os\nfrom pathlib import Path\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nos.chdir(source)\nos.execvp(\"dbus-run-session\", [\"dbus-run-session\", \"--\", \"xvfb-run\", \"--auto-servernum\", \"node\", os.environ[\"PHISTORY_ELECTRON_DRIVER\"], str(source), str(Path(os.environ[\"PHISTORY_HOME\"]) / \"orkas\"), \"http://127.0.0.1:\" + os.environ[\"PHISTORY_TAP_PORT\"] + \"/v1\", \"Reply with one short sentence.\"])\n"
+  ]
+}
