@@ -10238,7 +10238,7 @@
           "path": "source-captures/cowagent/589155a1fc0f07d4f642"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "cowagent"
     }
   ]
