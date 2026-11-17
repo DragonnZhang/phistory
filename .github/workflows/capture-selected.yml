@@ -30,6 +30,7 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   GH_TOKEN: ${{ github.token }}
+  GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
   capture:
@@ -73,7 +74,7 @@ jobs:
           FORCE_CAPTURE: ${{ inputs.force }}
         run: |
           test -n "$SELECTED_AGENTS"
-          args=(--latest --agents "$SELECTED_AGENTS")
+          args=(--latest --agents "$SELECTED_AGENTS" --prune-installs)
           if [ -n "$SELECTED_VARIANTS" ] && [ "$SELECTED_VARIANTS" != "auto" ]; then
             args+=(--variants "$SELECTED_VARIANTS")
           fi
@@ -100,7 +101,7 @@ jobs:
       - name: Smoke selected agents
         if: inputs.smoke && steps.capture.outputs.status == '0'
         run: |
-          args=(--latest --agents "$SELECTED_AGENTS" --force)
+          args=(--latest --agents "$SELECTED_AGENTS" --force --prune-installs)
           if [ -n "$SELECTED_VARIANTS" ] && [ "$SELECTED_VARIANTS" != "auto" ]; then
             args+=(--variants "$SELECTED_VARIANTS")
           fi

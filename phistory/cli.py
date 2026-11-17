@@ -34,6 +34,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     capture.add_argument("--force", action="store_true", help="recapture existing versions")
     capture.add_argument("--keep-tap", action="store_true", help="keep raw claude-tap output directories")
+    capture.add_argument(
+        "--prune-installs",
+        action="store_true",
+        help="remove each exact package install after all of its variants finish",
+    )
     capture.add_argument("--summary-title", default="Capture results", help="GitHub Actions summary title")
 
     fill = sub.add_parser("backfill", help="capture historical package versions")
@@ -130,6 +135,7 @@ def main(argv: list[str] | None = None) -> int:
             variant_ids=_parse_csv(args.variants),
             force=args.force,
             keep_tap=args.keep_tap,
+            prune_installs=args.prune_installs,
         )
         return _print_results(results, args.summary_title)
 

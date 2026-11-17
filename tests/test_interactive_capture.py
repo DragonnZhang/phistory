@@ -20,12 +20,15 @@ import json, os, sys, termios, time, tty
 from pathlib import Path
 assert sys.stdin.isatty() and sys.stdout.isatty()
 assert tuple(os.get_terminal_size()) == (100, 30)
+assert os.tcgetpgrp(sys.stdin.fileno()) == os.getpgrp()
 tty.setraw(sys.stdin.fileno())
 print("owned_pid=" + str(os.getpid()), flush=True)
 print("\\x1b[36mReady for task\\x1b[0m", flush=True)
 task = b""
 while not task.endswith(b"\\r"):
     task += os.read(sys.stdin.fileno(), 1)
+    if task == b"Reply with one short sentence.":
+        print(task.decode(), flush=True)
 assert task == b"Reply with one short sentence.\\r"
 trace = Path(sys.argv[1]); trace.parent.mkdir(parents=True, exist_ok=True)
 trace.write_text(json.dumps({"request":{"path":"/v1/embeddings","body":{"input": task.decode()}}}) + "\\n")

@@ -129,6 +129,37 @@ def test_capture_latest_runs_default_and_every_configured_variant(monkeypatch, t
     assert {target.version.version for target in captured} == {"1.0.0"}
 
 
+def test_latest_prunes_only_selected_install_after_all_variants_even_after_failure(tmp_path, monkeypatch):
+    agent = AgentSpec(
+        "agent", "Agent", "agent", "agent", {}, variants=(CaptureVariant("one", "One"), CaptureVariant("two", "Two"))
+    )
+    cache = tmp_path / "cache"
+    install = cache / "installs/agent/1.0.0"
+    install.mkdir(parents=True)
+    other = cache / "installs/agent/2.0.0"
+    other.mkdir()
+    evidence = tmp_path / "captures/trace.jsonl"
+    evidence.parent.mkdir()
+    evidence.write_text("real captured evidence")
+    monkeypatch.setattr("phistory.workflow.get_agent", lambda _: agent)
+    monkeypatch.setattr("phistory.workflow.packages.latest_version", lambda _: VersionInfo("1.0.0"))
+    seen = []
+
+    def capture(target, **kwargs):
+        assert install.is_dir()
+        seen.append(target.variant.id)
+        if target.variant.id == "one":
+            raise RuntimeError("native variant failed")
+        return target.variant.id
+
+    monkeypatch.setattr("phistory.workflow.capture_target", capture)
+    result = capture_latest([agent.id], root=evidence.parent, cache_dir=cache, prune_installs=True)
+    assert seen == ["default", "one", "two"]
+    assert result[1].status == "failed" and result[2] == "two"
+    assert not install.exists() and other.is_dir()
+    assert evidence.read_text() == "real captured evidence"
+
+
 def test_capture_latest_skips_variants_before_their_minimum_version(monkeypatch, tmp_path: Path):
     agent = AgentSpec(
         id="agent",

@@ -41,8 +41,12 @@ class LocalApi:
             headers=self.headers,
             method=method or ("POST" if body is not None else "GET"),
         )
-        with self.opener.open(request, timeout=self.remaining(90)) as response:
-            return json.load(response)
+        try:
+            with self.opener.open(request, timeout=self.remaining(90)) as response:
+                return json.load(response)
+        except urllib.error.HTTPError as error:
+            detail = error.read(4000).decode("utf-8", errors="replace")
+            raise RuntimeError(f"native API {request.method} {path} failed ({error.code}): {detail}") from error
 
     def wait_ready(self, process: subprocess.Popen, *, path: str = "/") -> None:
         deadline = time.monotonic() + self.remaining(90)

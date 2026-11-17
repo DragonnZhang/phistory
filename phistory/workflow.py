@@ -18,6 +18,7 @@ def capture_latest(
     variant_ids: Iterable[str] | None = None,
     force: bool = False,
     keep_tap: bool = False,
+    prune_installs: bool = False,
 ) -> list[CaptureResult]:
     results: list[CaptureResult] = []
     selected_ids = tuple(variant_ids) if variant_ids is not None else None
@@ -29,17 +30,21 @@ def capture_latest(
         except Exception as exc:
             results.append(CaptureResult(agent_id, "unknown", "default", "failed", error=str(exc)))
             continue
-        for variant in _variants_for_version(variants, version):
-            try:
-                result = capture_target(
-                    CaptureTarget(agent, version, variant, root),
-                    cache_dir=cache_dir,
-                    force=force,
-                    keep_tap=keep_tap,
-                )
-            except Exception as exc:
-                result = CaptureResult(agent_id, version.version, variant.id, "failed", error=str(exc))
-            results.append(result)
+        try:
+            for variant in _variants_for_version(variants, version):
+                try:
+                    result = capture_target(
+                        CaptureTarget(agent, version, variant, root),
+                        cache_dir=cache_dir,
+                        force=force,
+                        keep_tap=keep_tap,
+                    )
+                except Exception as exc:
+                    result = CaptureResult(agent_id, version.version, variant.id, "failed", error=str(exc))
+                results.append(result)
+        finally:
+            if prune_installs:
+                remove_if_exists((cache_dir / "installs" / agent.id / version.version).resolve())
     return results
 
 

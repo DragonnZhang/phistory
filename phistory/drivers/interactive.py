@@ -19,6 +19,11 @@ from phistory.models import CommandResult
 ANSI = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
 
 
+def _claim_terminal() -> None:
+    os.setsid()
+    fcntl.ioctl(0, termios.TIOCSCTTY, 0)
+
+
 def run_interactive_pty(context: CaptureRunContext) -> CaptureExecution:
     ready = context.target.variant.pty_ready_text
     if not ready:
@@ -31,6 +36,8 @@ def run_interactive_pty(context: CaptureRunContext) -> CaptureExecution:
     output = bytearray()
     failure = None
     submitted = False
+    ready_at = None
+    text_at = None
     agent = context.target.agent
     try:
         process = subprocess.Popen(
@@ -40,7 +47,7 @@ def run_interactive_pty(context: CaptureRunContext) -> CaptureExecution:
             stdin=slave,
             stdout=slave,
             stderr=slave,
-            start_new_session=True,
+            preexec_fn=_claim_terminal,
         )
         os.close(slave)
         slave = -1
@@ -54,8 +61,15 @@ def run_interactive_pty(context: CaptureRunContext) -> CaptureExecution:
                     chunk = b""
                 if chunk:
                     output.extend(chunk)
-            if not submitted and ready in ANSI.sub("", output.decode("utf-8", errors="replace")):
-                os.write(master, (PROMPT + "\r").encode())
+            plain = ANSI.sub("", output.decode("utf-8", errors="replace"))
+            if ready_at is None and ready in plain:
+                ready_at = time.monotonic()
+            raw = not (termios.tcgetattr(master)[3] & termios.ICANON)
+            if text_at is None and ready_at is not None and time.monotonic() - ready_at >= 0.25 and raw:
+                os.write(master, PROMPT.encode())
+                text_at = time.monotonic()
+            if not submitted and text_at is not None and PROMPT in plain and time.monotonic() - text_at >= 0.1:
+                os.write(master, b"\r")
                 submitted = True
             if submitted and has_prompt_request(
                 context.tap_output_dir,

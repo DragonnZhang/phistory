@@ -341,7 +341,7 @@ subprocess.run([str(launcher), "features", "status"], check=True)
 status = json.loads(subprocess.check_output([str(launcher), "host", "status", "claude"], text=True))
 session = status.get("session", {})
 runtime = Path(status.get("runtime", "/nonexistent"))
-release = (source / "RELEASE").read_text().strip()
+release = (runtime / "RELEASE").read_text().strip()
 if not (status.get("status") == "partial" and status.get("reason") == "session_activation_not_observed" and status.get("version", "").startswith(release + "+os.") and runtime.is_dir() and runtime.resolve().is_relative_to(Path(os.environ["PHISTORY_HOME"]).resolve()) and (runtime / "RELEASE").read_text().strip() == release and session.get("reason") == "session_activation_not_observed" and session.get("hostCommand", [])[:1] == ["claude"] and any(item.get("kind") == "core" and Path(item.get("pluginDir", ""), ".mcp.json").is_file() for item in session.get("components", []))):
     raise RuntimeError("native Agentlas runtime/session integrity was not verified: " + json.dumps(status))
 print("Native Agentlas prepared runtime:", json.dumps(status), flush=True)
@@ -376,7 +376,7 @@ facts = json.dumps({"os": platform.system(), "architecture": platform.machine(),
 includes = [source / path for path in ("coax/lib/microcoder/run.coax", "coax/lib/gateway/plan.coax", "coax/lib/gateway/openrouter.coax")]
 code = '#import "Basic";\n' + ''.join('#load ' + json.dumps(str(path)) + ';\n' for path in includes)
 code += r"""
-main :: () {
+phistory_task :: () -> int #export_c {
   run: [1] McRun; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;
   p: [1] GwPlan; pb: [1] GwPlanBuffers; bench: [1] GwBench;
   gw_plan_init(p[..], pb[..]);
@@ -387,15 +387,19 @@ main :: () {
   ev: [16] McRunEvent;
   while !run[0].ended { n := mc_run_poll(run[..], ev[..]); }
   print("native Microcoder ended\n");
+  return 0;
 }
 """
 code = code.replace('FACTS', json.dumps(facts)).replace('TASK', json.dumps("Reply with one short sentence.")).replace('WORKDIR', json.dumps(str(Path.cwd())))
 driver = state / "task.coax"
 driver.write_text(code)
 c_file = state / "task.c"
+header = state / "task.h"
+entry = state / "entry.c"
+entry.write_text('#include "task.h"\nint main(void) { return (int)phistory_task(); }\n')
 with c_file.open("w") as output:
-    subprocess.run([str(source / "coax/bin/coax"), "c", str(driver)], cwd=source, stdout=output, check=True)
-subprocess.run(["cc", "-std=c11", "-O1", "-g", "-o", str(state / "task"), str(c_file), str(source / "coax/platform/process-native.c"), "-lm"], check=True)
+    subprocess.run([str(source / "coax/bin/coax"), "c", str(driver), "--library", "--header", str(header)], cwd=source, stdout=output, check=True)
+subprocess.run(["cc", "-std=c11", "-O1", "-g", "-o", str(state / "task"), str(entry), str(c_file), str(source / "coax/platform/process-native.c"), "-lm"], check=True)
 '''
 
 OPENAGENTS_TASK = """
