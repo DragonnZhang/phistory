@@ -4435,7 +4435,7 @@
           "path": "source-captures/agenticseek/27eeac716f9a910217c2"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "agenticseek"
     },
     {
@@ -7634,7 +7634,7 @@
           "path": "source-captures/bambooai/d404725f09e38301b7fb"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "bambooai"
     },
     {
