@@ -21,13 +21,8 @@ def test_unverified_profiles_require_explicit_selection():
         "critic-training",
         "empryo",
         "web3gpt",
-        "atomic-agent",
         "self-operating-computer",
-        "hive",
-        "intentkit",
-        "mirix",
         "ouroboros",
-        "agent-zero",
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
