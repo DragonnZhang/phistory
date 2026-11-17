@@ -153,6 +153,7 @@ Last capture update: 2026-11-17 14:23 UTC
 | PR-Agent | [0.50.0 - 2026-11-08](captures/pr-agent/0.50.0/variants/plain-diff-review/prompt.md) | 1 | 1 | 2026-11-17 14:13 UTC |
 | DeepAnalyze | [afc697a11675c59683b9f6596c3ab3b3d661182a](captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/prompt.md) | 1 | 1 | 2026-11-17 14:13 UTC |
 | localGPT | [34f3107f56a88203859092312231b945a711c619](captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/prompt.md) | 1 | 1 | 2026-11-17 14:14 UTC |
+| CowAgent | [bcc36de52ca17b45d1132f388a04b7a456bd3f95](captures/cowagent/bcc36de52ca17b45d1132f388a04b7a456bd3f95/variants/bridge-api/prompt.md) | 1 | 1 | 2026-11-17 14:22 UTC |
 
 ## Project Trend
 
