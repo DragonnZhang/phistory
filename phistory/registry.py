@@ -33,6 +33,7 @@ from phistory.task_entries import (
     MINIAGI_TASK,
     OPENAGENTS_SETUP,
     OPENAGENTS_TASK,
+    ORKAS_TASK,
     OUROBOROS_SERVER,
     QM_TASK,
     QUORUM_TASK,
@@ -1968,6 +1969,42 @@ VIBESDK = AgentSpec(
     ),
 )
 
+ORKAS = AgentSpec(
+    id="orkas",
+    display_name="Orkas",
+    package="Orkas-AI/Orkas",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="isolated",
+    source_build_commands=(("npm", "ci", "--no-audit", "--no-fund"), ("node", "scripts/ensure-dev-dependencies.cjs")),
+    tap_client="python",
+    fake_env={},
+    required_system_text=("You are the **commander** of this group chat:", "## Runtime injection"),
+    capture_min_tools=1,
+    tap_mode="reverse",
+    tap_target="https://api.openai.com",
+    track_latest=False,
+    capture_timeout_seconds=360,
+    latest_variant_ids=("native-electron-commander",),
+    default_variant=_default(
+        capture_unavailable="Use the complete native Electron application and real local Commander conversation."
+    ),
+    variants=(
+        _variant(
+            "native-electron-commander",
+            "Native Electron / configured Commander",
+            ("--no-yolo", "--", "-c", ORKAS_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "real Electron bootstrap, renderer, preload and native local-user initialization",
+                "model": "native custom OpenAI-compatible gpt-4.1",
+                "task": "actual new-chat UI submission",
+                "runtime": "full official Linux dependencies; D-Bus/Xvfb; owned Electron --no-sandbox --disable-gpu",
+            },
+        ),
+    ),
+)
+
 DARK_MOON = AgentSpec(
     id="dark-moon",
     display_name="DarkMoon",
@@ -3407,6 +3444,7 @@ AGENTS: dict[str, AgentSpec] = {
         DARK_MOON,
         AUTOGPT,
         QM,
+        ORKAS,
         AGENTLINK,
         UFO,
         AGENTLAS_OS,

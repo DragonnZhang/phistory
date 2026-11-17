@@ -1,5 +1,13 @@
 """Small drivers calling upstream public task APIs without assembling prompts."""
 
+ORKAS_TASK = """
+import os
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+os.execvp("dbus-run-session", ["dbus-run-session", "--", "xvfb-run", "--auto-servernum", "node", os.environ["PHISTORY_ELECTRON_DRIVER"], str(source), str(Path(os.environ["PHISTORY_HOME"]) / "orkas"), "http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "/v1", "Reply with one short sentence."])
+"""
+
 CTXAGENT_PREFETCH = """
 import asyncio
 from ctxagent.providers import providers

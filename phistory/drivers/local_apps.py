@@ -228,7 +228,7 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
             readiness = {
                 "web3gpt": "/api/chat",
                 "hivekeep": "/api/onboarding/status",
-                "librechat": "/api/config",
+                "librechat": "/readyz",
                 "vibesdk": "/api/auth/csrf-token",
             }
             if context.target.agent.id != "dark-moon":

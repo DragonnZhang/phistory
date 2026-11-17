@@ -7,6 +7,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Prepare native Electron desktop libraries
+      if: contains(format(',{0},', inputs.agents), ',orkas,') || contains(format(',{0},', inputs.agents), ',dyad,')
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb xauth openbox x11-utils dbus-x11 ripgrep libgtk-3-0t64 libnss3 libgbm1 libasound2t64 libxss1 libatk-bridge2.0-0t64 libdrm2
+        sudo chmod -R go-w /usr/share/fonts
     - name: Prepare native document runtime libraries
       if: contains(format(',{0},', inputs.agents), ',anything-llm,')
       shell: bash
