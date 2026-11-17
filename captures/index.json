@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-17T18:30:46.366089Z",
+  "updated_at": "2026-11-17T18:32:07.563039Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -459,6 +459,15 @@
       "latest_version": "160afa00ac0eca6315aabe662b2e7673c8c96172",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-17T18:15:29.934265+00:00",
+      "versions": 1,
+      "snapshots": 1
+    },
+    {
+      "agent_id": "dark-moon",
+      "agent": "DarkMoon",
+      "latest_version": "edfe9cb12a263036a0c3dc1af604713e8197cce9",
+      "latest_published_at": "",
+      "latest_captured_at": "2026-11-17T18:32:07.563039+00:00",
       "versions": 1,
       "snapshots": 1
     },
@@ -116981,6 +116990,31 @@
       "prompt": "captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/prompt.md",
       "trace": "captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/trace.jsonl",
       "meta": "captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/meta.json"
+    },
+    {
+      "agent_id": "dark-moon",
+      "agent": "DarkMoon",
+      "version": "edfe9cb12a263036a0c3dc1af604713e8197cce9",
+      "variant_id": "native-compatible-pentest",
+      "variant_label": "Native full stack / configured pentest role",
+      "variant_dimensions": {
+        "entry": "native darkmoon.sh headless wrapper; complete two-container stack",
+        "role": "native pentest primary agent",
+        "model": "configured compatible openai/gpt-4.1",
+        "tools": "all 13 native MCP functions plus host tools",
+        "privacy": "actual persistent MCP tokenizer/socket; native plugins",
+        "provenance": "published image digests; main role/privacy/server file hashes verified"
+      },
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 23
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-17T18:32:07.563039+00:00",
+      "prompt": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/prompt.md",
+      "trace": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/trace.jsonl",
+      "meta": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/meta.json"
     },
     {
       "agent_id": "ufo",
