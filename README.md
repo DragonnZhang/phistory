@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-17 11:04 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-17 11:33 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-17 11:04 UTC
+Last capture update: 2026-11-17 11:33 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -112,6 +112,7 @@ Last capture update: 2026-11-17 11:04 UTC
 | opencode | [1.19.6 - 2026-11-17](captures/opencode/1.19.6/variants/default/prompt.md) | 125 | 125 | 2026-11-17 11:03 UTC |
 | Pi | [1.5.2 - 2026-11-10](captures/pi/1.5.2/variants/default/prompt.md) | 62 | 62 | 2026-11-11 09:49 UTC |
 | Oh My Pi | [18.22.0 - 2026-11-16](captures/omp/18.22.0/variants/default/prompt.md) | 144 | 144 | 2026-11-17 11:04 UTC |
+| Gemini CLI | [0.68.0 - 2026-11-10](captures/gemini-cli/0.68.0/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:33 UTC |
 
 ## Project Trend
 
