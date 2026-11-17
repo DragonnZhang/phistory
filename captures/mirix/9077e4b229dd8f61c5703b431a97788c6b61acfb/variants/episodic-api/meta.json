@@ -1,0 +1,85 @@
+{
+  "agent_id": "mirix",
+  "agent": "MIRIX",
+  "package": "Mirix-AI/MIRIX",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "build_commands": []
+  },
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "import tiktoken; tiktoken.get_encoding('cl100k_base'); tiktoken.get_encoding('o200k_base')"
+    ],
+    "environment": {}
+  },
+  "version": "9077e4b229dd8f61c5703b431a97788c6b61acfb",
+  "variant": {
+    "id": "episodic-api",
+    "label": "Native episodic memory agent · SQLite server API",
+    "dimensions": {
+      "entry": "native meta initialization then episodic-agent message",
+      "config": "complete official mirix.yaml",
+      "database": "native SQLite fallback",
+      "auth": "native local first-admin registration / JWT"
+    }
+  },
+  "requested": {
+    "entry": "native meta initialization then episodic-agent message",
+    "config": "complete official mirix.yaml",
+    "database": "native SQLite fallback",
+    "auth": "native local first-admin registration / JWT"
+  },
+  "observed": {
+    "model": "gpt-4o-mini",
+    "tool_count": 9
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/Mirix-AI/MIRIX/archive/9077e4b229dd8f61c5703b431a97788c6b61acfb.tar.gz",
+  "binary_version": "9077e4b229dd8f61c5703b431a97788c6b61acfb",
+  "captured_at": "2026-11-17T15:29:39.290436+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44114629752",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44114629752"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 12.434,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-m",
+    "uvicorn",
+    "mirix.server.rest_api:app",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "41499"
+  ]
+}
