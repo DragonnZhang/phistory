@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
+import pytest
+
 from phistory.drivers import CaptureRunContext
-from phistory.drivers.local_apps import PROMPT, _mirix_task, _submit_task
+from phistory.drivers.local_apps import PROMPT, LocalApi, _mirix_task, _submit_task
 from phistory.drivers.local_server import has_prompt_request
 from phistory.models import CaptureTarget, VersionInfo
 from phistory.registry import get_agent
@@ -84,3 +87,25 @@ def test_prompt_wait_ignores_embeddings_and_accepts_native_chat_google_and_flat_
     ]:
         trace.write_text(json.dumps({"request": {"path": path, "body": body}}) + "\n")
         assert has_prompt_request(tmp_path, PROMPT)
+
+
+def test_supervisor_wait_requires_native_dialogue_ready_and_reports_boot_failure(monkeypatch):
+    class Process:
+        def poll(self):
+            return None
+
+    api = LocalApi(1, time.monotonic() + 10)
+    health = iter([{"boot": {"phase": "ready", "dialogue_ready": False}}, {"boot": {"dialogue_ready": True}}])
+    paths = []
+
+    def request(path):
+        paths.append(path)
+        return next(health)
+
+    monkeypatch.setattr(api, "request", request)
+    monkeypatch.setattr("phistory.drivers.local_apps.time.sleep", lambda _: None)
+    api.wait_dialogue(Process())
+    assert paths == ["/api/health", "/api/health"]
+    monkeypatch.setattr(api, "request", lambda _: {"boot": {"phase": "failed", "error": "native failure"}})
+    with pytest.raises(RuntimeError, match="native failure"):
+        api.wait_dialogue(Process())

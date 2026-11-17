@@ -56,6 +56,25 @@ class LocalApi:
             time.sleep(0.25)
         raise RuntimeError("native application did not become ready")
 
+    def wait_dialogue(self, process: subprocess.Popen) -> None:
+        deadline = time.monotonic() + self.remaining(180)
+        last_health = None
+        while time.monotonic() < deadline:
+            if process.poll() is not None:
+                raise RuntimeError(f"native supervisor exited during startup ({process.returncode})")
+            try:
+                last_health = self.request("/api/health")
+            except (OSError, urllib.error.URLError):
+                time.sleep(0.5)
+                continue
+            boot = last_health.get("boot") or {}
+            if boot.get("phase") == "failed":
+                raise RuntimeError(f"native supervisor boot failed: {json.dumps(last_health)}")
+            if boot.get("dialogue_ready") is True:
+                return
+            time.sleep(0.5)
+        raise RuntimeError(f"native supervisor dialogue did not become ready: {json.dumps(last_health)}")
+
 
 def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
     deadline = time.monotonic() + context.target.agent.capture_timeout_seconds
@@ -84,6 +103,8 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         try:
             api = LocalApi(port, deadline)
             api.wait_ready(process)
+            if context.target.agent.id == "ouroboros":
+                api.wait_dialogue(process)
             try:
                 _submit_task(context, api, log)
             except Exception as exc:
