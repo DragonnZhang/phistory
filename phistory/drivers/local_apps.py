@@ -43,13 +43,13 @@ class LocalApi:
         with self.opener.open(request, timeout=self.remaining(90)) as response:
             return json.load(response)
 
-    def wait_ready(self, process: subprocess.Popen) -> None:
+    def wait_ready(self, process: subprocess.Popen, *, path: str = "/") -> None:
         deadline = time.monotonic() + self.remaining(90)
         while time.monotonic() < deadline:
             if process.poll() is not None:
                 raise RuntimeError(f"native application exited during startup ({process.returncode})")
             try:
-                with self.opener.open(self.base + "/", timeout=2):
+                with self.opener.open(self.base + path, timeout=2):
                     return
             except urllib.error.HTTPError as exc:
                 if exc.code < 500:
@@ -128,7 +128,7 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         )
         try:
             api = LocalApi(port, deadline)
-            api.wait_ready(process)
+            api.wait_ready(process, path="/api/chat" if context.target.agent.id == "web3gpt" else "/")
             if context.target.agent.id == "ouroboros":
                 api.wait_managed_tasks(process)
             try:

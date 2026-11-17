@@ -470,7 +470,7 @@ def _install_github_release(
 
 
 def _find_source_root(extract_dir: Path) -> Path:
-    projects = {path.parent for path in extract_dir.rglob("pyproject.toml")}
+    projects = {path.parent for filename in ("pyproject.toml", "setup.py") for path in extract_dir.rglob(filename)}
     roots = sorted(path for path in projects if not any(parent in projects for parent in path.parents))
     if len(roots) != 1:
         found = ", ".join(str(path) for path in roots) or "none"

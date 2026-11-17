@@ -16,11 +16,8 @@ def test_unverified_profiles_require_explicit_selection():
     candidates = {
         "markus",
         "wechat-mac-rpa",
-        "autoref",
         "agent-s",
         "devopsgpt",
-        "critic-training",
-        "empryo",
         "web3gpt",
         "self-operating-computer",
         "ouroboros",

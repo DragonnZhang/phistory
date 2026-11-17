@@ -134,6 +134,15 @@ def test_python_api_install_does_not_treat_bare_venv_as_installed_package(tmp_pa
     assert len(commands) == 2
 
 
+def test_legacy_root_project_takes_precedence_over_nested_modern_packages(tmp_path):
+    root = tmp_path / "source"
+    nested = root / "experimental"
+    nested.mkdir(parents=True)
+    (root / "setup.py").write_text("from setuptools import setup; setup(name='native-root')")
+    (nested / "pyproject.toml").write_text("[project]\nname='experimental'\nversion='1'")
+    assert packages._find_source_root(tmp_path) == root
+
+
 def test_source_script_install_keeps_sibling_templates_and_resolves_immutable_revision(tmp_path, monkeypatch):
     from phistory.models import CommandResult
 
