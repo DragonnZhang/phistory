@@ -1,0 +1,33 @@
+{
+  "kind": "actual public model metadata",
+  "requests": [
+    {
+      "url": "https://openrouter.ai/api/v1/models",
+      "sha256": "3674a70a84a65b35791450fe51047e26e617d5f8a048c2d4c8ff93925e088177",
+      "file": "3674a70a84a65b35791450fe51047e26e617d5f8a048c2d4c8ff93925e088177.json",
+      "received_at": "2026-11-17T17:25:20.185532+00:00",
+      "capture_host": "Linux"
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models",
+      "sha256": "3674a70a84a65b35791450fe51047e26e617d5f8a048c2d4c8ff93925e088177",
+      "file": "3674a70a84a65b35791450fe51047e26e617d5f8a048c2d4c8ff93925e088177.json",
+      "received_at": "2026-11-17T17:25:20.263441+00:00",
+      "capture_host": "Linux"
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models",
+      "sha256": "3674a70a84a65b35791450fe51047e26e617d5f8a048c2d4c8ff93925e088177",
+      "file": "3674a70a84a65b35791450fe51047e26e617d5f8a048c2d4c8ff93925e088177.json",
+      "received_at": "2026-11-17T17:25:20.548709+00:00",
+      "capture_host": "Linux"
+    },
+    {
+      "url": "https://openrouter.ai/api/v1/models",
+      "sha256": "3674a70a84a65b35791450fe51047e26e617d5f8a048c2d4c8ff93925e088177",
+      "file": "3674a70a84a65b35791450fe51047e26e617d5f8a048c2d4c8ff93925e088177.json",
+      "received_at": "2026-11-17T17:25:20.727179+00:00",
+      "capture_host": "Linux"
+    }
+  ]
+}

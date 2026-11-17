@@ -1,0 +1,217 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:42593
+[claude-tap] CA cert: /tmp/phistory-home-0gn_g1_z/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/.tap/2026-11-17/trace_172517.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+base = "http://127.0.0.1:" + os.environ["PHISTORY_SERVER_PORT"]
+os.environ.update(HIVEKEEP_DATA_DIR=str(Path(os.environ["PHISTORY_HOME"]) / "hivekeep-data"), HOST="127.0.0.1", PORT=os.environ["PHISTORY_SERVER_PORT"], PUBLIC_URL=base, BETTER_AUTH_BASE_URL=base)
+os.execvp("bun", ["bun", "src/server/index.ts"])
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:42593
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-0gn_g1_z/.local/share/claude-tap/ca.pem
+Generated and persisted ENCRYPTION_KEY in data directory.
+[17:25:18.635] [32mINFO[39m: [36mSQLite database opened[39m
+    [35mmodule[39m: "database"
+    [35mpath[39m: "/tmp/phistory-home-0gn_g1_z/hivekeep-data/hivekeep.db"
+[17:25:19.113] [32mINFO[39m: [36mRunning database migrations...[39m
+    [35mmodule[39m: "server"
+[17:25:19.575] [32mINFO[39m: [36mDatabase migrations complete[39m
+    [35mmodule[39m: "server"
+[17:25:19.575] [32mINFO[39m: [36mInitializing virtual tables (FTS5, sqlite-vec)...[39m
+    [35mmodule[39m: "server"
+[17:25:19.581] [32mINFO[39m: [36mVirtual tables initialized[39m
+    [35mmodule[39m: "server"
+[17:25:19.584] [32mINFO[39m: [36mStarting one-time model→provider backfill migration[39m
+    [35mmodule[39m: "migrate-model-providers"
+[17:25:19.587] [32mINFO[39m: [36mSetting updated[39m
+    [35mmodule[39m: "app-settings"
+    [35mkey[39m: "migration_model_provider_done"
+[17:25:19.587] [32mINFO[39m: [36mModel→provider backfill migration complete[39m
+    [35mmodule[39m: "migrate-model-providers"
+    [35mtotalFixed[39m: 0
+[17:25:19.590] [32mINFO[39m: [36mRegistering native tools...[39m
+    [35mmodule[39m: "server"
+[17:25:19.591] [32mINFO[39m: [36mNative tools registered[39m
+    [35mmodule[39m: "tools"
+    [35mcount[39m: 232
+[17:25:19.591] [32mINFO[39m: [36mSeeding built-in toolboxes...[39m
+    [35mmodule[39m: "server"
+[17:25:19.601] [32mINFO[39m: [36mBuilt-in toolboxes seeded[39m
+    [35mmodule[39m: "toolboxes"
+    [35minserted[39m: 9
+    [35mupdated[39m: 0
+    [35mtotal[39m: 9
+[17:25:19.603] [32mINFO[39m: [36mSetting updated[39m
+    [35mmodule[39m: "app-settings"
+    [35mkey[39m: "agent_toolbox_default_migrated"
+[17:25:19.604] [32mINFO[39m: [36mSeeding built-in tool domains...[39m
+    [35mmodule[39m: "server"
+[17:25:19.624] [32mINFO[39m: [36mBuilt-in tool domains seeded[39m
+    [35mmodule[39m: "tool-domains"
+    [35minserted[39m: 25
+    [35mupdated[39m: 0
+    [35mtotal[39m: 25
+[17:25:19.624] [32mINFO[39m: [36mRegistering built-in LLM providers...[39m
+    [35mmodule[39m: "server"
+[17:25:19.625] [32mINFO[39m: [36mScanning for plugins...[39m
+    [35mmodule[39m: "server"
+[17:25:19.626] [32mINFO[39m: [36mScanning for plugins[39m
+    [35mmodule[39m: "plugins"
+    [35mdir[39m: "/home/runner/work/phistory/phistory/.phistory-cache/installs/hivekeep/e6bf9aea4159312730a690b94697084616b44556/source/hivekeep-e6bf9aea4159312730a690b94697084616b44556/plugins"
+[17:25:19.631] [32mINFO[39m: [36mPlugin scan complete[39m
+    [35mmodule[39m: "plugins"
+    [35mtotal[39m: 0
+    [35menabled[39m: 0
+[17:25:19.633] [32mINFO[39m: [36mPlugin file watcher started[39m
+    [35mmodule[39m: "plugins"
+[17:25:19.633] [32mINFO[39m: [36mStarting queue worker...[39m
+    [35mmodule[39m: "server"
+[17:25:19.634] [32mINFO[39m: [36mQueue worker started[39m
+    [35mmodule[39m: "agent-engine"
+    [35mpollIntervalMs[39m: 500
+[17:25:19.634] [32mINFO[39m: [36mInitializing cron scheduler...[39m
+    [35mmodule[39m: "server"
+[17:25:19.635] [32mINFO[39m: [36mRecovering pending wake-ups...[39m
+    [35mmodule[39m: "server"
+[17:25:19.636] [32mINFO[39m: [36mStarting background mini-app backends...[39m
+    [35mmodule[39m: "server"
+[17:25:19.636] [32mINFO[39m: [36mStarting email trigger poller...[39m
+    [35mmodule[39m: "server"
+[17:25:19.637] [32mINFO[39m: [36mEmail trigger poller started[39m
+    [35mmodule[39m: "email-trigger-poller"
+    [35mintervalMs[39m: 120000
+[17:25:19.638] [32mINFO[39m: [36mQuick session cleanup started[39m
+    [35mmodule[39m: "quick-session-cleanup"
+    [35mintervalMinutes[39m: 60
+[17:25:19.640] [32mINFO[39m: [36mRestoring persisted terminal sessions...[39m
+    [35mmodule[39m: "server"
+[17:25:19.649] [32mINFO[39m: [36mChannel file cleanup scheduled[39m
+    [35mmodule[39m: "files"
+    [35mintervalMin[39m: 60
+    [35mretentionDays[39m: 30
+[17:25:19.649] [32mINFO[39m: [36mStuck-agent watch scheduled[39m
+    [35mmodule[39m: "stuck-agent-watch"
+    [35mwarnMs[39m: 900000
+    [35mrecoverMs[39m: 3600000
+[17:25:19.650] [32mINFO[39m: [36mWebhook log cleanup scheduled[39m
+    [35mmodule[39m: "webhooks"
+    [35mintervalHours[39m: 6
+[17:25:19.650] [32mINFO[39m: [36mExternal API request GC scheduled[39m
+    [35mmodule[39m: "external-api"
+    [35mintervalHours[39m: 6
+    [35mretentionHours[39m: 168
+[17:25:19.651] [32mINFO[39m: [36mVersion check cron started[39m
+    [35mmodule[39m: "version-check"
+    [35mintervalHours[39m: 1
+[17:25:19.653] [32mINFO[39m: [36mModel-info cache refresh cron started[39m
+    [35mmodule[39m: "model-info-cache"
+    [35mschedule[39m: "0 */6 * * *"
+[17:25:19.655] [32mINFO[39m: [36mHivekeep server started[39m
+    [35mmodule[39m: "server"
+    [35mport[39m: 59967
+    [35menv[39m: "development"
+    [35mdataDir[39m: "/tmp/phistory-home-0gn_g1_z/hivekeep-data"
+[17:25:19.655] [32mINFO[39m: [36mRestored active crons[39m
+    [35mmodule[39m: "crons"
+    [35mcount[39m: 0
+[17:25:19.656] [32mINFO[39m: [36mRestoring active channels[39m
+    [35mmodule[39m: "channels"
+    [35mcount[39m: 0
+[17:25:19.657] [32mINFO[39m: [36mModel-info cache refresh complete[39m
+    [35mmodule[39m: "model-info-cache"
+    [35mproviderCount[39m: 0
+    [35mtotalCached[39m: 0
+[17:25:20.106] [32mINFO[39m: [36mOnboarding completed[39m
+    [35mmodule[39m: "routes:onboarding"
+    [35muserId[39m: "M3fIBGwCYoDvYgWSytFlW98HSuAcN3Vc"
+    [35mrole[39m: "admin"
+    [35mpseudonym[39m: "phistory"
+[17:25:20.185] [32mINFO[39m: [36mProvider connection tested[39m
+    [35mmodule[39m: "providers"
+    [35mtype[39m: "openai-compatible"
+    [35mvalid[39m: true
+[17:25:20.191] [32mINFO[39m: [36mVault secret created[39m
+    [35mmodule[39m: "vault"
+    [35msecretKey[39m: "provider_openai-compatible_934408fc-0e91-4a2b-80fd-67e4dd8f85ea_apiKey"
+[17:25:20.193] [32mINFO[39m (Phistory compatible OpenRouter): [36mProvider created[39m
+    [35mmodule[39m: "routes:providers"
+    [35mproviderId[39m: "934408fc-0e91-4a2b-80fd-67e4dd8f85ea"
+    [35mslug[39m: "phistory-compatible-openrouter"
+    [35mtype[39m: "openai-compatible"
+    [35mcapabilities[39m: [
+      "llm"
+    ]
+    [35misValid[39m: true
+[17:25:20.557] [32mINFO[39m: [36mSetting updated[39m
+    [35mmodule[39m: "app-settings"
+    [35mkey[39m: "default_llm_model"
+[17:25:20.558] [32mINFO[39m: [36mSetting updated[39m
+    [35mmodule[39m: "app-settings"
+    [35mkey[39m: "default_llm_provider_id"
+[17:25:20.560] [32mINFO[39m (Queenie): [36mAgent created[39m
+    [35mmodule[39m: "services:agents"
+    [35magentId[39m: "3354b133-7d5e-4e12-bef6-12aaa2b6a629"
+    [35mslug[39m: "queenie"
+[17:25:20.563] [32mINFO[39m: [36mConfigurator Agent (Queenie) seeded[39m
+    [35mmodule[39m: "configurator"
+    [35magentId[39m: "3354b133-7d5e-4e12-bef6-12aaa2b6a629"
+    [35mmodel[39m: "qwen/qwen4-max"
+[17:25:20.643] [32mINFO[39m: [36mProcessing message[39m
+    [35mmodule[39m: "agent-engine"
+    [35magentId[39m: "3354b133-7d5e-4e12-bef6-12aaa2b6a629"
+    [35mqueueItemId[39m: "f2655d7f-2fe8-4fb5-b51b-3ba1380d548f"
+    [35mmessageType[39m: "user"
+    [35msourceType[39m: "system"
+[17:25:20.792] [32mINFO[39m: [36mSetting updated[39m
+    [35mmodule[39m: "app-settings"
+    [35mkey[39m: "context_usage:3354b133-7d5e-4e12-bef6-12aaa2b6a629"
+[17:25:20.813] [32mINFO[39m: [36mPrompt cache stats[39m
+    [35mmodule[39m: "agent-engine"
+    [35magentId[39m: "3354b133-7d5e-4e12-bef6-12aaa2b6a629"
+    [35mmodelId[39m: "qwen/qwen4-max"
+    [35minputTokens[39m: 0
+    [35mcacheReadTokens[39m: 0
+    [35mcacheWriteTokens[39m: 0
+    [35mcacheHitRatio[39m: null
+
+[claude-tap] shutting down python... (Ctrl+C again to force)
+[17:25:20.813] [32mINFO[39m: [36mLLM turn completed[39m
+    [35mmodule[39m: "agent-engine"
+    [35magentId[39m: "3354b133-7d5e-4e12-bef6-12aaa2b6a629"
+    [35mmessageId[39m: "354bdee9-56bd-4553-9685-09b9b513cae8"
+    [35mstepCount[39m: 1
+    [35mfinishReasons[39m: [
+      "stop"
+    ]
+    [35mcontentLength[39m: 8
+    [35mtoolCalls[39m: 0
+    [35mwasAborted[39m: false
+    [35mturnTimedOut[39m: false
+    [35msilentStopAfterTools[39m: false
+[17:25:20.860] [32mINFO[39m: [36mShutting down...[39m
+    [35mmodule[39m: "server"
+[17:25:20.860] [32mINFO[39m: [36mShutting down Playwright manager[39m
+    [35mmodule[39m: "playwright-manager"
+    [35mbrowsers[39m: 0
+    [35msessions[39m: 0
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/.tap/2026-11-17/trace_172517.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/.tap/2026-11-17/trace_172517.log
+  view:         /home/runner/work/phistory/phistory/captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/.tap/2026-11-17/trace_172517.html
+  prompt:       /home/runner/work/phistory/phistory/captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/prompt.md
+
+stderr:
