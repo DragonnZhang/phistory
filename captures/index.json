@@ -427,6 +427,15 @@
       "snapshots": 1
     },
     {
+      "agent_id": "wechat-mac-rpa",
+      "agent": "WeChat Mac RPA",
+      "latest_version": "31cf55be1264acf35d436e754deda06833ec4087",
+      "latest_published_at": "",
+      "latest_captured_at": "2026-11-17T15:45:15.463526+00:00",
+      "versions": 1,
+      "snapshots": 1
+    },
+    {
       "agent_id": "autoref",
       "agent": "AutoRef",
       "latest_version": "2cd47b74226f76c785f0679e6ccc61e33e55b7e6",
@@ -116751,6 +116760,29 @@
       "prompt": "captures/inkos/1.8.0/variants/chat-openai/prompt.md",
       "trace": "captures/inkos/1.8.0/variants/chat-openai/trace.jsonl",
       "meta": "captures/inkos/1.8.0/variants/chat-openai/meta.json"
+    },
+    {
+      "agent_id": "wechat-mac-rpa",
+      "agent": "WeChat Mac RPA",
+      "version": "31cf55be1264acf35d436e754deda06833ec4087",
+      "variant_id": "portable-reply-api",
+      "variant_label": "Native portable reply API / built-in tool registry",
+      "variant_dimensions": {
+        "entry": "ReplyGenerator.generate / ChatMessage",
+        "model": "native DeepSeek v4 flash",
+        "dependencies": "declared portable core and tool dependencies; no macOS UI spine",
+        "scope": "native reply engine; no WeChat send"
+      },
+      "observed": {
+        "model": "deepseek-v4-flash",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-17T15:45:15.463526+00:00",
+      "prompt": "captures/wechat-mac-rpa/31cf55be1264acf35d436e754deda06833ec4087/variants/portable-reply-api/prompt.md",
+      "trace": "captures/wechat-mac-rpa/31cf55be1264acf35d436e754deda06833ec4087/variants/portable-reply-api/trace.jsonl",
+      "meta": "captures/wechat-mac-rpa/31cf55be1264acf35d436e754deda06833ec4087/variants/portable-reply-api/meta.json"
     },
     {
       "agent_id": "autoref",

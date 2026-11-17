@@ -143,6 +143,7 @@ Last capture update: 2026-11-17 15:45 UTC
 | CUGA | [0.4.5 - 2026-11-03](captures/cuga-agent/0.4.5/variants/hello-tools-api/prompt.md) | 1 | 1 | 2026-11-17 13:13 UTC |
 | AutoResearchClaw | [v0.5.0 - 2026-05-20](captures/autoresearchclaw/v0.5.0/variants/topic-init/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | Inkos | [1.8.0 - 2026-08-17](captures/inkos/1.8.0/variants/chat-openai/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
+| WeChat Mac RPA | [31cf55be1264acf35d436e754deda06833ec4087](captures/wechat-mac-rpa/31cf55be1264acf35d436e754deda06833ec4087/variants/portable-reply-api/prompt.md) | 1 | 1 | 2026-11-17 15:45 UTC |
 | AutoRef | [2cd47b74226f76c785f0679e6ccc61e33e55b7e6](captures/autoref/2cd47b74226f76c785f0679e6ccc61e33e55b7e6/variants/scene-planner-initial/prompt.md) | 1 | 1 | 2026-11-17 15:45 UTC |
 | Critic-training | [1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c](captures/critic-training/1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c/variants/prm-actor-initial/prompt.md) | 1 | 1 | 2026-11-17 15:37 UTC |
 | Empryo / public SoulForge v2 | [c27dac116d2ee1637abfc6634bebf08b5c379454](captures/empryo/c27dac116d2ee1637abfc6634bebf08b5c379454/variants/public-soulforge-v2/prompt.md) | 1 | 1 | 2026-11-17 15:37 UTC |
