@@ -23,6 +23,7 @@ This file is for future coding agents. Read it before changing the project.
 - `.github/workflows/recapture-claude-history.yml`: manually triggered, sharded Linux recapture for the complete Claude Code history with remote experiment fetching disabled.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
 - `.github/workflows/archive-sources.yml`: Linux source archival and hash verification, with separate `source-captures/` artifacts and `sources.html` viewer.
+- `.github/workflows/capture-selected.yml`: bounded captures and fresh smoke for an explicit list of agents, without running the other integrations.
 
 Generated capture artifacts live in:
 
@@ -109,6 +110,7 @@ Claude Code also tracks `official-fable-5-2` and `official-mythos-5-2` from `2.1
 - `pi`: npm package `@earendil-works/pi-coding-agent`, tap client `pi`, isolated Pi provider config.
 - `omp`: npm package `@oh-my-pi/pi-coding-agent` for version discovery, official `can1357/oh-my-pi` release binary for installation, tap client `omp`, isolated Oh My Pi provider config.
 - `gemini-cli`: official npm package `@google/gemini-cli`, tap client `gemini`, fake `GEMINI_API_KEY`, transparent forward capture. The default model is not overridden; keeping `GOOGLE_GEMINI_BASE_URL` unset preserves the native API-key prompt surface rather than selecting gateway auth. `GEMINI_CLI_TRUST_WORKSPACE=true` trusts only Phistory's isolated empty work directory and is recorded in capture metadata.
+- The additional `goose`, `crush`, `mini-swe-agent`, `nanobot`, `bub`, and `jcode` profiles use generic typed-protocol forward capture. They remain outside scheduled latest capture until Linux verification passes. Goose selects the OpenAI provider's default model and the platform Developer extension. Crush and mini require an explicitly configured model, recorded in variant dimensions/environment. Nanobot, Bub, and Jcode retain their package's model selection; Bub installs the official `app` extra. Configurations and temporary homes are isolated.
 
 When adding another CLI, prefer extending the existing abstractions:
 

@@ -234,8 +234,9 @@ def _install_pypi(agent: AgentSpec, version: str, install_dir: Path) -> Path:
         shutil.rmtree(install_dir)
     install_dir.mkdir(parents=True, exist_ok=True)
     run(["uv", "venv", str(install_dir)], timeout=120)
+    extras = f"[{','.join(agent.pypi_extras)}]" if agent.pypi_extras else ""
     run(
-        ["uv", "pip", "install", "--python", str(bin_dir / "python"), f"{agent.package}=={version}"],
+        ["uv", "pip", "install", "--python", str(bin_dir / "python"), f"{agent.package}{extras}=={version}"],
         timeout=INSTALL_TIMEOUT_SECONDS,
     )
     if not executable.exists():

@@ -91,7 +91,9 @@
           ],
           "path": "source-captures/jcode/c3b4e3fee787fb2fccbf"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "jcode"
     },
     {
       "id": "goose",
@@ -220,7 +222,9 @@
           ],
           "path": "source-captures/goose/02d3be6aae21bcfd8f29"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "goose"
     },
     {
       "id": "hive",
@@ -293,7 +297,9 @@
           ],
           "path": "source-captures/hive/1a2250c8c6ad48590e2c"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "hive"
     },
     {
       "id": "agent-zero",
@@ -1362,7 +1368,9 @@
           ],
           "path": "source-captures/agent-zero/88d8ab4923301ac70dab"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "agent-zero"
     },
     {
       "id": "agentlas-os",
@@ -1435,7 +1443,9 @@
           ],
           "path": "source-captures/agentlas-os/d292fdca39deab201006"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "agentlas-os"
     },
     {
       "id": "autoresearchclaw",
@@ -1560,7 +1570,9 @@
           ],
           "path": "source-captures/autoresearchclaw/6dea07326bf432ae582e"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "autoresearchclaw"
     },
     {
       "id": "openevolve",
@@ -1653,7 +1665,9 @@
           ],
           "path": "source-captures/openevolve/be374669e51159e619e7"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "openevolve"
     },
     {
       "id": "longhorizon-harness",
@@ -1744,14 +1758,18 @@
           ],
           "path": "source-captures/longhorizon-harness/d1f61ecc4402933f170a"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "longhorizon-harness"
     },
     {
       "id": "opencode",
       "name": "OpenCode",
       "repository": "anomalyco/opencode",
       "existing_agent": "opencode",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "opencode"
     },
     {
       "id": "dark-moon",
@@ -1842,7 +1860,9 @@
           ],
           "path": "source-captures/dark-moon/347289c26d83ef2f892a"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "dark-moon"
     },
     {
       "id": "gpt-researcher",
@@ -1917,7 +1937,9 @@
           ],
           "path": "source-captures/gpt-researcher/ec24f80a760e324e1df8"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "gpt-researcher"
     },
     {
       "id": "atomic-agent",
@@ -2032,7 +2054,9 @@
           ],
           "path": "source-captures/atomic-agent/d31b988e7c0d2128ef6e"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "atomic-agent"
     },
     {
       "id": "pi-rust",
@@ -2107,7 +2131,9 @@
           ],
           "path": "source-captures/pi-rust/128ee911697aea8b61b0"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "pi-rust"
     },
     {
       "id": "bub",
@@ -2198,7 +2224,9 @@
           ],
           "path": "source-captures/bub/d12172b0a95941cd898e"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "bub"
     },
     {
       "id": "deer-flow",
@@ -2307,14 +2335,18 @@
           ],
           "path": "source-captures/deer-flow/47c1ea714c6cd7783a81"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "deer-flow"
     },
     {
       "id": "omp",
       "name": "oh-my-pi",
       "repository": "can1357/oh-my-pi",
       "existing_agent": "omp",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "omp"
     },
     {
       "id": "crush",
@@ -2405,7 +2437,9 @@
           ],
           "path": "source-captures/crush/70e6cf1dea4e74097f1e"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "crush"
     },
     {
       "id": "cline",
@@ -2568,7 +2602,9 @@
           ],
           "path": "source-captures/cline/573238b035e9bc954e02"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "cline"
     },
     {
       "id": "vibesdk",
@@ -2659,7 +2695,9 @@
           ],
           "path": "source-captures/vibesdk/0cef02efe40370cce138"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "vibesdk"
     },
     {
       "id": "codewhale",
@@ -2804,7 +2842,9 @@
           ],
           "path": "source-captures/codewhale/90b430084e4d6e06bfbf"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "codewhale"
     },
     {
       "id": "intentkit",
@@ -2877,7 +2917,9 @@
           ],
           "path": "source-captures/intentkit/9fa4cd13e4ed549072b3"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "intentkit"
     },
     {
       "id": "cuga-agent",
@@ -2988,14 +3030,18 @@
           ],
           "path": "source-captures/cuga-agent/f14a983da3e3c120f08f"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "cuga-agent"
     },
     {
       "id": "dsh",
       "name": "DSH",
       "repository": "deepseek-ai/deepseek-harness",
       "existing_agent": "dsh",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "dsh"
     },
     {
       "id": "quorum-cli",
@@ -3068,7 +3114,9 @@
           ],
           "path": "source-captures/quorum-cli/eca6d379a287e836e1f9"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "quorum-cli"
     },
     {
       "id": "dyad",
@@ -3267,14 +3315,18 @@
           ],
           "path": "source-captures/dyad/98504bb472c8ebb3bb8d"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "dyad"
     },
     {
       "id": "pi",
       "name": "Pi",
       "repository": "earendil-works/pi",
       "existing_agent": "pi",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "pi"
     },
     {
       "id": "eigent",
@@ -3401,7 +3453,9 @@
           ],
           "path": "source-captures/eigent/e0f943fcd46500742ae5"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "eigent"
     },
     {
       "id": "eliza",
@@ -3510,7 +3564,9 @@
           ],
           "path": "source-captures/eliza/66f9f76d5e9586467b27"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "eliza"
     },
     {
       "id": "db-gpt",
@@ -3603,7 +3659,9 @@
           ],
           "path": "source-captures/db-gpt/b87b05849b52369e04e3"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "db-gpt"
     },
     {
       "id": "deepseek-reasonix",
@@ -3874,7 +3932,9 @@
           ],
           "path": "source-captures/deepseek-reasonix/cdc5e09d31b45a8dc818"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "deepseek-reasonix"
     },
     {
       "id": "raven",
@@ -4127,7 +4187,9 @@
           ],
           "path": "source-captures/raven/e2eeb11c00244a023813"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "raven"
     },
     {
       "id": "jobs-applier-ai-agent-aihawk",
@@ -4184,7 +4246,9 @@
           ],
           "path": "source-captures/jobs-applier-ai-agent-aihawk/e746449b61c135eea5b0"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "jobs-applier-ai-agent-aihawk"
     },
     {
       "id": "fibona-agent",
@@ -4295,7 +4359,9 @@
           ],
           "path": "source-captures/fibona-agent/edd0d6495cf4abe34b2f"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "fibona-agent"
     },
     {
       "id": "agenticseek",
@@ -4368,7 +4434,9 @@
           ],
           "path": "source-captures/agenticseek/27eeac716f9a910217c2"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "agenticseek"
     },
     {
       "id": "openmanus",
@@ -4459,7 +4527,9 @@
           ],
           "path": "source-captures/openmanus/91496e1ba9a7dd9f50f7"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "openmanus"
     },
     {
       "id": "gemini-cli",
@@ -4610,7 +4680,9 @@
           ],
           "path": "source-captures/gemini-cli/c2658cafda9c22e3e2b5"
         }
-      ]
+      ],
+      "runtime_available": true,
+      "runtime_agent": "gemini-cli"
     },
     {
       "id": "nanobot",
@@ -4701,7 +4773,9 @@
           ],
           "path": "source-captures/nanobot/10494c2e43ea646e7ab4"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "nanobot"
     },
     {
       "id": "tianshu-harness",
@@ -4776,7 +4850,9 @@
           ],
           "path": "source-captures/tianshu-harness/390c76ada401664b7db7"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "tianshu-harness"
     },
     {
       "id": "nausicaa-harness",
@@ -4885,7 +4961,9 @@
           ],
           "path": "source-captures/nausicaa-harness/d385635d630f5453a441"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "nausicaa-harness"
     },
     {
       "id": "kilocode",
@@ -5030,7 +5108,9 @@
           ],
           "path": "source-captures/kilocode/00f3f715a55ba06aaf2d"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "kilocode"
     },
     {
       "id": "devopsgpt",
@@ -5103,7 +5183,9 @@
           ],
           "path": "source-captures/devopsgpt/2f1a17ab1a5e8c5026ce"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "devopsgpt"
     },
     {
       "id": "autoref",
@@ -5176,7 +5258,9 @@
           ],
           "path": "source-captures/autoref/d401b8ea584f38afe8c3"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "autoref"
     },
     {
       "id": "open-swe",
@@ -5285,7 +5369,9 @@
           ],
           "path": "source-captures/open-swe/2e8b395ae7735e1766e3"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "open-swe"
     },
     {
       "id": "headlong",
@@ -5358,7 +5444,9 @@
           ],
           "path": "source-captures/headlong/1852bf64666d6b897e88"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "headlong"
     },
     {
       "id": "letta-code",
@@ -5503,7 +5591,9 @@
           ],
           "path": "source-captures/letta-code/91c809e56ed8cdf799c5"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "letta-code"
     },
     {
       "id": "librechat",
@@ -5612,7 +5702,9 @@
           ],
           "path": "source-captures/librechat/188dba831ffa61bfa476"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "librechat"
     },
     {
       "id": "looptroop",
@@ -5721,7 +5813,9 @@
           ],
           "path": "source-captures/looptroop/c8fca827d51fb882f0ce"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "looptroop"
     },
     {
       "id": "web3gpt",
@@ -5814,7 +5908,9 @@
           ],
           "path": "source-captures/web3gpt/27c21c52b74f2cb24d1a"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "web3gpt"
     },
     {
       "id": "markus",
@@ -5941,7 +6037,9 @@
           ],
           "path": "source-captures/markus/7fb385165f8f36ecae24"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "markus"
     },
     {
       "id": "hivekeep",
@@ -6122,7 +6220,9 @@
           ],
           "path": "source-captures/hivekeep/b42e6f25546a68904a08"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "hivekeep"
     },
     {
       "id": "ctxagent",
@@ -6195,7 +6295,9 @@
           ],
           "path": "source-captures/ctxagent/fd69cc26cdd8051d9c50"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "ctxagent"
     },
     {
       "id": "ufo",
@@ -6286,7 +6388,9 @@
           ],
           "path": "source-captures/ufo/3a4817df37493dc0b318"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "ufo"
     },
     {
       "id": "anything-llm",
@@ -6377,7 +6481,9 @@
           ],
           "path": "source-captures/anything-llm/5669dfa6e34a63cbd82b"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "anything-llm"
     },
     {
       "id": "mirix",
@@ -6450,21 +6556,27 @@
           ],
           "path": "source-captures/mirix/58dd62cbea63033f9af8"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "mirix"
     },
     {
       "id": "kimi",
       "name": "Kimi CLI（旧仓库）",
       "repository": "MoonshotAI/kimi-cli",
       "existing_agent": "kimi",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "kimi"
     },
     {
       "id": "kimi-code",
       "name": "Kimi Code",
       "repository": "MoonshotAI/kimi-code",
       "existing_agent": "kimi-code",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "kimi-code"
     },
     {
       "id": "mini-agi",
@@ -6521,7 +6633,9 @@
           ],
           "path": "source-captures/mini-agi/703466d35169f2eefc5c"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "mini-agi"
     },
     {
       "id": "octomind",
@@ -6648,7 +6762,9 @@
           ],
           "path": "source-captures/octomind/1b972275033b36f463a1"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "octomind"
     },
     {
       "id": "nanomuse",
@@ -6775,7 +6891,9 @@
           ],
           "path": "source-captures/nanomuse/2cba60bb232d9c8cff9c"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "nanomuse"
     },
     {
       "id": "inkos",
@@ -6848,14 +6966,18 @@
           ],
           "path": "source-captures/inkos/d7a5827b6466a711c4d3"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "inkos"
     },
     {
       "id": "hermes",
       "name": "Hermes Agent",
       "repository": "NousResearch/hermes-agent",
       "existing_agent": "hermes",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "hermes"
     },
     {
       "id": "openagents",
@@ -6988,21 +7110,27 @@
           ],
           "path": "source-captures/openagents/e4bd0a19801a07dbbc72"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "openagents"
     },
     {
       "id": "codex",
       "name": "Codex",
       "repository": "openai/codex",
       "existing_agent": "codex",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "codex"
     },
     {
       "id": "openclaw",
       "name": "OpenClaw",
       "repository": "openclaw/openclaw",
       "existing_agent": "openclaw",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "openclaw"
     },
     {
       "id": "opendev",
@@ -7147,7 +7275,9 @@
           ],
           "path": "source-captures/opendev/723fae218312059de001"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "opendev"
     },
     {
       "id": "openinterpreter",
@@ -7256,7 +7386,9 @@
           ],
           "path": "source-captures/openinterpreter/b5821eef28924f82f578"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "openinterpreter"
     },
     {
       "id": "orkas",
@@ -7383,7 +7515,9 @@
           ],
           "path": "source-captures/orkas/1a2dd3d91b2a2de7285d"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "orkas"
     },
     {
       "id": "self-operating-computer",
@@ -7440,7 +7574,9 @@
           ],
           "path": "source-captures/self-operating-computer/8b6f1a52ddd472c6b6e5"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "self-operating-computer"
     },
     {
       "id": "bambooai",
@@ -7497,7 +7633,9 @@
           ],
           "path": "source-captures/bambooai/d404725f09e38301b7fb"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "bambooai"
     },
     {
       "id": "prime-agent",
@@ -7698,7 +7836,9 @@
           ],
           "path": "source-captures/prime-agent/a2dd1edfd8fdbaa76345"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "prime-agent"
     },
     {
       "id": "localgpt",
@@ -7771,7 +7911,9 @@
           ],
           "path": "source-captures/localgpt/49d79fed1a7099fd4d02"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "localgpt"
     },
     {
       "id": "empryo",
@@ -7862,14 +8004,18 @@
           ],
           "path": "source-captures/empryo/0eb52119b441cde832ea"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "empryo"
     },
     {
       "id": "qwen-code",
       "name": "Qwen Code",
       "repository": "QwenLM/qwen-code",
       "existing_agent": "qwen-code",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "qwen-code"
     },
     {
       "id": "ouroboros",
@@ -8014,7 +8160,9 @@
           ],
           "path": "source-captures/ouroboros/ca38f1a859e771b3dff4"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "ouroboros"
     },
     {
       "id": "agentlink",
@@ -8105,7 +8253,9 @@
           ],
           "path": "source-captures/agentlink/3bafdfedcfdd0947b956"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "agentlink"
     },
     {
       "id": "robotuse",
@@ -8268,7 +8418,9 @@
           ],
           "path": "source-captures/robotuse/3cc0479b8ea1cb905da2"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "robotuse"
     },
     {
       "id": "deepanalyze",
@@ -8325,7 +8477,9 @@
           ],
           "path": "source-captures/deepanalyze/1eab91b25b9ffef79d2e"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "deepanalyze"
     },
     {
       "id": "cheetahclaws",
@@ -8398,7 +8552,9 @@
           ],
           "path": "source-captures/cheetahclaws/be3e874d5f62b917e806"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "cheetahclaws"
     },
     {
       "id": "trashclaw",
@@ -8455,7 +8611,9 @@
           ],
           "path": "source-captures/trashclaw/1f27faf48042546289ac"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "trashclaw"
     },
     {
       "id": "critic-training",
@@ -8512,7 +8670,9 @@
           ],
           "path": "source-captures/critic-training/3531f7ecabd80c4da0dd"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "critic-training"
     },
     {
       "id": "autogpt",
@@ -8657,7 +8817,9 @@
           ],
           "path": "source-captures/autogpt/3dc56ebc08e5c8dcc929"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "autogpt"
     },
     {
       "id": "agent-s",
@@ -8748,7 +8910,9 @@
           ],
           "path": "source-captures/agent-s/87f9aa145df88100788f"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "agent-s"
     },
     {
       "id": "skyvern",
@@ -8917,7 +9081,9 @@
           ],
           "path": "source-captures/skyvern/0200be2ca2cb40c4e6b9"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "skyvern"
     },
     {
       "id": "jev-social",
@@ -8974,7 +9140,9 @@
           ],
           "path": "source-captures/jev-social/afe07c1366e123cee7b4"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "jev-social"
     },
     {
       "id": "mini-swe-agent",
@@ -9065,7 +9233,9 @@
           ],
           "path": "source-captures/mini-swe-agent/817bcc9388429557ef6a"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "mini-swe-agent"
     },
     {
       "id": "openagent",
@@ -9198,7 +9368,9 @@
           ],
           "path": "source-captures/openagent/820f63f045562c7eb111"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "openagent"
     },
     {
       "id": "pr-agent",
@@ -9271,7 +9443,9 @@
           ],
           "path": "source-captures/pr-agent/248659c4c7083e79443b"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "pr-agent"
     },
     {
       "id": "agent-qa",
@@ -9328,7 +9502,9 @@
           ],
           "path": "source-captures/agent-qa/e2f74546fb1541484e88"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "agent-qa"
     },
     {
       "id": "omni-rewriter",
@@ -9401,7 +9577,9 @@
           ],
           "path": "source-captures/omni-rewriter/3419afbe33617d18af4d"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "omni-rewriter"
     },
     {
       "id": "wechat-mac-rpa",
@@ -9492,21 +9670,27 @@
           ],
           "path": "source-captures/wechat-mac-rpa/af6a5c388f417a788f48"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "wechat-mac-rpa"
     },
     {
       "id": "grok",
       "name": "grok-build",
       "repository": "xai-org/grok-build",
       "existing_agent": "grok",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "grok"
     },
     {
       "id": "mimo",
       "name": "MiMo-Code",
       "repository": "XiaomiMiMo/MiMo-Code",
       "existing_agent": "mimo",
-      "snapshots": []
+      "snapshots": [],
+      "runtime_available": true,
+      "runtime_agent": "mimo"
     },
     {
       "id": "qm",
@@ -9597,7 +9781,9 @@
           ],
           "path": "source-captures/qm/e2d353d0009eee0712fd"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "qm"
     },
     {
       "id": "zcode",
@@ -9886,7 +10072,9 @@
           ],
           "path": "source-captures/zcode/0058cc78a1808a1e8f4d"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "zcode"
     },
     {
       "id": "cowagent",
@@ -10049,7 +10237,9 @@
           ],
           "path": "source-captures/cowagent/589155a1fc0f07d4f642"
         }
-      ]
+      ],
+      "runtime_available": false,
+      "runtime_agent": "cowagent"
     }
   ]
 }

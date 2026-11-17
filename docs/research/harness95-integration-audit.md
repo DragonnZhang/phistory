@@ -136,3 +136,122 @@ The initial survey citations often selected a short discriminating fragment rath
 LibreChat and DeepAnalyze do not have a universal built-in system prompt to export for every deployment. Archive their configuration/assembly code and preserve that distinction. Likewise, external CLI tools used by LongHorizon, Dark-Moon, LoopTroop or AutoRef are not declared to be the outer project's own universal toolset.
 
 All real execution captures and fresh smoke runs belong in Linux GitHub Actions. Source-file download, hashing, rendering and fake-CLI tests can run locally; neither an installable package nor a checked source hash is evidence that a runtime request capture passed.
+
+## Appendix: next Linux request-capture contracts
+
+These contracts were checked against the published release/package source, without executing the real CLIs locally. They are inputs for Linux CI validation, not claims that those captures have passed. Keep the existing isolated HOME/XDG setup and fake credentials. In each command below, the CLI is the child of `claude-tap run <executable> --mode forward --export-prompt ... --no-yolo -- ...`; no command should be launched directly against a real model service.
+
+### Shared claude-tap protocol requirement
+
+At the pinned tap revision, `clients.generic(cmd)` advertises only `PASSTHROUGH`. Request export can later infer the provider from the raw request, but dummy-response generation and streaming detection select their behavior from the already chosen `Protocol`. Consequently, a generic Chat Completions or Anthropic child currently receives a Responses-shaped fallback dummy and may retry or hang.
+
+The shared correction is to give generic clients `(ANTHROPIC, OPENAI, GEMINI, PASSTHROUGH)`, in that order with catch-all last. This reuses typed path selection, JSON/SSE dummy generation and streaming detection in both forward and reverse transports. Six duplicate client definitions are unnecessary. Native `/v1/messages`, `/v1/responses`, `/v1/chat/completions` and Google model paths are covered; the existing OpenAI `suffix:/chat/completions` rule also covers OpenRouter's `/api/v1/chat/completions`. Startup GETs and arbitrary gateway paths remain separate concerns: catch-all dummy output is not a model catalog/auth bootstrap implementation. [Generic client](https://github.com/DragonnZhang/claude-tap/blob/64872f527b862906b5944e74b4d155e6cbb4bd44/claude_tap/clients.py), [protocol selection](https://github.com/DragonnZhang/claude-tap/blob/64872f527b862906b5944e74b4d155e6cbb4bd44/claude_tap/protocols.py), [capture dummy responses](https://github.com/DragonnZhang/claude-tap/blob/64872f527b862906b5944e74b4d155e6cbb4bd44/claude_tap/pipeline.py).
+
+### Goose 1.59.2
+
+Use the official release asset `goose-x86_64-unknown-linux-gnu.tar.gz` from tag `v1.59.2`; the executable is `goose`. A fresh profile has no universal configured provider/model, and no enabled extension set is inferred merely from the presence of a default-extension constant. [Release](https://github.com/aaif-goose/goose/releases/tag/v1.59.2), [session resolution](https://github.com/aaif-goose/goose/blob/v1.59.2/crates/goose-cli/src/session/builder.rs), [CLI arguments](https://github.com/aaif-goose/goose/blob/v1.59.2/crates/goose-cli/src/cli.rs).
+
+Set `GOOSE_PATH_ROOT` to an absolute isolated directory and `GOOSE_DISABLE_KEYRING=1`. Goose then reads `<GOOSE_PATH_ROOT>/config/config.yaml`. Set `OPENAI_API_KEY=phistory-fake-api-key`. The current configuration wizard enables the in-process Developer extension as `type: platform`, not the older bundled-MCP `builtin` form:
+
+```yaml
+extensions:
+  developer:
+    enabled: true
+    type: platform
+    name: developer
+    description: Developer extension
+    display_name: Developer
+    bundled: true
+```
+
+```text
+goose run --provider openai --text "Reply with one short sentence." --no-session
+```
+
+With a CLI provider selection and no model selection, the session builder uses that provider's own metadata default, currently OpenAI `gpt-6.1-sol`. Setting only environment `GOOSE_PROVIDER=openai` does not enter that fallback branch: the unflagged path also requires a configured `GOOSE_MODEL`. If the default Phistory lane uses an unflagged command, put `GOOSE_PROVIDER: openai` and `GOOSE_MODEL: gpt-6.1-sol` in its isolated YAML and record the fixed capture configuration; do not describe it as a universal first-run model. The developer-extension configuration is also part of the recorded surface. [Provider default and request routing](https://github.com/aaif-goose/goose/blob/v1.59.2/crates/goose-providers/src/openai.rs), [wizard extension setup](https://github.com/aaif-goose/goose/blob/v1.59.2/crates/goose-cli/src/commands/configure.rs), [path isolation](https://github.com/aaif-goose/goose/blob/v1.59.2/crates/goose/src/config/paths.rs).
+
+For forward TLS, Goose supports `GOOSE_CA_CERT_PATH` explicitly. Point it to tap's generated Linux CA at `<isolated XDG_DATA_HOME>/claude-tap/ca.pem` if generic CA environment variables do not suffice. The provider adds this PEM bundle to its reqwest client. Do not replace the real raw request or disable TLS verification. [TLS setting](https://github.com/aaif-goose/goose/blob/v1.59.2/crates/goose/src/config/tls.rs), [TLS application](https://github.com/aaif-goose/goose/blob/v1.59.2/crates/goose-providers/src/api_client.rs).
+
+### Crush 0.101.0
+
+Use npm `@charmland/crush@0.101.0` or the same official release's Linux binary. The executable is `crush`, and `crush run "Reply with one short sentence."` is the normal one-shot entry. The published npm wrapper identifies the official source repository. [Release](https://github.com/charmbracelet/crush/releases/tag/v0.101.0), [package metadata](https://registry.npmjs.org/@charmland%2Fcrush/0.101.0), [run implementation](https://github.com/charmbracelet/crush/blob/v0.101.0/internal/cmd/run.go).
+
+The fresh install has no persisted large/small model choice. To create a repeatable fake-provider lane, set `CRUSH_GLOBAL_CONFIG` to an isolated **directory**, and write `crush.json` inside it. It is not a config-filename environment variable. Native JSON config remains supported alongside the newer `crushrc` format:
+
+```json
+{
+  "models": {
+    "large": {"model": "gpt-4.1", "provider": "openai"},
+    "small": {"model": "gpt-4.1", "provider": "openai"}
+  },
+  "providers": {
+    "openai": {"api_key": "phistory-fake-api-key"}
+  },
+  "options": {
+    "disable_provider_auto_update": true,
+    "disable_metrics": true
+  }
+}
+```
+
+Set `OPENAI_API_KEY=phistory-fake-api-key`, `CRUSH_DISABLE_PROVIDER_AUTO_UPDATE=1`, `CRUSH_DISABLE_METRICS=1`, and an isolated `CRUSH_DATA_DIR` in addition to HOME/XDG. Both model choices are explicit capture conditions, not built-in Crush defaults. The built-in `openai` provider migrates to the Responses endpoint type in this release; use its actual request body rather than converting it to Chat Completions. An empty disposable work directory also avoids the separate project-initialization flow. [Config locations and migration](https://github.com/charmbracelet/crush/blob/v0.101.0/internal/config/load.go), [model/provider/options schema](https://github.com/charmbracelet/crush/blob/v0.101.0/internal/config/config.go), [initialization](https://github.com/charmbracelet/crush/blob/v0.101.0/internal/config/init.go).
+
+### mini-swe-agent 2.4.6
+
+Use PyPI `mini-swe-agent==2.4.6` with executable `mini`. Read the installed package's `minisweagent/run/mini.py`, `run/utilities/config.py`, `models/__init__.py` and `config/mini.yaml`; the wheel is the release source of truth. [Release metadata](https://pypi.org/pypi/mini-swe-agent/2.4.6/json), [release wheel](https://files.pythonhosted.org/packages/a2/00/a2f454775f69f540ab529c5f5e35d672f6491f0e6edab7cb196a0d2a0e2e/mini_swe_agent-2.4.6-py3-none-any.whl).
+
+Set these isolated capture conditions:
+
+```text
+MSWEA_CONFIGURED=true
+MSWEA_GLOBAL_CONFIG_DIR=<absolute isolated config directory>
+MSWEA_MODEL_NAME=openai/gpt-4.1
+OPENAI_API_KEY=phistory-fake-api-key
+MSWEA_COST_TRACKING=ignore_errors
+```
+
+There is no built-in default model: precedence is explicit input, model config, then `MSWEA_MODEL_NAME`, followed by an error. `MSWEA_CONFIGURED` skips the interactive first-run configuration wizard. Keep this provider/model choice in metadata rather than implying an upstream model default.
+
+```text
+mini --task "Reply with one short sentence." --yolo --exit-immediately -c mini.yaml -c agent.step_limit=1
+```
+
+`mini.yaml` is this release's real CLI default and uses a native bash tool schema. `default.yaml` is a different text-action prompt; it must be a separate named surface if captured. A bare `-c agent.step_limit=1` would replace the default config list and lose its prompt, so retain `-c mini.yaml` explicitly. The one-step budget is necessary for an export probe: tap's text dummy contains no bash action, and the default unlimited step budget would otherwise allow format-error retries indefinitely. This budget changes execution length, not the initial prompt/tool definition. `--exit-immediately` disables the final confirmation prompt. A source survey describing an older text-only mini version must not override this published version's actual native-tool default.
+
+### nanobot 0.4.1
+
+Use PyPI `nanobot-ai==0.4.1`, selecting its Linux x86-64 wheel on CI. The executable is `nanobot`; the current wheel's `nanobot/cli/agent.py` exposes a true one-message path:
+
+```text
+nanobot agent --message "Reply with one short sentence."
+```
+
+The message flag selects the classic Python one-shot runtime automatically; a TTY, native UI or separate gateway daemon is not required. `--classic` is needed only to request the older interactive prompt. The one-shot still constructs the real AgentLoop, synchronizes workspace templates, registers configured tools, and emits its normal model request. [Release metadata](https://pypi.org/pypi/nanobot-ai/0.4.1/json), [Linux release wheel](https://files.pythonhosted.org/packages/27/47/972e61cfb71ed6f2393f93a0034348667973f8820a938e3cfd8a06200be0/nanobot_ai-0.4.1-py3-none-manylinux_2_17_x86_64.whl).
+
+Under isolated HOME, write `~/.nanobot/config.json` with only fake Anthropic credentials:
+
+```json
+{"providers":{"anthropic":{"apiKey":"phistory-fake-api-key"}}}
+```
+
+Leave model/provider overrides absent. Published `AgentDefaults` uses model `anthropic/claude-opus-4-5` and provider `auto`; the provider registry routes that selection to its native Anthropic backend. The fake credential can therefore preserve the package's actual default model while still preventing a real provider call through tap capture-only mode. The workspace template files contribute prompt content and must remain in the isolated capture environment. Explicit custom endpoint/provider recipes are different surfaces, not substitutes for this default.
+
+### Bub 0.6.1
+
+Install **`bub[app]==0.6.1`**, not plain `bub`: the release wheel's bootstrap deliberately checks its app-extra requirements before running any CLI. Python 3.12 or newer is required. The normal one-message entry is:
+
+```text
+bub run "Reply with one short sentence."
+```
+
+Set isolated `BUB_HOME`, `BUB_API_KEY=phistory-fake-api-key` (or provider-specific `BUB_OPENROUTER_API_KEY`), and `BUB_MAX_STEPS=1`. Leave `BUB_MODEL` absent to preserve the package's actual `openrouter:openrouter/free` default. The provider uses OpenRouter's Chat Completions endpoint; the generic tap correction handles its `/api/v1/chat/completions` suffix. `bub run` builds a normal CLI-channel message, loads the framework hooks, and passes it through `process_inbound`, including the real built-in prompt and tools; it is not an SDK reimplementation or an interactive `bub chat` session. [Release metadata](https://pypi.org/pypi/bub/0.6.1/json), [release wheel](https://files.pythonhosted.org/packages/2f/3c/39be7c0b0023977208aeba3e98fedb5403297df84d29cc6a361bf3af946b/bub-0.6.1-py3-none-any.whl).
+
+### Jcode 1.0.0
+
+Use release asset `jcode-linux-x86_64.tar.gz` from official tag `v1.0.0`. Its clap definitions provide `run` with a positional message and `--json` or `--ndjson`; the single-message implementation constructs the normal tool registry and Agent. [Release](https://github.com/1jehuang/jcode/releases/tag/v1.0.0), [CLI arguments](https://github.com/1jehuang/jcode/blob/v1.0.0/src/cli/args.rs), [single-message execution](https://github.com/1jehuang/jcode/blob/v1.0.0/src/cli/commands.rs).
+
+```text
+jcode --no-update --no-selfdev run --json "Reply with one short sentence."
+```
+
+Set isolated `JCODE_HOME`, `JCODE_NON_INTERACTIVE=1`, `ANTHROPIC_API_KEY=phistory-fake-api-key`, and `JCODE_RUN_AUTO_POKE=0`. Leave model and provider flags unset. `auto` is the CLI provider default; credential discovery counts a direct Anthropic API key as an available Claude backend. A directly supplied environment key avoids the separate consent flow for importing another application's stored credential. No universal fixed model should be invented: the provider/model defaults and configuration select it. Source inspection confirms the entry and credential path; the release's TLS/capability-prefetch behavior still requires its real Linux capture. [Provider initialization and direct-key handling](https://github.com/1jehuang/jcode/blob/v1.0.0/src/cli/provider_init.rs), [config defaults](https://github.com/1jehuang/jcode/blob/v1.0.0/crates/jcode-base/src/config/default_file.rs).

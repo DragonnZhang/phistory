@@ -945,7 +945,134 @@ GEMINI_CLI = AgentSpec(
     tap_mode="forward",
     extra_env={"CI": "1", "GEMINI_TELEMETRY_ENABLED": "false", "GEMINI_CLI_TRUST_WORKSPACE": "true"},
     recorded_env=("GEMINI_TELEMETRY_ENABLED", "GEMINI_CLI_TRUST_WORKSPACE"),
+    capture_timeout_seconds=300,
     default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.")),
+)
+
+
+GOOSE = AgentSpec(
+    id="goose",
+    display_name="Goose",
+    package="aaif-goose/goose",
+    source="github-release-asset",
+    release_asset="goose-x86_64-unknown-linux-gnu.tar.gz",
+    release_asset_binary="goose",
+    tap_client="goose",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={"GOOSE_DISABLE_KEYRING": "1"},
+    recorded_env=("GOOSE_DISABLE_KEYRING",),
+    home_profile="goose",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "run", "--provider", "openai", "--text", "Reply with one short sentence.", "--no-session"),
+        label="Default · OpenAI provider",
+        dimensions={"provider": "openai", "extensions": "platform developer"},
+    ),
+)
+
+CRUSH = AgentSpec(
+    id="crush",
+    display_name="Crush",
+    package="@charmland/crush",
+    tap_client="crush",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={"CRUSH_DISABLE_PROVIDER_AUTO_UPDATE": "1", "CRUSH_DISABLE_METRICS": "1"},
+    recorded_env=("CRUSH_DISABLE_PROVIDER_AUTO_UPDATE", "CRUSH_DISABLE_METRICS"),
+    home_profile="crush",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "run", "Reply with one short sentence."),
+        label="Default · configured OpenAI",
+        dimensions={"provider": "openai", "model": "gpt-4.1"},
+    ),
+)
+
+MINI_SWE_AGENT = AgentSpec(
+    id="mini-swe-agent",
+    display_name="mini-swe-agent",
+    package="mini-swe-agent",
+    source="pypi",
+    tap_client="mini",
+    executable="mini",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={
+        "MSWEA_CONFIGURED": "true",
+        "MSWEA_MODEL_NAME": "openai/gpt-4.1",
+        "MSWEA_COST_TRACKING": "ignore_errors",
+    },
+    recorded_env=("MSWEA_CONFIGURED", "MSWEA_MODEL_NAME", "MSWEA_COST_TRACKING"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "--task",
+            "Reply with one short sentence.",
+            "--yolo",
+            "--exit-immediately",
+            "-c",
+            "mini.yaml",
+            "-c",
+            "agent.step_limit=1",
+        ),
+        label="Default · configured OpenAI",
+        dimensions={"provider": "openai", "model": "gpt-4.1", "config": "mini.yaml", "step_limit": "1"},
+    ),
+)
+
+NANOBOT = AgentSpec(
+    id="nanobot",
+    display_name="nanobot",
+    package="nanobot-ai",
+    source="pypi",
+    tap_client="nanobot",
+    fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
+    home_profile="nanobot",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=180,
+    default_variant=_default(("--no-yolo", "--", "agent", "--message", "Reply with one short sentence.")),
+)
+
+BUB = AgentSpec(
+    id="bub",
+    display_name="Bub",
+    package="bub",
+    source="pypi",
+    pypi_extras=("app",),
+    tap_client="bub",
+    fake_env={"BUB_API_KEY": "phistory-fake-api-key", "BUB_OPENROUTER_API_KEY": "phistory-fake-api-key"},
+    extra_env={"BUB_MAX_STEPS": "1"},
+    recorded_env=("BUB_MAX_STEPS",),
+    home_profile="bub",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=180,
+    default_variant=_default(("--no-yolo", "--", "run", "Reply with one short sentence.")),
+)
+
+JCODE = AgentSpec(
+    id="jcode",
+    display_name="Jcode",
+    package="1jehuang/jcode",
+    source="github-release-asset",
+    release_asset="jcode-linux-x86_64.tar.gz",
+    release_asset_binary="jcode",
+    tap_client="jcode",
+    fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
+    extra_env={"JCODE_NON_INTERACTIVE": "1", "JCODE_RUN_AUTO_POKE": "0"},
+    recorded_env=("JCODE_NON_INTERACTIVE", "JCODE_RUN_AUTO_POKE"),
+    home_profile="jcode",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(("--no-yolo", "--", "--no-update", "run", "--json", "Reply with one short sentence.")),
 )
 
 
@@ -969,6 +1096,12 @@ AGENTS: dict[str, AgentSpec] = {
         PI,
         OMP,
         GEMINI_CLI,
+        GOOSE,
+        CRUSH,
+        MINI_SWE_AGENT,
+        NANOBOT,
+        BUB,
+        JCODE,
     )
 }
 AGENT_ORDER = tuple(AGENTS)

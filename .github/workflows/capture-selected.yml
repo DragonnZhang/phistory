@@ -1,0 +1,93 @@
+name: Capture selected prompts
+
+on:
+  workflow_dispatch:
+    inputs:
+      agents:
+        description: Comma-separated registered agent ids (only these agents are run)
+        type: string
+        required: true
+      variants:
+        description: Capture variant ids
+        type: string
+        default: default
+      force:
+        description: Recapture the selected latest versions
+        type: boolean
+        default: false
+      smoke:
+        description: Repeat selected captures in a fresh root and install cache
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: capture-prompts-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SELECTED_AGENTS: ${{ inputs.agents }}
+      SELECTED_VARIANTS: ${{ inputs.variants }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - run: uv run ruff format --check phistory tests
+      - run: uv run ruff check phistory tests
+      - run: uv run pytest
+      - run: uv build
+      - name: Capture selected agents
+        id: capture
+        env:
+          FORCE_CAPTURE: ${{ inputs.force }}
+        run: |
+          test -n "$SELECTED_AGENTS"
+          args=(--latest --agents "$SELECTED_AGENTS" --variants "$SELECTED_VARIANTS")
+          if [ "$FORCE_CAPTURE" = "true" ]; then
+            args+=(--force)
+          fi
+          set +e
+          uv run phistory capture "${args[@]}" --summary-title "Selected agent capture"
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+      - run: uv run phistory render-index
+      - run: uv run phistory render-site
+      - run: uv run phistory render-sources
+      - name: Commit selected capture updates
+        run: |
+          git add README.md README_zh.md index.html sources.html docs/captures.md captures source-captures/index.json
+          if git diff --cached --quiet; then
+            echo "No capture changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Capture selected agent prompt snapshots"
+          git push
+      - name: Smoke selected agents
+        if: inputs.smoke && steps.capture.outputs.status == '0'
+        run: uv run phistory --root /tmp/phistory-selected-smoke --cache-dir /tmp/phistory-selected-smoke-cache capture --latest --agents "$SELECTED_AGENTS" --variants "$SELECTED_VARIANTS" --force --summary-title "Selected agent fresh smoke"
+      - uses: actions/upload-artifact@v7
+        if: inputs.smoke && always()
+        with:
+          name: selected-smoke-captures
+          path: /tmp/phistory-selected-smoke
+          include-hidden-files: true
+          retention-days: 14
+      - name: Report capture failures
+        if: always() && steps.capture.outputs.status != '0'
+        run: |
+          echo "::error::Some selected captures failed; successful snapshots were preserved. Inspect per-agent errors."
+          exit 1

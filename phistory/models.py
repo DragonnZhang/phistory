@@ -22,6 +22,11 @@ HomeProfile = Literal[
     "opencode",
     "pi",
     "qwen",
+    "goose",
+    "crush",
+    "nanobot",
+    "bub",
+    "jcode",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -80,8 +85,12 @@ class AgentSpec:
     release_manifest_url: str | None = None
     github_release_install: GitHubReleaseInstall = "wheel"
     track_latest: bool = True
+    pypi_extras: tuple[str, ...] = ()
+    capture_timeout_seconds: int = 1800
 
     def __post_init__(self) -> None:
+        if self.capture_timeout_seconds < 1:
+            raise ValueError(f"{self.id}: capture timeout must be positive")
         all_variants = self.capture_variants
         ids = [variant.id for variant in all_variants]
         if self.default_variant.id != "default":

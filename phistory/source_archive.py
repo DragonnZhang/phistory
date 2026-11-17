@@ -265,7 +265,15 @@ def render_source_index(root: Path, output: Path) -> None:
                 raise ValueError(f"invalid source archive: {path}")
             snapshots.append({**manifest, "path": path.parent.as_posix()})
         snapshots.sort(key=lambda item: item["archived_at"], reverse=True)
-        records.append({**record, "snapshots": snapshots})
+        runtime_id = record.get("existing_agent") or record["id"]
+        runtime = root.parent / "captures" / runtime_id
+        runtime_available = any(
+            (path.parent / "prompt.md").exists() and (path.parent / "trace.jsonl").exists()
+            for path in runtime.glob("*/variants/*/meta.json")
+        )
+        records.append(
+            {**record, "snapshots": snapshots, "runtime_available": runtime_available, "runtime_agent": runtime_id}
+        )
         name = html.escape(record["name"])
         repo = html.escape(record["repository"])
         body = f'<p><a href="https://github.com/{repo}">{repo}</a></p>'
@@ -277,7 +285,10 @@ def render_source_index(root: Path, output: Path) -> None:
             body += "<p>Source archive pending.</p>"
             status = "pending"
         else:
-            status = "source archive"
+            status = "runtime + source archive" if runtime_available else "source archive only"
+            if runtime_available:
+                agent = urllib.parse.quote(runtime_id)
+                body += f'<p><a href="index.html?agent={agent}">Runtime request captures</a> are also available.</p>'
             for snapshot in snapshots:
                 base = html.escape(snapshot["path"])
                 body += (
@@ -297,6 +308,7 @@ def render_source_index(root: Path, output: Path) -> None:
         sections.append(f"<details><summary>{name} <small>{status}</small></summary>{body}</details>")
     existing = sum(bool(item.get("existing_agent")) for item in records)
     archived = sum(bool(item["snapshots"]) for item in records)
+    runtime_count = sum(item["runtime_available"] for item in records)
     body = "\n".join(sections)
     output.write_text(
         '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -304,7 +316,7 @@ def render_source_index(root: Path, output: Path) -> None:
         "background:#11151c;color:#e5e7eb}a{color:#8dc7ff}details{border-top:1px solid #384152;padding:16px 0}summary{cursor:pointer;font-weight:600}"
         "small{font-weight:400;color:#a8b5c7;margin-left:12px}li{overflow-wrap:anywhere}h1{line-height:1.2}h3{font-size:16px}</style>"
         '<a href="index.html">← Phistory request captures</a><h1>Harness source archive</h1>'
-        f"<p>{len(records)} surveyed agents · {existing} already integrated · {archived} additional source archives.</p>"
+        f"<p>{len(records)} surveyed agents · {existing} already integrated · {archived} additional source archives · {runtime_count} runtime request integrations.</p>"
         f"<p>{html.escape(SOURCE_SCOPE)}</p><p>Each original file is preserved byte for byte at its recorded Git commit, with SHA-256 and collection provenance. "
         "A project can have no fixed system prompt or delegate its tools to another host; the archived code keeps that behavior visible.</p>"
         f"{body}</html>\n",

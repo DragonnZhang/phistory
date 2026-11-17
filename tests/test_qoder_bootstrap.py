@@ -143,7 +143,9 @@ def test_capture_records_bootstrap_provenance_without_changing_default_arguments
         report.parent.mkdir(parents=True, exist_ok=True)
         report.write_text(json.dumps({"mode": "model-availability", "model": "auto", "enable": True}))
         target.prompt_path.write_text("# Fake system prompt\n")
-        target.trace_path.write_text('{"request":{"body":{"model":"auto","system":"Fake system prompt"}}}\n')
+        target.trace_path.write_text(
+            '{"request":{"path":"/__claude_tap/qoder/prompt","body":{"model_config":{"key":"auto"},"system":"Fake system prompt"}}}\n'
+        )
         return CommandResult(tuple(argv), 0, "", "")
 
     monkeypatch.setattr("phistory.drivers.oneshot.run", fake_run)

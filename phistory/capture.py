@@ -11,6 +11,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
 
+from claude_tap.prompt_snapshot import snapshot_from_records
+
 from phistory import packages
 from phistory.drivers import CaptureRunContext, run_capture
 from phistory.models import CaptureResult, CaptureTarget
@@ -178,6 +180,7 @@ def capture_target(
                 "agent_id": target.agent.id,
                 "agent": target.agent.display_name,
                 "package": target.agent.package,
+                **({"package_extras": list(target.agent.pypi_extras)} if target.agent.pypi_extras else {}),
                 "version": target.version.version,
                 "variant": {
                     "id": target.variant.id,
@@ -304,6 +307,12 @@ def _capture_env(
         _write_pi_config(home)
     if target.agent.home_profile == "qwen":
         _write_qwen_config(home)
+    if target.agent.home_profile == "goose":
+        _write_goose_config(home)
+    if target.agent.home_profile == "crush":
+        _write_crush_config(home)
+    if target.agent.home_profile == "nanobot":
+        _write_nanobot_config(home)
     inherited = (
         dict(inherited_env)
         if inherited_env is not None
@@ -360,6 +369,18 @@ def _capture_env(
         env["PI_CODING_AGENT_DIR"] = str(home / ".pi" / "agent")
     if target.agent.home_profile == "omp":
         env["PI_CODING_AGENT_DIR"] = str(home / ".omp" / "agent")
+    if target.agent.home_profile == "goose":
+        env["GOOSE_PATH_ROOT"] = str(home / ".goose")
+        env["GOOSE_CA_CERT_PATH"] = str(home / ".local" / "share" / "claude-tap" / "ca.pem")
+    if target.agent.home_profile == "crush":
+        env["CRUSH_GLOBAL_CONFIG"] = str(home / ".config" / "crush")
+        env["CRUSH_DATA_DIR"] = str(home / ".local" / "share" / "crush")
+    if target.agent.home_profile == "bub":
+        (home / ".bub").mkdir(parents=True, exist_ok=True)
+        env["BUB_HOME"] = str(home / ".bub")
+    if target.agent.home_profile == "jcode":
+        (home / ".jcode").mkdir(parents=True, exist_ok=True)
+        env["JCODE_HOME"] = str(home / ".jcode")
     if target.agent.node_runtime:
         env["NPM_CONFIG_CACHE"] = str(bin_dir.parents[2] / ".npm-runtime-cache")
     if target.agent.fake_chatgpt_auth:
@@ -378,7 +399,7 @@ def _extract_static_best_effort(target: CaptureTarget, install_dir: Path) -> Non
 
 
 def _trace_observation(trace_path: Path) -> dict[str, object]:
-    best: tuple[int, dict] | None = None
+    records: list[dict] = []
     try:
         lines = trace_path.read_text(encoding="utf-8").splitlines()
     except OSError:
@@ -388,7 +409,12 @@ def _trace_observation(trace_path: Path) -> dict[str, object]:
             record = json.loads(line)
         except json.JSONDecodeError:
             continue
-        body = (record.get("request") or {}).get("body")
+        if not isinstance(record, dict):
+            continue
+        request = record.get("request")
+        if not isinstance(request, dict):
+            continue
+        body = request.get("body")
         if isinstance(body, str):
             try:
                 body = json.loads(body)
@@ -396,50 +422,17 @@ def _trace_observation(trace_path: Path) -> dict[str, object]:
                 continue
         if not isinstance(body, dict):
             continue
-        score = _prompt_request_score(body)
-        if best is None or score > best[0]:
-            best = (score, body)
-    if best is None:
+        records.append({**record, "request": {**request, "body": body}})
+    try:
+        snapshot = snapshot_from_records(records)
+    except ValueError:
         return {}
-    body = best[1]
     observed: dict[str, object] = {}
-    if isinstance(body.get("model"), str):
-        observed["model"] = body["model"]
-    tool_count = _observed_tool_count(body)
-    if tool_count:
-        observed["tool_count"] = tool_count
+    if snapshot.model:
+        observed["model"] = snapshot.model
+    if snapshot.tools:
+        observed["tool_count"] = len(snapshot.tools)
     return observed
-
-
-def _observed_tool_count(body: dict) -> int:
-    count = len(body["tools"]) if isinstance(body.get("tools"), list) else 0
-    inputs = body.get("input")
-    if not isinstance(inputs, list):
-        return count
-    for item in inputs:
-        if not isinstance(item, dict) or item.get("type") != "additional_tools":
-            continue
-        tools = item.get("tools")
-        if isinstance(tools, list):
-            count += len(tools)
-    return count
-
-
-def _prompt_request_score(body: dict) -> int:
-    score = 0
-    if body.get("system"):
-        score += 4
-    if body.get("instructions"):
-        score += 4
-    if body.get("tools"):
-        score += 4
-    if _observed_tool_count(body):
-        score += 4
-    if body.get("messages"):
-        score += 1
-    if body.get("input"):
-        score += 1
-    return score
 
 
 def _write_fake_chatgpt_auth(home: Path) -> None:
@@ -517,6 +510,44 @@ def _write_hermes_config(home: Path) -> None:
         ),
         encoding="utf-8",
     )
+
+
+def _write_goose_config(home: Path) -> None:
+    config_dir = home / ".goose" / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config = {
+        "extensions": {
+            "developer": {
+                "enabled": True,
+                "type": "platform",
+                "name": "developer",
+                "display_name": "Developer",
+                "bundled": True,
+            }
+        }
+    }
+    (config_dir / "config.yaml").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+
+def _write_crush_config(home: Path) -> None:
+    config_dir = home / ".config" / "crush"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config = {
+        "models": {
+            "large": {"model": "gpt-4.1", "provider": "openai"},
+            "small": {"model": "gpt-4.1", "provider": "openai"},
+        },
+        "providers": {"openai": {"api_key": "phistory-fake-api-key"}},
+        "options": {"disable_provider_auto_update": True, "disable_metrics": True},
+    }
+    (config_dir / "crush.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+
+def _write_nanobot_config(home: Path) -> None:
+    config_dir = home / ".nanobot"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config = {"providers": {"anthropic": {"apiKey": "phistory-fake-api-key"}}}
+    (config_dir / "config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
 
 
 def _write_kimi_config(home: Path) -> None:

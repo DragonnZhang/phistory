@@ -19,7 +19,6 @@ from phistory.packages import agent_executable
 from phistory.storage import remove_if_exists
 from phistory.subprocesses import run
 
-CAPTURE_TIMEOUT_SECONDS = 1800
 QODER_CAPTURE_TIMEOUT_SECONDS = 180
 LEGACY_CLAUDE_FORWARD_PATCH = (
     "Claude Code does not accept inline --settings JSON; stripped claude-tap's injected forward-proxy settings "
@@ -138,7 +137,7 @@ def _run(argv: list[str], context: CaptureRunContext, env: dict[str, str]) -> Co
 def _capture_timeout(context: CaptureRunContext) -> int:
     if context.target.agent.id == "qoder":
         return QODER_CAPTURE_TIMEOUT_SECONDS
-    return CAPTURE_TIMEOUT_SECONDS
+    return context.target.agent.capture_timeout_seconds
 
 
 def _reset_output(context: CaptureRunContext) -> None:
