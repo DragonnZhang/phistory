@@ -177,6 +177,11 @@ def capture_target(
             )
             raise RuntimeError(f"capture command failed ({result.returncode})\n{detail}")
 
+        client_log = f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        (working_target.variant_dir / "client.log").write_text(
+            _redact_secrets(client_log, tuple(inherited_env.values())), encoding="utf-8"
+        )
+
         if not working_target.trace_path.exists():
             trace = latest_trace(tap_output_dir)
             if inherited_env:
@@ -226,6 +231,7 @@ def capture_target(
                 "tap_client": target.agent.tap_client,
                 "target": "claude-tap capture-only",
                 "client_exit_code": result.returncode,
+                "client_log": "client.log",
                 "duration_seconds": round(time.time() - started, 3),
                 "command": [_replace_many(part, replacements) for part in _portable_command(argv, variant_dir)],
                 **({"stdin": target.variant.stdin_text} if target.variant.stdin_text is not None else {}),
@@ -521,7 +527,7 @@ def _capture_env(
             config = source / "config" / "config.toml"
             config.parent.mkdir(parents=True, exist_ok=True)
             config.write_text(
-                '[llm]\nmodel = "gpt-4o"\nbase_url = "https://api.openai.com/v1"\napi_key = "phistory-fake-api-key"\nmax_tokens = 8192\ntemperature = 0.0\n',
+                '[llm]\nmodel = "gpt-4o"\nbase_url = "https://api.openai.com/v1"\napi_key = "phistory-fake-api-key"\nmax_tokens = 8192\ntemperature = 0.0\n\n[daytona]\ndaytona_api_key = "phistory-fake-daytona-key"\n',
                 encoding="utf-8",
             )
     if profile == "cuga":

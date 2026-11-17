@@ -1476,7 +1476,7 @@ OPENAGENT = AgentSpec(
             ("--no-yolo", "--", "serve"),
             driver="openagent-store",
             dimensions={
-                "entry": "native built-in Store completion API",
+                "entry": "native Store API; named clone of built-in defaults",
                 "provider": "OpenAI",
                 "model": "gpt-4.1",
                 "setup_auth": "configured local application Basic; no hosted Casdoor",

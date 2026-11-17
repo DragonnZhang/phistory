@@ -34,6 +34,7 @@ captures/<agent>/<version>/variants/<variant>/meta.json
 ```
 
 `prompt.md` is normalized for human reading and diffs. `trace.jsonl` is raw evidence and should not be rewritten for presentation-only cleanup.
+New captures also keep `client.log` with the actual child/proxy stdout and stderr, redacting inherited secrets. Use it to verify optional MCP startup and native fallback conditions rather than inferring them only from tool counts. Older snapshots without this optional log remain valid.
 
 Claude Code captures may also include:
 

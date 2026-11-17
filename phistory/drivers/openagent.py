@@ -89,8 +89,20 @@ def _configure_and_prompt(opener, credentials: tuple[str, str]) -> None:
     store = _api(opener, path, basic_auth=credentials)
     if not isinstance(store, dict):
         raise RuntimeError("OpenAgent's native built-in Store was not returned")
-    store = {**store, "modelProvider": "phistory", "externalApiKey": "phistory-local-store-key"}
-    _api(opener, "/api/update-store?id=admin/store-built-in", store, basic_auth=credentials)
+    store = {
+        **store,
+        "owner": "admin",
+        "name": "phistory-capture",
+        "isDefault": False,
+        "modelProvider": "phistory",
+        "externalApiKey": "phistory-local-store-key",
+    }
+    _api(opener, "/api/add-store", store, basic_auth=credentials)
+    created = _api(opener, "/api/get-store?id=admin/phistory-capture", basic_auth=credentials)
+    if not isinstance(created, dict) or any(
+        created.get(key) != store.get(key) for key in ("prompt", "tools", "modelProvider")
+    ):
+        raise RuntimeError("OpenAgent's configured Store did not preserve the native prompt/tool selection")
     _api(
         opener,
         "/api/v1/chat/completions",

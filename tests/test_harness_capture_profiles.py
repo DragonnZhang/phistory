@@ -188,3 +188,4 @@ def test_openmanus_config_and_workspace_are_copied_per_capture(tmp_path):
     config = tomllib.loads((Path(first["PHISTORY_SOURCE_ROOT"]) / "config/config.toml").read_text())
     assert config["llm"]["model"] == "gpt-4o"
     assert config["llm"]["base_url"] == "https://api.openai.com/v1"
+    assert config["daytona"]["daytona_api_key"] == "phistory-fake-daytona-key"

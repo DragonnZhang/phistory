@@ -10,7 +10,7 @@ def test_store_driver_preserves_native_prompt_and_tools_instead_of_using_provide
     native = {
         "owner": "admin",
         "name": "store-built-in",
-        "systemPrompt": "native prompt",
+        "prompt": "native prompt",
         "tools": ["native-tool"],
         "otherConfig": {"unchanged": True},
     }
@@ -18,17 +18,28 @@ def test_store_driver_preserves_native_prompt_and_tools_instead_of_using_provide
 
     def api(opener, path, payload=None, **kwargs):
         calls.append((path, payload, kwargs))
+        if path == "/api/get-store?id=admin/phistory-capture":
+            return {**native, "modelProvider": "phistory"}
         return native if path.startswith("/api/get-store") else True
 
     monkeypatch.setattr("phistory.drivers.openagent._api", api)
     credentials = ("local-client", "local-secret")
     _configure_and_prompt(object(), credentials)
     updated = calls[2][1]
-    assert updated == {**native, "modelProvider": "phistory", "externalApiKey": "phistory-local-store-key"}
+    assert updated == {
+        **native,
+        "owner": "admin",
+        "name": "phistory-capture",
+        "isDefault": False,
+        "modelProvider": "phistory",
+        "externalApiKey": "phistory-local-store-key",
+    }
+    assert calls[2][0] == "/api/add-store"
+    assert not any("update-store" in call[0] for call in calls)
     assert native["tools"] == ["native-tool"] and "modelProvider" not in native
     assert calls[-1][0] == "/api/v1/chat/completions"
     assert calls[-1][2] == {"bearer": "phistory-local-store-key"}
-    assert all(call[2] == {"basic_auth": credentials} for call in calls[:3])
+    assert all(call[2] == {"basic_auth": credentials} for call in calls[:-1])
     assert calls[-1][1]["messages"] == [{"role": "user", "content": PROMPT}]
     assert not any("test-provider" in call[0] for call in calls)
 
