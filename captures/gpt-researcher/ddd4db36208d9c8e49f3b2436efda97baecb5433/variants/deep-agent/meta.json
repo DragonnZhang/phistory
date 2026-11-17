@@ -1,0 +1,71 @@
+{
+  "agent_id": "gpt-researcher",
+  "agent": "GPT Researcher",
+  "package": "assafelovic/gpt-researcher",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [
+      "deep_agents/requirements.txt"
+    ]
+  },
+  "version": "ddd4db36208d9c8e49f3b2436efda97baecb5433",
+  "variant": {
+    "id": "deep-agent",
+    "label": "Native Deep Agent task API",
+    "dimensions": {
+      "entry": "deep_agents.main.run_research_task",
+      "model": "native strategic model",
+      "source": "web"
+    }
+  },
+  "requested": {
+    "entry": "deep_agents.main.run_research_task",
+    "model": "native strategic model",
+    "source": "web"
+  },
+  "observed": {
+    "model": "gpt-5.4",
+    "tool_count": 9
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/assafelovic/gpt-researcher/archive/ddd4db36208d9c8e49f3b2436efda97baecb5433.tar.gz",
+  "binary_version": "ddd4db36208d9c8e49f3b2436efda97baecb5433",
+  "captured_at": "2026-11-17T14:12:49.039591+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44100478048",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44100478048"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 9.801,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport asyncio\nimport os\nos.chdir(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nfrom deep_agents.main import run_research_task\ntask = \"Reply with one short sentence.\"\nasyncio.run(run_research_task(task, {\n    \"query\": task, \"max_sections\": 3, \"source\": \"web\",\n    \"follow_guidelines\": False, \"verbose\": False,\n}))\n"
+  ]
+}

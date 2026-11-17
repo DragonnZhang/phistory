@@ -1,0 +1,114 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:38293
+[claude-tap] CA cert: /tmp/phistory-home-7wbt70yn/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/.tap/2026-11-17/trace_141413.jsonl
+
+[claude-tap] launching python: python -m rag_system.main chat Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:38293
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-7wbt70yn/.local/share/claude-tap/ca.pem
+Initialized Verifier with Ollama model 'qwen3.5:4b'.
+🔍 ROUTING DEBUG: Starting triage for query: 'Reply with one short sentence....'
+📖 ROUTING DEBUG: Attempting overview-based routing...
+📖 ROUTING DEBUG: No document overviews available, returning None
+❌ ROUTING DEBUG: Overview routing returned None, falling back to LLM triage
+🤖 ROUTING DEBUG: No history, using LLM fallback triage...
+❌ ROUTING DEBUG: LLM fallback triage JSON parsing failed, defaulting to 'rag_query'
+🎯 ROUTING DEBUG: Final triage decision: 'rag_query'
+Agent Triage Decision: 'rag_query'
+🔧 Query-side embedding instruction active: 'Given a web search query, retrieve relevant passages that answer the query'
+Initializing HF Embedder with model 'microsoft/harrier-oss-v1-0.6b' on device 'cpu'. (first load)
+
+[claude-tap] python exited with code 1
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/.tap/2026-11-17/trace_141413.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/.tap/2026-11-17/trace_141413.log
+  view:         /home/runner/work/phistory/phistory/captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/.tap/2026-11-17/trace_141413.html
+  prompt:       /home/runner/work/phistory/phistory/captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 
+Traceback (most recent call last):
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1572, in _get_metadata_or_catch_error
+    raise FileMetadataError(
+huggingface_hub.errors.FileMetadataError: Distant resource does not seem to be on huggingface.co. It is possible that a configuration issue prevents you from downloading resources from https://huggingface.co. Please check your firewall and proxy settings and make sure your SSL certificates are updated.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/transformers/utils/hub.py", line 424, in cached_files
+    hf_hub_download(
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1014, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1121, in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1665, in _raise_on_head_call_error
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: An error happened while trying to locate the file on the Hub and we cannot find the requested files in the local cache. Please check your connection and try again or make sure your Internet connection is on.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/phistory-home-7wbt70yn/source/rag_system/main.py", line 358, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/tmp/phistory-home-7wbt70yn/source/rag_system/main.py", line 330, in main
+    result = get_agent(args.mode).run(args.query, filters=filters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-7wbt70yn/source/rag_system/agent/loop.py", line 305, in run
+    return asyncio.run(self._run_async(query, table_name, session_id, compose_sub_answers, query_decompose, ai_rerank, context_expand, verify, retrieval_k, context_window_size, reranker_top_k, retrieval_mode, force_rag, event_callback, filters=filters))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-7wbt70yn/source/rag_system/agent/loop.py", line 377, in _run_async
+    result = await self._run_async_inner(query, table_name, session_id, compose_sub_answers, query_decompose, ai_rerank, context_expand, verify, retrieval_k, context_window_size, reranker_top_k, retrieval_mode, force_rag, event_callback, filters=filters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-7wbt70yn/source/rag_system/agent/loop.py", line 437, in _run_async_inner
+    text_embedder = self.retrieval_pipeline._get_text_embedder()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-7wbt70yn/source/rag_system/pipelines/retrieval_pipeline.py", line 230, in _get_text_embedder
+    self.text_embedder = select_embedder(
+                         ^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-7wbt70yn/source/rag_system/indexing/representations.py", line 231, in select_embedder
+    return QwenEmbedder(model_name=model_name, query_instruction=query_instruction)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-7wbt70yn/source/rag_system/indexing/representations.py", line 91, in __init__
+    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, padding_side="left")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/transformers/models/auto/tokenization_auto.py", line 965, in from_pretrained
+    config = AutoConfig.from_pretrained(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/transformers/models/auto/configuration_auto.py", line 1112, in from_pretrained
+    config_dict, unused_kwargs = PretrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/transformers/configuration_utils.py", line 590, in get_config_dict
+    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/transformers/configuration_utils.py", line 649, in _get_config_dict
+    resolved_config_file = cached_file(
+                           ^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/transformers/utils/hub.py", line 266, in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/localgpt/34f3107f56a88203859092312231b945a711c619/lib/python3.12/site-packages/transformers/utils/hub.py", line 491, in cached_files
+    raise OSError(
+OSError: We couldn't connect to 'https://huggingface.co' to load the files, and couldn't find them in the cached files.
+Checkout your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.

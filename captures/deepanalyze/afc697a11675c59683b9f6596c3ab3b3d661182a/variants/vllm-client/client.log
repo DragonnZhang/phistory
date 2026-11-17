@@ -1,0 +1,31 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:45749
+[claude-tap] CA cert: /tmp/phistory-home-t68kwm0n/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/.tap/2026-11-17/trace_141349.jsonl
+
+[claude-tap] launching python: python -c 
+from deepanalyze import DeepAnalyzeVLLM
+from pathlib import Path
+DeepAnalyzeVLLM(
+    "DeepAnalyze-8B", api_url="http://deepanalyze.phistory.invalid/v1/chat/completions",
+    max_rounds=1,
+).generate("Reply with one short sentence.", workspace=str(Path.cwd()))
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:45749
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-t68kwm0n/.local/share/claude-tap/ca.pem
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/.tap/2026-11-17/trace_141349.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/.tap/2026-11-17/trace_141349.log
+  view:         /home/runner/work/phistory/phistory/captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/.tap/2026-11-17/trace_141349.html
+  prompt:       /home/runner/work/phistory/phistory/captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/prompt.md
+
+stderr:
+[claude-tap] warning: 
