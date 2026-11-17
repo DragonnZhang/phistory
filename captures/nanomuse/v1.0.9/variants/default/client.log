@@ -1,0 +1,27 @@
+stdout:
+[claude-tap] 'nanomuse' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] nanomuse target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:46341
+[claude-tap] CA cert: /tmp/phistory-home-9irt34h4/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/nanomuse/v1.0.9/variants/default/.tap/2026-11-17/trace_141250.jsonl
+
+[claude-tap] launching nanomuse: nanomuse run Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:46341
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-9irt34h4/.local/share/claude-tap/ca.pem
+nanoMuse v1.0.9  ·  model deepseek-flash via openai  ·  sentinel ask  ·  config 
+defaults+env
+nanoMuse › captured
+
+[claude-tap] nanomuse exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/nanomuse/v1.0.9/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/nanomuse/v1.0.9/variants/default/.tap/2026-11-17/trace_141250.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/nanomuse/v1.0.9/variants/default/.tap/2026-11-17/trace_141250.log
+  view:         /home/runner/work/phistory/phistory/captures/nanomuse/v1.0.9/variants/default/.tap/2026-11-17/trace_141250.html
+  prompt:       /home/runner/work/phistory/phistory/captures/nanomuse/v1.0.9/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 

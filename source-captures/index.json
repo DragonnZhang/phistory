@@ -1666,7 +1666,7 @@
           "path": "source-captures/openevolve/be374669e51159e619e7"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "openevolve"
     },
     {
@@ -6892,7 +6892,7 @@
           "path": "source-captures/nanomuse/2cba60bb232d9c8cff9c"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "nanomuse"
     },
     {
@@ -9444,7 +9444,7 @@
           "path": "source-captures/pr-agent/248659c4c7083e79443b"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "pr-agent"
     },
     {
@@ -9578,7 +9578,7 @@
           "path": "source-captures/omni-rewriter/3419afbe33617d18af4d"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "omni-rewriter"
     },
     {

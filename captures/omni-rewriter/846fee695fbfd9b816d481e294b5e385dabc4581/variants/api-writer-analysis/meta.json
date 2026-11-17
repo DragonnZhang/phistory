@@ -1,0 +1,74 @@
+{
+  "agent_id": "omni-rewriter",
+  "agent": "Omni-Rewriter",
+  "package": "WayneJin0918/Omni-Rewriter",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": []
+  },
+  "version": "846fee695fbfd9b816d481e294b5e385dabc4581",
+  "variant": {
+    "id": "api-writer-analysis",
+    "label": "Configured API Writer · initial analysis",
+    "dimensions": {
+      "entry": "expand pipeline / official text-only fixture",
+      "stage": "initial AnalysisPlan request",
+      "model": "gpt-5.6"
+    }
+  },
+  "requested": {
+    "entry": "expand pipeline / official text-only fixture",
+    "stage": "initial AnalysisPlan request",
+    "model": "gpt-5.6"
+  },
+  "observed": {
+    "model": "gpt-5.6"
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/WayneJin0918/Omni-Rewriter/archive/846fee695fbfd9b816d481e294b5e385dabc4581.tar.gz",
+  "binary_version": "846fee695fbfd9b816d481e294b5e385dabc4581",
+  "captured_at": "2026-11-17T14:12:39.565443+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44100466748",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44100466748"
+  },
+  "tap_client": "omni-rewriter",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 2.504,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "omni-rewriter",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "expand",
+    "$PHISTORY_INSTALL/source/Omni-Rewriter-846fee695fbfd9b816d481e294b5e385dabc4581/examples/requests/t2va_kite.json",
+    "--output",
+    "h3"
+  ],
+  "capture_environment": {
+    "OMNI_WRITER_BACKEND_BASE_URL": "https://api.openai.com/v1",
+    "OMNI_WRITER_BACKEND_MODEL": "gpt-5.6"
+  }
+}
