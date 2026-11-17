@@ -1,0 +1,25 @@
+stdout:
+[claude-tap] 'cheetahclaws' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] cheetahclaws target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:43893
+[claude-tap] CA cert: /tmp/phistory-home-s_ro3_gq/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/cheetahclaws/3.5.90/variants/default/.tap/2026-11-17/trace_140436.jsonl
+
+[claude-tap] launching cheetahclaws: cheetahclaws -p Reply with one short sentence. --output-format json --max-turns 1
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:43893
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-s_ro3_gq/.local/share/claude-tap/ca.pem
+{"type": "result", "seq": 6, "ts": 1794924277.043, "session_id": "aa946075", "final_text": "captured", "exit_reason": "completed", "is_error": false, "exit_code": 0, "turns": 1, "usage": {"input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0, "cache_write_tokens": 0}, "cost_usd": 0.0, "duration_ms": 45, "model": "ollama/gemma4:e4b", "permission_denials": [], "skipped_untrusted": []}
+
+[claude-tap] cheetahclaws exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/cheetahclaws/3.5.90/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/cheetahclaws/3.5.90/variants/default/.tap/2026-11-17/trace_140436.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/cheetahclaws/3.5.90/variants/default/.tap/2026-11-17/trace_140436.log
+  view:         /home/runner/work/phistory/phistory/captures/cheetahclaws/3.5.90/variants/default/.tap/2026-11-17/trace_140436.html
+  prompt:       /home/runner/work/phistory/phistory/captures/cheetahclaws/3.5.90/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 

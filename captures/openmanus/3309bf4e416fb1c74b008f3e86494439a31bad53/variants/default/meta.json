@@ -1,0 +1,77 @@
+{
+  "agent_id": "openmanus",
+  "agent": "OpenManus",
+  "package": "FoundationAgents/OpenManus",
+  "python_runtime": "3.12",
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport subprocess\nimport tiktoken\ntiktoken.encoding_for_model(\"gpt-4o\")\ntiktoken.encoding_for_model(\"gpt-4\")\nsubprocess.run([\"uvx\", \"browser-use\", \"--help\"], check=True)\n"
+    ],
+    "environment": {
+      "UV_OFFLINE": "0"
+    }
+  },
+  "version": "3309bf4e416fb1c74b008f3e86494439a31bad53",
+  "variant": {
+    "id": "default",
+    "label": "Default · configured OpenAI, native browser MCP startup",
+    "dimensions": {
+      "provider": "OpenAI-compatible",
+      "model": "gpt-4o",
+      "browser_mcp": "native startup with pre-staged public package"
+    }
+  },
+  "requested": {
+    "provider": "OpenAI-compatible",
+    "model": "gpt-4o",
+    "browser_mcp": "native startup with pre-staged public package"
+  },
+  "observed": {
+    "model": "gpt-4o",
+    "tool_count": 8
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/FoundationAgents/OpenManus/archive/3309bf4e416fb1c74b008f3e86494439a31bad53.tar.gz",
+  "binary_version": "3309bf4e416fb1c74b008f3e86494439a31bad53",
+  "captured_at": "2026-11-17T14:05:07.824847+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44099060202",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44099060202"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 30.31,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "$PHISTORY_HOME/source/main.py",
+    "--prompt",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "UV_OFFLINE": "1"
+  }
+}
