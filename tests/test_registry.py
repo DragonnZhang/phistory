@@ -58,6 +58,14 @@ def test_parse_default_agents():
         "cuga-agent",
         "autoresearchclaw",
         "inkos",
+        "gpt-researcher",
+        "openevolve",
+        "deer-flow",
+        "omni-rewriter",
+        "nanomuse",
+        "pr-agent",
+        "deepanalyze",
+        "localgpt",
     ]
     assert "kimi" in AGENT_ORDER
     assert parse_agent_ids("kimi,kimi-code") == ["kimi", "kimi-code"]

@@ -146,6 +146,9 @@ print(Bridge().fetch_agent_reply(text, context))
 AGENT_ZERO_PREFETCH = """
 import os
 import importlib
+import tiktoken
+tiktoken.get_encoding("cl100k_base")
+tiktoken.get_encoding("o200k_base")
 os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
 module = importlib.import_module("plugins._model_config.extensions.python.startup_migration._20_bootstrap_model_presets")
 assert module.BootstrapModelPresets(None).execute() != "error"
