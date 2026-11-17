@@ -409,6 +409,16 @@ os.environ["CURL_CA_BUNDLE"] = os.environ["SSL_CERT_FILE"]
 os.execv(str(Path(os.environ["PHISTORY_HOME"]) / "openagents/task"), ["openagents-native-microcoder-task"])
 """
 
+HIVEKEEP_TASK = """
+import os
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+base = "http://127.0.0.1:" + os.environ["PHISTORY_SERVER_PORT"]
+os.environ.update(HIVEKEEP_DATA_DIR=str(Path(os.environ["PHISTORY_HOME"]) / "hivekeep-data"), HOST="127.0.0.1", PORT=os.environ["PHISTORY_SERVER_PORT"], PUBLIC_URL=base, BETTER_AUTH_BASE_URL=base)
+os.execvp("bun", ["bun", "src/server/index.ts"])
+"""
+
 AGENTLINK_SETUP = """
 import os
 import subprocess

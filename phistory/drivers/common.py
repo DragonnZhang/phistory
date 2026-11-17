@@ -9,7 +9,12 @@ from phistory.models import CaptureTarget, TapMode
 
 
 def tap_command(
-    target: CaptureTarget, prompt_path: Path, tap_output_dir: Path, run_env: Mapping[str, str] | None = None
+    target: CaptureTarget,
+    prompt_path: Path,
+    tap_output_dir: Path,
+    run_env: Mapping[str, str] | None = None,
+    *,
+    proxy_port: int = 0,
 ) -> list[str]:
     return [
         sys.executable,
@@ -26,6 +31,7 @@ def tap_command(
         "--output-dir",
         str(tap_output_dir),
         *_tap_mode_args(target),
+        *(["--port", str(proxy_port)] if proxy_port else []),
         "--",
         *[_expand_capture_path(arg, run_env) for arg in upstream_client_args(target.variant.run_args)],
     ]

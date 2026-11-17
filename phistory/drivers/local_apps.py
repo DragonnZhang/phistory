@@ -7,11 +7,13 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from contextlib import ExitStack
 from http.cookiejar import CookieJar
 from pathlib import Path
 from urllib.parse import quote
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
+from phistory.drivers.catalog_gateway import PublicCatalogGateway
 from phistory.drivers.common import tap_command
 from phistory.drivers.local_server import has_prompt_request, stop_process, wait_for_prompt
 from phistory.models import CommandResult
@@ -103,6 +105,14 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
             timeout=90,
             stdout=subprocess.DEVNULL,
         )
+        models = subprocess.run(
+            ["opencode", "models"], cwd=checkout, env=env, capture_output=True, text=True, timeout=120
+        )
+        if models.returncode:
+            raise RuntimeError(
+                f"native OpenCode model catalogue bootstrap failed: {(models.stderr or models.stdout)[-4000:]}"
+            )
+        (context.prompt_path.parent / "native-host-models.log").write_text(models.stdout, encoding="utf-8")
         with socket.socket() as check:
             check.bind(("127.0.0.1", 0))
             opencode_port = check.getsockname()[1]
@@ -138,11 +148,30 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         "required_system_text": context.target.agent.required_system_text,
         "required_user_text": context.target.agent.required_user_text,
     }
-    argv = tap_command(context.target, context.prompt_path, context.tap_output_dir, env)
+    proxy_port = 0
+    if context.target.agent.id == "hivekeep":
+        with socket.socket() as check:
+            check.bind(("127.0.0.1", 0))
+            proxy_port = check.getsockname()[1]
+    argv = tap_command(
+        context.target,
+        context.prompt_path,
+        context.tap_output_dir,
+        env,
+        **({"proxy_port": proxy_port} if proxy_port else {}),
+    )
     context.tap_output_dir.mkdir(parents=True, exist_ok=True)
     log_path = context.tap_output_dir / "client.log"
     failure = None
-    with log_path.open("w", encoding="utf-8") as log:
+    task_marker = next(iter(context.target.agent.required_user_text), PROMPT)
+    with log_path.open("w", encoding="utf-8") as log, ExitStack() as resources:
+        gateway = (
+            resources.enter_context(
+                PublicCatalogGateway(proxy_port, context.prompt_path.parent / "public-model-catalog")
+            )
+            if proxy_port
+            else None
+        )
         process = subprocess.Popen(
             argv,
             cwd=context.work_dir,
@@ -167,18 +196,19 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
                     time.sleep(0.25)
                 else:
                     raise TimeoutError("native LoopTroop OpenCode supervision did not become ready")
-            api.wait_ready(process, path="/api/chat" if context.target.agent.id == "web3gpt" else "/")
+            readiness = {"web3gpt": "/api/chat", "hivekeep": "/api/onboarding/status"}
+            api.wait_ready(process, path=readiness.get(context.target.agent.id, "/"))
             if context.target.agent.id == "ouroboros":
                 api.wait_managed_tasks(process)
             try:
-                _submit_task(context, api, log)
+                _submit_task(context, api, log, **({"catalog_gateway_url": gateway.base_url} if gateway else {}))
             except Exception as exc:
-                if not has_prompt_request(context.tap_output_dir, PROMPT, **requirements):
+                if not has_prompt_request(context.tap_output_dir, task_marker, **requirements):
                     raise
                 print(f"Native task returned after its captured request: {exc}", file=log, flush=True)
-            if not has_prompt_request(context.tap_output_dir, PROMPT, **requirements):
+            if not has_prompt_request(context.tap_output_dir, task_marker, **requirements):
                 wait_for_prompt(
-                    context.tap_output_dir, process, PROMPT, timeout=max(1, int(api.remaining(90))), **requirements
+                    context.tap_output_dir, process, task_marker, timeout=max(1, int(api.remaining(90))), **requirements
                 )
         except Exception as exc:
             failure = exc
@@ -190,7 +220,7 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
     return CaptureExecution(tuple(argv), CommandResult(tuple(argv), process.returncode or 0, output, ""))
 
 
-def _submit_task(context: CaptureRunContext, api: LocalApi, log) -> None:
+def _submit_task(context: CaptureRunContext, api: LocalApi, log, *, catalog_gateway_url: str | None = None) -> None:
     match context.target.agent.id:
         case "markus":
             api.request("/api/auth/login", {"email": "admin@markus.local", "password": context.env["ADMIN_PASSWORD"]})
@@ -232,6 +262,33 @@ def _submit_task(context: CaptureRunContext, api: LocalApi, log) -> None:
             workspace = api.request("/api/v1/workspace/new", {"name": "Phistory", "chatMode": "chat"})
             slug = quote(workspace["workspace"]["slug"], safe="")
             api.request(f"/api/v1/workspace/{slug}/chat", {"message": "@agent " + PROMPT, "mode": "chat"})
+        case "hivekeep":
+            if catalog_gateway_url is None:
+                raise ValueError("Hivekeep requires its explicit public-catalogue transport")
+            api.headers["Origin"] = api.base
+            api.request(
+                "/api/auth/sign-up/email",
+                {
+                    "email": "phistory@example.com",
+                    "password": context.env["PHISTORY_HIVEKEEP_PASSWORD"],
+                    "name": "Phistory",
+                },
+            )
+            api.request("/api/onboarding/profile", {"firstName": "Phistory", "pseudonym": "phistory", "language": "en"})
+            provider = api.request(
+                "/api/providers",
+                {
+                    "name": "Phistory compatible OpenRouter",
+                    "type": "openai-compatible",
+                    "config": {"baseUrl": catalog_gateway_url, "apiKey": context.env["OPENAI_API_KEY"]},
+                    "families": ["llm"],
+                },
+            )["provider"]
+            if provider.get("isValid") is not True:
+                raise RuntimeError("native Hivekeep provider did not authenticate against the actual public catalogue")
+            agent = api.request("/api/onboarding/configurator", {"providerId": provider["id"]})["agent"]
+            if agent.get("name") != "Queenie" or agent.get("kind") != "configurator":
+                raise RuntimeError("native Hivekeep onboarding did not seed its real Queenie configurator")
         case "hive":
             session = api.request("/api/sessions", {"initial_phase": "independent", "initial_prompt": PROMPT})
             api.request(f"/api/sessions/{session['session_id']}/chat", {"message": PROMPT})

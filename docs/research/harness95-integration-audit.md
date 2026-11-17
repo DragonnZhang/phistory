@@ -1201,7 +1201,7 @@ This index checks **research coverage**, not successful runtime captures. Each l
 | 47 | `looptroop` | Native capture pending | [LoopTroop native ticket planning API](#looptroop-native-ticket-planning-api) — Native ticket planner through real daemon/OpenCode child. |
 | 48 | `web3gpt` | Verified runtime | [Web3GPT native anonymous built-in agent](#web3gpt-native-anonymous-built-in-agent) — **Verified**, native1176-character developer/three tools identical, gpt-6.1-terra. |
 | 49 | `markus` | Verified runtime | [Markus native seeded Secretary task](#markus-native-seeded-secretary-task) — **Verified**, native Secretary/cookie API;32 tools equal after scoped shell-path normalization. |
-| 50 | `hivekeep` | Source archive | [Hivekeep native Queenie onboarding agent](#hivekeep-native-queenie-onboarding-agent) — Native Queenie API; live catalogue bootstrap needs safe metadata support. |
+| 50 | `hivekeep` | Native capture pending | [Hivekeep native Queenie onboarding agent](#hivekeep-native-queenie-onboarding-agent) — Native Queenie API; live catalogue bootstrap needs safe metadata support. |
 | 51 | `ctxagent` | Verified runtime | [CTXAgent: paper runtime Python task API](#ctxagent-paper-runtime-python-task-api) |
 | 52 | `ufo` | Verified runtime | [UFO supported Linux DeviceAgent](#ufo-supported-linux-deviceagent) — Supported real headless Linux DeviceAgent + MCP; distinct from Windows GUI. |
 | 53 | `anything-llm` | Native capture pending | [AnythingLLM native REST agent cluster](#anythingllm-native-rest-agent-cluster) |

@@ -23,6 +23,7 @@ from phistory.task_entries import (
     DEERFLOW_TASK,
     DEVOPSGPT_TASK,
     GPT_RESEARCHER_TASK,
+    HIVEKEEP_TASK,
     INTENTKIT_DATABASE_SETUP,
     LONG_HORIZON_SETUP,
     LONG_HORIZON_TASK,
@@ -1772,6 +1773,44 @@ INKOS = AgentSpec(
 )
 
 
+HIVEKEEP = AgentSpec(
+    id="hivekeep",
+    display_name="Hivekeep",
+    package="MarlBurroW/hivekeep",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="readonly",
+    source_build_commands=(("bun", "install", "--frozen-lockfile"),),
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key", "PHISTORY_HIVEKEEP_PASSWORD": "phistory-owned-local-password"},
+    required_system_text=("You are Queenie:",),
+    required_user_text=("[A new user just finished initial setup and opened the onboarding chat.",),
+    capture_min_tools=1,
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("native-queenie-onboarding",),
+    default_variant=_default(
+        capture_unavailable="Use the real authenticated Queenie onboarding flow and its native live-catalogue model selection."
+    ),
+    variants=(
+        _variant(
+            "native-queenie-onboarding",
+            "Native Queenie / compatible OpenRouter catalogue",
+            ("--no-yolo", "--", "-c", HIVEKEEP_TASK),
+            driver="local-task-api",
+            dimensions={
+                "entry": "real server, BetterAuth signup, profile, provider and configurator",
+                "provider": "native openai-compatible connector",
+                "models": "native model selection from unmodified actual public OpenRouter catalogue",
+                "transport": "owned local gateway: live public metadata GET, model POST only to capture-only tap",
+                "tools": "complete native configurator toolbox",
+                "scope": "initial native Queenie onboarding turn",
+            },
+        ),
+    ),
+)
+
 LOOPTROOP = AgentSpec(
     id="looptroop",
     display_name="LoopTroop",
@@ -3128,6 +3167,7 @@ AGENTS: dict[str, AgentSpec] = {
         INKOS,
         DB_GPT,
         LOOPTROOP,
+        HIVEKEEP,
         ANYTHINGLLM,
         AGENTLINK,
         UFO,
