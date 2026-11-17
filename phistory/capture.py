@@ -110,6 +110,14 @@ def capture_target(
             target.trace_path,
             target.meta_path,
         )
+    if target.variant.capture_unavailable:
+        return CaptureResult(
+            target.agent.id,
+            target.version.version,
+            target.variant.id,
+            "failed",
+            error=target.variant.capture_unavailable,
+        )
 
     staging_root: Path | None = None
     working_target = target
@@ -137,6 +145,14 @@ def capture_target(
         ):
             env = _capture_env(working_target, bin_dir, Path(home_dir), inherited_env=inherited_env)
             env["PWD"] = str(Path(work_dir))
+            if target.agent.bootstrap_args:
+                run(
+                    [str(bin_dir / agent_executable(target.agent)), *target.agent.bootstrap_args],
+                    cwd=Path(work_dir),
+                    env={**env, **target.agent.bootstrap_env},
+                    timeout=600,
+                    inherit_env=False,
+                )
             execution = run_capture(
                 CaptureRunContext(
                     target=working_target,
@@ -181,6 +197,17 @@ def capture_target(
                 "agent": target.agent.display_name,
                 "package": target.agent.package,
                 **({"package_extras": list(target.agent.pypi_extras)} if target.agent.pypi_extras else {}),
+                **({"package_layout": "bundle"} if target.agent.release_asset_layout == "bundle" else {}),
+                **(
+                    {
+                        "bootstrap": {
+                            "arguments": list(target.agent.bootstrap_args),
+                            "environment": target.agent.bootstrap_env,
+                        }
+                    }
+                    if target.agent.bootstrap_args
+                    else {}
+                ),
                 "version": target.version.version,
                 "variant": {
                     "id": target.variant.id,
@@ -283,36 +310,43 @@ def _capture_env(
     inherited_env: Mapping[str, str] | None = None,
 ) -> dict[str, str]:
     home = home_dir or target.version_dir / ".home"
+    profile = target.variant.home_profile or target.agent.home_profile
     for path in (home, home / ".config", home / ".cache", home / ".local" / "share", home / ".codex", home / ".claude"):
         path.mkdir(parents=True, exist_ok=True)
     if target.agent.fake_chatgpt_auth:
         _write_fake_chatgpt_auth(home)
-    if target.agent.home_profile == "antigravity":
+    if profile == "antigravity":
         _write_antigravity_config(home)
-    if target.agent.home_profile == "hermes":
+    if profile == "hermes":
         _write_hermes_config(home)
-    if target.agent.home_profile == "kimi":
+    if profile == "kimi":
         _write_kimi_config(home)
-    if target.agent.home_profile == "kimi-code":
+    if profile == "kimi-code":
         _write_kimi_code_config(home)
-    if target.agent.home_profile == "mimo":
+    if profile == "mimo":
         _write_mimo_config(home)
-    if target.agent.home_profile == "omp":
+    if profile == "omp":
         _write_omp_config(home)
-    if target.agent.home_profile == "openclaw":
+    if profile == "openclaw":
         _write_openclaw_config(home)
-    if target.agent.home_profile == "opencode":
+    if profile == "opencode":
         _write_opencode_config(home)
-    if target.agent.home_profile == "pi":
+    if profile == "pi":
         _write_pi_config(home)
-    if target.agent.home_profile == "qwen":
+    if profile == "qwen":
         _write_qwen_config(home)
-    if target.agent.home_profile == "goose":
+    if profile == "goose":
         _write_goose_config(home)
-    if target.agent.home_profile == "crush":
+    if profile == "crush":
         _write_crush_config(home)
-    if target.agent.home_profile == "nanobot":
+    if profile == "nanobot":
         _write_nanobot_config(home)
+    if profile == "codewhale":
+        config_dir = home / ".codewhale"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        (config_dir / "config.toml").write_text("[update]\ncheck_for_updates = false\n", encoding="utf-8")
+    if profile == "cline-anthropic":
+        _write_cline_anthropic_config(home)
     inherited = (
         dict(inherited_env)
         if inherited_env is not None
@@ -337,50 +371,107 @@ def _capture_env(
     if target.agent.id == "qoder":
         # Older releases interpret this as a paid workflow mode instead of ordinary headless CLI execution.
         env.pop("GITHUB_ACTIONS")
-    if target.agent.home_profile == "hermes":
+    if profile == "hermes":
         env["HERMES_HOME"] = str(home / ".hermes")
-    if target.agent.home_profile == "dsh":
+    if profile == "dsh":
         env["DSH_HOME"] = str(home / ".dsh")
-    if target.agent.home_profile == "grok":
+    if profile == "grok":
         grok_home = home / ".grok"
         grok_home.mkdir(parents=True, exist_ok=True)
         env["GROK_HOME"] = str(grok_home)
-    if target.agent.home_profile == "kimi":
+    if profile == "kimi":
         env["KIMI_SHARE_DIR"] = str(home / ".kimi")
-    if target.agent.home_profile == "kimi-code":
+    if profile == "kimi-code":
         env["KIMI_CODE_HOME"] = str(home / ".kimi-code")
-    if target.agent.home_profile == "mimo":
+    if profile == "mimo":
         env.update(
             {
                 "MIMOCODE_CONFIG": str(home / ".config" / "mimocode" / "mimocode.json"),
                 "MIMOCODE_MIMO_ONLY": "false",
             }
         )
-    if target.agent.home_profile == "openclaw":
+    if profile == "openclaw":
         env.update(
             {
                 "OPENCLAW_STATE_DIR": str(home / ".openclaw"),
                 "OPENCLAW_CONFIG_PATH": str(home / ".openclaw" / "openclaw.json"),
             }
         )
-    if target.agent.home_profile == "opencode":
+    if profile == "opencode":
         env["OPENCODE_CONFIG"] = str(home / ".config" / "opencode" / "opencode.json")
-    if target.agent.home_profile == "pi":
+    if profile == "pi":
         env["PI_CODING_AGENT_DIR"] = str(home / ".pi" / "agent")
-    if target.agent.home_profile == "omp":
+    if profile == "omp":
         env["PI_CODING_AGENT_DIR"] = str(home / ".omp" / "agent")
-    if target.agent.home_profile == "goose":
+    if profile == "goose":
         env["GOOSE_PATH_ROOT"] = str(home / ".goose")
         env["GOOSE_CA_CERT_PATH"] = str(home / ".local" / "share" / "claude-tap" / "ca.pem")
-    if target.agent.home_profile == "crush":
+    if profile == "crush":
         env["CRUSH_GLOBAL_CONFIG"] = str(home / ".config" / "crush")
         env["CRUSH_DATA_DIR"] = str(home / ".local" / "share" / "crush")
-    if target.agent.home_profile == "bub":
+    if profile == "bub":
         (home / ".bub").mkdir(parents=True, exist_ok=True)
         env["BUB_HOME"] = str(home / ".bub")
-    if target.agent.home_profile == "jcode":
+    if profile == "jcode":
         (home / ".jcode").mkdir(parents=True, exist_ok=True)
         env["JCODE_HOME"] = str(home / ".jcode")
+    if profile == "pi-rust":
+        (home / ".rpi" / "agent").mkdir(parents=True, exist_ok=True)
+        env["RPI_CODING_AGENT_DIR"] = str(home / ".rpi" / "agent")
+    if profile == "codewhale":
+        env["CODEWHALE_HOME"] = str(home / ".codewhale")
+    if profile == "kilocode":
+        env["KILO_CONFIG_CONTENT"] = json.dumps(
+            {
+                "model": "phistory/gpt-4.1",
+                "enabled_providers": ["phistory"],
+                "provider": {
+                    "phistory": {
+                        "npm": "@ai-sdk/openai-compatible",
+                        "name": "Phistory",
+                        "options": {"baseURL": "https://api.openai.com/v1", "apiKey": "phistory-fake-api-key"},
+                        "models": {"gpt-4.1": {"name": "GPT-4.1"}},
+                    }
+                },
+            }
+        )
+    if profile in ("cline", "cline-anthropic"):
+        state = home / ".cline"
+        state.mkdir(parents=True, exist_ok=True)
+        env["CLINE_DATA_DIR"] = str(state)
+        env["CLINE_PROVIDER_SETTINGS_PATH"] = str(state / "settings" / "providers.json")
+    if profile == "letta-code":
+        state = home / ".letta-local"
+        state.mkdir(parents=True, exist_ok=True)
+        env["LETTA_LOCAL_BACKEND_DIR"] = str(state)
+    if profile == "prime-agent":
+        state = home / ".prime-agent"
+        state.mkdir(parents=True, exist_ok=True)
+        env.update(
+            {
+                "PRIME_AGENT_CODING_AGENT_DIR": str(state),
+                "PRIME_AGENT_SESSION_DIR": str(state / "sessions"),
+                "PRIME_AGENT_DAEMON_SOCKET": str(state / "daemon.sock"),
+                "PRIME_AGENT_KERNEL_VENV": str(state / "kernel-venv"),
+                "PI_PACKAGE_DIR": str(bin_dir.resolve()),
+            }
+        )
+    if profile in ("interpreter", "interpreter-http"):
+        state = home / ".openinterpreter"
+        state.mkdir(parents=True, exist_ok=True)
+        env["INTERPRETER_HOME"] = str(state)
+        if profile == "interpreter-http":
+            from phistory.interpreter import compatibility_metadata
+
+            metadata = compatibility_metadata(bin_dir.parent, target.version.version)
+            _write_interpreter_http_config(state, metadata["compatibility_version"])
+            env.update(
+                {
+                    "PHISTORY_INTERPRETER_COMPATIBILITY_VERSION": metadata["compatibility_version"],
+                    "PHISTORY_INTERPRETER_COMPATIBILITY_SOURCE": metadata["source"],
+                    "PHISTORY_INTERPRETER_COMPATIBILITY_SHA256": metadata["sha256"],
+                }
+            )
     if target.agent.node_runtime:
         env["NPM_CONFIG_CACHE"] = str(bin_dir.parents[2] / ".npm-runtime-cache")
     if target.agent.fake_chatgpt_auth:
@@ -548,6 +639,39 @@ def _write_nanobot_config(home: Path) -> None:
     config_dir.mkdir(parents=True, exist_ok=True)
     config = {"providers": {"anthropic": {"apiKey": "phistory-fake-api-key"}}}
     (config_dir / "config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+
+def _write_cline_anthropic_config(home: Path) -> None:
+    config_dir = home / ".cline" / "settings"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config = {
+        "version": 1,
+        "lastUsedProvider": "anthropic",
+        "providers": {
+            "anthropic": {
+                "settings": {"provider": "anthropic", "apiKey": "phistory-fake-api-key", "model": "claude-sonnet-5-5"},
+                "updatedAt": _iso_now(),
+            }
+        },
+    }
+    (config_dir / "providers.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+
+def _write_interpreter_http_config(state: Path, compatibility_version: str) -> None:
+    config = "\n".join(
+        [
+            "[model_providers.openai]",
+            'name = "OpenAI"',
+            'wire_api = "responses"',
+            "requires_openai_auth = true",
+            "supports_websockets = false",
+            "supports_standalone_web_search = true",
+            f"http_headers = {{ version = {json.dumps(compatibility_version)} }}",
+            'env_http_headers = { "OpenAI-Organization" = "OPENAI_ORGANIZATION", "OpenAI-Project" = "OPENAI_PROJECT" }',
+            "",
+        ]
+    )
+    (state / "config.toml").write_text(config, encoding="utf-8")
 
 
 def _write_kimi_config(home: Path) -> None:

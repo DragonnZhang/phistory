@@ -357,6 +357,16 @@ def _install_github_release_asset(agent: AgentSpec, version: str, install_dir: P
     _extract_archive(archive_path, extract_dir)
     binary_name = agent.release_asset_binary or agent.tap_client
     source = _find_extracted_binary(extract_dir, binary_name)
+    if agent.release_asset_layout == "bundle":
+        source.chmod(source.stat().st_mode | 0o755)
+        command = source.parent / agent_executable(agent)
+        if command != source:
+            if command.exists():
+                raise RuntimeError(f"release bundle already contains a different command: {command}")
+            command.symlink_to(source.name)
+        bin_dir.rmdir()
+        bin_dir.symlink_to(source.parent.resolve(), target_is_directory=True)
+        return bin_dir
     shutil.copy2(source, executable)
     executable.chmod(executable.stat().st_mode | 0o755)
     return bin_dir
@@ -507,7 +517,7 @@ def _github_release_by_tag_via_gh(repo: str, tag: str) -> dict:
 def _select_release_asset(agent: AgentSpec, version: str, release: dict) -> dict:
     if not agent.release_asset:
         raise RuntimeError(f"{agent.id} does not define release_asset")
-    expected = agent.release_asset.format(version=version)
+    expected = agent.release_asset.format(version=version, version_number=version.removeprefix("v"))
     assets = release.get("assets")
     if not isinstance(assets, list):
         raise RuntimeError(f"GitHub release without assets for {agent.package}@{version}: {release!r}")
@@ -532,7 +542,7 @@ def _verify_sha512(path: Path, expected: str) -> None:
 
 def _extract_archive(archive: Path, output: Path) -> None:
     suffixes = "".join(archive.suffixes)
-    if suffixes.endswith(".tar.gz") or suffixes.endswith(".tgz"):
+    if suffixes.endswith((".tar.gz", ".tgz", ".tar.xz", ".txz", ".tar.bz2", ".tar")):
         with tarfile.open(archive) as tar:
             for member in tar.getmembers():
                 target = (output / member.name).resolve()

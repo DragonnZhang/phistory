@@ -27,6 +27,16 @@ HomeProfile = Literal[
     "nanobot",
     "bub",
     "jcode",
+    "pi-rust",
+    "codewhale",
+    "opendev",
+    "kilocode",
+    "cline",
+    "cline-anthropic",
+    "letta-code",
+    "prime-agent",
+    "interpreter",
+    "interpreter-http",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -52,6 +62,8 @@ class CaptureVariant:
     extra_env: dict[str, str] = field(default_factory=dict)
     tap_mode: TapMode | None = None
     min_version: str | None = None
+    home_profile: HomeProfile | None = None
+    capture_unavailable: str | None = None
 
     def supports_version(self, version: str) -> bool:
         return self.min_version is None or _version_key(version) >= _version_key(self.min_version)
@@ -87,6 +99,10 @@ class AgentSpec:
     track_latest: bool = True
     pypi_extras: tuple[str, ...] = ()
     capture_timeout_seconds: int = 1800
+    release_asset_layout: Literal["binary", "bundle"] = "binary"
+    latest_variant_ids: tuple[str, ...] | None = None
+    bootstrap_args: tuple[str, ...] = ()
+    bootstrap_env: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.capture_timeout_seconds < 1:
@@ -97,6 +113,9 @@ class AgentSpec:
             raise ValueError(f"{self.id}: default variant id must be 'default'")
         if len(ids) != len(set(ids)):
             raise ValueError(f"{self.id}: capture variant ids must be unique")
+        if self.latest_variant_ids is not None:
+            if not self.latest_variant_ids or set(self.latest_variant_ids) - set(ids):
+                raise ValueError(f"{self.id}: latest variant ids must select configured variants")
         for variant_id in ids:
             if _VARIANT_ID_RE.fullmatch(variant_id) is None:
                 raise ValueError(f"{self.id}: invalid capture variant id {variant_id!r}")

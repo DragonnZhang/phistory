@@ -1,4 +1,6 @@
 import json
+import tomllib
+from pathlib import Path
 
 from phistory.capture import _capture_env
 from phistory.models import CaptureTarget, VersionInfo
@@ -11,7 +13,17 @@ def target(agent_id, tmp_path):
 
 
 def test_unverified_profiles_require_explicit_selection():
-    candidates = {"goose", "crush", "mini-swe-agent", "nanobot", "bub", "jcode"}
+    candidates = {
+        "jcode",
+        "pi-rust",
+        "codewhale",
+        "opendev",
+        "kilocode",
+        "cline",
+        "letta-code",
+        "prime-agent",
+        "openinterpreter",
+    }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
 
@@ -69,3 +81,69 @@ def test_jcode_does_not_disable_default_selfdev_tool_surface(tmp_path):
     assert "--model" not in item.variant.run_args
     assert env["JCODE_NON_INTERACTIVE"] == "1"
     assert env["ANTHROPIC_API_KEY"] == "phistory-fake-api-key"
+
+
+def test_codewhale_keeps_toolless_default_and_separate_agent_mode(tmp_path):
+    item = target("codewhale", tmp_path)
+    env = _capture_env(item, tmp_path / "bin", tmp_path / "home")
+    assert "--auto" not in item.variant.run_args
+    assert "--auto" in item.agent.variant("auto").run_args
+    assert "--model" not in item.variant.run_args
+    assert tomllib.loads((Path(env["CODEWHALE_HOME"]) / "config.toml").read_text()) == {
+        "update": {"check_for_updates": False}
+    }
+
+
+def test_cline_variant_redirects_provider_state_without_changing_gateway_default(tmp_path):
+    agent = get_agent("cline")
+    home = tmp_path / "home"
+    native = CaptureTarget(agent, VersionInfo("3.0.74"), agent.default_variant, tmp_path)
+    env = _capture_env(native, tmp_path / "bin", home)
+    path = Path(env["CLINE_PROVIDER_SETTINGS_PATH"])
+    assert path == Path(env["CLINE_DATA_DIR"]) / "settings/providers.json"
+    assert not path.exists()
+    configured = CaptureTarget(agent, VersionInfo("3.0.74"), agent.variant("anthropic"), tmp_path)
+    _capture_env(configured, tmp_path / "bin", home)
+    settings = json.loads(path.read_text())
+    assert settings["lastUsedProvider"] == "anthropic"
+    assert settings["providers"]["anthropic"]["settings"]["model"] == "claude-sonnet-5-5"
+
+
+def test_letta_local_auth_does_not_leak_into_cloud_default(tmp_path):
+    agent = get_agent("letta-code")
+    cloud = _capture_env(target("letta-code", tmp_path), tmp_path / "bin", tmp_path / "cloud")
+    local = CaptureTarget(agent, VersionInfo("test"), agent.variant("local"), tmp_path)
+    env = _capture_env(local, tmp_path / "bin", tmp_path / "local")
+    assert "ANTHROPIC_API_KEY" not in cloud and "LETTA_API_KEY" not in cloud
+    assert env["ANTHROPIC_API_KEY"] == "phistory-fake-api-key"
+    assert agent.latest_variant_ids == ("local",)
+    assert agent.default_variant.capture_unavailable
+
+
+def test_interpreter_http_preserves_native_provider_headers_and_records_matching_source(tmp_path, monkeypatch):
+    from phistory import interpreter
+
+    metadata = {"compatibility_version": "1.2.3", "source": "https://example.invalid/exact-tag", "sha256": "a" * 64}
+    monkeypatch.setattr(interpreter, "compatibility_metadata", lambda *_: metadata)
+    agent = get_agent("openinterpreter")
+    item = CaptureTarget(agent, VersionInfo("rust-v0.0.61"), agent.variant("responses-http"), tmp_path)
+    env = _capture_env(item, tmp_path / "install/bin", tmp_path / "home")
+    config = tomllib.loads((Path(env["INTERPRETER_HOME"]) / "config.toml").read_text())
+    provider = config["model_providers"]["openai"]
+    assert provider["requires_openai_auth"]
+    assert provider["wire_api"] == "responses" and not provider["supports_websockets"]
+    assert provider["http_headers"] == {"version": "1.2.3"}
+    assert provider["env_http_headers"]["OpenAI-Organization"] == "OPENAI_ORGANIZATION"
+    assert env["PHISTORY_INTERPRETER_COMPATIBILITY_SHA256"] == metadata["sha256"]
+    assert agent.default_variant.capture_unavailable
+
+
+def test_prime_preserves_bundle_and_bootstraps_kernel_before_offline_capture(tmp_path):
+    agent = get_agent("prime-agent")
+    env = _capture_env(target("prime-agent", tmp_path), tmp_path / "bin", tmp_path / "home")
+    assert agent.release_asset_layout == "bundle"
+    assert agent.bootstrap_args == ("--prime-agent-bootstrap",)
+    assert agent.bootstrap_env == {"PI_OFFLINE": "0"}
+    assert env["PI_OFFLINE"] == "1"
+    assert env["PI_PACKAGE_DIR"] == str((tmp_path / "bin").resolve())
+    assert Path(env["PRIME_AGENT_KERNEL_VENV"]).is_relative_to(tmp_path / "home")

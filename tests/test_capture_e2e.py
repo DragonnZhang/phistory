@@ -2,6 +2,7 @@ import json
 import os
 import stat
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from phistory.capture import (
@@ -29,6 +30,48 @@ from phistory.subprocesses import run as run_subprocess
 
 def _target(agent: AgentSpec, version: VersionInfo, root: Path) -> CaptureTarget:
     return CaptureTarget(agent, version, agent.default_variant, root)
+
+
+def test_unavailable_surface_stops_before_installing_or_opening_model_transport(tmp_path, monkeypatch):
+    from phistory.registry import get_agent
+
+    def unexpected_install(*args, **kwargs):
+        raise AssertionError("unavailable transport must not launch")
+
+    monkeypatch.setattr("phistory.packages.install_agent", unexpected_install)
+    target = _target(get_agent("openinterpreter"), VersionInfo("rust-v0.0.61"), tmp_path)
+    result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
+    assert result.status == "failed" and "WebSocket" in result.error
+    assert not target.variant_dir.exists()
+
+
+def test_bootstrap_runs_in_same_isolated_home_before_interception(tmp_path, monkeypatch):
+    from phistory.registry import get_agent
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    agent = replace(get_agent("prime-agent"), bootstrap_args=("--setup-only",))
+    target = _target(agent, VersionInfo("v0.10.3"), tmp_path / "captures")
+    monkeypatch.setattr("phistory.packages.install_agent", lambda *_: bin_dir)
+    events = []
+
+    def bootstrap(argv, **kwargs):
+        events.append((argv, kwargs))
+        assert kwargs["env"]["PI_OFFLINE"] == "0"
+        assert kwargs["inherit_env"] is False
+        (Path(kwargs["env"]["HOME"]) / "kernel-ready").touch()
+
+    def intercepted(context):
+        assert (Path(context.env["HOME"]) / "kernel-ready").exists()
+        assert context.env["PI_OFFLINE"] == "1"
+        assert events[0][1]["cwd"] == context.work_dir
+        raise RuntimeError("stopped after setup verification")
+
+    monkeypatch.setattr("phistory.capture.run", bootstrap)
+    monkeypatch.setattr("phistory.capture.run_capture", intercepted)
+    result = capture_target(target, cache_dir=tmp_path / "cache")
+    assert result.status == "failed" and "setup verification" in result.error
+    assert events[0][0] == [str(bin_dir / "prime-agent"), "--setup-only"]
 
 
 def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):

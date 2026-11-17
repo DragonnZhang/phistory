@@ -152,6 +152,16 @@ def test_capture_latest_skips_variants_before_their_minimum_version(monkeypatch,
     assert captured == ["default"]
 
 
+def test_latest_variant_policy_does_not_replace_explicit_variant_selection(monkeypatch, tmp_path):
+    agent = get_agent("letta-code")
+    monkeypatch.setattr("phistory.workflow.get_agent", lambda _: agent)
+    monkeypatch.setattr("phistory.workflow.packages.latest_version", lambda _: VersionInfo("0.34.63"))
+    monkeypatch.setattr("phistory.workflow.capture_target", lambda target, **_: target.variant.id)
+    kwargs = {"root": tmp_path / "captures", "cache_dir": tmp_path / "cache"}
+    assert capture_latest([agent.id], **kwargs) == ["local"]
+    assert capture_latest([agent.id], variant_ids=["default"], **kwargs) == ["default"]
+
+
 def test_backfill_starts_a_variant_at_its_minimum_version(monkeypatch, tmp_path: Path):
     agent = AgentSpec(
         id="agent",

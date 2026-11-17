@@ -25,7 +25,7 @@ def capture_latest(
         try:
             agent = get_agent(agent_id)
             version = packages.latest_version(agent)
-            variants = _selected_variants(agent, selected_ids)
+            variants = _selected_variants(agent, selected_ids if selected_ids is not None else agent.latest_variant_ids)
         except Exception as exc:
             results.append(CaptureResult(agent_id, "unknown", "default", "failed", error=str(exc)))
             continue

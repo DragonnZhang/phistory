@@ -28,6 +28,11 @@ def test_parse_default_agents():
         "pi",
         "omp",
         "gemini-cli",
+        "goose",
+        "crush",
+        "mini-swe-agent",
+        "nanobot",
+        "bub",
     ]
     assert "kimi" in AGENT_ORDER
     assert parse_agent_ids("kimi,kimi-code") == ["kimi", "kimi-code"]

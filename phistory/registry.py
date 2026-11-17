@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, TapMode
+from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, HomeProfile, TapMode
 
 
 def _default(
@@ -10,6 +10,7 @@ def _default(
     driver: CaptureDriver = "oneshot",
     dimensions: dict[str, str] | None = None,
     tap_mode: TapMode | None = None,
+    capture_unavailable: str | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id="default",
@@ -18,6 +19,7 @@ def _default(
         driver=driver,
         dimensions=dimensions or {},
         tap_mode=tap_mode,
+        capture_unavailable=capture_unavailable,
     )
 
 
@@ -30,6 +32,8 @@ def _variant(
     dimensions: dict[str, str] | None = None,
     tap_mode: TapMode | None = None,
     min_version: str | None = None,
+    home_profile: HomeProfile | None = None,
+    extra_env: dict[str, str] | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id=variant_id,
@@ -39,6 +43,8 @@ def _variant(
         dimensions=dimensions or {},
         tap_mode=tap_mode,
         min_version=min_version,
+        home_profile=home_profile,
+        extra_env=extra_env or {},
     )
 
 
@@ -963,7 +969,6 @@ GOOSE = AgentSpec(
     recorded_env=("GOOSE_DISABLE_KEYRING",),
     home_profile="goose",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "run", "--provider", "openai", "--text", "Reply with one short sentence.", "--no-session"),
@@ -982,7 +987,6 @@ CRUSH = AgentSpec(
     recorded_env=("CRUSH_DISABLE_PROVIDER_AUTO_UPDATE", "CRUSH_DISABLE_METRICS"),
     home_profile="crush",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "run", "Reply with one short sentence."),
@@ -1006,7 +1010,6 @@ MINI_SWE_AGENT = AgentSpec(
     },
     recorded_env=("MSWEA_CONFIGURED", "MSWEA_MODEL_NAME", "MSWEA_COST_TRACKING"),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     default_variant=_default(
         (
@@ -1035,7 +1038,6 @@ NANOBOT = AgentSpec(
     fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
     home_profile="nanobot",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=180,
     default_variant=_default(("--no-yolo", "--", "agent", "--message", "Reply with one short sentence.")),
 )
@@ -1052,7 +1054,6 @@ BUB = AgentSpec(
     recorded_env=("BUB_MAX_STEPS",),
     home_profile="bub",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=180,
     default_variant=_default(("--no-yolo", "--", "run", "Reply with one short sentence.")),
 )
@@ -1063,7 +1064,8 @@ JCODE = AgentSpec(
     package="1jehuang/jcode",
     source="github-release-asset",
     release_asset="jcode-linux-x86_64.tar.gz",
-    release_asset_binary="jcode",
+    release_asset_binary="jcode-linux-x86_64",
+    release_asset_layout="bundle",
     tap_client="jcode",
     fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
     extra_env={"JCODE_NON_INTERACTIVE": "1", "JCODE_RUN_AUTO_POKE": "0"},
@@ -1073,6 +1075,204 @@ JCODE = AgentSpec(
     track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(("--no-yolo", "--", "--no-update", "run", "--json", "Reply with one short sentence.")),
+)
+
+
+PI_RUST = AgentSpec(
+    id="pi-rust",
+    display_name="pi-rust",
+    package="@bigfishnpm/rpi",
+    tap_client="rpi",
+    fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
+    extra_env={"RPI_OFFLINE": "1"},
+    recorded_env=("RPI_OFFLINE",),
+    home_profile="pi-rust",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.", "--no-session")),
+)
+
+CODEWHALE = AgentSpec(
+    id="codewhale",
+    display_name="Codewhale",
+    package="codewhale",
+    tap_client="codewhale",
+    fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
+    home_profile="codewhale",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "exec", "--output-format", "stream-json", "Reply with one short sentence."),
+        label="Default · exec without tools",
+        dimensions={"mode": "exec", "tools": "none"},
+    ),
+    variants=(
+        _variant(
+            "auto",
+            "Auto · agent tools",
+            ("--no-yolo", "--", "exec", "--auto", "--output-format", "stream-json", "Reply with one short sentence."),
+            dimensions={"mode": "auto"},
+        ),
+    ),
+)
+
+OPENDEV = AgentSpec(
+    id="opendev",
+    display_name="OpenDev",
+    package="opendev-to/opendev",
+    source="github-release-asset",
+    release_asset="opendev-cli-x86_64-unknown-linux-gnu.tar.xz",
+    release_asset_binary="opendev",
+    tap_client="opendev",
+    fake_env={"FIREWORKS_API_KEY": "phistory-fake-api-key"},
+    extra_env={"OPENDEV_DISABLE_REMOTE_MODELS": "1"},
+    recorded_env=("OPENDEV_DISABLE_REMOTE_MODELS",),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.")),
+)
+
+KILOCODE = AgentSpec(
+    id="kilocode",
+    display_name="Kilo Code",
+    package="@kilocode/cli",
+    tap_client="kilo",
+    fake_env={},
+    extra_env={"KILO_DISABLE_MODELS_FETCH": "1", "KILO_DISABLE_AUTOUPDATE": "1"},
+    recorded_env=("KILO_DISABLE_MODELS_FETCH", "KILO_DISABLE_AUTOUPDATE"),
+    home_profile="kilocode",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "run", "--format", "json", "Reply with one short sentence."),
+        label="Default · configured compatible provider",
+        dimensions={"provider": "OpenAI-compatible", "model": "gpt-4.1"},
+    ),
+)
+
+CLINE = AgentSpec(
+    id="cline",
+    display_name="Cline",
+    package="cline",
+    tap_client="cline",
+    fake_env={},
+    home_profile="cline",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "--key", "phistory-fake-api-key", "--json", "Reply with one short sentence.")
+    ),
+    variants=(
+        _variant(
+            "anthropic",
+            "Configured Anthropic",
+            ("--no-yolo", "--", "--json", "Reply with one short sentence."),
+            home_profile="cline-anthropic",
+            dimensions={"provider": "anthropic", "model": "claude-sonnet-5-5"},
+        ),
+    ),
+)
+
+LETTA_CODE = AgentSpec(
+    id="letta-code",
+    display_name="Letta Code",
+    package="@letta-ai/letta-code",
+    tap_client="letta",
+    fake_env={},
+    home_profile="letta-code",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("local",),
+    default_variant=_default(
+        ("--no-yolo", "--", "-p", "Reply with one short sentence."),
+        capture_unavailable="Cloud backend constructs its model request on Letta's server; local HTTP interception cannot archive the complete model system prompt and tools.",
+    ),
+    variants=(
+        _variant(
+            "local",
+            "Local backend",
+            ("--no-yolo", "--", "--backend", "local", "-p", "Reply with one short sentence."),
+            extra_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
+            dimensions={"backend": "local", "provider": "anthropic"},
+        ),
+    ),
+)
+
+PRIME_AGENT = AgentSpec(
+    id="prime-agent",
+    display_name="Prime Agent",
+    package="PrimeIntellect-ai/prime-agent",
+    source="github-release-asset",
+    release_asset="prime-agent-{version_number}-linux-x64.tar.gz",
+    release_asset_binary="prime-agent",
+    release_asset_layout="bundle",
+    tap_client="prime-agent",
+    fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
+    extra_env={"PI_OFFLINE": "1"},
+    recorded_env=("PI_OFFLINE",),
+    home_profile="prime-agent",
+    bootstrap_args=("--prime-agent-bootstrap",),
+    bootstrap_env={"PI_OFFLINE": "0"},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    default_variant=_default(("--no-yolo", "--", "--print", "--no-session", "Reply with one short sentence.")),
+)
+
+OPENINTERPRETER = AgentSpec(
+    id="openinterpreter",
+    display_name="OpenInterpreter",
+    package="openinterpreter/openinterpreter",
+    source="github-release-asset",
+    release_asset="open-interpreter-package-x86_64-unknown-linux-musl.tar.gz",
+    release_asset_binary="interpreter",
+    release_asset_layout="bundle",
+    tap_client="interpreter",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={
+        "OPEN_INTERPRETER_NONINTERACTIVE": "1",
+        "PHISTORY_INTERPRETER_COMPATIBILITY_VERSION": "",
+        "PHISTORY_INTERPRETER_COMPATIBILITY_SOURCE": "",
+        "PHISTORY_INTERPRETER_COMPATIBILITY_SHA256": "",
+    },
+    recorded_env=(
+        "OPEN_INTERPRETER_NONINTERACTIVE",
+        "PHISTORY_INTERPRETER_COMPATIBILITY_VERSION",
+        "PHISTORY_INTERPRETER_COMPATIBILITY_SOURCE",
+        "PHISTORY_INTERPRETER_COMPATIBILITY_SHA256",
+    ),
+    home_profile="interpreter",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("responses-http",),
+    default_variant=_default(
+        ("--no-yolo", "--", "exec", "--skip-git-repo-check", "--ephemeral", "--json", "Reply with one short sentence."),
+        capture_unavailable="Native Responses WebSocket transport is not supported by capture-only tap; use the explicitly recorded responses-http variant.",
+    ),
+    variants=(
+        _variant(
+            "responses-http",
+            "Responses · HTTP transport",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "--skip-git-repo-check",
+                "--ephemeral",
+                "--json",
+                "Reply with one short sentence.",
+            ),
+            home_profile="interpreter-http",
+            dimensions={"transport": "Responses HTTP", "provider": "native openai; WebSocket capability disabled"},
+        ),
+    ),
 )
 
 
@@ -1102,6 +1302,14 @@ AGENTS: dict[str, AgentSpec] = {
         NANOBOT,
         BUB,
         JCODE,
+        PI_RUST,
+        CODEWHALE,
+        OPENDEV,
+        KILOCODE,
+        CLINE,
+        LETTA_CODE,
+        PRIME_AGENT,
+        OPENINTERPRETER,
     )
 }
 AGENT_ORDER = tuple(AGENTS)

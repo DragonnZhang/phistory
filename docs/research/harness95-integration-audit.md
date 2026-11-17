@@ -6,6 +6,8 @@ The table distinguishes the initial registry overlap from new source targets. �
 
 ## Confirmed CLI contracts
 
+Runtime status after Linux runs [44078434491](https://github.com/DragonnZhang/phistory/actions/runs/44078434491) and [44081049485](https://github.com/DragonnZhang/phistory/actions/runs/44081049485): Gemini plus Goose, Crush, mini-swe-agent, nanobot and Bub now have real request captures, bringing this survey to 18 runtime integrations including the original 12. The five latter agents passed independent fresh-home/cache smoke captures with exactly equal canonical tool definitions (17, 26, 1, 22 and 18 tools respectively). Crush, mini and nanobot also have identical normalized prompt Markdown; Goose differs only in its current-time field and Bub only in its Date field. Raw Linux traces retain these values. Jcode's first attempt failed during release-layout installation, before a model request; its launcher/sidecar bundle fix requires another CI attempt. Registry entries for the next eight are implementation candidates until corresponding Linux captures succeed.
+
 | Project | Installation source | Normal single-task entry | Capture condition |
 | --- | --- | --- | --- |
 | Gemini CLI | npm `@google/gemini-cli` | `gemini -p "Reply with one short sentence."` | Use a fake `GEMINI_API_KEY` behind claude-tap; preserve native Google request bodies. `GOOGLE_GEMINI_BASE_URL` changes auth selection to GATEWAY in current source, so record it if selected. [README](https://github.com/google-gemini/gemini-cli/blob/main/README.md), [content generator](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/core/contentGenerator.ts) |
@@ -250,8 +252,257 @@ Set isolated `BUB_HOME`, `BUB_API_KEY=phistory-fake-api-key` (or provider-specif
 
 Use release asset `jcode-linux-x86_64.tar.gz` from official tag `v1.0.0`. Its clap definitions provide `run` with a positional message and `--json` or `--ndjson`; the single-message implementation constructs the normal tool registry and Agent. [Release](https://github.com/1jehuang/jcode/releases/tag/v1.0.0), [CLI arguments](https://github.com/1jehuang/jcode/blob/v1.0.0/src/cli/args.rs), [single-message execution](https://github.com/1jehuang/jcode/blob/v1.0.0/src/cli/commands.rs).
 
+The actual Linux archive entry is a 505-byte executable launcher named `jcode-linux-x86_64`, which sets `LD_LIBRARY_PATH` to its resolved directory and executes sibling `jcode-linux-x86_64.bin`. Preserve the archive bundle and symlink the command `jcode` to that launcher; copying or renaming only one file loses its sibling/library lookup. [Release archive](https://github.com/1jehuang/jcode/releases/download/v1.0.0/jcode-linux-x86_64.tar.gz).
+
 ```text
 jcode --no-update --no-selfdev run --json "Reply with one short sentence."
 ```
 
 Set isolated `JCODE_HOME`, `JCODE_NON_INTERACTIVE=1`, `ANTHROPIC_API_KEY=phistory-fake-api-key`, and `JCODE_RUN_AUTO_POKE=0`. Leave model and provider flags unset. `auto` is the CLI provider default; credential discovery counts a direct Anthropic API key as an available Claude backend. A directly supplied environment key avoids the separate consent flow for importing another application's stored credential. No universal fixed model should be invented: the provider/model defaults and configuration select it. Source inspection confirms the entry and credential path; the release's TLS/capability-prefetch behavior still requires its real Linux capture. [Provider initialization and direct-key handling](https://github.com/1jehuang/jcode/blob/v1.0.0/src/cli/provider_init.rs), [config defaults](https://github.com/1jehuang/jcode/blob/v1.0.0/crates/jcode-base/src/config/default_file.rs).
+
+## Next eight Linux runtime capture contracts
+
+These contracts select the official published implementation, its normal headless entry, and a fresh configuration directory. They are source-verified capture recipes; Linux trace artifacts must establish success. A fake key is supplied only to make the real client assemble its request behind claude-tap. No real CLI or model invocation was performed locally. Preserve model/provider defaults when a single credential selects a supported native route. Record explicitly configured routes, local backends, and tool-enabling modes as named surfaces.
+
+### Cline 3.0.74
+
+Install npm `cline@3.0.74`, whose executable is `cline` and Linux binary dependency is `@cline/cli-linux-x64@3.0.74`. The matching official source tag is `cli-v3.0.74`. Do not substitute `@cline/cli@0.0.13`: that older package exposes `clite`, a different entry. [Published package](https://registry.npmjs.org/cline/3.0.74), [release CLI source](https://github.com/cline/cline/blob/cli-v3.0.74/apps/cli/src/main.ts).
+
+```text
+cline --json "Reply with one short sentence."
+```
+
+Add `--data-dir <fresh-absolute-directory>` to both setup and capture. This release-supported isolation option redirects database/session/team state and sets `CLINE_PROVIDER_SETTINGS_PATH` to that directory's `settings/providers.json`; setting only `CLINE_DATA_DIR` does not activate the helper. The CLI resolves the last-used configured provider, otherwise the Cline gateway. Headless single-task execution supplies the normal agent/tool registration and defaults to its noninteractive permission mode. Attempt the fresh Cline gateway by also adding `--key phistory-fake-api-key`, leaving provider/model unset; gateway catalog/account bootstrap may prevent a fake-credential run. This flag is an explicit release-supported auth path and does not depend on unverified gateway environment-key discovery. Its model comes from the provider's catalog/free/recommended selection, so do not call a hardcoded Anthropic model the product default. [Provider selection and key flag](https://github.com/cline/cline/blob/cli-v3.0.74/apps/cli/src/main.ts), [isolated settings paths](https://github.com/cline/cline/blob/cli-v3.0.74/apps/cli/src/utils/helpers.ts).
+
+For an honest configured direct-Anthropic surface, the release's normal setup command is `cline auth --provider anthropic --apikey phistory-fake-api-key --modelid claude-sonnet-5-5`. That quick-auth branch saves the provider settings without validating a remote account. Run setup in Linux with the same isolated directory, then use the headless command without model/provider flags. An equivalent `settings/providers.json` is:
+
+```json
+{"version":1,"lastUsedProvider":"anthropic","providers":{"anthropic":{"settings":{"provider":"anthropic","apiKey":"phistory-fake-api-key","model":"claude-sonnet-5-5"},"updatedAt":"2026-11-17T00:00:00.000Z"}}}
+```
+
+The configured model is a recorded choice, not an unconfigured default. [Quick-auth implementation](https://github.com/cline/cline/blob/cli-v3.0.74/apps/cli/src/commands/auth.ts).
+
+### Kilo Code 7.8.27
+
+Install npm `@kilocode/cli@7.8.27`, executables `kilo` and `kilocode`, matching official tag `v7.8.27` / commit `03a6f07d053cd7e6aa88fa1e258e93510335259f`. Its headless run path builds the real session agent with registered tools. Model selection follows configured model, recent state, then available providers/models; it has no single fixed default across fresh authentication choices. [Package](https://registry.npmjs.org/@kilocode%2fcli/7.8.27), [run entry](https://github.com/Kilo-Org/kilocode/blob/v7.8.27/packages/opencode/src/cli/cmd/run.ts), [provider selection](https://github.com/Kilo-Org/kilocode/blob/v7.8.27/packages/opencode/src/provider/provider.ts).
+
+```text
+kilo run --format json "Reply with one short sentence."
+```
+
+Use isolated HOME/XDG directories. For a reproducible named OpenAI-compatible surface set `KILO_CONFIG_CONTENT` to the JSON below, `KILO_DISABLE_MODELS_FETCH=1`, and `KILO_DISABLE_AUTOUPDATE=1`. The compatible provider is bundled; it does not require an extra dynamically installed package. These configuration settings deliberately select a model and therefore must not be labeled Kilo's universal default.
+
+```json
+{"model":"phistory/gpt-4.1","enabled_providers":["phistory"],"provider":{"phistory":{"npm":"@ai-sdk/openai-compatible","name":"Phistory","options":{"baseURL":"https://api.openai.com/v1","apiKey":"phistory-fake-api-key"},"models":{"gpt-4.1":{"name":"GPT-4.1"}}}}}
+```
+
+Leave normal plugins enabled initially. `KILO_DISABLE_DEFAULT_PLUGINS=1` is a separately recorded fallback if plugin bootstrap blocks capture because disabling plugins may change the available tool surface. The initial request does not require an extra auto-approval flag. [Config loader](https://github.com/Kilo-Org/kilocode/blob/v7.8.27/packages/opencode/src/config/config.ts), [environment flags](https://github.com/Kilo-Org/kilocode/blob/v7.8.27/packages/core/src/flag/flag.ts).
+
+### Letta Code 0.34.63, local backend
+
+Install npm `@letta-ai/letta-code@0.34.63`, executable `letta`; its published `gitHead` is `eadef1c6c3594d1bf81517efd4b68fce54644ad4`. Cloud remains the documented default and requires Letta account/service state to create and manage its remote agent. The normal local backend is a distinct, directly capturable surface with its own MemFS agent state and prompt construction. [Package](https://registry.npmjs.org/@letta-ai%2fletta-code/0.34.63), [backend selection](https://github.com/letta-ai/letta-code/blob/eadef1c6c3594d1bf81517efd4b68fce54644ad4/src/index.ts).
+
+```text
+letta --backend local -p "Reply with one short sentence."
+```
+
+Set isolated HOME, `LETTA_LOCAL_BACKEND_DIR` to a fresh absolute state directory, and only `ANTHROPIC_API_KEY=phistory-fake-api-key`; omit `LETTA_API_KEY` and model flags. Local provider resolution chooses configured providers first. In this exact release the Anthropic default is `claude-opus-5-5`; the native OpenAI alternative is `gpt-6.1-sol`. The local backend invokes pi-ai directly and does not require a local Letta server or Cloud account. Preserve its normal MemFS memory tools; do not use the internal stateless-subagent memory kill switch to obtain an easier but narrower prompt. [Local provider/model resolution](https://github.com/letta-ai/letta-code/blob/eadef1c6c3594d1bf81517efd4b68fce54644ad4/src/backend/local/local-model-config.ts), [provider defaults](https://github.com/letta-ai/letta-code/blob/eadef1c6c3594d1bf81517efd4b68fce54644ad4/src/backend/dev/pi-provider-registry.ts), [state directory override](https://github.com/letta-ai/letta-code/blob/eadef1c6c3594d1bf81517efd4b68fce54644ad4/src/utils/local-backend-paths.ts).
+
+### pi-rust 0.22.1
+
+Install npm `@bigfishnpm/rpi@0.22.1`, executable `rpi`. Its installer downloads and checksums the matching official release binary; this captures the Rust agent loop rather than the separate existing Pi integration. [Package](https://registry.npmjs.org/@bigfishnpm%2frpi/0.22.1), [official release](https://github.com/bigfish1913/pi-rust/releases/tag/v0.22.1).
+
+```text
+rpi -p "Reply with one short sentence." --no-session
+```
+
+Set `RPI_CODING_AGENT_DIR` to a fresh absolute directory, `RPI_OFFLINE=1`, and only `ANTHROPIC_API_KEY=phistory-fake-api-key`. Offline mode disables startup network operations, not the model call. With no saved settings or model/provider flag, this credential selects the native Anthropic default `claude-opus-4-8`; the release also defines OpenAI's per-provider default `gpt-5.5`. Saved provider/model settings take precedence in a nonfresh home, which is why isolation matters. The print path preserves normal prompt/tool assembly. [Headless/offline arguments](https://github.com/bigfish1913/pi-rust/blob/v0.22.1/crates/rpi-cli/src/args.rs), [config paths](https://github.com/bigfish1913/pi-rust/blob/v0.22.1/crates/rpi-cli/src/config.rs), [runtime provider defaults and selection](https://github.com/bigfish1913/pi-rust/blob/v0.22.1/crates/rpi-runtime/src/provider.rs).
+
+### Codewhale 0.10.2
+
+Install npm `codewhale@0.10.2`, executables `codewhale` / `codew`, matching official tag `v0.10.2` and package `gitHead` `ff466b2ed0bfb4ae5267d4d8d0ecb562cf46956e`. The wrapper installs its own official Rust release. Native default provider is DeepSeek and the documented default model is `deepseek-flash`. [Package](https://registry.npmjs.org/codewhale/0.10.2), [release installation and headless reference](https://github.com/codewhale-hq/Codewhale/blob/v0.10.2/docs/INSTALL.md).
+
+```text
+codewhale exec --output-format stream-json "Reply with one short sentence."
+codewhale exec --auto --output-format stream-json "Reply with one short sentence."
+```
+
+Record these as two surfaces: plain `exec` explicitly supplies no tools; `--auto` enables the agent's tool registry and its automatic permission mode. A successful tool-less default request therefore does not satisfy the tool-schema capture goal. Set `CODEWHALE_HOME` to an isolated directory and `DEEPSEEK_API_KEY=phistory-fake-api-key`. Its `config.toml` may contain `[update]` followed by `check_for_updates=false` to avoid updater bootstrap. Do not run `auth set` merely to persist the fake key: the release documentation describes a model-changing behavior in an older auth setup branch. Environment auth suffices in fresh state; existing explicit/config/secret-store keys outrank it. [Headless tool-mode distinction and credential priority](https://github.com/codewhale-hq/Codewhale/blob/v0.10.2/docs/INSTALL.md), [home isolation](https://github.com/codewhale-hq/Codewhale/blob/v0.10.2/crates/tui/src/config/home.rs).
+
+### OpenDev 0.1.9
+
+Use official tag `v0.1.9` / commit `dda22f081f0edcfb4c6fb901f09ac5fc3b816461`, Linux asset `opendev-cli-x86_64-unknown-linux-gnu.tar.xz`. The executable is `opendev`; `-p` is its normal one-prompt headless path. [Release](https://github.com/opendev-to/opendev/releases/tag/v0.1.9), [arguments](https://github.com/opendev-to/opendev/blob/v0.1.9/crates/opendev-cli/src/cli.rs).
+
+```text
+opendev -p "Reply with one short sentence."
+```
+
+Set isolated HOME, `FIREWORKS_API_KEY=phistory-fake-api-key`, and `OPENDEV_DISABLE_REMOTE_MODELS=1`. The exact release's `AppConfig` defaults are provider `fireworks` and model `accounts/fireworks/models/kimi-k2-instruct-0905`; preserve them by supplying that provider's credential and no model/provider flags. The generic README's support for OpenAI keys is not evidence of an OpenAI product default. The remote-model switch uses built-in catalog fallback while retaining the ordinary agent. No permission-bypass flag is needed just to emit its first request. [Configuration defaults](https://github.com/opendev-to/opendev/blob/v0.1.9/crates/opendev-models/src/config/mod.rs), [environment overrides](https://github.com/opendev-to/opendev/blob/v0.1.9/crates/opendev-config/src/env.rs), [main routing](https://github.com/opendev-to/opendev/blob/v0.1.9/crates/opendev-cli/src/main.rs).
+
+### Prime Agent 0.10.3
+
+Use official tag `v0.10.3` / commit `efb25e2be62507f8a13a157545d031da213abac9`, Linux asset `prime-agent-0.10.3-linux-x64.tar.gz`. Actual tar headers confirm root executable `prime-agent`, `package.json` reporting version `0.10.3`, `models.bundled.json`, `mcp-services.bundled.json`, `photon_rs_bg.wasm`, `export-html/`, and sibling `prime-agent-runtime/{pyproject.toml,src/rlm/...}`. Preserve the whole tree and symlink the command to the root executable; `PI_PACKAGE_DIR` may explicitly point to that extracted root. Unlike interactive and ACP paths, print mode assembles a daemonless native session engine; it does not need a separately attached daemon. [Release and archive](https://github.com/PrimeIntellect-ai/prime-agent/releases/tag/v0.10.3), [headless runtime](https://github.com/PrimeIntellect-ai/prime-agent/blob/v0.10.3/crates/pa-cli/src/print_runtime.rs).
+
+```text
+prime-agent --prime-agent-bootstrap
+prime-agent --print --no-session "Reply with one short sentence."
+```
+
+Run the bootstrap only in Linux setup, with `uv` available and network allowed, before the intercepted model request. It provisions the real Python kernel environment; the release includes its runtime sidecar but neither uv nor the ready venv. The exact bootstrap-only argument branches directly to `ensure_kernel_python` before normal auth/model construction and performs no model API call. Use the same isolated HOME and `PRIME_AGENT_CODING_AGENT_DIR` for setup/capture. Also isolate `PRIME_AGENT_SESSION_DIR` and `PRIME_AGENT_DAEMON_SOCKET`; the print path itself sets `daemonless=true` and prewarms its kernel. `PRIME_AGENT_KERNEL_VENV` can select a dedicated writable venv directory. [Official installer prewarm](https://github.com/PrimeIntellect-ai/prime-agent/blob/v0.10.3/install-rust.sh), [bootstrap entry](https://github.com/PrimeIntellect-ai/prime-agent/blob/v0.10.3/crates/pa-cli/src/lib.rs), [kernel provisioning](https://github.com/PrimeIntellect-ai/prime-agent/blob/v0.10.3/crates/pa-core/src/kernel/bootstrap/mod.rs).
+
+For capture set `PI_OFFLINE=1` and only `ANTHROPIC_API_KEY=phistory-fake-api-key`; leave model/provider flags unset. The preferred global default is Prime Inference `z-ai/glm-5.3` when authorized, but available models are filtered by configured auth. With only Anthropic auth, its native per-provider default is `claude-opus-4-7`. The real kernel-backed tool surface includes `python_repl`; no faux-script seam is appropriate for capture. [Default model resolution](https://github.com/PrimeIntellect-ai/prime-agent/blob/v0.10.3/crates/pa-core/src/models/resolver.rs), [authenticated model filtering](https://github.com/PrimeIntellect-ai/prime-agent/blob/v0.10.3/crates/pa-core/src/models/registry.rs), [state/environment contract](https://github.com/PrimeIntellect-ai/prime-agent/blob/v0.10.3/crates/pa-cli/src/config.rs).
+
+### OpenInterpreter Rust fork 0.0.61
+
+Use official `rust-v0.0.61` / commit `80d8f55385452457a625dbabc032f3003b9545b4`, production Linux asset `open-interpreter-package-x86_64-unknown-linux-musl.tar.gz`. Preserve `codex-package.json`, `bin/interpreter`, `bin/codex-code-mode-host`, and `codex-resources` in the packaged layout. The old Python OpenInterpreter package and upstream `@openai/codex` package are different products; neither substitutes for this survey target. [Release](https://github.com/openinterpreter/openinterpreter/releases/tag/rust-v0.0.61), [official installation entry](https://www.openinterpreter.com/install), [Rust CLI](https://github.com/openinterpreter/openinterpreter/blob/rust-v0.0.61/codex-rs/cli/src/main.rs).
+
+```text
+interpreter exec --skip-git-repo-check --ephemeral --json "Reply with one short sentence."
+```
+
+Set `INTERPRETER_HOME` to a precreated isolated absolute directory, `OPENAI_API_KEY=phistory-fake-api-key`, and `OPEN_INTERPRETER_NONINTERACTIVE=1`. Interpreter deliberately ignores `CODEX_HOME` and otherwise uses `~/.openinterpreter`. Leave model/provider flags unset for the native catalog-selected default. [Exec arguments](https://github.com/openinterpreter/openinterpreter/blob/rust-v0.0.61/codex-rs/exec/src/cli.rs), [Interpreter home selection](https://github.com/openinterpreter/openinterpreter/blob/rust-v0.0.61/codex-rs/utils/home-dir/src/lib.rs).
+
+The native OpenAI route uses Responses over WebSocket: `responses_websocket_enabled()` checks provider capability and session fallback state, with no feature or auth-mode gate. The legacy `responses_websockets` and `responses_websockets_v2` features are removed, so setting them false does not force HTTP. Do not attempt the native WebSocket connection with the current capture-only tap because its WebSocket path can open an upstream connection. Instead, record an explicit HTTP transport capture and put this complete native OpenAI provider object into the isolated `config.toml`, changing only WebSocket capability:
+
+```toml
+[model_providers.openai]
+name = "OpenAI"
+wire_api = "responses"
+requires_openai_auth = true
+supports_websockets = false
+supports_standalone_web_search = true
+http_headers = { version = "0.159.0" }
+env_http_headers = { "OpenAI-Organization" = "OPENAI_ORGANIZATION", "OpenAI-Project" = "OPENAI_PROJECT" }
+```
+
+All omitted optional fields match the native unset values; provider ID, auth handling, Responses protocol, default model selection, and native headers remain the same. `0.159.0` is this Interpreter tag's declared Codex compatibility version, not its product version. For latest-aware installations, obtain that value from the exact selected release tag's `codex-rs/product-info/src/lib.rs` constant `OPEN_INTERPRETER_CODEX_COMPATIBILITY_VERSION` and retain the source hash/tag. The package builder's `codex-package.json` schema records product version, target, variant, and layout paths but has no compatibility-version field; product version must not be substituted for the header. Fail if the matching constant cannot be resolved. A lone `supports_websockets` field is insufficient: non-Bedrock provider objects replace the whole built-in object and would drop native auth/header settings. The explicit Chat Completions option is another surface and should not replace this Responses capture. [Transport gate](https://github.com/openinterpreter/openinterpreter/blob/rust-v0.0.61/codex-rs/core/src/client.rs), [removed legacy feature switches](https://github.com/openinterpreter/openinterpreter/blob/rust-v0.0.61/codex-rs/features/src/lib.rs), [native provider and merge semantics](https://github.com/openinterpreter/openinterpreter/blob/rust-v0.0.61/codex-rs/model-provider-info/src/lib.rs), [compatibility version](https://github.com/openinterpreter/openinterpreter/blob/rust-v0.0.61/codex-rs/product-info/src/lib.rs), [package metadata schema](https://github.com/openinterpreter/openinterpreter/blob/rust-v0.0.61/scripts/codex_package/layout.py).
+
+## Third runtime batch: source-owned task entry points
+
+All eight have concrete native task/wake entry points. Four use terminal tasks directly; Headlong exposes a synchronous framework wake; CTXAgent and Quorum expose Python runtime APIs; OpenAgent needs its local server and Store API. These are source-verified recipes pending Linux validation. They construct the real runtime and let it emit the request; none substitutes static prompt concatenation for a trace.
+
+### Fibona: Python bootstrap runtime and separate JavaScript port
+
+The current official release is `js-v0.1.3`, with `fibona-agent-0.1.3.tgz` for the JavaScript library. Its root Python package remains version `0.1.0`, Python ≥3.12, with console script `fibona = fibona:main`; the survey's Python runtime is source-installable from this tag. Install the source/lock in Linux, not an unrelated npm package: the npm registry name returned no published package, while the official JS README installs the release tgz directly. [Release](https://github.com/FibonaAI/fibona-agent/releases/tag/js-v0.1.3), [Python packaging](https://github.com/FibonaAI/fibona-agent/blob/js-v0.1.3/pyproject.toml), [JS packaging and installation](https://github.com/FibonaAI/fibona-agent/blob/js-v0.1.3/js/README.md).
+
+```text
+fibona --boot-mode minimal "Reply with one short sentence."
+```
+
+Set `FIBONA_API_KEY=phistory-fake-api-key`, isolated HOME/cwd, and `FIBONA_LOG_DIR`. Leave `FIBONA_MODEL` and `FIBONA_BASE_URL` unset: native defaults are `gpt-6-astra` and OpenAI `/v1`. `--boot-mode` is required; `minimal` and `terminal` are explicit native bootstrap surfaces, not an implicit default. The real CLI creates `Mind`, `IPythonEnv`, and `Agent.run`; minimal reads the positional task then calls `call_me`. Its emitted request is nonstreaming Responses, `store=false`, complete native instructions, and the `set_next_cell` tool schema. Terminal mode additionally contributes its normal bootstrap instructions. [CLI construction](https://github.com/FibonaAI/fibona-agent/blob/js-v0.1.3/fibona.py), [minimal bootstrap](https://github.com/FibonaAI/fibona-agent/blob/js-v0.1.3/bootstraps/minimal/init.py), [native mind/tool request](https://github.com/FibonaAI/fibona-agent/blob/js-v0.1.3/core/agent.py).
+
+A text-only dummy response does not choose a next cell, so the native runtime repairs until its default five consecutive failures and can exit nonzero after valid captures. A focused API driver can instead use the public `Agent.run(..., on_result=...)` observer to stop after the first bootstrap result, retaining normal bootstrap/Mind execution. Do not use `Mind.query`/`call_llm_api`: that intentionally omits agent instructions and the host tool. The JS port's documented `Agent(...).run(BOOTSTRAP, {env})` is a separate feasible library surface.
+
+### Octomind 0.72.0
+
+Use release asset `octomind-0.72.0-x86_64-unknown-linux-musl.tar.gz`. Native configuration now defaults to model `octohub:auto` and role `assistant:chief`; `developer` resolves a different domain orchestrator and `developer:general` is a named specialist. Scripts skip interactive onboarding. [Release](https://github.com/Muvon/octomind/releases/tag/0.72.0), [native default configuration](https://github.com/Muvon/octomind/blob/0.72.0/config-templates/default.toml), [run arguments](https://github.com/Muvon/octomind/blob/0.72.0/src/commands/run.rs).
+
+```text
+printf '%s\n' 'Reply with one short sentence.' | octomind run --format jsonl -c model.request_transport=http
+```
+
+Set isolated `OCTOMIND_DATA_DIR`, `OCTOHUB_API_KEY=phistory-fake-api-key`, and `OCTOMIND_TELEMETRY=0`. There is no positional task argument: the sole positional argument is a role/tag, and headless input comes from nonempty stdin. The explicit `http` transport is necessary for capture safety because the native model profile defaults to WebSocket; keep model/provider/role selections native. Dotted `-c` overrides accept unquoted strings when TOML parsing fails. The locked octolib `0.43.1` OctoHub HTTP client sends Responses-style `instructions`, `input`, and full tools to `/v1/completions`; claude-tap's existing OpenAI path and Responses dummy shape fit this route. [Override parsing](https://github.com/Muvon/octomind/blob/0.72.0/src/config/loading.rs), [state/auth environment](https://github.com/Muvon/octomind/blob/0.72.0/doc/reference/04-environment-variables.md), [OctoHub HTTP request](https://github.com/Muvon/octolib/blob/0.43.1/src/llm/providers/octohub.rs).
+
+Before interception, clone the official default tap into `<OCTOMIND_DATA_DIR>/taps/muvon/octomind-tap` using the same shallow Git clone the source uses. Record its commit: tap manifests independently determine prompt, tools, and dependencies. This public-source bootstrap performs no model call. Do not call `octomind tap muvon/tap`; source explicitly rejects re-adding its always-active built-in tap. Subsequent dependency/capability startup still needs Linux verification with the selected tap manifest. [Default tap cloning and location](https://github.com/Muvon/octomind/blob/0.72.0/src/agent/taps.rs), [official tap](https://github.com/muvon/octomind-tap).
+
+### OpenAgent 2.89.2: local Store API
+
+Use official binary `openagent_linux_x86_64` from `v2.89.2`. `openagent run`, `start`, `serve`, and `gateway` are aliases for its HTTP server; none is a one-task prompt command. No hosted account is needed: with no Casdoor endpoint, a fresh instance creates the native local `admin` account with initial password `123`. Fresh initialization creates a default Store and tools, but **no model provider**, so a configured model lane is required. [Release](https://github.com/the-open-agent/openagent/releases/tag/v2.89.2), [command dispatch](https://github.com/the-open-agent/openagent/blob/v2.89.2/internal/cli/cli.go), [local account initialization](https://github.com/the-open-agent/openagent/blob/v2.89.2/object/user.go), [Store/provider initialization](https://github.com/the-open-agent/openagent/blob/v2.89.2/object/init.go).
+
+Start the server under tap, in isolated HOME/cwd, with exact configuration environment names `driverName=sqlite3` and `dataSourceName=<isolated-absolute-path>/openagent.db`. This explicit database path matters: the single-binary SQLite fallback otherwise writes beside the installed executable, outside HOME. Reserve its native port 14000 exclusively for the driver, or supply an isolated normal `conf/app.conf` with a chosen port. [Config environment precedence](https://github.com/the-open-agent/openagent/blob/v2.89.2/conf/conf.go), [database isolation](https://github.com/the-open-agent/openagent/blob/v2.89.2/object/adapter.go), [server startup](https://github.com/the-open-agent/openagent/blob/v2.89.2/main.go).
+
+Use a focused local-HTTP driver with this sequence:
+
+1. `POST /api/signin` with `{"username":"admin","password":"123"}` and retain its local session cookie.
+2. `POST /api/add-provider` with `{"name":"phistory","category":"Model","type":"OpenAI","subType":"gpt-4.1","clientSecret":"phistory-fake-api-key","providerUrl":"https://api.openai.com","state":"Active","isDefault":true}`. This endpoint inserts the record; connection testing is a different endpoint.
+3. `GET /api/get-store?id=admin/store-built-in`; preserve the returned native Store fields and tool selection. Set only `modelProvider="phistory"` and `externalApiKey="phistory-local-store-key"`, then `POST /api/update-store?id=admin/store-built-in` with that Store.
+4. `POST /api/v1/chat/completions` with bearer `phistory-local-store-key` and body `{"model":"gpt-4.1","stream":false,"messages":[{"role":"user","content":"Reply with one short sentence."}]}`.
+
+The Store-key route performs `MergeMcpTools` and `QueryTextWithTools`, preserving the actual Store prompt and available tool registration. The direct provider-key route calls `QueryText` without this harness/tool assembly and is unsuitable as a replacement. Record this as a configured local Store/API surface; no universal unconfigured model exists. [Password sign-in](https://github.com/the-open-agent/openagent/blob/v2.89.2/controllers/signin.go), [provider insertion](https://github.com/the-open-agent/openagent/blob/v2.89.2/controllers/provider.go), [Store read/update](https://github.com/the-open-agent/openagent/blob/v2.89.2/controllers/store.go), [Store versus provider completion paths](https://github.com/the-open-agent/openagent/blob/v2.89.2/controllers/openai_api.go).
+
+### Headlong: synchronous native monolith wake
+
+No GitHub release is published; pin current official source commit `72f599562d104c7785798dde63dd5c1c7562280a`. Put its `bin/` and `tools/` on PATH with Bash, curl, jq, Python 3, and Git available. The ordinary checkout installer without `--init` is another supported way to install tools. Avoid running the identity interview/bootstrap installer outside tap because it can invoke models. [Checkout installation](https://github.com/laude-institute/headlong/blob/72f599562d104c7785798dde63dd5c1c7562280a/docs/install.md), [framework versus shellm naming](https://github.com/laude-institute/headlong/blob/72f599562d104c7785798dde63dd5c1c7562280a/AGENTS.md).
+
+```text
+identity --dir <state>/identities new phistory
+bash -c '. "$1"; thinkers step monolith' _ <state>/identities/phistory/activate
+```
+
+The first command is Linux setup: it creates the native identity, root trajectory, bundled kernel/thinker templates, and literal seed thoughts without any model call. Run the second command under tap with isolated HOME/`HEADLONG_HOME`, only `ANTHROPIC_API_KEY=phistory-fake-api-key`, `SHELLM_THINKER_ENV=local`, and `SHELLM_MAX_ITERATIONS=1`. It executes a real manual-trigger monolith wake synchronously, with no dispatcher daemon. Native model selection remains `claude-opus-4-7`. The explicit local execution environment and iteration bound belong in provenance. [Identity creation and activation](https://github.com/laude-institute/headlong/blob/72f599562d104c7785798dde63dd5c1c7562280a/tools/identity), [synchronous step command](https://github.com/laude-institute/headlong/blob/72f599562d104c7785798dde63dd5c1c7562280a/bin/thinkers), [monolith prompt/wake assembly](https://github.com/laude-institute/headlong/blob/72f599562d104c7785798dde63dd5c1c7562280a/thinkers/monolith/step).
+
+This captures the framework's actual persona/memory/recent-stream/function-menu context. The underlying action protocol is fenced Bash with `FINAL`/`FINAL_FILE`, not API JSON function schemas; zero API `tools` is genuine. A lower-level `shellm --env local --max-iterations 1 TEXT` is independently feasible but should remain a separate engine surface. Standalone shellm also makes an asynchronous run-summary request, whereas the monolith reuses its existing root trajectory; preserve auxiliary requests when present. [Native shellm prompt and loop](https://github.com/laude-institute/headlong/blob/72f599562d104c7785798dde63dd5c1c7562280a/bin/shellm), [protocol reference](https://github.com/laude-institute/headlong/blob/72f599562d104c7785798dde63dd5c1c7562280a/docs/shellm.md).
+
+### CTXAgent: paper runtime Python task API
+
+The survey references root `ctxagent/`, the frozen paper runtime, package version `0.1.0`; official release `app-v0.2.1` also contains a separately developed `app/ctxagent/` desktop runtime. There is no published PyPI package at `ctxagent`. Source-install the root editable package from this tag, with Python ≥3.11. The `ctxagent` console command opens its GUI/server; use its actual public `AgentSession.run_turn` API for a bounded task. [Root packaging](https://github.com/MatthiasHBusch/CTXAgent/blob/app-v0.2.1/pyproject.toml), [paper/application distinction](https://github.com/MatthiasHBusch/CTXAgent/blob/app-v0.2.1/app/README.md).
+
+Set isolated `CTXAGENT_DATA`, HOME, and workdir, plus `OPENROUTER_API_KEY=phistory-fake-api-key`. In Linux setup, call `asyncio.run(ctxagent.providers.providers(force=True))` before interception to cache the real public `/api/v1/providers` directory; it performs no generation. The native `eu_us` policy refuses an empty provider allowlist, so replacing that GET with a generic dummy can otherwise prevent the model request. Preserve the normal policy; the native disk cache lasts 24 hours. [Provider-directory cache](https://github.com/MatthiasHBusch/CTXAgent/blob/app-v0.2.1/ctxagent/providers.py), [routing guard](https://github.com/MatthiasHBusch/CTXAgent/blob/app-v0.2.1/ctxagent/flex.py).
+
+```python
+import asyncio
+from pathlib import Path
+from ctxagent import store
+from ctxagent.agent import AgentSession
+from ctxagent.config import SessionConfig
+from ctxagent.segments import Conversation
+
+async def main():
+    store.init()
+    cfg = SessionConfig(workdirs=[str(Path.cwd())])
+    cid = store.create_chat("Phistory", cfg.to_dict())
+    session = AgentSession(cid, cfg, Conversation())
+    async for event in session.run_turn("Reply with one short sentence."):
+        print(event)
+
+asyncio.run(main())
+```
+
+The real runtime constructs its system segment, compaction engine, workspace and tool schema, then streams Chat Completions through OpenRouter. The paper default is `anthropic/claude-sonnet-5`; do not substitute the newer desktop app's `anthropic/claude-opus-5.5` default. Tool availability follows the normally installed optional readers and workspace state; record those conditions. This is an honest paper/API capture and does not claim the newer desktop surface. [AgentSession runtime](https://github.com/MatthiasHBusch/CTXAgent/blob/app-v0.2.1/ctxagent/agent.py), [native defaults/state](https://github.com/MatthiasHBusch/CTXAgent/blob/app-v0.2.1/ctxagent/config.py), [native HTTP client](https://github.com/MatthiasHBusch/CTXAgent/blob/app-v0.2.1/ctxagent/llm.py).
+
+### DeepSeek-Reasonix Studio 2.61.0
+
+Use `studio-v2.61.0` asset `reasonix-linux-amd64.tar.gz`, the current 2.x CLI sharing the Studio engine. npm `reasonix` belongs to the maintained 1.x channel and must not replace the survey's Studio implementation. [Official release](https://github.com/esengine/DeepSeek-Reasonix/releases/tag/studio-v2.61.0), [channel distinction](https://github.com/esengine/DeepSeek-Reasonix/blob/studio-v2.61.0/README.md).
+
+```text
+reasonix -p "Reply with one short sentence." --output-format json
+```
+
+Set only `DEEPSEEK_API_KEY=phistory-fake-api-key` and `REASONIX_HOME` to an isolated absolute directory; leave model/provider/preset flags unset. Native configuration defaults to `deepseek-flash` and built-in DeepSeek providers using the OpenAI-compatible route. Setting `REASONIX_HOME` explicitly skips legacy migration and OS-home scanning and isolates all config/state/cache. The print/run path uses the normal engine; unlike Codewhale, it has no documented plain-exec no-tools restriction. `--max-steps 1` is an optional recorded native tool-round bound; external capture timeout can preserve the default budget. Missing language servers stay dormant rather than preventing the first request. [Print/run CLI](https://github.com/esengine/DeepSeek-Reasonix/blob/studio-v2.61.0/docs/CLI.md), [native config defaults](https://github.com/esengine/DeepSeek-Reasonix/blob/studio-v2.61.0/internal/contract/config/config.go), [state isolation](https://github.com/esengine/DeepSeek-Reasonix/blob/studio-v2.61.0/docs/CONFIG_PATHS.md).
+
+### Quorum CLI 1.5.1: native API-participant discussion
+
+Install PyPI `quorum-cli==1.5.1`, Python ≥3.11. Its default `quorum` command launches a Node TUI; official alternatives are `quorum --ipc`, `quorum-mcp-server`, and the Python discussion runtime. Use `FourPhaseConsensusTeam.run_stream` directly for an ordinary configured debate without Node or a fabricated prompt. There is no universal fresh default participant lineup: models are required configured choices. [PyPI release](https://pypi.org/project/quorum-cli/1.5.1/), [entry points](https://github.com/Detrol/quorum-cli/blob/v1.5.1/pyproject.toml), [native discussion API](https://github.com/Detrol/quorum-cli/blob/v1.5.1/src/quorum/team.py).
+
+Set isolated HOME and workdir, `OPENAI_API_KEY=phistory-fake-api-key`, and `OPENAI_MODELS=gpt-4.1,gpt-4.1-mini`. The fake credential satisfies its ≥20-character format check. A supported optional bound is `QUORUM_ROUNDS_PER_AGENT=1` (native default 2). A focused driver is:
+
+```python
+import asyncio
+from quorum.team import FourPhaseConsensusTeam
+from quorum.models import close_pool
+
+async def main():
+    team = FourPhaseConsensusTeam(
+        model_ids=["openai:gpt-4.1", "openai:gpt-4.1-mini"],
+        method_override="standard",
+    )
+    try:
+        async for event in team.run_stream("Reply with one short sentence."):
+            print(event)
+    finally:
+        await close_pool()
+
+asyncio.run(main())
+```
+
+This runs the actual independent-answer, critique, discussion, final-position and synthesis phases using its pooled OpenAI client, with native nonstreaming Chat Completions. It does not need the UI's separate model-validation ping. API/local-model participants intentionally have no tool access, so empty API tools are correct; delegated agent-CLI participants and host-facing MCP tools are different surfaces. Preserve phase requests rather than keeping only the first or synthesis prompt. [Standard phase execution](https://github.com/Detrol/quorum-cli/blob/v1.5.1/src/quorum/methods/standard.py), [client/model selection](https://github.com/Detrol/quorum-cli/blob/v1.5.1/src/quorum/models.py), [native OpenAI requests](https://github.com/Detrol/quorum-cli/blob/v1.5.1/src/quorum/clients/openai_client.py), [config validation](https://github.com/Detrol/quorum-cli/blob/v1.5.1/src/quorum/config.py).
+
+### Tianshu Harness 3.37.4
+
+The official npm latest is `tianshu-harness@3.37.4`, with executables `tianshu` and legacy `rivet`. GitHub latest `v4.0.4` is a desktop release whose root CLI package still reports `3.37.4`; do not label the npm CLI `4.0.4`. The published npm tgz was inspected directly: it contains the CLI entry, native headless path, configuration defaults and bundled runtime modules. Node requirements are `^24.22.1 || ^26.12.1`; let the official install stage its runtime/SQLite resources. [Official package metadata](https://registry.npmjs.org/tianshu-harness/3.37.4), [published package](https://registry.npmjs.org/tianshu-harness/-/tianshu-harness-3.37.4.tgz), [source package manifest](https://github.com/huiliyi37/Tianshu-harness/blob/v4.0.4/package.json).
+
+```text
+tianshu -p "Reply with one short sentence." --json
+```
+
+Use isolated `RIVET_HOME`/HOME, `DEEPSEEK_API_KEY=phistory-fake-api-key`, and `RIVET_NO_UPDATE_CHECK=1`. `--stream-json` is also supported; `--output-format` is not this CLI's format flag. Leave model/provider/tool-preset flags unset: native provider is DeepSeek, model `deepseek-flash`, and protocol OpenAI Chat Completions. Headless creates the actual `AgentLoop`, prompt engine, registry, MCP/plugin faces, and persistent session context. It bypasses the interactive TTY/trust onboarding branch. The default tool preset is `minimal`; `RIVET_TOOL_PRESET=full` is a separate named surface. `RIVET_HEADLESS_MAX_TURNS=1` is a supported optional bound, while an unset value preserves the native headless limit of 15. [CLI reference](https://github.com/huiliyi37/Tianshu-harness/blob/v4.0.4/docs/reference/cli-reference.en.md), [state paths](https://github.com/huiliyi37/Tianshu-harness/blob/v4.0.4/src/config/paths.ts), [provider presets](https://github.com/huiliyi37/Tianshu-harness/blob/v4.0.4/src/config/provider-presets.ts), [headless event reference](https://github.com/huiliyi37/Tianshu-harness/blob/v4.0.4/docs/headless-stream-json.md).
