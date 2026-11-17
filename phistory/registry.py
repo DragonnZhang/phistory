@@ -1090,7 +1090,6 @@ PI_RUST = AgentSpec(
     recorded_env=("RPI_OFFLINE", "ANTHROPIC_BASE_URL"),
     home_profile="pi-rust",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "-p", "Reply with one short sentence.", "--no-session"),
@@ -1106,7 +1105,6 @@ CODEWHALE = AgentSpec(
     fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
     home_profile="codewhale",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "exec", "--output-format", "stream-json", "Reply with one short sentence."),
@@ -1136,7 +1134,6 @@ OPENDEV = AgentSpec(
     recorded_env=("OPENDEV_DISABLE_REMOTE_MODELS",),
     home_profile="opendev",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.")),
 )
@@ -1167,7 +1164,6 @@ CLINE = AgentSpec(
     fake_env={},
     home_profile="cline",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "--key", "phistory-fake-api-key", "--json", "Reply with one short sentence.")
@@ -1191,7 +1187,6 @@ LETTA_CODE = AgentSpec(
     fake_env={},
     home_profile="letta-code",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     latest_variant_ids=("local",),
     default_variant=_default(
@@ -1240,43 +1235,15 @@ OPENINTERPRETER = AgentSpec(
     release_tag_prefix="rust-v",
     tap_client="interpreter",
     fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
-    extra_env={
-        "OPEN_INTERPRETER_NONINTERACTIVE": "1",
-        "PHISTORY_INTERPRETER_COMPATIBILITY_VERSION": "",
-        "PHISTORY_INTERPRETER_COMPATIBILITY_SOURCE": "",
-        "PHISTORY_INTERPRETER_COMPATIBILITY_SHA256": "",
-    },
-    recorded_env=(
-        "OPEN_INTERPRETER_NONINTERACTIVE",
-        "PHISTORY_INTERPRETER_COMPATIBILITY_VERSION",
-        "PHISTORY_INTERPRETER_COMPATIBILITY_SOURCE",
-        "PHISTORY_INTERPRETER_COMPATIBILITY_SHA256",
-    ),
+    extra_env={"OPEN_INTERPRETER_NONINTERACTIVE": "1"},
+    recorded_env=("OPEN_INTERPRETER_NONINTERACTIVE",),
     home_profile="interpreter",
     tap_mode="forward",
     track_latest=False,
     capture_timeout_seconds=300,
-    latest_variant_ids=("responses-http",),
     default_variant=_default(
         ("--no-yolo", "--", "exec", "--skip-git-repo-check", "--ephemeral", "--json", "Reply with one short sentence."),
-        capture_unavailable="Native Responses WebSocket transport is not supported by capture-only tap; use the explicitly recorded responses-http variant.",
-    ),
-    variants=(
-        _variant(
-            "responses-http",
-            "Responses · HTTP transport",
-            (
-                "--no-yolo",
-                "--",
-                "exec",
-                "--skip-git-repo-check",
-                "--ephemeral",
-                "--json",
-                "Reply with one short sentence.",
-            ),
-            home_profile="interpreter-http",
-            dimensions={"transport": "Responses HTTP", "provider": "native openai; WebSocket capability disabled"},
-        ),
+        dimensions={"transport": "native HTTP fallback after capture-only proxy refuses WebSocket with HTTP 426"},
     ),
 )
 

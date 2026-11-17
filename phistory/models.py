@@ -36,7 +36,6 @@ HomeProfile = Literal[
     "letta-code",
     "prime-agent",
     "interpreter",
-    "interpreter-http",
     "fibona",
     "ctxagent",
     "reasonix",

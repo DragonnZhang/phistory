@@ -39,9 +39,9 @@ def test_unavailable_surface_stops_before_installing_or_opening_model_transport(
         raise AssertionError("unavailable transport must not launch")
 
     monkeypatch.setattr("phistory.packages.install_agent", unexpected_install)
-    target = _target(get_agent("openinterpreter"), VersionInfo("rust-v0.0.61"), tmp_path)
+    target = _target(get_agent("letta-code"), VersionInfo("0.34.63"), tmp_path)
     result = capture_target(target, cache_dir=tmp_path / "cache", force=True)
-    assert result.status == "failed" and "WebSocket" in result.error
+    assert result.status == "failed" and "Cloud" in result.error
     assert not target.variant_dir.exists()
 
 

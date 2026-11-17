@@ -14,11 +14,6 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
-        "pi-rust",
-        "codewhale",
-        "opendev",
-        "cline",
-        "letta-code",
         "openinterpreter",
         "fibona-agent",
         "ctxagent",
@@ -125,22 +120,14 @@ def test_letta_local_auth_does_not_leak_into_cloud_default(tmp_path):
     assert agent.default_variant.capture_unavailable
 
 
-def test_interpreter_http_preserves_native_provider_headers_and_records_matching_source(tmp_path, monkeypatch):
-    from phistory import interpreter
-
-    metadata = {"compatibility_version": "1.2.3", "source": "https://example.invalid/exact-tag", "sha256": "a" * 64}
-    monkeypatch.setattr(interpreter, "compatibility_metadata", lambda *_: metadata)
+def test_interpreter_uses_native_fallback_without_overriding_reserved_provider(tmp_path):
     agent = get_agent("openinterpreter")
-    item = CaptureTarget(agent, VersionInfo("rust-v0.0.61"), agent.variant("responses-http"), tmp_path)
+    item = CaptureTarget(agent, VersionInfo("rust-v0.0.61"), agent.default_variant, tmp_path)
     env = _capture_env(item, tmp_path / "install/bin", tmp_path / "home")
-    config = tomllib.loads((Path(env["INTERPRETER_HOME"]) / "config.toml").read_text())
-    provider = config["model_providers"]["openai"]
-    assert provider["requires_openai_auth"]
-    assert provider["wire_api"] == "responses" and not provider["supports_websockets"]
-    assert provider["http_headers"] == {"version": "1.2.3"}
-    assert provider["env_http_headers"]["OpenAI-Organization"] == "OPENAI_ORGANIZATION"
-    assert env["PHISTORY_INTERPRETER_COMPATIBILITY_SHA256"] == metadata["sha256"]
-    assert agent.default_variant.capture_unavailable
+    assert Path(env["INTERPRETER_HOME"]).is_dir()
+    assert not (Path(env["INTERPRETER_HOME"]) / "config.toml").exists()
+    assert "--model" not in item.variant.run_args and "--config" not in item.variant.run_args
+    assert not agent.default_variant.capture_unavailable
 
 
 def test_prime_preserves_bundle_and_bootstraps_kernel_before_offline_capture(tmp_path):
@@ -174,3 +161,8 @@ def test_opendev_setup_marker_preserves_all_native_defaults(tmp_path):
     assert json.loads((Path(env["OPENDEV_DIR"]) / "settings.json").read_text()) == {}
     assert env["FIREWORKS_API_KEY"] == "phistory-fake-api-key"
     assert "OPENDEV_MODEL" not in env and "OPENDEV_PROVIDER" not in env
+
+
+def test_reasonix_stored_key_preflight_uses_isolated_dotenv(tmp_path):
+    env = _capture_env(target("deepseek-reasonix", tmp_path), tmp_path / "bin", tmp_path / "home")
+    assert (Path(env["REASONIX_HOME"]) / ".env").read_text() == "DEEPSEEK_API_KEY=phistory-fake-api-key\n"

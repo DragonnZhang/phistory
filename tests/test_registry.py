@@ -34,7 +34,12 @@ def test_parse_default_agents():
         "nanobot",
         "bub",
         "jcode",
+        "pi-rust",
+        "codewhale",
+        "opendev",
         "kilocode",
+        "cline",
+        "letta-code",
         "prime-agent",
     ]
     assert "kimi" in AGENT_ORDER

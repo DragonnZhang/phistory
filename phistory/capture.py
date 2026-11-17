@@ -351,6 +351,11 @@ def _capture_env(
         config_dir = home / ".opendev"
         config_dir.mkdir(parents=True, exist_ok=True)
         (config_dir / "settings.json").write_text("{}\n", encoding="utf-8")
+    if profile == "reasonix":
+        config_dir = home / ".reasonix"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        (config_dir / ".env").write_text("DEEPSEEK_API_KEY=phistory-fake-api-key\n", encoding="utf-8")
+        (config_dir / ".env").chmod(0o600)
     if profile == "cline-anthropic":
         _write_cline_anthropic_config(home)
     inherited = (
@@ -464,22 +469,10 @@ def _capture_env(
                 "PI_PACKAGE_DIR": str(bin_dir.resolve()),
             }
         )
-    if profile in ("interpreter", "interpreter-http"):
+    if profile == "interpreter":
         state = home / ".openinterpreter"
         state.mkdir(parents=True, exist_ok=True)
         env["INTERPRETER_HOME"] = str(state)
-        if profile == "interpreter-http" and prepare_runtime:
-            from phistory.interpreter import compatibility_metadata
-
-            metadata = compatibility_metadata(bin_dir.parent, target.version.version)
-            _write_interpreter_http_config(state, metadata["compatibility_version"])
-            env.update(
-                {
-                    "PHISTORY_INTERPRETER_COMPATIBILITY_VERSION": metadata["compatibility_version"],
-                    "PHISTORY_INTERPRETER_COMPATIBILITY_SOURCE": metadata["source"],
-                    "PHISTORY_INTERPRETER_COMPATIBILITY_SHA256": metadata["sha256"],
-                }
-            )
     if profile == "fibona":
         env["FIBONA_LOG_DIR"] = str(home / ".fibona" / "logs")
     if profile == "ctxagent":
@@ -690,23 +683,6 @@ def _write_cline_anthropic_config(home: Path) -> None:
         },
     }
     (config_dir / "providers.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
-
-
-def _write_interpreter_http_config(state: Path, compatibility_version: str) -> None:
-    config = "\n".join(
-        [
-            "[model_providers.openai]",
-            'name = "OpenAI"',
-            'wire_api = "responses"',
-            "requires_openai_auth = true",
-            "supports_websockets = false",
-            "supports_standalone_web_search = true",
-            f"http_headers = {{ version = {json.dumps(compatibility_version)} }}",
-            'env_http_headers = { "OpenAI-Organization" = "OPENAI_ORGANIZATION", "OpenAI-Project" = "OPENAI_PROJECT" }',
-            "",
-        ]
-    )
-    (state / "config.toml").write_text(config, encoding="utf-8")
 
 
 def _write_kimi_config(home: Path) -> None:
