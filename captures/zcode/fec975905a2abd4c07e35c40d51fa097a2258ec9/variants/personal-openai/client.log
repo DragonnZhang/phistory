@@ -1,0 +1,46 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:36557
+[claude-tap] CA cert: /tmp/phistory-home-a_trw4dg/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/zcode/fec975905a2abd4c07e35c40d51fa097a2258ec9/variants/personal-openai/.tap/2026-11-17/trace_142355.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+os.environ["ZCODE_HTTP_PROXY"] = os.environ["HTTP_PROXY"]
+os.environ["ZCODE_AGENT_CA_CERT"] = os.environ["SSL_CERT_FILE"]
+path = Path(os.environ["PHISTORY_SOURCE_ROOT"]) / "apps/zcode-cli/packages/cli/dist/zcode.cjs"
+os.execvp("node", ["node", str(path), "--prompt", "Reply with one short sentence.", "--cwd", str(Path.cwd()), "--json"])
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:36557
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-a_trw4dg/.local/share/claude-tap/ca.pem
+{
+  "sessionId": "sess_a93d35b9-9b0f-4728-a381-e18f5a0d922f",
+  "traceId": "49d30812-960c-4e96-9c66-312598913ef4",
+  "turnId": "turn_dd1f62fd-6b96-4b2a-b15f-66e2aaad87dd",
+  "response": "captured",
+  "eventCount": 11,
+  "projection": {
+    "status": "idle",
+    "turnCount": 1,
+    "totalTokenCount": 0,
+    "contextUsed": 0,
+    "contextWindow": 200000
+  }
+}
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/zcode/fec975905a2abd4c07e35c40d51fa097a2258ec9/variants/personal-openai/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/zcode/fec975905a2abd4c07e35c40d51fa097a2258ec9/variants/personal-openai/.tap/2026-11-17/trace_142355.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/zcode/fec975905a2abd4c07e35c40d51fa097a2258ec9/variants/personal-openai/.tap/2026-11-17/trace_142355.log
+  view:         /home/runner/work/phistory/phistory/captures/zcode/fec975905a2abd4c07e35c40d51fa097a2258ec9/variants/personal-openai/.tap/2026-11-17/trace_142355.html
+  prompt:       /home/runner/work/phistory/phistory/captures/zcode/fec975905a2abd4c07e35c40d51fa097a2258ec9/variants/personal-openai/prompt.md
+
+stderr:
+[claude-tap] warning: 
+ZCode Built-in 刷新失败: ZCode Built-in client-config: invalid schema at code (invalid_value)

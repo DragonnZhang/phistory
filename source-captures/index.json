@@ -4188,7 +4188,7 @@
           "path": "source-captures/raven/e2eeb11c00244a023813"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "raven"
     },
     {
@@ -10073,7 +10073,7 @@
           "path": "source-captures/zcode/0058cc78a1808a1e8f4d"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "zcode"
     },
     {
