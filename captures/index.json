@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-17T15:56:27.948741Z",
+  "updated_at": "2026-11-17T16:09:35.448190Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -450,6 +450,15 @@
       "latest_version": "2cd47b74226f76c785f0679e6ccc61e33e55b7e6",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-17T15:45:33.024238+00:00",
+      "versions": 1,
+      "snapshots": 1
+    },
+    {
+      "agent_id": "agent-s",
+      "agent": "Agent-S S3",
+      "latest_version": "0fff0e634869dab72027435b4586e62300185d41",
+      "latest_published_at": "",
+      "latest_captured_at": "2026-11-17T16:09:35.448190+00:00",
       "versions": 1,
       "snapshots": 1
     },
@@ -116856,6 +116865,30 @@
       "prompt": "captures/autoref/2cd47b74226f76c785f0679e6ccc61e33e55b7e6/variants/scene-planner-initial/prompt.md",
       "trace": "captures/autoref/2cd47b74226f76c785f0679e6ccc61e33e55b7e6/variants/scene-planner-initial/trace.jsonl",
       "meta": "captures/autoref/2cd47b74226f76c785f0679e6ccc61e33e55b7e6/variants/scene-planner-initial/meta.json"
+    },
+    {
+      "agent_id": "agent-s",
+      "agent": "Agent-S S3",
+      "version": "0fff0e634869dab72027435b4586e62300185d41",
+      "variant_id": "s3-linux-desktop",
+      "variant_label": "Native S3 first action / owned Linux screenshot",
+      "variant_dimensions": {
+        "entry": "native agent_s --task",
+        "model": "native OpenAI gpt-5-2025-08-07",
+        "display": "actual owned Xvfb 1280x800",
+        "grounding": "configured capture-only UI-TARS HuggingFace endpoint; no live deployment claimed",
+        "reflection": "native enabled",
+        "scope": "first main action request before execution"
+      },
+      "observed": {
+        "model": "gpt-5-2025-08-07"
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-17T16:09:35.448190+00:00",
+      "prompt": "captures/agent-s/0fff0e634869dab72027435b4586e62300185d41/variants/s3-linux-desktop/prompt.md",
+      "trace": "captures/agent-s/0fff0e634869dab72027435b4586e62300185d41/variants/s3-linux-desktop/trace.jsonl",
+      "meta": "captures/agent-s/0fff0e634869dab72027435b4586e62300185d41/variants/s3-linux-desktop/meta.json"
     },
     {
       "agent_id": "critic-training",
