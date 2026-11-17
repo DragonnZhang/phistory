@@ -1,0 +1,62 @@
+{
+  "agent_id": "tianshu-harness",
+  "agent": "Tianshu Harness",
+  "package": "tianshu-harness",
+  "version": "3.37.4",
+  "variant": {
+    "id": "full-tools",
+    "label": "Full tool preset",
+    "dimensions": {
+      "tool_preset": "full"
+    }
+  },
+  "requested": {
+    "tool_preset": "full"
+  },
+  "observed": {
+    "model": "deepseek-flash",
+    "tool_count": 43
+  },
+  "published_at": "2026-10-31T04:24:13.134Z",
+  "tarball_url": "https://registry.npmjs.org/tianshu-harness/-/tianshu-harness-3.37.4.tgz",
+  "binary_version": "tianshu-harness v3.37.4",
+  "captured_at": "2026-11-17T12:55:59.294364+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44087561017",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44087561017"
+  },
+  "tap_client": "tianshu",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 1.787,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "tianshu",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-p",
+    "Reply with one short sentence.",
+    "--json"
+  ],
+  "capture_environment": {
+    "RIVET_NO_UPDATE_CHECK": "1"
+  }
+}

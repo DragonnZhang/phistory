@@ -3115,7 +3115,7 @@
           "path": "source-captures/quorum-cli/eca6d379a287e836e1f9"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "quorum-cli"
     },
     {
@@ -4360,7 +4360,7 @@
           "path": "source-captures/fibona-agent/edd0d6495cf4abe34b2f"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "fibona-agent"
     },
     {
@@ -4851,7 +4851,7 @@
           "path": "source-captures/tianshu-harness/390c76ada401664b7db7"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "tianshu-harness"
     },
     {
@@ -5445,7 +5445,7 @@
           "path": "source-captures/headlong/1852bf64666d6b897e88"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "headlong"
     },
     {
@@ -6296,7 +6296,7 @@
           "path": "source-captures/ctxagent/fd69cc26cdd8051d9c50"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "ctxagent"
     },
     {

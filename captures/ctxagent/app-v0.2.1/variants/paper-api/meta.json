@@ -1,0 +1,71 @@
+{
+  "agent_id": "ctxagent",
+  "agent": "CTXAgent · paper runtime",
+  "package": "MatthiasHBusch/CTXAgent",
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport asyncio\nfrom ctxagent.providers import providers\nassert asyncio.run(providers(force=True)), \"OpenRouter provider directory could not be cached\"\n"
+    ],
+    "environment": {}
+  },
+  "version": "app-v0.2.1",
+  "variant": {
+    "id": "paper-api",
+    "label": "Paper runtime · AgentSession API",
+    "dimensions": {
+      "runtime": "root Python paper package",
+      "entry": "AgentSession.run_turn",
+      "provider_policy": "eu_us",
+      "optional_readers": "not installed"
+    }
+  },
+  "requested": {
+    "runtime": "root Python paper package",
+    "entry": "AgentSession.run_turn",
+    "provider_policy": "eu_us",
+    "optional_readers": "not installed"
+  },
+  "observed": {
+    "model": "anthropic/claude-sonnet-5",
+    "tool_count": 47
+  },
+  "published_at": "2026-11-11T16:55:09Z",
+  "tarball_url": "https://github.com/MatthiasHBusch/CTXAgent/releases/tag/app-v0.2.1",
+  "binary_version": "app-v0.2.1",
+  "captured_at": "2026-11-17T12:55:32.222417+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44087561017",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44087561017"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 3.432,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport asyncio\nfrom pathlib import Path\nfrom ctxagent import store\nfrom ctxagent.agent import AgentSession\nfrom ctxagent.config import SessionConfig\nfrom ctxagent.segments import Conversation\n\nasync def main():\n    store.init()\n    config = SessionConfig(workdirs=[str(Path.cwd())])\n    chat_id = store.create_chat(\"Phistory\", config.to_dict())\n    session = AgentSession(chat_id, config, Conversation())\n    async for event in session.run_turn(\"Reply with one short sentence.\"):\n        print(event, flush=True)\n\nasyncio.run(main())\n"
+  ]
+}

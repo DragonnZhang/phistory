@@ -1,0 +1,69 @@
+{
+  "agent_id": "quorum-cli",
+  "agent": "Quorum CLI",
+  "package": "quorum-cli",
+  "version": "1.5.1",
+  "variant": {
+    "id": "standard-api",
+    "label": "Standard discussion · configured OpenAI API participants",
+    "dimensions": {
+      "entry": "FourPhaseConsensusTeam.run_stream",
+      "method": "standard",
+      "participants": "openai:gpt-4.1,openai:gpt-4.1-mini",
+      "rounds_per_agent": "1",
+      "tools": "none for API participants"
+    }
+  },
+  "requested": {
+    "entry": "FourPhaseConsensusTeam.run_stream",
+    "method": "standard",
+    "participants": "openai:gpt-4.1,openai:gpt-4.1-mini",
+    "rounds_per_agent": "1",
+    "tools": "none for API participants"
+  },
+  "observed": {
+    "model": "gpt-4.1"
+  },
+  "published_at": "2026-09-27T10:24:20.654113Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/08/f0/642f6634b1098ff07187e8474f44295db85308983fc7a6900d197b75173d/quorum_cli-1.5.1-py3-none-any.whl",
+  "binary_version": "1.5.1",
+  "captured_at": "2026-11-17T12:55:46.729717+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44087561017",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44087561017"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 2.924,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport asyncio\nfrom quorum.team import FourPhaseConsensusTeam\nfrom quorum.models import close_pool\n\nasync def main():\n    team = FourPhaseConsensusTeam(\n        model_ids=[\"openai:gpt-4.1\", \"openai:gpt-4.1-mini\"],\n        method_override=\"standard\",\n    )\n    try:\n        async for event in team.run_stream(\"Reply with one short sentence.\"):\n            print(event, flush=True)\n    finally:\n        await close_pool()\n\nasyncio.run(main())\n"
+  ],
+  "capture_environment": {
+    "OPENAI_MODELS": "gpt-4.1,gpt-4.1-mini",
+    "QUORUM_ROUNDS_PER_AGENT": "1"
+  }
+}

@@ -10,7 +10,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 [Harness 源码归档](sources.html)保存 95 项调研中新增项目的提示词模板、装配代码与工具声明，保留完整原文件和来源，单独展示，不与真实请求捕获混用。
 
-> 每天自动检查新版本，归档最近更新于 **2026-11-17 12:51 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-11-17 12:56 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-11-17 12:51 UTC
+最近抓取更新：2026-11-17 12:56 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -126,6 +126,11 @@ uv run phistory render-site
 | Cline | [3.0.74 - 2026-10-26](captures/cline/3.0.74/variants/default/prompt.md) | 1 | 2 | 2026-11-17 12:42 UTC |
 | Letta Code | [0.34.63 - 2026-11-15](captures/letta-code/0.34.63/variants/local/prompt.md) | 1 | 1 | 2026-11-17 12:51 UTC |
 | Prime Agent | [v0.10.3 - 2026-11-12](captures/prime-agent/v0.10.3/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:42 UTC |
+| Fibona · Python | [js-v0.1.3 - 2026-11-16](captures/fibona-agent/js-v0.1.3/variants/minimal/prompt.md) | 1 | 2 | 2026-11-17 12:55 UTC |
+| CTXAgent · paper runtime | [app-v0.2.1 - 2026-11-11](captures/ctxagent/app-v0.2.1/variants/paper-api/prompt.md) | 1 | 1 | 2026-11-17 12:55 UTC |
+| Quorum CLI | [1.5.1 - 2026-09-27](captures/quorum-cli/1.5.1/variants/standard-api/prompt.md) | 1 | 1 | 2026-11-17 12:55 UTC |
+| Tianshu Harness | [3.37.4 - 2026-10-31](captures/tianshu-harness/3.37.4/variants/default/prompt.md) | 1 | 2 | 2026-11-17 12:55 UTC |
+| Headlong | [72f599562d104c7785798dde63dd5c1c7562280a](captures/headlong/72f599562d104c7785798dde63dd5c1c7562280a/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:56 UTC |
 
 ## 项目趋势
 

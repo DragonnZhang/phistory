@@ -1,0 +1,67 @@
+{
+  "agent_id": "headlong",
+  "agent": "Headlong",
+  "package": "laude-institute/headlong",
+  "version": "72f599562d104c7785798dde63dd5c1c7562280a",
+  "variant": {
+    "id": "default",
+    "label": "Native monolith · synchronous manual wake",
+    "dimensions": {
+      "entry": "thinkers step monolith",
+      "environment": "local",
+      "max_iterations": "1",
+      "action_protocol": "fenced Bash embedded in prompt"
+    }
+  },
+  "requested": {
+    "entry": "thinkers step monolith",
+    "environment": "local",
+    "max_iterations": "1",
+    "action_protocol": "fenced Bash embedded in prompt"
+  },
+  "observed": {
+    "model": "claude-opus-4-7"
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/laude-institute/headlong/archive/72f599562d104c7785798dde63dd5c1c7562280a.tar.gz",
+  "binary_version": "72f599562d104c7785798dde63dd5c1c7562280a",
+  "captured_at": "2026-11-17T12:56:12.059564+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44087561017",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44087561017"
+  },
+  "tap_client": "bash",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 5.556,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "bash",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    ". \"$HEADLONG_HOME/identities/phistory/activate\"; thinkers step monolith"
+  ],
+  "capture_environment": {
+    "SHELLM_THINKER_ENV": "local",
+    "SHELLM_MAX_ITERATIONS": "1"
+  }
+}
