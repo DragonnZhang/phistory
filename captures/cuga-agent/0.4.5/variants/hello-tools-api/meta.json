@@ -1,0 +1,66 @@
+{
+  "agent_id": "cuga-agent",
+  "agent": "CUGA",
+  "package": "cuga",
+  "python_runtime": "3.12",
+  "version": "0.4.5",
+  "variant": {
+    "id": "hello-tools-api",
+    "label": "Official hello-tools SDK example · codeact",
+    "dimensions": {
+      "entry": "official v0.4.4 hello_tools example on current PyPI package",
+      "execution_mode": "native codeact",
+      "tool_scope": "two official example tools"
+    }
+  },
+  "requested": {
+    "entry": "official v0.4.4 hello_tools example on current PyPI package",
+    "execution_mode": "native codeact",
+    "tool_scope": "two official example tools"
+  },
+  "observed": {
+    "model": "gpt-4o"
+  },
+  "published_at": "2026-11-03T17:45:30.269797Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/ce/f7/f8c23df0d693f30dc292fa7f1af1f125ece3ed168902b4f27dbc28a9d53f/cuga-0.4.5-py3-none-any.whl",
+  "binary_version": "0.4.5",
+  "captured_at": "2026-11-17T13:13:39.309596+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44090249949",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44090249949"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 45.96,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "$PHISTORY_HOME/cuga-hello-tools.py"
+  ],
+  "capture_environment": {
+    "AGENT_SETTING_CONFIG": "settings.openai.toml",
+    "PHISTORY_CUGA_EXAMPLE_SOURCE": "https://raw.githubusercontent.com/cuga-project/cuga-agent/v0.4.4/docs/examples/hello_tools/main.py",
+    "PHISTORY_CUGA_EXAMPLE_SHA256": "2c1d5e0edc4336ee30b7cee61fbfab2a02389b007a0bb5db9250f165ddf7e16f"
+  }
+}

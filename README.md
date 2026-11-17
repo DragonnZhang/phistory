@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-17 13:03 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-17 13:13 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-17 13:03 UTC
+Last capture update: 2026-11-17 13:13 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -133,6 +133,7 @@ Last capture update: 2026-11-17 13:03 UTC
 | Quorum CLI | [1.5.1 - 2026-09-27](captures/quorum-cli/1.5.1/variants/standard-api/prompt.md) | 1 | 1 | 2026-11-17 12:55 UTC |
 | Tianshu Harness | [3.37.4 - 2026-10-31](captures/tianshu-harness/3.37.4/variants/default/prompt.md) | 1 | 2 | 2026-11-17 12:55 UTC |
 | Headlong | [72f599562d104c7785798dde63dd5c1c7562280a](captures/headlong/72f599562d104c7785798dde63dd5c1c7562280a/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:56 UTC |
+| CUGA | [0.4.5 - 2026-11-03](captures/cuga-agent/0.4.5/variants/hello-tools-api/prompt.md) | 1 | 1 | 2026-11-17 13:13 UTC |
 
 ## Project Trend
 
