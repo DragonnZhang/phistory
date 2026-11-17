@@ -1,0 +1,135 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:32949
+[claude-tap] CA cert: /tmp/phistory-home-1d488a9y/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/.tap/2026-11-17/trace_183903.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+os.environ.pop("CI", None)
+os.environ["AGENTLINK_HOME"] = str(Path(os.environ["PHISTORY_HOME"]) / ".agentlink")
+os.execvp("node", ["node", str(Path(os.environ["PHISTORY_SOURCE_ROOT"]) / "apps/cli/dist/agentlink.js"), "--project", os.getcwd()])
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:32949
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-1d488a9y/.local/share/claude-tap/ca.pem
+[?1049h[?25l[?2026h[?25l
+[?2026l[8m[16t[14t_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\]1337;ReportCellSize[c[2K[0m[?2026h[1A[E[1G[K
+[1G[K
+[1G[K
+[1G[K
+[1G[K
+[1G[K
+[1G[K                     [38;5;115m ▄▄▄▄▄▄[39m       [38;5;231m                         █   █  ▀        █[39m
+[1G[K                     [38;5;115m█      █[39m      [38;5;231m▄▀▀▀▄ ▄▀▀▀█ ▄▀▀▀▄ █▀▀▀▄ ▀█▀▀ █  █  █▀▀▀▄ █ ▄▀[39m
+[1G[K                     [38;5;115m▀▄▄▄ ▄▀ ▀▀▀▄[39m  [38;5;231m█   █ █   █ █▀▀▀▀ █   █  █   █  █  █   █ ██[39m
+[1G[K                     [38;5;115m    █      █[39m  [38;5;231m▀▄▄▄█ ▀▄▄▄█ ▀▄▄▄▄ █   █  ▀▄▄ █  █  █   █ █ ▀▄[39m
+[1G[K                     [38;5;115m     ▀▀▀▀▀▀[39m   [38;5;231m       ▄▄▄▀[39m
+[1G[K
+[1G[K
+[1G[K            [48;5;59m[38;5;59m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[39m[49m
+[1G[K            [48;5;59m                                                                            [49m
+[1G[K            [48;5;59m [1m[38;5;109m❯[39m[22m [38;5;231m[2mWhat would you like AgentLink to work on?[22m[39m                                [49m
+[1G[K            [48;5;59m                                                                            [49m
+[1G[K            [48;5;59m   [38;5;115mcode[38;5;109m · [38;5;152mdefault model[38;5;109m · reasoning default[39m                                 [49m
+[1G[K            [48;5;59m                                                                            [49m
+[1G[K
+[1G[K             [38;5;109mready[39m   [38;5;152m⏎[38;5;109m send[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152m/[38;5;109m commands[39m   [38;5;152m@[38;5;109m files[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^c[38;5;109m quit[39m
+[1G[K
+[1G[K             [38;5;186mNew session 2c1dfb10-5e2b-422c-99c9-d5b5ecdfac99[39m
+[1G[K
+[1G[K
+[1G[K
+[1G[K
+[1G[K
+[?2026l[?2004h[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[13G[K[48;5;59m[38;5;115m▔▔▔▔[38;5;116m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;117m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;147m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;183m▔▔▔▔▔[39m[49m
+[E[14G[K[48;5;59m[1m[38;5;115m❯[39m[22m [38;5;231m[2mWhat would you like AgentLink to work on?[22m[39m                                [49m
+[E[E[E[E[E[E[E[E[E[E[E[E[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[16G[K[48;5;59m[1m[38;5;115m[39m[22m[38;5;231mReply with one short sentence.[39m[7m [27m                                          [49m
+[E[E[E[E[E[E[E[E[E[E[E[E[?2026l[?2026h[29A[1G[K [38;5;115m◆ [1ma[38;5;116mge[38;5;117mnt[38;5;147mlin[38;5;183mk[22m[38;5;109m ▏ [38;5;231mphistory-work-dfkkzmqv[38;5;109m ▸ [38;5;152m2c1dfb10-5e2[39m       [38;5;115mcode[38;5;109m · [38;5;231mdefault model[38;5;109m · [38;5;152mdefault reasoning[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m [38;5;109mStart a coding task below.[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K[38;5;59m▏[39m
+[1G[K [38;5;186mNew session 2c1dfb10-5e2b-422c-99c9-d5b5ecdfac99[39m
+[1G[K[48;5;59m[38;5;115m▔▔▔▔▔▔[38;5;116m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;117m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;147m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;183m▔▔▔▔▔▔▔[39m[49m
+[1G[K[48;5;59m [1m[38;5;115m❯[39m[22m [38;5;231m[2mAsk AgentLink, type / for commands or @ for files[22m[39m                                                [49m
+[1G[K[48;5;59m                                                                                                    [49m
+[1G[K[48;5;59m                                                                                                    [49m
+[1G[K[48;5;59m                                                                                                    [49m
+[1G[K[48;5;59m                                                                                                    [49m
+[1G[K [38;5;115m⠋ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2004l[?2004h[?2026h[29A[E[E[3G[K[38;5;59m[39m[1m[48;5;59m[38;5;115m❯ [22m[38;5;152myou[39m                                                                                            [49m
+[2G[K[38;5;59m[39m [48;5;59m  [38;5;231mReply with one short sentence.[39m                                                                 [49m
+[E[E[E[E[E[E[E[E[E[E[E[E[E[E[1G[K[38;5;59m── [38;5;152mactivity · 1 live[38;5;59m ────────────────────────────────────────────────────────[38;5;109m ⏎ expand · ^t todos [38;5;59m──[39m
+[1G[K [1m[38;5;115m❯[22m[38;5;109m ▸ [1m[38;5;231mActive work  [22m[38;5;152mrunning · 0 active tools[39m
+[1G[K
+[1G[K
+[E[E[E[E[E[E[E[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[2G[K[38;5;115m⠙ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[2G[K[38;5;115m⠹ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[2G[K[38;5;115m⠸ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[2G[K[38;5;115m⠼ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[2G[K[38;5;115m⠴ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[2G[K[38;5;115m⠦ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[60G[K[38;5;115m[1m[38;5;116m[38;5;117m[38;5;147m[38;5;183m[22m[38;5;109m[38;5;231m[38;5;109m[38;5;152m[39m  [38;5;115mcode[38;5;109m · [38;5;231mgpt-5.6-sol[38;5;109m · [38;5;152mdefault reasoning[39m
+[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[2G[K[38;5;115m⠧ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[E[2G[K[38;5;115m⠇ working 0s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[E[E[E[E[E[2G[K[38;5;59m[39m [38;5;115m◆ [1m[38;5;158magentlink[39m[22m
+[2G[K[38;5;59m[39m   captured
+[2G[K[38;5;59m[39m   [38;5;115m▌[39m
+[E[E[E[E[E[E[E[E[E[E[E[6G[K[1m[38;5;115m[22m[38;5;109m[1m[38;5;231mContext      [22m[38;5;152m0 in · 0 out[39m
+[1G[K [1m[38;5;109m [22m ▸ [38;5;152mActive work  [38;5;109mrunning · 0 active tools[39m
+[E[E[E[E[E[E[E[E[12G[K[38;5;115m1s[39m    [38;5;152m⏎[38;5;109m queue[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m cancel[39m[?2026l[?2026h[29A[E[E[E[E[E[E[E[2G[K[38;5;59m[39m
+[E[E[E[E[E[E[E[E[E[E[12G[K[38;5;59m[38;5;152m[38;5;59m ─────────────────────────────────────────────────────────────────[38;5;109m ⏎ expand · ^t todos [38;5;59m──[39m
+[E[1G[K
+[E[E[E[E[E[E[E[E[2G[K[38;5;109mready[39m              [38;5;152m⏎[38;5;109m send[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m quit[39m[?2026l[?2026h[1;1H[J [38;5;115m◆ [1ma[38;5;116mge[38;5;117mnt[38;5;147mlin[38;5;183mk[22m[38;5;109m ▏ [38;5;231mphistory-work-dfkkzmqv[38;5;109m ▸ [38;5;152m2c1dfb10-5e2[39m         [38;5;115mcode[38;5;109m · [38;5;231mgpt-5.6-sol[38;5;109m · [38;5;152mdefault reasoning[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m [1m[48;5;59m[38;5;115m❯ [22m[38;5;152myou[39m                                                                                            [49m
+[38;5;59m▏[39m [48;5;59m  [38;5;231mReply with one short sentence.[39m                                                                 [49m
+[38;5;59m▏[39m
+[38;5;59m▏[39m [38;5;115m◆ [1m[38;5;158magentlink[39m[22m
+[38;5;59m▏[39m   captured
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m▏[39m
+[38;5;59m── [38;5;152mactivity[38;5;59m ─────────────────────────────────────────────────────────────────[38;5;109m ⏎ expand · ^t todos [38;5;59m──[39m
+ [1m[38;5;115m❯[22m[38;5;109m ▸ [1m[38;5;231mContext      [22m[38;5;152m0 in · 0 out[39m
+
+
+ [38;5;186mNew session 2c1dfb10-5e2b-422c-99c9-d5b5ecdfac99[39m
+[48;5;59m[38;5;115m▔▔▔▔▔▔[38;5;116m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;117m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;147m▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔[38;5;183m▔▔▔▔▔▔▔[39m[49m
+[48;5;59m [1m[38;5;115m❯[39m[22m [38;5;231m[2mAsk AgentLink, type / for commands or @ for files[22m[39m                                                [49m
+[48;5;59m                                                                                                    [49m
+[48;5;59m                                                                                                    [49m
+[48;5;59m                                                                                                    [49m
+[48;5;59m                                                                                                    [49m
+ [38;5;109mready[39m              [38;5;152m⏎[38;5;109m send[39m   [38;5;152m^j[38;5;109m newline[39m   [38;5;152mtab[38;5;109m focus[39m   [38;5;152m^o[38;5;109m controls[39m   [38;5;152m^t[38;5;109m tasks[39m   [38;5;152m^z[38;5;109m suspend[39m   [38;5;152m^c[38;5;109m quit[39m[?2026l[?25h[?2004l[?25h[?1049l[?25h[?25h
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/.tap/2026-11-17/trace_183903.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/.tap/2026-11-17/trace_183903.log
+  view:         /home/runner/work/phistory/phistory/captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/.tap/2026-11-17/trace_183903.html
+  prompt:       /home/runner/work/phistory/phistory/captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/prompt.md
+
+stderr:
