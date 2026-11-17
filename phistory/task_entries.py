@@ -555,7 +555,7 @@ env_path = deployment / ".env"
 values = {"OPENAI_API_KEY": os.environ["OPENAI_API_KEY"], "AUTH_ALLOWED_EMAILS": "phistory@example.com", "ADMIN_GRANTS": "phistory@example.com:org_admin"}
 lines = env_path.read_text().splitlines()
 env_path.write_text("\n".join(line for line in lines if line.split("=",1)[0] not in values) + "\n" + "\n".join(key + "=" + value for key,value in values.items()) + "\n")
-subprocess.run(["qm", "up", "--yes"], cwd=deployment, check=True)
+subprocess.run(["qm", "up"], cwd=deployment, check=True)
 Path(os.environ["PHISTORY_NATIVE_READY"]).touch()
 while True:
     time.sleep(1)
