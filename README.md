@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-17 15:56 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-17 16:09 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-17 15:56 UTC
+Last capture update: 2026-11-17 16:09 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -143,6 +143,7 @@ Last capture update: 2026-11-17 15:56 UTC
 | CUGA | [0.4.5 - 2026-11-03](captures/cuga-agent/0.4.5/variants/hello-tools-api/prompt.md) | 1 | 1 | 2026-11-17 13:13 UTC |
 | AutoResearchClaw | [v0.5.0 - 2026-05-20](captures/autoresearchclaw/v0.5.0/variants/topic-init/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | Inkos | [1.8.0 - 2026-08-17](captures/inkos/1.8.0/variants/chat-openai/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
+| LongHorizon-Harness | [0.1.8 - 2026-10-21](captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/prompt.md) | 1 | 1 | 2026-11-17 16:09 UTC |
 | Markus | [0.12.4 - 2026-11-14](captures/markus/0.12.4/variants/secretary-openai-api/prompt.md) | 1 | 1 | 2026-11-17 15:56 UTC |
 | WeChat Mac RPA | [31cf55be1264acf35d436e754deda06833ec4087](captures/wechat-mac-rpa/31cf55be1264acf35d436e754deda06833ec4087/variants/portable-reply-api/prompt.md) | 1 | 1 | 2026-11-17 15:45 UTC |
 | AutoRef | [2cd47b74226f76c785f0679e6ccc61e33e55b7e6](captures/autoref/2cd47b74226f76c785f0679e6ccc61e33e55b7e6/variants/scene-planner-initial/prompt.md) | 1 | 1 | 2026-11-17 15:45 UTC |

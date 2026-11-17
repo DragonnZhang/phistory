@@ -1,0 +1,89 @@
+{
+  "agent_id": "longhorizon-harness",
+  "agent": "LongHorizon-Harness",
+  "package": "lh-harness",
+  "python_runtime": "3.12",
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport subprocess\nsubprocess.run([\"git\", \"init\", \"--quiet\"], check=True)\nsubprocess.run([\"lh-harness\", \"init\"], check=True)\n"
+    ],
+    "environment": {}
+  },
+  "version": "0.1.8",
+  "variant": {
+    "id": "codex-manager-initial",
+    "label": "Native initial manager / real Codex host",
+    "dimensions": {
+      "entry": "native lh-harness run",
+      "host": "actual separately installed Codex / host_runtime provenance",
+      "model": "native harness Codex gpt-5.6-sol",
+      "max_rounds": "1",
+      "scope": "first native outer-manager request; later executor/auditor not claimed"
+    }
+  },
+  "requested": {
+    "entry": "native lh-harness run",
+    "host": "actual separately installed Codex / host_runtime provenance",
+    "model": "native harness Codex gpt-5.6-sol",
+    "max_rounds": "1",
+    "scope": "first native outer-manager request; later executor/auditor not claimed"
+  },
+  "observed": {
+    "model": "gpt-5.6-sol",
+    "tool_count": 9
+  },
+  "host_runtime": {
+    "package": "@openai/codex",
+    "version": "0.169.0",
+    "executable": "codex",
+    "version_output": "codex-cli 0.169.0"
+  },
+  "capture_selection": {
+    "minimum_tools": 0,
+    "required_system_text": [],
+    "required_user_text": [
+      "You are the LongHorizon-Harness manager agent.",
+      "Current management round: 1"
+    ]
+  },
+  "published_at": "2026-10-21T03:30:32.053126Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/be/49/e72252b47bd11f0e3a1f2bff0f5a0f881b56c3a0267cd9766a71af3e7496/lh_harness-0.1.8-py3-none-any.whl",
+  "binary_version": "0.1.8",
+  "captured_at": "2026-11-17T16:09:58.950172+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44122341138",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44122341138"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 10.159,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nprint(\"Native host provenance:\", os.environ[\"PHISTORY_NATIVE_HOST\"], flush=True)\nos.execvp(\"lh-harness\", [\"lh-harness\", \"run\", \"--task\", \"Reply with one short sentence.\", \"--agent\", \"codex\", \"--max-rounds\", \"1\", \"--api-key\", os.environ[\"OPENAI_API_KEY\"], \"--base-url\", \"https://api.openai.com/v1\"])\n"
+  ]
+}

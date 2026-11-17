@@ -1759,7 +1759,7 @@
           "path": "source-captures/longhorizon-harness/d1f61ecc4402933f170a"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "longhorizon-harness"
     },
     {
