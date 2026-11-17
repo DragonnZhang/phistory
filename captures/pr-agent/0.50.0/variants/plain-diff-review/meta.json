@@ -1,0 +1,74 @@
+{
+  "agent_id": "pr-agent",
+  "agent": "PR-Agent",
+  "package": "pr-agent",
+  "python_runtime": "3.12",
+  "bootstrap": {
+    "arguments": [
+      "--help"
+    ],
+    "environment": {}
+  },
+  "version": "0.50.0",
+  "variant": {
+    "id": "plain-diff-review",
+    "label": "Native plain-diff review",
+    "dimensions": {
+      "entry": "PlainDiffProvider / PRAgent review",
+      "model": "native primary and fallback",
+      "publication": "local files only"
+    }
+  },
+  "requested": {
+    "entry": "PlainDiffProvider / PRAgent review",
+    "model": "native primary and fallback",
+    "publication": "local files only"
+  },
+  "observed": {
+    "model": "gpt-6.1-sol"
+  },
+  "published_at": "2026-11-08T10:28:47.146155Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/e0/d6/5c17bbb0925ce64627d96793a635b33c5738917b1fab9b82038d6a821b11/pr_agent-0.50.0-py3-none-any.whl",
+  "binary_version": "0.50.0",
+  "captured_at": "2026-11-17T14:13:07.110197+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44100466748",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44100466748"
+  },
+  "tap_client": "pr-agent",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 14.93,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "pr-agent",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--diff-file",
+    "$PHISTORY_HOME/input.diff",
+    "--output",
+    "$PHISTORY_HOME/review.md",
+    "--json-output",
+    "$PHISTORY_HOME/review.json",
+    "review"
+  ]
+}

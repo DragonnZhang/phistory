@@ -1,0 +1,33 @@
+stdout:
+[claude-tap] 'omni-rewriter' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] omni-rewriter target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:33867
+[claude-tap] CA cert: /tmp/phistory-home-ri1u413z/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/omni-rewriter/846fee695fbfd9b816d481e294b5e385dabc4581/variants/api-writer-analysis/.tap/2026-11-17/trace_141239.jsonl
+
+[claude-tap] launching omni-rewriter: omni-rewriter expand /home/runner/work/phistory/phistory/.phistory-cache/installs/omni-rewriter/846fee695fbfd9b816d481e294b5e385dabc4581/source/Omni-Rewriter-846fee695fbfd9b816d481e294b5e385dabc4581/examples/requests/t2va_kite.json --output h3
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:33867
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-ri1u413z/.local/share/claude-tap/ca.pem
+
+[claude-tap] omni-rewriter exited with code 1
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/omni-rewriter/846fee695fbfd9b816d481e294b5e385dabc4581/variants/api-writer-analysis/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/omni-rewriter/846fee695fbfd9b816d481e294b5e385dabc4581/variants/api-writer-analysis/.tap/2026-11-17/trace_141239.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/omni-rewriter/846fee695fbfd9b816d481e294b5e385dabc4581/variants/api-writer-analysis/.tap/2026-11-17/trace_141239.log
+  view:         /home/runner/work/phistory/phistory/captures/omni-rewriter/846fee695fbfd9b816d481e294b5e385dabc4581/variants/api-writer-analysis/.tap/2026-11-17/trace_141239.html
+  prompt:       /home/runner/work/phistory/phistory/captures/omni-rewriter/846fee695fbfd9b816d481e294b5e385dabc4581/variants/api-writer-analysis/prompt.md
+
+stderr:
+[claude-tap] warning: 
+{
+  "valid": false,
+  "errors": [
+    {
+      "type": "StructuredOutputError",
+      "msg": "analysis response is not a valid AnalysisPlan"
+    }
+  ]
+}
