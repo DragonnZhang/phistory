@@ -481,6 +481,15 @@
       "snapshots": 1
     },
     {
+      "agent_id": "qm",
+      "agent": "QM",
+      "latest_version": "0.1.18",
+      "latest_published_at": "2026-11-11T23:51:13.001Z",
+      "latest_captured_at": "2026-11-17T18:39:07.154697+00:00",
+      "versions": 1,
+      "snapshots": 1
+    },
+    {
       "agent_id": "agentlink",
       "agent": "AgentLink",
       "latest_version": "5e6450f0a8f420991ddff5c4c17f921c5f40790c",
@@ -117057,6 +117066,29 @@
       "prompt": "captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/prompt.md",
       "trace": "captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/trace.jsonl",
       "meta": "captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/meta.json"
+    },
+    {
+      "agent_id": "qm",
+      "agent": "QM",
+      "version": "0.1.18",
+      "variant_id": "native-local-web-turn",
+      "variant_label": "Native local deployment / web turn",
+      "variant_dimensions": {
+        "entry": "published native CLI; Docker/PostgreSQL/local sandbox and web task",
+        "provider": "configured native OpenAI default",
+        "authentication": "native admin-login one-use token and actual cookie",
+        "tools": "native complete sandbox toolbox; no browser execution"
+      },
+      "observed": {
+        "model": "gpt-6.1-sol",
+        "tool_count": 20
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-11T23:51:13.001Z",
+      "captured_at": "2026-11-17T18:39:07.154697+00:00",
+      "prompt": "captures/qm/0.1.18/variants/native-local-web-turn/prompt.md",
+      "trace": "captures/qm/0.1.18/variants/native-local-web-turn/trace.jsonl",
+      "meta": "captures/qm/0.1.18/variants/native-local-web-turn/meta.json"
     },
     {
       "agent_id": "agentlink",
