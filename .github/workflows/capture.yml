@@ -16,7 +16,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   GH_TOKEN: ${{ github.token }}
   # Legacy kimi ended at 1.51.0; 1.52.0 only prints a migration notice (kimi-cli#2666).
-  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,opencode,pi,omp,gemini-cli,goose,crush,mini-swe-agent,nanobot,bub,jcode,pi-rust,codewhale,opendev,kilocode,cline,letta-code,prime-agent,openinterpreter,fibona-agent,ctxagent,deepseek-reasonix,quorum-cli,tianshu-harness,octomind,headlong,openagent,nausicaa-harness,cheetahclaws,trashclaw,mini-agi,openmanus,cuga-agent,autoresearchclaw,inkos,gpt-researcher,openevolve,deer-flow,omni-rewriter,nanomuse,pr-agent,deepanalyze,localgpt
+  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,opencode,pi,omp,gemini-cli,goose,crush,mini-swe-agent,nanobot,bub,jcode,pi-rust,codewhale,opendev,kilocode,cline,letta-code,prime-agent,openinterpreter,fibona-agent,ctxagent,deepseek-reasonix,quorum-cli,tianshu-harness,octomind,headlong,openagent,nausicaa-harness,cheetahclaws,trashclaw,mini-agi,openmanus,cuga-agent,autoresearchclaw,inkos,zcode,raven,gpt-researcher,openevolve,deer-flow,omni-rewriter,agenticseek,nanomuse,pr-agent,deepanalyze,localgpt,bambooai,cowagent
 
 jobs:
   capture:
@@ -28,6 +28,9 @@ jobs:
           node-version: "24"
           check-latest: true
       - uses: astral-sh/setup-uv@v8.1.0
+      - uses: ./.github/actions/setup-agent-runtimes
+        with:
+          agents: ${{ env.CAPTURE_AGENTS }}
       - run: uv sync --all-groups
       - run: uv run ruff format --check phistory tests
       - run: uv run ruff check phistory tests

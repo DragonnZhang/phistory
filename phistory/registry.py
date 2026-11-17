@@ -13,7 +13,9 @@ from phistory.task_entries import (
     DEEPANALYZE_TASK,
     DEERFLOW_TASK,
     GPT_RESEARCHER_TASK,
+    INTENTKIT_DATABASE_SETUP,
     MINIAGI_TASK,
+    OUROBOROS_SERVER,
     QUORUM_TASK,
     ZCODE_TASK,
 )
@@ -1750,6 +1752,170 @@ INKOS = AgentSpec(
 )
 
 
+HIVE = AgentSpec(
+    id="hive",
+    display_name="Hive",
+    package="aden-hive",
+    source="pypi",
+    pypi_extras=("tools",),
+    python_runtime="3.12",
+    tap_client="hive",
+    fake_env={},
+    home_profile="hive",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("queen-api",),
+    default_variant=_default(
+        capture_unavailable="The interactive app opens a dashboard; use its real Queen session API without launching a browser."
+    ),
+    variants=(
+        _variant(
+            "queen-api",
+            "Native Queen DM · local server API",
+            ("--no-yolo", "--", "serve", "--host", "127.0.0.1", "--port", "$PHISTORY_SERVER_PORT"),
+            driver="local-task-api",
+            dimensions={
+                "entry": "native Queen independent session",
+                "model": "native preferred default",
+                "tools": "native full installed tools extra",
+            },
+        ),
+    ),
+)
+
+INTENTKIT = AgentSpec(
+    id="intentkit",
+    display_name="IntentKit",
+    package="crestalnetwork/intentkit",
+    source="github-source",
+    source_state="isolated",
+    python_runtime="3.13",
+    tap_client="python",
+    fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
+    extra_env={
+        "ENV": "local",
+        "DB_HOST": "127.0.0.1",
+        "DB_PORT": "5432",
+        "DB_USERNAME": "postgres",
+        "DB_PASSWORD": "phistory-local-db",
+        "DB_NAME": "phistory",
+        "DB_AUTO_MIGRATE": "true",
+        "REDIS_HOST": "127.0.0.1",
+        "REDIS_PORT": "6379",
+    },
+    recorded_env=("ENV", "DB_HOST", "DB_PORT", "DB_USERNAME", "DB_NAME", "DB_AUTO_MIGRATE", "REDIS_HOST", "REDIS_PORT"),
+    home_profile="intentkit",
+    bootstrap_args=("-c", INTENTKIT_DATABASE_SETUP),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("local-lead-api",),
+    default_variant=_default(
+        capture_unavailable="A Lead task requires initialized application database state; use the official single-user local API with real PostgreSQL and Redis."
+    ),
+    variants=(
+        _variant(
+            "local-lead-api",
+            "Native single-user Lead API",
+            (
+                "--no-yolo",
+                "--",
+                "-m",
+                "uvicorn",
+                "app.api:app",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "$PHISTORY_SERVER_PORT",
+            ),
+            driver="local-task-api",
+            dimensions={
+                "entry": "official app.api / native Lead",
+                "provider": "native first available DeepSeek",
+                "database": "real isolated PostgreSQL and Redis",
+            },
+        ),
+    ),
+)
+
+MIRIX = AgentSpec(
+    id="mirix",
+    display_name="MIRIX",
+    package="Mirix-AI/MIRIX",
+    source="github-source",
+    source_state="readonly",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key", "GEMINI_API_KEY": "phistory-fake-api-key"},
+    home_profile="mirix",
+    bootstrap_args=("-c", "import tiktoken; tiktoken.get_encoding('cl100k_base'); tiktoken.get_encoding('o200k_base')"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("episodic-api",),
+    default_variant=_default(
+        capture_unavailable="The memory framework needs native agent initialization and a task; use the official config and local authenticated episodic-agent API."
+    ),
+    variants=(
+        _variant(
+            "episodic-api",
+            "Native episodic memory agent · SQLite server API",
+            (
+                "--no-yolo",
+                "--",
+                "-m",
+                "uvicorn",
+                "mirix.server.rest_api:app",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "$PHISTORY_SERVER_PORT",
+            ),
+            driver="local-task-api",
+            dimensions={
+                "entry": "native meta initialization then episodic-agent message",
+                "config": "complete official mirix.yaml",
+                "database": "native SQLite fallback",
+                "auth": "native local first-admin registration / JWT",
+            },
+        ),
+    ),
+)
+
+OUROBOROS = AgentSpec(
+    id="ouroboros",
+    display_name="Ouroboros",
+    package="razzant/ouroboros",
+    source="github-release",
+    github_release_install="editable",
+    source_state="isolated",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key"},
+    home_profile="ouroboros",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("headless-task",),
+    default_variant=_default(
+        capture_unavailable="The interactive application and detached startup are separate from a bounded native managed task; use its headless task CLI with an owned local server."
+    ),
+    variants=(
+        _variant(
+            "headless-task",
+            "Native managed headless task",
+            ("--no-yolo", "--", "-c", OUROBOROS_SERVER),
+            driver="local-task-api",
+            dimensions={
+                "entry": "native server and CLI run task",
+                "models": "native main/light/fallback",
+                "task_timeout": "60 seconds",
+            },
+        ),
+    ),
+)
+
 ZCODE = AgentSpec(
     id="zcode",
     display_name="ZCode",
@@ -1765,7 +1931,6 @@ ZCODE = AgentSpec(
     ),
     home_profile="zcode",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("personal-openai",),
     default_variant=_default(
@@ -1796,9 +1961,10 @@ AGENT_ZERO = AgentSpec(
     python_runtime="3.12",
     tap_client="python",
     fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key"},
-    extra_env={"A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES": "1"},
-    recorded_env=("A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES",),
+    extra_env={"A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES": "1", "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1"},
+    recorded_env=("A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES", "HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"),
     bootstrap_args=("-c", AGENT_ZERO_PREFETCH),
+    bootstrap_env={"HF_HUB_OFFLINE": "0", "TRANSFORMERS_OFFLINE": "0"},
     tap_mode="forward",
     track_latest=False,
     capture_timeout_seconds=300,
@@ -1835,7 +2001,6 @@ RAVEN = AgentSpec(
     fake_env={},
     home_profile="raven",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     default_variant=_default(
         (
@@ -2005,7 +2170,6 @@ AGENTICSEEK = AgentSpec(
     extra_env={"PULSE_SERVER": "unix:/tmp/phistory-pulse.sock"},
     recorded_env=("PULSE_SERVER",),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     latest_variant_ids=("coder-openai",),
     default_variant=_default(
@@ -2153,7 +2317,6 @@ BAMBOOAI = AgentSpec(
     home_profile="bambooai",
     bootstrap_args=("-c", "import tiktoken; tiktoken.get_encoding('cl100k_base')"),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("sdk-free-quick",),
     default_variant=_default(
@@ -2185,7 +2348,6 @@ COWAGENT = AgentSpec(
     fake_env={},
     home_profile="cowagent",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("bridge-api",),
     default_variant=_default(
@@ -2256,6 +2418,10 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        HIVE,
+        INTENTKIT,
+        MIRIX,
+        OUROBOROS,
         ZCODE,
         AGENT_ZERO,
         RAVEN,

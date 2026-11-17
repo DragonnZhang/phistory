@@ -562,6 +562,20 @@ def _capture_env(
             env["PHISTORY_CUGA_EXAMPLE_SHA256"] = digest
     if profile == "deerflow":
         env["DEER_FLOW_HOME"] = str(home / "deerflow")
+    if profile == "hive":
+        state = home / "hive"
+        state.mkdir(parents=True, exist_ok=True)
+        env["HIVE_HOME"] = str(state)
+        path = state / "configuration.json"
+        path.write_text(json.dumps({"llm": {"api_key": "phistory-fake-api-key"}}) + "\n", encoding="utf-8")
+        path.chmod(0o600)
+    if profile == "mirix":
+        env["MIRIX_DIR"] = str(home / "mirix")
+    if profile == "intentkit":
+        env["DB_NAME"] = "phistory_" + re.sub(r"[^a-zA-Z0-9]", "_", home.name)[-48:]
+    if profile == "ouroboros":
+        env["OUROBOROS_DATA_DIR"] = str(home / "ouroboros")
+        env["OUROBOROS_APP_ROOT"] = env["PHISTORY_SOURCE_ROOT"]
     if profile == "raven":
         state = home / "raven"
         state.mkdir(parents=True, exist_ok=True)

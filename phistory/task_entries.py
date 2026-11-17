@@ -183,3 +183,21 @@ os.environ["ZCODE_AGENT_CA_CERT"] = os.environ["SSL_CERT_FILE"]
 path = Path(os.environ["PHISTORY_SOURCE_ROOT"]) / "apps/zcode-cli/packages/cli/dist/zcode.cjs"
 os.execvp("node", ["node", str(path), "--prompt", "Reply with one short sentence.", "--cwd", str(Path.cwd()), "--json"])
 """
+
+OUROBOROS_SERVER = """
+import os
+os.environ["OUROBOROS_EXTRA_CA_BUNDLE"] = os.environ["SSL_CERT_FILE"]
+os.execvp("ouroboros", ["ouroboros", "server", "--host", "127.0.0.1", "--port", os.environ["PHISTORY_SERVER_PORT"], "--no-ui"])
+"""
+
+INTENTKIT_DATABASE_SETUP = """
+import os
+import psycopg
+from psycopg import sql
+import redis
+with psycopg.connect(host=os.environ["DB_HOST"], port=int(os.environ["DB_PORT"]),
+    user=os.environ["DB_USERNAME"], password=os.environ["DB_PASSWORD"], dbname="postgres",
+    autocommit=True) as connection:
+    connection.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(os.environ["DB_NAME"])))
+redis.Redis(host=os.environ["REDIS_HOST"], port=int(os.environ["REDIS_PORT"])).flushdb()
+"""

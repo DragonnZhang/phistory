@@ -35,6 +35,21 @@ jobs:
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    services:
+      postgres:
+        image: ${{ contains(format(',{0},', inputs.agents), ',intentkit,') && 'postgres:17' || '' }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: phistory-local-db
+          POSTGRES_DB: phistory
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: ${{ contains(format(',{0},', inputs.agents), ',intentkit,') && 'redis:7' || '' }}
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       SELECTED_AGENTS: ${{ inputs.agents }}
       SELECTED_VARIANTS: ${{ inputs.variants }}
@@ -44,13 +59,9 @@ jobs:
         with:
           node-version: "24"
       - uses: astral-sh/setup-uv@v8.1.0
-      - name: Prepare selected native audio runtime
-        if: contains(format(',{0},', inputs.agents), ',agenticseek,')
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libportaudio2 pulseaudio pulseaudio-utils
-          pulseaudio --start --exit-idle-time=-1
-          pactl load-module module-native-protocol-unix socket=/tmp/phistory-pulse.sock auth-anonymous=1
+      - uses: ./.github/actions/setup-agent-runtimes
+        with:
+          agents: ${{ inputs.agents }}
       - run: uv sync --all-groups
       - run: uv run ruff format --check phistory tests
       - run: uv run ruff check phistory tests

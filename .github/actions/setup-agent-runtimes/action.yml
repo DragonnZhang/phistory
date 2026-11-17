@@ -1,0 +1,23 @@
+name: Prepare native agent runtimes
+description: Install Linux libraries needed by the explicitly selected native capture surfaces
+inputs:
+  agents:
+    description: Comma-separated registered agent IDs
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Prepare native audio runtime
+      if: contains(format(',{0},', inputs.agents), ',agenticseek,')
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libportaudio2 pulseaudio pulseaudio-utils
+        pulseaudio --start --exit-idle-time=-1
+        pactl load-module module-native-protocol-unix socket=/tmp/phistory-pulse.sock auth-anonymous=1
+    - name: Prepare owned virtual desktop
+      if: contains(format(',{0},', inputs.agents), ',self-operating-computer,')
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb xauth scrot python3-tk

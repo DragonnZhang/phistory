@@ -48,6 +48,24 @@ on:
           - cuga-agent
           - autoresearchclaw
           - inkos
+          - hive
+          - intentkit
+          - mirix
+          - ouroboros
+          - zcode
+          - agent-zero
+          - raven
+          - gpt-researcher
+          - openevolve
+          - deer-flow
+          - omni-rewriter
+          - agenticseek
+          - nanomuse
+          - pr-agent
+          - deepanalyze
+          - localgpt
+          - bambooai
+          - cowagent
       variants:
         description: Optional comma-separated capture variant ids
         required: false
@@ -106,6 +124,9 @@ jobs:
           node-version: "24"
           check-latest: true
       - uses: astral-sh/setup-uv@v8.1.0
+      - uses: ./.github/actions/setup-agent-runtimes
+        with:
+          agents: ${{ inputs.agent }}
       - run: uv sync --all-groups
       - run: uv run ruff format --check phistory tests
       - run: uv run ruff check phistory tests

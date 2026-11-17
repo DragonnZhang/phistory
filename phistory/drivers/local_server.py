@@ -7,6 +7,8 @@ import subprocess
 import time
 from pathlib import Path
 
+from claude_tap.prompt_snapshot import snapshot_from_records
+
 
 def has_prompt_request(tap_output_dir: Path, prompt: str) -> bool:
     for trace in tap_output_dir.glob("*/trace_*.jsonl"):
@@ -16,17 +18,19 @@ def has_prompt_request(tap_output_dir: Path, prompt: str) -> bool:
             continue
         for line in lines:
             try:
-                body = (json.loads(line).get("request") or {}).get("body")
+                record = json.loads(line)
+                body = (record.get("request") or {}).get("body")
                 if isinstance(body, str):
                     body = json.loads(body)
             except (json.JSONDecodeError, AttributeError):
                 continue
-            if (
-                isinstance(body, dict)
-                and any(key in body for key in ("messages", "input", "system", "instructions"))
-                and prompt in json.dumps(body, ensure_ascii=False)
-            ):
-                return True
+            if isinstance(body, dict) and prompt in json.dumps(body, ensure_ascii=False):
+                try:
+                    snapshot = snapshot_from_records([record])
+                except ValueError:
+                    continue
+                if snapshot.system_prompt or snapshot.developer_prompt or snapshot.user_message:
+                    return True
     return False
 
 

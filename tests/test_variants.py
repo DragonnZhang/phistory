@@ -220,7 +220,10 @@ def test_dsh_web_accepts_a_prompt_request_without_tools(tmp_path: Path):
     trace_dir = tmp_path / "session"
     trace_dir.mkdir()
     (trace_dir / "trace_1.jsonl").write_text(
-        json.dumps({"request": {"body": {"messages": [{"role": "user", "content": PROMPT}]}}}) + "\n",
+        json.dumps(
+            {"request": {"path": "/chat/completions", "body": {"messages": [{"role": "user", "content": PROMPT}]}}}
+        )
+        + "\n",
         encoding="utf-8",
     )
 
