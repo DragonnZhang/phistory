@@ -1,0 +1,95 @@
+{
+  "agent_id": "ufo",
+  "agent": "UFO LinuxAgent",
+  "package": "microsoft/UFO",
+  "python_runtime": "3.10",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [
+      "requirements.txt"
+    ],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport os\nfrom pathlib import Path\nimport yaml\ntry:\n    import tiktoken\nexcept ImportError:\n    pass\nelse:\n    tiktoken.get_encoding(\"cl100k_base\")\n    tiktoken.get_encoding(\"o200k_base\")\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nconfig = yaml.safe_load((source / \"config/ufo/agents.yaml.template\").read_text())\nfor item in config.values():\n    if isinstance(item, dict) and \"API_KEY\" in item:\n        item[\"API_KEY\"] = os.environ[\"OPENAI_API_KEY\"]\n(source / \"config/ufo/agents.yaml\").write_text(yaml.safe_dump(config, sort_keys=False))\n"
+    ],
+    "environment": {}
+  },
+  "version": "eae3c0a8d168c47cb10df0652e293e092eda1078",
+  "variant": {
+    "id": "linux-device-agent",
+    "label": "Native LinuxAgent / authenticated UFO and Bash MCP",
+    "dimensions": {
+      "entry": "native server, Linux MCP, WebSocket client request",
+      "model": "native APP_AGENT OpenAI gpt-4o",
+      "auth": "real isolated server token and UFO_MCP_API_KEY",
+      "config": "complete official agents template with fake model key",
+      "visual": "native Linux text-only; no screenshot or X server",
+      "scope": "LinuxAgent; Windows HostAgent/AppAgent not claimed"
+    }
+  },
+  "requested": {
+    "entry": "native server, Linux MCP, WebSocket client request",
+    "model": "native APP_AGENT OpenAI gpt-4o",
+    "auth": "real isolated server token and UFO_MCP_API_KEY",
+    "config": "complete official agents template with fake model key",
+    "visual": "native Linux text-only; no screenshot or X server",
+    "scope": "LinuxAgent; Windows HostAgent/AppAgent not claimed"
+  },
+  "observed": {
+    "model": "gpt-4o"
+  },
+  "capture_selection": {
+    "minimum_tools": 0,
+    "required_system_text": [
+      "You are **LinuxAgent**"
+    ],
+    "required_user_text": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/microsoft/UFO/archive/eae3c0a8d168c47cb10df0652e293e092eda1078.tar.gz",
+  "binary_version": "eae3c0a8d168c47cb10df0652e293e092eda1078",
+  "captured_at": "2026-11-17T16:51:16.072901+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44130213522",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44130213522"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 45.429,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nimport subprocess\nimport sys\nimport time\nimport urllib.request\nimport urllib.error\nos.chdir(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nservices = []\ntry:\n    services.append(subprocess.Popen([sys.executable, \"-m\", \"ufo.client.mcp.http_servers.linux_mcp_server\", \"--host\", \"localhost\", \"--port\", \"8010\"]))\n    services.append(subprocess.Popen([sys.executable, \"-m\", \"ufo.server.app\", \"--host\", \"127.0.0.1\", \"--port\", \"5001\", \"--platform\", \"linux\", \"--api-key\", os.environ[\"PHISTORY_UFO_CONTROL_KEY\"]]))\n    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))\n    deadline = time.monotonic() + 120\n    for url in [\"http://localhost:8010/mcp\", \"http://127.0.0.1:5001/\"]:\n        while time.monotonic() < deadline:\n            if any(process.poll() is not None for process in services):\n                raise RuntimeError(\"native UFO service exited during startup\")\n            try:\n                with opener.open(url, timeout=2):\n                    break\n            except urllib.error.HTTPError as error:\n                if error.code < 500:\n                    break\n            except (OSError, urllib.error.URLError):\n                pass\n            time.sleep(0.25)\n        else:\n            raise RuntimeError(\"native UFO services did not become ready\")\n    subprocess.run([sys.executable, \"-m\", \"ufo.client.client\", \"--ws\", \"--ws-server\", \"ws://127.0.0.1:5001/ws?token=\" + os.environ[\"PHISTORY_UFO_CONTROL_KEY\"], \"--client-id\", \"phistory_linux\", \"--platform\", \"linux\", \"--request\", \"Reply with one short sentence.\", \"--task_name\", \"phistory\"], check=True)\nfinally:\n    for process in services:\n        if process.poll() is None:\n            process.terminate()\n    for process in services:\n        try:\n            process.wait(timeout=10)\n        except subprocess.TimeoutExpired:\n            process.kill()\n            process.wait(timeout=5)\n"
+  ]
+}

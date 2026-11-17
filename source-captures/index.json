@@ -3660,7 +3660,7 @@
           "path": "source-captures/db-gpt/b87b05849b52369e04e3"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "db-gpt"
     },
     {
@@ -6389,7 +6389,7 @@
           "path": "source-captures/ufo/3a4817df37493dc0b318"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "ufo"
     },
     {
