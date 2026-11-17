@@ -8005,7 +8005,7 @@
           "path": "source-captures/empryo/0eb52119b441cde832ea"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "empryo"
     },
     {
@@ -8671,7 +8671,7 @@
           "path": "source-captures/critic-training/3531f7ecabd80c4da0dd"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "critic-training"
     },
     {

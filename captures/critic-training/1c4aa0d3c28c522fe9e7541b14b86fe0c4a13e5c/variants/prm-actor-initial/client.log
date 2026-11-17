@@ -1,0 +1,47 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:41325
+[claude-tap] CA cert: /tmp/phistory-home-dy9xqu58/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/critic-training/1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c/variants/prm-actor-initial/.tap/2026-11-17/trace_153711.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+import yaml
+from minisweagent.agents.default_prm import DefaultPRMAgent
+from minisweagent.environments.local import LocalEnvironment
+from minisweagent.models.litellm_model import LitellmModel
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"]) / "mini-swe-agent"
+config = yaml.safe_load((source / "src/minisweagent/config/default.yaml").read_text())["agent"]
+config.update(step_limit=1, use_prm=True)
+model = LitellmModel(model_name="gpt-4.1", model_kwargs={
+    "custom_llm_provider": "openai", "api_base": "https://api.openai.com/v1",
+    "api_key": os.environ["OPENAI_API_KEY"],
+})
+print(DefaultPRMAgent(model, LocalEnvironment(cwd=str(Path.cwd())), **config).run("Reply with one short sentence."))
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:41325
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-dy9xqu58/.local/share/claude-tap/ca.pem
+👋 This is mini-swe-agent version 1.11.1.
+Your config is stored in 
+'/tmp/phistory-home-dy9xqu58/.config/mini-swe-agent/.env'
+15:37:13 - LiteLLM:WARNING: get_model_cost_map.py:158 - LiteLLM: Fetched model cost map has only 7 models (minimum=50). This may indicate a corrupted upstream file. Falling back to local backup.
+15:37:13 - LiteLLM:WARNING: get_model_cost_map.py:790 - LiteLLM: Fetched model cost map failed integrity check. Using local backup instead. url=https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
+('LimitsExceeded', '')
+
+[claude-tap] shutting down python... (Ctrl+C again to force)
+
+[claude-tap] python stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/critic-training/1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c/variants/prm-actor-initial/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/critic-training/1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c/variants/prm-actor-initial/.tap/2026-11-17/trace_153711.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/critic-training/1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c/variants/prm-actor-initial/.tap/2026-11-17/trace_153711.log
+  view:         /home/runner/work/phistory/phistory/captures/critic-training/1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c/variants/prm-actor-initial/.tap/2026-11-17/trace_153711.html
+  prompt:       /home/runner/work/phistory/phistory/captures/critic-training/1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c/variants/prm-actor-initial/prompt.md
+
+stderr:

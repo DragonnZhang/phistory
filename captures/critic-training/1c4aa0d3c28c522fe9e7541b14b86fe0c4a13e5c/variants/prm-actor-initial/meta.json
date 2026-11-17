@@ -1,0 +1,80 @@
+{
+  "agent_id": "critic-training",
+  "agent": "Critic-training",
+  "package": "shubhamrgandhi/critic-training",
+  "python_runtime": "3.11",
+  "source_runtime": {
+    "project": "mini-swe-agent",
+    "state": "readonly",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "build_commands": []
+  },
+  "version": "1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c",
+  "variant": {
+    "id": "prm-actor-initial",
+    "label": "Native PRM fork · initial configured actor",
+    "dimensions": {
+      "entry": "DefaultPRMAgent.run",
+      "model": "configured OpenAI gpt-4.1",
+      "step_limit": "1",
+      "scope": "initial actor before interval-five critic",
+      "protocol": "native bash text grammar"
+    }
+  },
+  "requested": {
+    "entry": "DefaultPRMAgent.run",
+    "model": "configured OpenAI gpt-4.1",
+    "step_limit": "1",
+    "scope": "initial actor before interval-five critic",
+    "protocol": "native bash text grammar"
+  },
+  "observed": {
+    "model": "gpt-4.1"
+  },
+  "capture_selection": {
+    "minimum_tools": 0,
+    "required_system_text": [
+      "You are a helpful assistant that can interact with a computer."
+    ]
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/shubhamrgandhi/critic-training/archive/1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c.tar.gz",
+  "binary_version": "1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c",
+  "captured_at": "2026-11-17T15:37:16.667867+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44116254821",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44116254821"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 9.088,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nfrom pathlib import Path\nimport yaml\nfrom minisweagent.agents.default_prm import DefaultPRMAgent\nfrom minisweagent.environments.local import LocalEnvironment\nfrom minisweagent.models.litellm_model import LitellmModel\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"]) / \"mini-swe-agent\"\nconfig = yaml.safe_load((source / \"src/minisweagent/config/default.yaml\").read_text())[\"agent\"]\nconfig.update(step_limit=1, use_prm=True)\nmodel = LitellmModel(model_name=\"gpt-4.1\", model_kwargs={\n    \"custom_llm_provider\": \"openai\", \"api_base\": \"https://api.openai.com/v1\",\n    \"api_key\": os.environ[\"OPENAI_API_KEY\"],\n})\nprint(DefaultPRMAgent(model, LocalEnvironment(cwd=str(Path.cwd())), **config).run(\"Reply with one short sentence.\"))\n"
+  ]
+}
