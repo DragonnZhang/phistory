@@ -10,7 +10,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 [Harness 源码归档](sources.html)保存 95 项调研中新增项目的提示词模板、装配代码与工具声明，保留完整原文件和来源，单独展示，不与真实请求捕获混用。
 
-> 每天自动检查新版本，归档最近更新于 **2026-11-17 18:21 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-11-17 18:30 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-11-17 18:21 UTC
+最近抓取更新：2026-11-17 18:30 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -144,6 +144,7 @@ uv run phistory render-site
 | AutoResearchClaw | [v0.5.0 - 2026-05-20](captures/autoresearchclaw/v0.5.0/variants/topic-init/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | Inkos | [1.8.0 - 2026-08-17](captures/inkos/1.8.0/variants/chat-openai/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | DB-GPT | [547882b84b15b32b2894f1bccc6bfb535b7b70c3](captures/db-gpt/547882b84b15b32b2894f1bccc6bfb535b7b70c3/variants/official-react-example/prompt.md) | 1 | 1 | 2026-11-17 16:51 UTC |
+| LoopTroop | [0.6.4 - 2026-11-06](captures/looptroop/0.6.4/variants/native-relevant-files-scan/prompt.md) | 1 | 1 | 2026-11-17 18:30 UTC |
 | Hivekeep | [e6bf9aea4159312730a690b94697084616b44556](captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/prompt.md) | 1 | 1 | 2026-11-17 17:25 UTC |
 | AnythingLLM | [160afa00ac0eca6315aabe662b2e7673c8c96172](captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/prompt.md) | 1 | 1 | 2026-11-17 18:15 UTC |
 | UFO LinuxAgent | [eae3c0a8d168c47cb10df0652e293e092eda1078](captures/ufo/eae3c0a8d168c47cb10df0652e293e092eda1078/variants/linux-device-agent/prompt.md) | 1 | 1 | 2026-11-17 16:51 UTC |

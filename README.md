@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-17 18:21 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-17 18:30 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-17 18:21 UTC
+Last capture update: 2026-11-17 18:30 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -144,6 +144,7 @@ Last capture update: 2026-11-17 18:21 UTC
 | AutoResearchClaw | [v0.5.0 - 2026-05-20](captures/autoresearchclaw/v0.5.0/variants/topic-init/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | Inkos | [1.8.0 - 2026-08-17](captures/inkos/1.8.0/variants/chat-openai/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | DB-GPT | [547882b84b15b32b2894f1bccc6bfb535b7b70c3](captures/db-gpt/547882b84b15b32b2894f1bccc6bfb535b7b70c3/variants/official-react-example/prompt.md) | 1 | 1 | 2026-11-17 16:51 UTC |
+| LoopTroop | [0.6.4 - 2026-11-06](captures/looptroop/0.6.4/variants/native-relevant-files-scan/prompt.md) | 1 | 1 | 2026-11-17 18:30 UTC |
 | Hivekeep | [e6bf9aea4159312730a690b94697084616b44556](captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/prompt.md) | 1 | 1 | 2026-11-17 17:25 UTC |
 | AnythingLLM | [160afa00ac0eca6315aabe662b2e7673c8c96172](captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/prompt.md) | 1 | 1 | 2026-11-17 18:15 UTC |
 | UFO LinuxAgent | [eae3c0a8d168c47cb10df0652e293e092eda1078](captures/ufo/eae3c0a8d168c47cb10df0652e293e092eda1078/variants/linux-device-agent/prompt.md) | 1 | 1 | 2026-11-17 16:51 UTC |
