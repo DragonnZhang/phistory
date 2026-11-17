@@ -8911,7 +8911,7 @@
           "path": "source-captures/agent-s/87f9aa145df88100788f"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "agent-s"
     },
     {
