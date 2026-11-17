@@ -1,0 +1,43 @@
+stdout:
+[claude-tap] 'openagent' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] openagent target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:38389
+[claude-tap] CA cert: /tmp/phistory-home-g293yq07/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/openagent/v2.95.1/variants/store-api/.tap/2026-11-17/trace_140528.jsonl
+
+[claude-tap] launching openagent: openagent serve
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:38389
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-g293yq07/.local/share/claude-tap/ca.pem
+embedsupport: loaded conf/app.conf from embedded binary
+OpenAgent: connecting to database [driver=sqlite3, dsn=/tmp/phistory-home-g293yq07/openagent.db, db=casibase]
+skills: 54 loaded from (embedded): 1password, apple-notes, apple-reminders, bear-notes, blogwatcher, blucli, bluebubbles, camsnap, canvas, clawhub, coding-agent, discord, eightctl, gemini, gh-issues, gifgrep, github, gog, goplaces, healthcheck, himalaya, imsg, mcporter, model-usage, nano-pdf, node-connect, notion, obsidian, openai-whisper, openai-whisper-api, openhue, oracle, ordercli, peekaboo, powerpoint, sag, session-logs, sherpa-onnx-tts, skill-creator, slack, songsee, sonoscli, spotify-player, summarize, taskflow, taskflow-inbox-triage, things-mac, tmux, trello, video-frames, voice-call, wacli, weather, xurl
+AI models: 0: (none)
+storage providers: 2: provider-image-built-in, provider-storage-built-in
+tools: 10: browser_use, gui, local_file, office, shell, time, video_download, web_browser, web_fetch, web_search
+MCP servers: 0: (none)
+2026/11/17 14:05:31.606 [1;34m[I][0m [asm_amd64.s:1693]  http server Running on http://:14000
+2026/11/17 14:05:31.758 [1;44m[D][0m [server.go:3340]  |      127.0.0.1|[97;42m 200 [0m|   5.794294ms|   match|[97;44m GET     [0m /api/get-store   r:/api/get-store
+2026/11/17 14:05:31.763 [1;44m[D][0m [server.go:3340]  |      127.0.0.1|[97;42m 200 [0m|    3.94412ms|   match|[97;46m POST    [0m /api/add-provider   r:/api/add-provider
+2026/11/17 14:05:31.767 [1;44m[D][0m [server.go:3340]  |      127.0.0.1|[97;42m 200 [0m|   2.409614ms|   match|[97;44m GET     [0m /api/get-store   r:/api/get-store
+2026/11/17 14:05:31.771 [1;44m[D][0m [server.go:3340]  |      127.0.0.1|[97;42m 200 [0m|   3.823692ms|   match|[97;46m POST    [0m /api/add-store   r:/api/add-store
+2026/11/17 14:05:31.776 [1;44m[D][0m [server.go:3340]  |      127.0.0.1|[97;42m 200 [0m|   3.881187ms|   match|[97;44m GET     [0m /api/get-store   r:/api/get-store
+
+--- LLM Call (Round 0) | Tools available: [37] ---
+LLM Decision: [Final Answer — no tool calls]
+2026/11/17 14:05:32.079 [1;44m[D][0m [server.go:3340]  |      127.0.0.1|[97;42m 200 [0m| 302.728222ms|   match|[97;46m POST    [0m /api/v1/chat/completions   r:/api/v1/chat/completions
+
+[claude-tap] shutting down openagent... (Ctrl+C again to force)
+
+[claude-tap] openagent stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/openagent/v2.95.1/variants/store-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/openagent/v2.95.1/variants/store-api/.tap/2026-11-17/trace_140528.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/openagent/v2.95.1/variants/store-api/.tap/2026-11-17/trace_140528.log
+  view:         /home/runner/work/phistory/phistory/captures/openagent/v2.95.1/variants/store-api/.tap/2026-11-17/trace_140528.html
+  prompt:       /home/runner/work/phistory/phistory/captures/openagent/v2.95.1/variants/store-api/prompt.md
+
+stderr:

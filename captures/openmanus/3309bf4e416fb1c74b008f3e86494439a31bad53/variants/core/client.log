@@ -1,0 +1,130 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:34793
+[claude-tap] CA cert: /tmp/phistory-home-lyh8091d/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/openmanus/3309bf4e416fb1c74b008f3e86494439a31bad53/variants/core/.tap/2026-11-17/trace_140510.jsonl
+
+[claude-tap] launching python: python /tmp/phistory-home-lyh8091d/source/main.py --prompt Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:34793
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-lyh8091d/.local/share/claude-tap/ca.pem
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/openmanus/3309bf4e416fb1c74b008f3e86494439a31bad53/variants/core/prompt.md
+
+[claude-tap] summary:
+  api_calls:    20
+  trace:        /home/runner/work/phistory/phistory/captures/openmanus/3309bf4e416fb1c74b008f3e86494439a31bad53/variants/core/.tap/2026-11-17/trace_140510.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/openmanus/3309bf4e416fb1c74b008f3e86494439a31bad53/variants/core/.tap/2026-11-17/trace_140510.log
+  view:         /home/runner/work/phistory/phistory/captures/openmanus/3309bf4e416fb1c74b008f3e86494439a31bad53/variants/core/.tap/2026-11-17/trace_140510.html
+  prompt:       /home/runner/work/phistory/phistory/captures/openmanus/3309bf4e416fb1c74b008f3e86494439a31bad53/variants/core/prompt.md
+
+stderr:
+[claude-tap] warning: 
+/home/runner/work/phistory/phistory/.phistory-cache/installs/openmanus/3309bf4e416fb1c74b008f3e86494439a31bad53/lib/python3.12/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.8.0) or chardet (7.7.0)/charset_normalizer (3.5.2) doesn't match a supported version!
+  warnings.warn(
+/home/runner/work/phistory/phistory/.phistory-cache/installs/openmanus/3309bf4e416fb1c74b008f3e86494439a31bad53/lib/python3.12/site-packages/pydantic/_internal/_config.py:345: UserWarning: Valid config keys have changed in V2:
+* 'underscore_attrs_are_private' has been removed
+  warnings.warn(message, UserWarning)
+[32m2026-11-17 14:05:11.303[0m | [33m[1mWARNING [0m | [36m__main__[0m:[36mmain[0m:[36m25[0m - [33m[1mProcessing your request...[0m
+[32m2026-11-17 14:05:11.303[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 1/20[0m
+[32m2026-11-17 14:05:11.403[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.403[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.403[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.404[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 2/20[0m
+[32m2026-11-17 14:05:11.414[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.414[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.414[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.414[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 3/20[0m
+[32m2026-11-17 14:05:11.423[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.423[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.423[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.423[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.423[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 4/20[0m
+[32m2026-11-17 14:05:11.433[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.433[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.433[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.433[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.433[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 5/20[0m
+[32m2026-11-17 14:05:11.444[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.444[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.444[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.445[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.445[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 6/20[0m
+[32m2026-11-17 14:05:11.457[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.457[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.457[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.457[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.457[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 7/20[0m
+[32m2026-11-17 14:05:11.471[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.471[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.471[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.471[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.471[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 8/20[0m
+[32m2026-11-17 14:05:11.486[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.486[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.486[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.486[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.487[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 9/20[0m
+[32m2026-11-17 14:05:11.502[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.503[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.503[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.503[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.503[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 10/20[0m
+[32m2026-11-17 14:05:11.520[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.520[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.520[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.520[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.520[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 11/20[0m
+[32m2026-11-17 14:05:11.539[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.539[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.539[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.540[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.540[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 12/20[0m
+[32m2026-11-17 14:05:11.560[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.560[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.560[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.560[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.560[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 13/20[0m
+[32m2026-11-17 14:05:11.581[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.582[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.582[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.582[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.582[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 14/20[0m
+[32m2026-11-17 14:05:11.606[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.607[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.607[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.607[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.607[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 15/20[0m
+[32m2026-11-17 14:05:11.631[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.631[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.631[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.631[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.631[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 16/20[0m
+[32m2026-11-17 14:05:11.656[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.657[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.657[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.657[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.657[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 17/20[0m
+[32m2026-11-17 14:05:11.684[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.684[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.684[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.684[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.684[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 18/20[0m
+[32m2026-11-17 14:05:11.711[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.712[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.712[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.712[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.712[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 19/20[0m
+[32m2026-11-17 14:05:11.741[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.741[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.741[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.741[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.741[0m | [1mINFO    [0m | [36mapp.agent.base[0m:[36mrun[0m:[36m140[0m - [1mExecuting step 20/20[0m
+[32m2026-11-17 14:05:11.772[0m | [1mINFO    [0m | [36mapp.llm[0m:[36mupdate_token_count[0m:[36m243[0m - [1mToken usage: Input=0, Completion=0, Cumulative Input=0, Cumulative Completion=0, Total=0, Cumulative Total=0[0m
+[32m2026-11-17 14:05:11.772[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m81[0m - [1m✨ Manus's thoughts: captured[0m
+[32m2026-11-17 14:05:11.772[0m | [1mINFO    [0m | [36mapp.agent.toolcall[0m:[36mthink[0m:[36m82[0m - [1m🛠️ Manus selected 0 tools to use[0m
+[32m2026-11-17 14:05:11.772[0m | [33m[1mWARNING [0m | [36mapp.agent.base[0m:[36mhandle_stuck_state[0m:[36m168[0m - [33m[1mAgent detected stuck state. Added prompt:         Observed duplicate responses. Consider new strategies and avoid repeating ineffective paths already attempted.[0m
+[32m2026-11-17 14:05:11.772[0m | [1mINFO    [0m | [36mapp.tool.mcp[0m:[36mdisconnect[0m:[36m224[0m - [1mDisconnected from all MCP servers[0m
+[32m2026-11-17 14:05:11.772[0m | [1mINFO    [0m | [36m__main__[0m:[36mmain[0m:[36m27[0m - [1mRequest processing completed.[0m

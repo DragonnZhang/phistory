@@ -4528,7 +4528,7 @@
           "path": "source-captures/openmanus/91496e1ba9a7dd9f50f7"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "openmanus"
     },
     {
@@ -9369,7 +9369,7 @@
           "path": "source-captures/openagent/820f63f045562c7eb111"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "openagent"
     },
     {
