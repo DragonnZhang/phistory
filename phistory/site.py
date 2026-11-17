@@ -120,6 +120,7 @@ def _site_row(row: dict) -> dict:
         "variant_label": row["variant_label"],
         "variant_dimensions": row["variant_dimensions"],
         "observed": row["observed"],
+        "capture_selection": row.get("capture_selection") or {},
         "capture_status": row["capture_status"],
         "published_compact": _compact_date(row["published_at"]),
         "published_display": _display_time(row["published_at"]),
@@ -2430,7 +2431,7 @@ async function loadDiffSnapshot(item, scope) {
   let reason = '';
   if (item.capture_status !== 'static-only') {
     try {
-      const selected = selectMainTraceRecord(await loadTrace(item));
+      const selected = selectMainTraceRecord(await loadTrace(item), item.capture_selection);
       if (!selected) throw new Error('No prompt-bearing request');
       return { text: requestDiffMarkdown(requestBody(selected.record), scope), warning: '' };
     } catch (error) {
@@ -2454,7 +2455,7 @@ function requestDiffMarkdown(body, scope = 'all') {
       if (body[key] !== undefined) blocks.push({ title, text: diffContentText(body[key]) });
     }
   }
-  for (const key of ['messages', 'input', 'contents']) {
+  for (const key of ['messages', 'input', 'contents', 'prompt']) {
     const messages = typeof body[key] === 'string'
       ? [{ role: 'user', content: body[key] }] : messageItems(body[key]);
     const counts = new Map();
@@ -2679,7 +2680,7 @@ async function renderTrace(sequence) {
   const item = snapshotInfo('to');
   const records = await loadTrace(item);
   if (!isCurrentRender(sequence)) return;
-  const selected = selectMainTraceRecord(records);
+  const selected = selectMainTraceRecord(records, item.capture_selection);
   if (!selected) {
     els.trace.innerHTML = '<div class="empty">No prompt-bearing trace request found.</div>';
     return;
@@ -2708,9 +2709,14 @@ async function renderStatic(sequence) {
   renderMonacoDiff(originalBody, modifiedBody);
 }
 
-function selectMainTraceRecord(records) {
+function selectMainTraceRecord(records, selection = {}) {
   let best = null;
   records.forEach((record, index) => {
+    const body = requestBody(record);
+    if (normalizeTools(body).length < (selection?.minimum_tools || 0)) return;
+    const prompts = normalizePromptBlocks(inferProvider(record.request?.path || '', body), body);
+    const instructions = [...prompts.system, ...prompts.developer].map(block => block.text).join('\n');
+    if (!(selection?.required_system_text || []).every(marker => instructions.includes(marker))) return;
     const score = traceRecordScore(record);
     if (!best || score > best.score) best = { record, index, score };
   });
@@ -2718,6 +2724,8 @@ function selectMainTraceRecord(records) {
 }
 
 function traceRecordScore(record) {
+  const path = record.request?.path || '';
+  if (/\/(?:embeddings|embed|count_tokens|input_tokens|tokenize|detokenize)(?:[/?]|$)|:(?:embedContent|batchEmbedContents|countTokens|computeTokens)(?:[?]|$)/i.test(path)) return 0;
   const body = requestBody(record);
   let score = 0;
   for (const [key, weight] of [
@@ -2728,6 +2736,7 @@ function traceRecordScore(record) {
     ['messages', 35],
     ['input', 35],
     ['contents', 35],
+    ['prompt', 35],
     ['tools', 20],
     ['toolConfig', 20]
   ]) {
@@ -2775,6 +2784,7 @@ function requestBody(record) {
 }
 
 function inferProvider(path, body) {
+  if (/\/api\/(?:chat|generate)(?:[?]|$)/.test(path)) return 'Ollama';
   if (path.includes('/chat/completions')) return 'OpenAI Chat';
   if (path.includes('/responses') || body.instructions || body.input) return 'OpenAI Responses';
   if (path.includes('/messages') || body.system || body.anthropic_version) return 'Anthropic';
@@ -2812,6 +2822,7 @@ function normalizePromptBlocks(provider, body) {
 
 function normalizeMessages(provider, body) {
   const out = [];
+  if (typeof body.prompt === 'string' && body.prompt) out.push({ role: 'user', text: body.prompt });
   for (const message of messageItems(body.messages)) {
     const role = String(message.role || 'message');
     if (role === 'system' || role === 'developer') continue;

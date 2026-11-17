@@ -65,6 +65,7 @@ def read_capture_rows(root: Path) -> list[dict[str, Any]]:
                 "variant_label": variant_meta.get("label") or variant_dir.name,
                 "variant_dimensions": variant_meta.get("dimensions") or {},
                 "observed": meta.get("observed") or {},
+                "capture_selection": meta.get("capture_selection") or {},
                 "capture_status": meta.get("capture_status") or "captured",
                 "published_at": meta.get("published_at") or "",
                 "captured_at": meta.get("captured_at") or "",

@@ -47,6 +47,34 @@ def run_browser_js(assertions: str, data=None) -> None:
     assert result.returncode == 0, result.stderr or result.stdout
 
 
+def test_primary_request_filters_and_ollama_flat_prompt_keep_raw_evidence():
+    run_browser_js(
+        """
+        const helper = {request: {path: '/v1/chat/completions', body: {
+          model: 'helper', system: 'Very long helper', messages: [{role: 'user', content: 'Native actor manual'}]
+        }}};
+        const actor = {request: {path: '/v1/chat/completions', body: {
+          model: 'actor', messages: [{role: 'developer', content: 'Native actor manual'}],
+          tools: [{type: 'function', function: {name: 'native_tool', parameters: {}}}]
+        }}};
+        const selection = {minimum_tools: 1, required_system_text: ['Native actor manual']};
+        assert.equal(selectMainTraceRecord([helper], selection), null);
+        assert.equal(selectMainTraceRecord([helper, actor], selection).record, actor);
+        const embedding = {request: {path: '/v1/embeddings', body: {input: 'not generation', system: 'aux'}}};
+        const count = {request: {path: '/v1/messages/count_tokens', body: actor.request.body}};
+        const ollama = {request: {path: '/api/generate', body: {model: 'native', prompt: 'FLAT NATIVE PROMPT'}}};
+        assert.equal(selectMainTraceRecord([embedding, count, ollama]).record, ollama);
+        assert.equal(selectMainTraceRecord([embedding, count]), null);
+        const detail = normalizeTraceRecord(ollama, 2, 3);
+        assert.equal(detail.provider, 'Ollama');
+        assert.equal(detail.messages[0].text, 'FLAT NATIVE PROMPT');
+        assert.ok(requestDiffMarkdown(ollama.request.body, 'messages').includes('FLAT NATIVE PROMPT'));
+        assert.equal(requestDiffMarkdown(ollama.request.body, 'system'), '');
+        assert.equal(ollama.request.body.prompt, 'FLAT NATIVE PROMPT');
+        """
+    )
+
+
 def capture_records(version: str, agent="claude-code", variant="non-official") -> list[dict]:
     path = ROOT / "captures" / agent / version / "variants" / variant / "trace.jsonl"
     if not path.exists():

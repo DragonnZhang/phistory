@@ -106,6 +106,14 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
 
 def _submit_task(context: CaptureRunContext, api: LocalApi, log) -> None:
     match context.target.agent.id:
+        case "web3gpt":
+            api.request(
+                "/api/chat",
+                {
+                    "agentId": "agent_web3gpt",
+                    "messages": [{"id": "phistory-user", "role": "user", "parts": [{"type": "text", "text": PROMPT}]}],
+                },
+            )
         case "hive":
             session = api.request("/api/sessions", {"initial_phase": "independent", "initial_prompt": PROMPT})
             api.request(f"/api/sessions/{session['session_id']}/chat", {"message": PROMPT})

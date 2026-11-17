@@ -248,3 +248,40 @@ SELF_OPERATING_TASK = """
 import os
 os.execvp("xvfb-run", ["xvfb-run", "-a", "-s", "-screen 0 1280x800x24", "operate", "--prompt", "Reply with one short sentence."])
 """
+
+DEVOPSGPT_TASK = """
+import json
+import os
+import sys
+from pathlib import Path
+import yaml
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+sys.path.insert(0, str(source / "backend"))
+config = yaml.safe_load((source / "env.yaml.tpl").read_text())
+for field in ("GPT_KEYS", "GPT_KEYS_BACKUP"):
+    providers = json.loads(config[field])
+    provider = providers["openai"]
+    provider["keys"] = [{os.environ["OPENAI_API_KEY"]: {"count": 0, "timestamp": 0}}]
+    config[field] = json.dumps({"openai": provider})
+(source / "env.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
+from app.pkgs.prompt.code_basic import CodeBasic
+print(CodeBasic().aiReviewCode(0, "Reply with one short sentence.", "print('hello')\\n", "main.py"))
+"""
+
+CRITIC_TRAINING_TASK = """
+import os
+from pathlib import Path
+import yaml
+from minisweagent.agents.default_prm import DefaultPRMAgent
+from minisweagent.environments.local import LocalEnvironment
+from minisweagent.models.litellm_model import LitellmModel
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"]) / "mini-swe-agent"
+config = yaml.safe_load((source / "src/minisweagent/config/default.yaml").read_text())["agent"]
+config.update(step_limit=1, use_prm=True)
+model = LitellmModel(model_name="gpt-4.1", model_kwargs={
+    "custom_llm_provider": "openai", "api_base": "https://api.openai.com/v1",
+    "api_key": os.environ["OPENAI_API_KEY"],
+})
+print(DefaultPRMAgent(model, LocalEnvironment(cwd=str(Path.cwd())), **config).run("Reply with one short sentence."))
+"""

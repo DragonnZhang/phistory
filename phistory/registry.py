@@ -8,10 +8,12 @@ from phistory.task_entries import (
     BAMBOOAI_TASK,
     BROWSER_USE_PREFETCH,
     COWAGENT_TASK,
+    CRITIC_TRAINING_TASK,
     CTXAGENT_PREFETCH,
     CTXAGENT_TASK,
     DEEPANALYZE_TASK,
     DEERFLOW_TASK,
+    DEVOPSGPT_TASK,
     GPT_RESEARCHER_TASK,
     INTENTKIT_DATABASE_SETUP,
     MINIAGI_TASK,
@@ -1753,6 +1755,163 @@ INKOS = AgentSpec(
 )
 
 
+DEVOPSGPT = AgentSpec(
+    id="devopsgpt",
+    display_name="DevOpsGPT",
+    package="kuafuai/DevOpsGPT",
+    source="github-source",
+    github_source_install="requirements",
+    source_state="isolated",
+    python_runtime="3.11",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=180,
+    latest_variant_ids=("code-review",),
+    default_variant=_default(
+        capture_unavailable="The web app requires application setup; use the native CodeBasic review API."
+    ),
+    variants=(
+        _variant(
+            "code-review",
+            "Native CodeBasic review API",
+            ("--no-yolo", "--", "-c", DEVOPSGPT_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "CodeBasic.aiReviewCode",
+                "config": "complete official env template / OpenAI only",
+                "model": "native gpt-3.5-turbo-16k-0613",
+                "protocol": "native user-role review text",
+            },
+        ),
+    ),
+)
+
+CRITIC_TRAINING = AgentSpec(
+    id="critic-training",
+    display_name="Critic-training",
+    package="shubhamrgandhi/critic-training",
+    source="github-source",
+    source_project="mini-swe-agent",
+    source_state="readonly",
+    python_runtime="3.11",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    track_latest=False,
+    latest_variant_ids=("prm-actor-initial",),
+    default_variant=_default(
+        capture_unavailable="The full critic pipeline needs trained model services; use the fork's native initial PRM actor."
+    ),
+    variants=(
+        _variant(
+            "prm-actor-initial",
+            "Native PRM fork · initial configured actor",
+            ("--no-yolo", "--", "-c", CRITIC_TRAINING_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "DefaultPRMAgent.run",
+                "model": "configured OpenAI gpt-4.1",
+                "step_limit": "1",
+                "scope": "initial actor before interval-five critic",
+                "protocol": "native bash text grammar",
+            },
+        ),
+    ),
+)
+
+EMPRYO = AgentSpec(
+    id="empryo",
+    display_name="Empryo / public SoulForge v2",
+    package="proxysoul/Empryo",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="readonly",
+    source_build_commands=(("bun", "install", "--frozen-lockfile"),),
+    tap_client="bun",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    track_latest=False,
+    latest_variant_ids=("public-soulforge-v2",),
+    default_variant=_default(
+        capture_unavailable="The fresh model is unconfigured and Empryo v3 is private; use the public SoulForge v2 configured lane."
+    ),
+    variants=(
+        _variant(
+            "public-soulforge-v2",
+            "Public SoulForge v2 · native headless task",
+            (
+                "--no-yolo",
+                "--",
+                "run",
+                "$PHISTORY_SOURCE_ROOT/src/boot.tsx",
+                "--headless",
+                "--events",
+                "--model",
+                "openai/gpt-4.1",
+                "--max-steps",
+                "1",
+                "--timeout",
+                "60000",
+                "Reply with one short sentence.",
+            ),
+            driver="first-request",
+            dimensions={
+                "entry": "native public headless CLI",
+                "model": "configured OpenAI gpt-4.1",
+                "mode": "native default",
+                "repomap": "native enabled",
+                "scope": "public SoulForge v2 only",
+            },
+        ),
+    ),
+)
+
+WEB3GPT = AgentSpec(
+    id="web3gpt",
+    display_name="Web3GPT",
+    package="markeljan/web3gpt",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="isolated",
+    source_build_commands=(("bun", "install", "--frozen-lockfile"),),
+    tap_client="bun",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key", "AUTH_SECRET": "phistory-owned-local-auth-secret-123456789"},
+    tap_mode="forward",
+    capture_min_tools=3,
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("builtin-agent-api",),
+    default_variant=_default(capture_unavailable="Use the real local app HTTP task route for its built-in agent."),
+    variants=(
+        _variant(
+            "builtin-agent-api",
+            "Native anonymous built-in agent API",
+            (
+                "--no-yolo",
+                "--",
+                "run",
+                "--cwd",
+                "$PHISTORY_SOURCE_ROOT",
+                "dev",
+                "--hostname",
+                "127.0.0.1",
+                "--port",
+                "$PHISTORY_SERVER_PORT",
+            ),
+            driver="local-task-api",
+            dimensions={
+                "entry": "POST /api/chat / agent_web3gpt",
+                "model": "native gpt-6.1-terra / medium",
+                "auth": "native anonymous local route",
+                "redis": "native fail-open missing Redis; raw warning preserved",
+                "wallet": "no transaction submitted",
+            },
+        ),
+    ),
+)
+
 ATOMIC_AGENT = AgentSpec(
     id="atomic-agent",
     display_name="Atomic Agent",
@@ -2484,6 +2643,10 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        DEVOPSGPT,
+        CRITIC_TRAINING,
+        EMPRYO,
+        WEB3GPT,
         ATOMIC_AGENT,
         SELF_OPERATING_COMPUTER,
         HIVE,

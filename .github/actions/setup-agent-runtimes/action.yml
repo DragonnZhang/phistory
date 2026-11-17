@@ -7,6 +7,10 @@ inputs:
 runs:
   using: composite
   steps:
+    - uses: oven-sh/setup-bun@v2
+      if: contains(format(',{0},', inputs.agents), ',empryo,') || contains(format(',{0},', inputs.agents), ',web3gpt,')
+      with:
+        bun-version: latest
     - name: Prepare native audio runtime
       if: contains(format(',{0},', inputs.agents), ',agenticseek,')
       shell: bash
