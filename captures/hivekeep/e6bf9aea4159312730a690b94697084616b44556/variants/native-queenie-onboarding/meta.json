@@ -1,0 +1,96 @@
+{
+  "agent_id": "hivekeep",
+  "agent": "Hivekeep",
+  "package": "MarlBurroW/hivekeep",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": [
+      [
+        "bun",
+        "install",
+        "--frozen-lockfile"
+      ]
+    ]
+  },
+  "version": "e6bf9aea4159312730a690b94697084616b44556",
+  "variant": {
+    "id": "native-queenie-onboarding",
+    "label": "Native Queenie / compatible OpenRouter catalogue",
+    "dimensions": {
+      "entry": "real server, BetterAuth signup, profile, provider and configurator",
+      "provider": "native openai-compatible connector",
+      "models": "native model selection from unmodified actual public OpenRouter catalogue",
+      "transport": "owned local gateway: live public metadata GET, model POST only to capture-only tap",
+      "tools": "complete native configurator toolbox",
+      "scope": "initial native Queenie onboarding turn"
+    }
+  },
+  "requested": {
+    "entry": "real server, BetterAuth signup, profile, provider and configurator",
+    "provider": "native openai-compatible connector",
+    "models": "native model selection from unmodified actual public OpenRouter catalogue",
+    "transport": "owned local gateway: live public metadata GET, model POST only to capture-only tap",
+    "tools": "complete native configurator toolbox",
+    "scope": "initial native Queenie onboarding turn"
+  },
+  "observed": {
+    "model": "qwen/qwen4-max",
+    "tool_count": 76
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [
+      "You are Queenie:"
+    ],
+    "required_user_text": [
+      "[A new user just finished initial setup and opened the onboarding chat."
+    ]
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/MarlBurroW/hivekeep/archive/e6bf9aea4159312730a690b94697084616b44556.tar.gz",
+  "binary_version": "e6bf9aea4159312730a690b94697084616b44556",
+  "captured_at": "2026-11-17T17:25:21.436262+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44136474089",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44136474089"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 16.77,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--port",
+    "42593",
+    "--",
+    "-c",
+    "\nimport os\nfrom pathlib import Path\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nos.chdir(source)\nbase = \"http://127.0.0.1:\" + os.environ[\"PHISTORY_SERVER_PORT\"]\nos.environ.update(HIVEKEEP_DATA_DIR=str(Path(os.environ[\"PHISTORY_HOME\"]) / \"hivekeep-data\"), HOST=\"127.0.0.1\", PORT=os.environ[\"PHISTORY_SERVER_PORT\"], PUBLIC_URL=base, BETTER_AUTH_BASE_URL=base)\nos.execvp(\"bun\", [\"bun\", \"src/server/index.ts\"])\n"
+  ]
+}
