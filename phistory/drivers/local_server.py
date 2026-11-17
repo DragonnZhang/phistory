@@ -19,6 +19,7 @@ def has_prompt_request(
     minimum_tools: int = 0,
     required_system_text: tuple[str, ...] = (),
     required_user_text: tuple[str, ...] = (),
+    required_tool_name_fragments: tuple[str, ...] = (),
 ) -> bool:
     for trace in tap_output_dir.glob("*/trace_*.jsonl"):
         try:
@@ -43,6 +44,7 @@ def has_prompt_request(
                     minimum_tools=minimum_tools,
                     required_system_text=required_system_text,
                     required_user_text=required_user_text,
+                    required_tool_name_fragments=required_tool_name_fragments,
                 ):
                     continue
                 if snapshot.system_prompt or snapshot.developer_prompt or snapshot.user_message:
@@ -59,6 +61,7 @@ def wait_for_prompt(
     minimum_tools: int = 0,
     required_system_text: tuple[str, ...] = (),
     required_user_text: tuple[str, ...] = (),
+    required_tool_name_fragments: tuple[str, ...] = (),
 ) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -68,6 +71,7 @@ def wait_for_prompt(
             minimum_tools=minimum_tools,
             required_system_text=required_system_text,
             required_user_text=required_user_text,
+            required_tool_name_fragments=required_tool_name_fragments,
         ):
             return
         if process.poll() is not None:

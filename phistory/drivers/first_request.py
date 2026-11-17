@@ -19,7 +19,7 @@ def run_first_request(context: CaptureRunContext) -> CaptureExecution:
         process = subprocess.Popen(
             argv,
             cwd=context.work_dir,
-            env=context.env,
+            env={**context.env, "PHISTORY_CAPTURE_ARTIFACT_DIR": str(context.prompt_path.parent)},
             stdout=log,
             stderr=subprocess.STDOUT,
             stdin=subprocess.PIPE if context.target.variant.stdin_text is not None else subprocess.DEVNULL,
@@ -40,6 +40,7 @@ def run_first_request(context: CaptureRunContext) -> CaptureExecution:
                 minimum_tools=context.target.agent.capture_min_tools,
                 required_system_text=context.target.agent.required_system_text,
                 required_user_text=context.target.agent.required_user_text,
+                required_tool_name_fragments=context.target.agent.required_tool_name_fragments,
             )
         except Exception as exc:
             failure = exc

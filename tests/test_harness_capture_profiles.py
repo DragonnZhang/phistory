@@ -1,15 +1,30 @@
+import ast
 import json
 import tomllib
 from pathlib import Path
 
 from phistory.capture import _capture_env
+from phistory.drivers.common import upstream_client_args
 from phistory.models import CaptureTarget, VersionInfo
-from phistory.registry import get_agent, parse_agent_ids
+from phistory.registry import AGENTS, get_agent, parse_agent_ids
 
 
 def target(agent_id, tmp_path):
     agent = get_agent(agent_id)
     return CaptureTarget(agent, VersionInfo("test"), agent.default_variant, tmp_path / "captures")
+
+
+def test_native_python_bootstraps_and_task_entries_are_valid_python():
+    for agent in AGENTS.values():
+        if agent.tap_client != "python":
+            continue
+        commands = [
+            agent.bootstrap_args,
+            *(upstream_client_args(variant.run_args) for variant in agent.capture_variants),
+        ]
+        for arguments in commands:
+            if len(arguments) > 1 and arguments[0] == "-c":
+                ast.parse(arguments[1], filename=f"{agent.id}:native Python entry")
 
 
 def test_unverified_profiles_require_explicit_selection():

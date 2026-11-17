@@ -349,7 +349,7 @@ from pathlib import Path
 print("Native host provenance:", os.environ["PHISTORY_NATIVE_HOST"], flush=True)
 launcher = str(Path(os.environ["PHISTORY_HOME"]) / ".agentlas/os-bin/agentlas-os")
 subprocess.run([launcher, "host", "status", "claude"], check=False)
-os.execv(launcher, [launcher, "host", "session", "claude", "--", "-p", "/agentlas-os-core:agentlas Reply with one short sentence.", "--output-format", "json"])
+os.execv(launcher, [launcher, "host", "session", "claude", "--", "-p", "/agentlas-os-core:agentlas Reply with one short sentence.", "--verbose", "--output-format", "stream-json", "--debug-file", str(Path(os.environ["PHISTORY_CAPTURE_ARTIFACT_DIR"]) / "native-host-debug.log")])
 """
 
 LONG_HORIZON_TASK = """
@@ -394,7 +394,7 @@ entry = state / "entry.c"
 entry.write_text('#include "task.h"\nint main(void) { return (int)phistory_task(); }\n')
 with c_file.open("w") as output:
     subprocess.run([str(source / "coax/bin/coax"), "c", str(driver), "--library", "--header", str(header)], cwd=source, stdout=output, check=True)
-subprocess.run(["cc", "-std=c11", "-O1", "-g", "-o", str(state / "task"), str(entry), str(c_file), str(source / "coax/platform/process-native.c"), "-lm"], check=True)
+subprocess.run(["cc", "-std=c11", "-O1", "-g", "-o", str(state / "task"), str(entry), str(c_file), str(source / "coax/platform/process-native.c"), str(source / "coax/platform/store-file-native.c"), "-lm"], check=True)
 '''
 
 OPENAGENTS_TASK = """
@@ -414,13 +414,18 @@ os.environ.update(HIVEKEEP_DATA_DIR=str(Path(os.environ["PHISTORY_HOME"]) / "hiv
 os.execvp("bun", ["bun", "src/server/index.ts"])
 """
 
-AGENTLINK_SETUP = """
+AGENTLINK_SETUP = r"""
+import json
 import os
 import subprocess
 from pathlib import Path
 source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
 env = dict(os.environ, AGENTLINK_HOME=str(Path(os.environ["PHISTORY_HOME"]) / ".agentlink"))
 subprocess.run(["node", str(source / "apps/cli/dist/agentlink.js"), "--project", os.getcwd(), "config", "model", "openai/gpt-5.6-sol"], env=env, check=True)
+config_path = Path(env["AGENTLINK_HOME"]) / "cli/config.json"
+config = json.loads(config_path.read_text())
+config.update(codexModels=[], codexUseWebSocket=False)
+config_path.write_text(json.dumps(config) + "\n")
 """
 
 AGENTLINK_TASK = """
@@ -452,7 +457,7 @@ import os
 import subprocess
 from pathlib import Path
 source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
-env = dict(os.environ, STORAGE_DIR=str(source / "server/storage"), NODE_ENV="production", SERVER_PORT=os.environ["PHISTORY_SERVER_PORT"], COLLECTOR_PORT=os.environ["PHISTORY_COLLECTOR_PORT"])
+env = dict(os.environ, STORAGE_DIR=str(source / "server/storage"), NODE_ENV="production", SERVER_PORT=os.environ["PHISTORY_SERVER_PORT"], COLLECTOR_PORT=os.environ["PHISTORY_COLLECTOR_PORT"], OPENAI_BASE_URL="http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "/v1")
 processes = []
 try:
     for name in ["collector", "server"]:

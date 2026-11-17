@@ -147,12 +147,14 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         "minimum_tools": context.target.agent.capture_min_tools,
         "required_system_text": context.target.agent.required_system_text,
         "required_user_text": context.target.agent.required_user_text,
+        "required_tool_name_fragments": context.target.agent.required_tool_name_fragments,
     }
     proxy_port = 0
-    if context.target.agent.id == "hivekeep":
+    if context.target.agent.id in ("hivekeep", "anything-llm"):
         with socket.socket() as check:
             check.bind(("127.0.0.1", 0))
             proxy_port = check.getsockname()[1]
+        env["PHISTORY_TAP_PORT"] = str(proxy_port)
     argv = tap_command(
         context.target,
         context.prompt_path,
@@ -169,7 +171,7 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
             resources.enter_context(
                 PublicCatalogGateway(proxy_port, context.prompt_path.parent / "public-model-catalog")
             )
-            if proxy_port
+            if context.target.agent.id == "hivekeep"
             else None
         )
         process = subprocess.Popen(

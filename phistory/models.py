@@ -116,6 +116,7 @@ class AgentSpec:
     binary_release_tag: str = "{version}"
     home_profile: HomeProfile = "none"
     tap_mode: TapMode = "auto"
+    tap_target: str | None = None
     extra_env: dict[str, str] = field(default_factory=dict)
     recorded_env: tuple[str, ...] = ()
     inherited_env: dict[str, str] = field(default_factory=dict)
@@ -147,11 +148,13 @@ class AgentSpec:
     capture_min_tools: int = 0
     required_system_text: tuple[str, ...] = ()
     required_user_text: tuple[str, ...] = ()
+    required_tool_name_fragments: tuple[str, ...] = ()
     native_host: tuple[str, str] | None = None
 
     def __post_init__(self) -> None:
         if self.capture_min_tools < 0 or any(
-            not text.strip() for text in (*self.required_system_text, *self.required_user_text)
+            not text.strip()
+            for text in (*self.required_system_text, *self.required_user_text, *self.required_tool_name_fragments)
         ):
             raise ValueError(f"{self.id}: primary request criteria must be meaningful")
         if self.capture_timeout_seconds < 1:

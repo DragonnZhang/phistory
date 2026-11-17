@@ -191,13 +191,19 @@ def capture_target(
         if inherited_env:
             _sanitize_trace(working_target.trace_path, inherited_env.values())
         selected_snapshot = None
-        if target.agent.capture_min_tools or target.agent.required_system_text or target.agent.required_user_text:
+        if (
+            target.agent.capture_min_tools
+            or target.agent.required_system_text
+            or target.agent.required_user_text
+            or target.agent.required_tool_name_fragments
+        ):
             try:
                 selected_snapshot = _primary_snapshot(
                     working_target.trace_path,
                     minimum_tools=target.agent.capture_min_tools,
                     required_system_text=target.agent.required_system_text,
                     required_user_text=target.agent.required_user_text,
+                    required_tool_name_fragments=target.agent.required_tool_name_fragments,
                 )
             except ValueError as exc:
                 raise RuntimeError(
@@ -269,6 +275,7 @@ def capture_target(
                             "minimum_tools": target.agent.capture_min_tools,
                             "required_system_text": list(target.agent.required_system_text),
                             "required_user_text": list(target.agent.required_user_text),
+                            "required_tool_name_fragments": list(target.agent.required_tool_name_fragments),
                         }
                     }
                     if selected_snapshot is not None
@@ -761,6 +768,7 @@ def _primary_snapshot(
     minimum_tools: int = 0,
     required_system_text: tuple[str, ...] = (),
     required_user_text: tuple[str, ...] = (),
+    required_tool_name_fragments: tuple[str, ...] = (),
 ) -> PromptSnapshot:
     candidates = []
     for record in _trace_records(trace_path):
@@ -773,6 +781,7 @@ def _primary_snapshot(
             minimum_tools=minimum_tools,
             required_system_text=required_system_text,
             required_user_text=required_user_text,
+            required_tool_name_fragments=required_tool_name_fragments,
         ):
             candidates.append(record)
     return snapshot_from_records(candidates)

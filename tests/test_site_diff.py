@@ -76,6 +76,10 @@ def test_primary_request_filters_and_ollama_flat_prompt_keep_raw_evidence():
         assert.equal(selectMainTraceRecord([helper], userSelection), null);
         const responses = {request: {path: '/v1/responses', body: {model: 'actor', input: 'FLAT NATIVE PROMPT'}}};
         assert.equal(selectMainTraceRecord([responses], userSelection).record, responses);
+        const toolSelection = {required_tool_name_fragments: ['native_tool']};
+        helper.request.body.tools = [{name: 'DeferredToolPlaceholder', description: 'native_tool', input_schema: {}}];
+        assert.equal(selectMainTraceRecord([helper], toolSelection), null);
+        assert.equal(selectMainTraceRecord([helper, actor], toolSelection).record, actor);
         """
     )
 

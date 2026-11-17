@@ -1862,7 +1862,8 @@ ANYTHINGLLM = AgentSpec(
     bootstrap_args=("-c", ANYTHINGLLM_SETUP),
     required_system_text=("Given the following conversation, relevant context, and a follow up question,",),
     capture_min_tools=1,
-    tap_mode="forward",
+    tap_mode="reverse",
+    tap_target="https://api.openai.com",
     track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("native-workspace-agent",),
@@ -1914,6 +1915,7 @@ AGENTLINK = AgentSpec(
             dimensions={
                 "entry": "source-built CLI TUI / native WorkspaceHost",
                 "model": "configured direct OpenAI gpt-5.6-sol",
+                "provider_config": "native API-only model inventory; HTTP transport; no Codex OAuth lane",
                 "terminal": "owned POSIX PTY 100x30; actual Enter after native ready prompt",
                 "scope": "initial CLI task; default Codex OAuth not claimed",
             },
@@ -2006,11 +2008,24 @@ AGENTLAS_OS = AgentSpec(
     source_state="readonly",
     tap_client="python",
     fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
-    extra_env={"HEPHAESTUS_AUTO_UPDATE": "0", "HEPHAESTUS_UPDATE_CHECK": "0"},
-    recorded_env=("HEPHAESTUS_AUTO_UPDATE", "HEPHAESTUS_UPDATE_CHECK"),
+    extra_env={
+        "HEPHAESTUS_AUTO_UPDATE": "0",
+        "HEPHAESTUS_UPDATE_CHECK": "0",
+        "ENABLE_TOOL_SEARCH": "false",
+        "MCP_CONNECTION_NONBLOCKING": "0",
+        "MCP_CONNECT_TIMEOUT_MS": "60000",
+    },
+    recorded_env=(
+        "HEPHAESTUS_AUTO_UPDATE",
+        "HEPHAESTUS_UPDATE_CHECK",
+        "ENABLE_TOOL_SEARCH",
+        "MCP_CONNECTION_NONBLOCKING",
+        "MCP_CONNECT_TIMEOUT_MS",
+    ),
     native_host=("@anthropic-ai/claude-code", "claude"),
     capture_min_tools=1,
     bootstrap_args=("-c", AGENTLAS_SETUP),
+    required_tool_name_fragments=("agentlas_tool_search", "hephaestus_search", "preflight_work_order"),
     required_user_text=(
         "# Agentlas Core & Unified Command System",
         "Single entry point for every Agentlas subsystem and capability.",
@@ -2018,14 +2033,14 @@ AGENTLAS_OS = AgentSpec(
     tap_mode="forward",
     track_latest=False,
     capture_timeout_seconds=300,
-    latest_variant_ids=("claude-core-session",),
+    latest_variant_ids=("claude-core-ready-inline",),
     default_variant=_default(
         capture_unavailable="The outer runtime needs a real host and verified standalone generation; use its native Claude core host-session lane."
     ),
     variants=(
         _variant(
-            "claude-core-session",
-            "Native verified standalone core / real Claude host",
+            "claude-core-ready-inline",
+            "Native core / complete inline MCP tools after startup",
             ("--no-yolo", "--", "-c", AGENTLAS_TASK),
             driver="first-request",
             dimensions={
@@ -2033,6 +2048,7 @@ AGENTLAS_OS = AgentSpec(
                 "host": "actual Claude Code / host_runtime provenance",
                 "activation": "/agentlas-os-core:agentlas native skill body required",
                 "features": "native optional defaults; memory retained",
+                "tool_loading": "native MCP startup wait and inline schemas; no tool registration suppressed",
                 "scope": "standalone core activation; no desktop/One workflow claim",
             },
         ),

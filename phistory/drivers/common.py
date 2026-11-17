@@ -31,6 +31,7 @@ def tap_command(
         "--output-dir",
         str(tap_output_dir),
         *_tap_mode_args(target),
+        *(["--target", target.agent.tap_target] if target.agent.tap_target else []),
         *(["--port", str(proxy_port)] if proxy_port else []),
         "--",
         *[_expand_capture_path(arg, run_env) for arg in upstream_client_args(target.variant.run_args)],

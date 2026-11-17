@@ -9,10 +9,12 @@ def matches_prompt_surface(
     minimum_tools: int = 0,
     required_system_text: tuple[str, ...] = (),
     required_user_text: tuple[str, ...] = (),
+    required_tool_name_fragments: tuple[str, ...] = (),
 ) -> bool:
     instructions = snapshot.system_prompt + "\n" + snapshot.developer_prompt
     return (
         len(snapshot.tools) >= minimum_tools
         and all(marker in instructions for marker in required_system_text)
         and all(marker in snapshot.user_message for marker in required_user_text)
+        and all(any(fragment in tool.name for tool in snapshot.tools) for fragment in required_tool_name_fragments)
     )

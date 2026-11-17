@@ -2451,7 +2451,9 @@ function selectMainTraceRecord(records, selection = {}) {
   let best = null;
   records.forEach((record, index) => {
     const body = requestBody(record);
-    if (normalizeTools(body).length < (selection?.minimum_tools || 0)) return;
+    const tools = normalizeTools(body);
+    if (tools.length < (selection?.minimum_tools || 0)) return;
+    if (!(selection?.required_tool_name_fragments || []).every(fragment => tools.some(tool => tool.name.includes(fragment)))) return;
     const prompts = normalizePromptBlocks(inferProvider(record.request?.path || '', body), body);
     const instructions = [...prompts.system, ...prompts.developer].map(block => block.text).join('\n');
     if (!(selection?.required_system_text || []).every(marker => instructions.includes(marker))) return;

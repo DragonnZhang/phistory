@@ -77,6 +77,7 @@ def run_interactive_pty(context: CaptureRunContext) -> CaptureExecution:
                 minimum_tools=agent.capture_min_tools,
                 required_system_text=agent.required_system_text,
                 required_user_text=agent.required_user_text,
+                required_tool_name_fragments=agent.required_tool_name_fragments,
             ):
                 break
             if process.poll() is not None:
