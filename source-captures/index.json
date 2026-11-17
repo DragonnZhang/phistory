@@ -1861,7 +1861,7 @@
           "path": "source-captures/dark-moon/347289c26d83ef2f892a"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "dark-moon"
     },
     {
