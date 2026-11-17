@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "agentlas-os",
+  "agent": "Agentlas-OS",
+  "repository": "agentlas-ai/Agentlas-OS",
+  "snapshot": "d292fdca39deab201006",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:30:21.539782+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44074505125",
+      "sha": "203bc31b10d62dac0658b1233be4eec19a67beee"
+    }
+  },
+  "files": [
+    {
+      "commit": "33e256b950210d07de716714fedb38ba1aa76b20",
+      "path": "agentlas_cloud/host_session.py",
+      "sha256": "2b981751ff937df80605bd4dbf85b7cc1853512198237e81d9fed3cb601b12c2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/33e256b950210d07de716714fedb38ba1aa76b20/agentlas_cloud/host_session.py",
+      "url": "https://github.com/agentlas-ai/Agentlas-OS/blob/33e256b950210d07de716714fedb38ba1aa76b20/agentlas_cloud/host_session.py"
+    },
+    {
+      "commit": "33e256b950210d07de716714fedb38ba1aa76b20",
+      "path": "agentlas_cloud/prompt_composition.py",
+      "sha256": "237390737b9c5cb59ce048978e4c62b3f5406ba5976364187dc691f1f8cf80be",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/33e256b950210d07de716714fedb38ba1aa76b20/agentlas_cloud/prompt_composition.py",
+      "url": "https://github.com/agentlas-ai/Agentlas-OS/blob/33e256b950210d07de716714fedb38ba1aa76b20/agentlas_cloud/prompt_composition.py"
+    }
+  ]
+}
