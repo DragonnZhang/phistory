@@ -1,0 +1,74 @@
+{
+  "agent_id": "agenticseek",
+  "agent": "AgenticSeek",
+  "package": "Fosowl/agenticSeek",
+  "python_runtime": "3.11",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "build_commands": []
+  },
+  "version": "8f705be8ca625e9549389f188b1e37f700d3ed34",
+  "variant": {
+    "id": "coder-openai",
+    "label": "Configured OpenAI · Jarvis coder API",
+    "dimensions": {
+      "entry": "CoderAgent.process",
+      "model": "gpt-4.1",
+      "persona": "Jarvis",
+      "tools": "native fenced text protocol"
+    }
+  },
+  "requested": {
+    "entry": "CoderAgent.process",
+    "model": "gpt-4.1",
+    "persona": "Jarvis",
+    "tools": "native fenced text protocol"
+  },
+  "observed": {
+    "model": "gpt-4.1"
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/Fosowl/agenticSeek/archive/8f705be8ca625e9549389f188b1e37f700d3ed34.tar.gz",
+  "binary_version": "8f705be8ca625e9549389f188b1e37f700d3ed34",
+  "captured_at": "2026-11-17T14:32:11.304912+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44103638783",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44103638783"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 13.119,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport asyncio\nimport os\nos.environ[\"AGENT_RUNTIME_DIR\"] = os.path.join(os.environ[\"PHISTORY_HOME\"], \"agenticseek-runtime\")\nos.environ[\"WORK_DIR\"] = os.path.join(os.environ[\"PHISTORY_HOME\"], \"work\")\nos.chdir(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nfrom sources.llm_provider import Provider\nfrom sources.agents.code_agent import CoderAgent\nprovider = Provider(\"openai\", \"gpt-4.1\", is_local=False)\nagent = CoderAgent(\"coder\", \"prompts/jarvis/coder_agent.txt\", provider, verbose=False)\nasyncio.run(agent.process(\"Reply with one short sentence.\", None))\n"
+  ],
+  "capture_environment": {
+    "PULSE_SERVER": "unix:/tmp/phistory-pulse.sock"
+  }
+}
