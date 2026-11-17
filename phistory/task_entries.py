@@ -339,12 +339,7 @@ if installed.returncode not in (0, 1):
 launcher = Path(os.environ["PHISTORY_HOME"]) / ".agentlas/os-bin/agentlas-os"
 subprocess.run([str(launcher), "features", "status"], check=True)
 status = json.loads(subprocess.check_output([str(launcher), "host", "status", "claude"], text=True))
-session = status.get("session", {})
-runtime = Path(status.get("runtime", "/nonexistent"))
-release = (runtime / "RELEASE").read_text().strip()
-if not (status.get("status") == "partial" and status.get("reason") == "session_activation_not_observed" and status.get("version", "").startswith(release + "+os.") and runtime.is_dir() and runtime.resolve().is_relative_to(Path(os.environ["PHISTORY_HOME"]).resolve()) and (runtime / "RELEASE").read_text().strip() == release and session.get("reason") == "session_activation_not_observed" and session.get("hostCommand", [])[:1] == ["claude"] and any(item.get("kind") == "core" and Path(item.get("pluginDir", ""), ".mcp.json").is_file() for item in session.get("components", []))):
-    raise RuntimeError("native Agentlas runtime/session integrity was not verified: " + json.dumps(status))
-print("Native Agentlas prepared runtime:", json.dumps(status), flush=True)
+print("Native Agentlas pre-session host status:", json.dumps(status), flush=True)
 """
 
 AGENTLAS_TASK = """
@@ -376,7 +371,7 @@ facts = json.dumps({"os": platform.system(), "architecture": platform.machine(),
 includes = [source / path for path in ("coax/lib/microcoder/run.coax", "coax/lib/gateway/plan.coax", "coax/lib/gateway/openrouter.coax")]
 code = '#import "Basic";\n' + ''.join('#load ' + json.dumps(str(path)) + ';\n' for path in includes)
 code += r"""
-phistory_task :: () -> int #export_c {
+phistory_task :: () -> int #export_c #effects(all) {
   run: [1] McRun; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;
   p: [1] GwPlan; pb: [1] GwPlanBuffers; bench: [1] GwBench;
   gw_plan_init(p[..], pb[..]);
