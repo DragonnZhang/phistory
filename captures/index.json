@@ -472,6 +472,15 @@
       "snapshots": 1
     },
     {
+      "agent_id": "autogpt",
+      "agent": "AutoGPT",
+      "latest_version": "autogpt-platform-beta-v0.11.3",
+      "latest_published_at": "2026-11-15T08:59:39Z",
+      "latest_captured_at": "2026-11-17T18:32:02.351400+00:00",
+      "versions": 1,
+      "snapshots": 1
+    },
+    {
       "agent_id": "ufo",
       "agent": "UFO LinuxAgent",
       "latest_version": "eae3c0a8d168c47cb10df0652e293e092eda1078",
@@ -117015,6 +117024,30 @@
       "prompt": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/prompt.md",
       "trace": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/trace.jsonl",
       "meta": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/meta.json"
+    },
+    {
+      "agent_id": "autogpt",
+      "agent": "AutoGPT",
+      "version": "autogpt-platform-beta-v0.11.3",
+      "variant_id": "native-baseline-copilot",
+      "variant_label": "Native appliance / baseline Copilot",
+      "variant_dimensions": {
+        "entry": "official full appliance; native Better Auth and chat session",
+        "engine": "native baseline Copilot; server-owned per-flag configuration",
+        "model": "native standard OpenRouter model",
+        "tools": "complete native baseline registry and Graphiti memory",
+        "scope": "first ordinary Copilot request"
+      },
+      "observed": {
+        "model": "anthropic/claude-sonnet-5-5",
+        "tool_count": 20
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-15T08:59:39Z",
+      "captured_at": "2026-11-17T18:32:02.351400+00:00",
+      "prompt": "captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/prompt.md",
+      "trace": "captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/trace.jsonl",
+      "meta": "captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/meta.json"
     },
     {
       "agent_id": "ufo",
