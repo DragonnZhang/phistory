@@ -9,6 +9,7 @@ import struct
 import subprocess
 import termios
 import time
+from threading import Thread
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
 from phistory.drivers.common import tap_command
@@ -88,7 +89,19 @@ def run_interactive_pty(context: CaptureRunContext) -> CaptureExecution:
         failure = exc
     finally:
         if process is not None:
-            stop_process(process)
+            stopper = Thread(target=stop_process, args=(process,), daemon=True)
+            stopper.start()
+            while stopper.is_alive():
+                readable, _, _ = select.select([master], [], [], 0.1)
+                if readable:
+                    try:
+                        chunk = os.read(master, 65536)
+                    except OSError:
+                        break
+                    if not chunk:
+                        break
+                    output.extend(chunk)
+            stopper.join(timeout=25)
         os.close(master)
         if slave >= 0:
             os.close(slave)

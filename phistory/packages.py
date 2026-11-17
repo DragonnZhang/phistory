@@ -5,6 +5,7 @@ import json
 import os
 import re
 import shutil
+import sys
 import tarfile
 import tomllib
 import urllib.request
@@ -417,6 +418,8 @@ def installed_source_root(bin_dir: Path) -> Path:
 def _install_github_release(
     agent: AgentSpec, version: str, install_dir: Path, *, archive_url: str | None = None, editable: bool = False
 ) -> Path:
+    if agent.github_release_install == "docker":
+        return _install_release_image(agent, version, install_dir)
     bin_dir = install_dir / "bin"
     executable = bin_dir / agent_executable(agent)
     complete = install_dir / ".phistory-python-package-installed"
@@ -495,6 +498,36 @@ def _install_github_release(
     if not executable.exists():
         raise RuntimeError(f"GitHub release install did not create executable: {executable}")
     complete.touch()
+    return bin_dir
+
+
+def _install_release_image(agent: AgentSpec, version: str, install_dir: Path) -> Path:
+    if not agent.docker_image:
+        raise ValueError("Docker release installation requires an official image template")
+    release = version.removeprefix(agent.release_tag_prefix or "")
+    image = agent.docker_image.format(version=release)
+    run(["docker", "pull", image], timeout=INSTALL_TIMEOUT_SECONDS)
+    inspected = json.loads(run(["docker", "image", "inspect", image], timeout=30).stdout)
+    if len(inspected) != 1 or not inspected[0].get("Id"):
+        raise RuntimeError("official container image did not resolve to one immutable image")
+    bin_dir = install_dir / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    executable = bin_dir / "python"
+    if not executable.exists():
+        executable.symlink_to(sys.executable)
+    (install_dir / "docker-image.json").write_text(
+        json.dumps(
+            {
+                "requested_image": image,
+                "image_id": inspected[0]["Id"],
+                "repo_digests": inspected[0].get("RepoDigests", []),
+                "labels": inspected[0].get("Config", {}).get("Labels", {}),
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     return bin_dir
 
 
@@ -742,14 +775,24 @@ def _extract_archive(archive: Path, output: Path) -> None:
     suffixes = "".join(archive.suffixes)
     if suffixes.endswith((".tar.gz", ".tgz", ".tar.xz", ".txz", ".tar.bz2", ".tar")):
         with tarfile.open(archive) as tar:
-            for member in tar.getmembers():
+            members = tar.getmembers()
+            symlinks = {Path(member.name) for member in members if member.issym()}
+            for member in members:
                 target = (output / member.name).resolve()
                 if not target.is_relative_to(output.resolve()):
                     raise RuntimeError(f"unsafe archive path: {member.name}")
-            try:
-                tar.extractall(output, filter="data")
-            except TypeError:
-                tar.extractall(output)
+                if symlinks.intersection(Path(member.name).parents):
+                    raise RuntimeError(f"archive member traverses a symlink: {member.name}")
+
+            def inert_symlink_filter(member, destination):
+                try:
+                    return tarfile.data_filter(member, destination)
+                except (tarfile.AbsoluteLinkError, tarfile.LinkOutsideDestinationError):
+                    if member.issym():
+                        return member
+                    raise
+
+            tar.extractall(output, filter=inert_symlink_filter)
         return
     if suffixes.endswith(".zip"):
         with zipfile.ZipFile(archive) as zip_file:

@@ -12,6 +12,7 @@ from phistory.task_entries import (
     AGENTLINK_TASK,
     ANYTHINGLLM_SETUP,
     ANYTHINGLLM_TASK,
+    AUTOGPT_TASK,
     AUTOREF_TASK,
     BAMBOOAI_TASK,
     BROWSER_USE_PREFETCH,
@@ -19,6 +20,7 @@ from phistory.task_entries import (
     CRITIC_TRAINING_TASK,
     CTXAGENT_PREFETCH,
     CTXAGENT_TASK,
+    DARKMOON_TASK,
     DEEPANALYZE_TASK,
     DEERFLOW_TASK,
     DEVOPSGPT_TASK,
@@ -32,6 +34,7 @@ from phistory.task_entries import (
     OPENAGENTS_SETUP,
     OPENAGENTS_TASK,
     OUROBOROS_SERVER,
+    QM_TASK,
     QUORUM_TASK,
     SELF_OPERATING_TASK,
     UFO_SETUP,
@@ -1821,27 +1824,29 @@ LOOPTROOP = AgentSpec(
     fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
     native_host=("opencode-ai", "opencode"),
     required_user_text=(
-        "You are an expert product manager and technical interviewer.",
+        "You are an expert software architect performing codebase analysis for implementation planning.",
         "Reply with one short sentence.",
     ),
     tap_mode="forward",
     track_latest=False,
     capture_timeout_seconds=300,
-    latest_variant_ids=("native-ticket-interview",),
+    capture_min_tools=4,
+    required_tool_name_fragments=("glob", "grep", "question", "read"),
+    latest_variant_ids=("native-relevant-files-scan",),
     default_variant=_default(
         capture_unavailable="Requires a real daemon, project and OpenCode workflow; use the named native ticket interview surface."
     ),
     variants=(
         _variant(
-            "native-ticket-interview",
-            "Native ticket interview / managed OpenCode",
+            "native-relevant-files-scan",
+            "Native ticket initial file scan / managed OpenCode",
             ("--no-yolo", "--", "start", "--foreground", "--port", "$PHISTORY_SERVER_PORT"),
             driver="local-task-api",
             dimensions={
                 "entry": "real daemon, GitHub project and ticket start",
                 "host": "native managed OpenCode",
                 "model": "configured native two-model OpenAI council: gpt-4.1 and gpt-4.1-mini",
-                "scope": "first PROM1 interview, native read-only tool policy",
+                "scope": "first real PROM0 file scan, native read-only tools; later interview is not captured",
             },
         ),
     ),
@@ -1957,6 +1962,138 @@ VIBESDK = AgentSpec(
                 "provider": "native Google model through configured compatible gateway",
                 "runtime": "native Vite/Cloudflare with local bindings",
                 "scope": "General project first agentic request",
+            },
+        ),
+    ),
+)
+
+DARK_MOON = AgentSpec(
+    id="dark-moon",
+    display_name="DarkMoon",
+    package="ASCIT31/Dark-Moon",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="isolated",
+    source_build_commands=(
+        ("docker", "pull", "ascit/darkmoon@sha256:1d17e1d148f4e4f90f24a6904dd4d4117e8b845c573ebb7d2b00585cebe60326"),
+        (
+            "docker",
+            "pull",
+            "ascit/opencode-darkmoon@sha256:3ab36bc62953fb1ea5e1e8ee9c4ce78ee46faa3735932f9ce60b0c28385f713b",
+        ),
+    ),
+    tap_client="python",
+    fake_env={},
+    required_system_text=("You are a Strategic Vulnerability Assessment Orchestrator",),
+    required_tool_name_fragments=tuple(
+        "darkmoon_" + name
+        for name in (
+            "get_session",
+            "tokenize_prompt",
+            "health_check",
+            "check_tool",
+            "diagnose",
+            "execute_command",
+            "list_allowed_tools",
+            "list_workflows",
+            "run_workflow",
+            "dashboard_init_campaign",
+            "dashboard_push_finding",
+            "dashboard_push_infra_node",
+            "dashboard_finalize_campaign",
+        )
+    ),
+    capture_min_tools=13,
+    tap_mode="reverse",
+    tap_target="https://api.openai.com",
+    track_latest=False,
+    capture_timeout_seconds=1200,
+    latest_variant_ids=("native-compatible-pentest",),
+    default_variant=_default(
+        capture_unavailable="Use the complete native Docker/OpenCode/MCP stack with a configured compatible provider and explicit primary pentest role."
+    ),
+    variants=(
+        _variant(
+            "native-compatible-pentest",
+            "Native full stack / configured pentest role",
+            ("--no-yolo", "--", "-c", DARKMOON_TASK),
+            driver="local-task-api",
+            dimensions={
+                "entry": "native darkmoon.sh headless wrapper; complete two-container stack",
+                "role": "native pentest primary agent",
+                "model": "configured compatible openai/gpt-4.1",
+                "tools": "all 13 native MCP functions plus host tools",
+                "privacy": "actual persistent MCP tokenizer/socket; native plugins",
+                "provenance": "published image digests; main role/privacy/server file hashes verified",
+            },
+        ),
+    ),
+)
+
+AUTOGPT = AgentSpec(
+    id="autogpt",
+    display_name="AutoGPT",
+    package="Significant-Gravitas/AutoGPT",
+    source="github-release",
+    release_tag_prefix="autogpt-platform-beta-",
+    github_release_install="docker",
+    docker_image="significantgravitas/autogpt:{version}",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    required_system_text=("You are Otto, the AI assistant inside AutoGPT.",),
+    capture_min_tools=1,
+    tap_mode="reverse",
+    tap_target="https://openrouter.ai",
+    track_latest=False,
+    capture_timeout_seconds=1200,
+    latest_variant_ids=("native-baseline-copilot",),
+    default_variant=_default(
+        capture_unavailable="Use the named complete official appliance with its supported baseline Copilot configuration."
+    ),
+    variants=(
+        _variant(
+            "native-baseline-copilot",
+            "Native appliance / baseline Copilot",
+            ("--no-yolo", "--", "-c", AUTOGPT_TASK),
+            driver="local-task-api",
+            dimensions={
+                "entry": "official full appliance; native Better Auth and chat session",
+                "engine": "native baseline Copilot; server-owned per-flag configuration",
+                "model": "native standard OpenRouter model",
+                "tools": "complete native baseline registry and Graphiti memory",
+                "scope": "first ordinary Copilot request",
+            },
+        ),
+    ),
+)
+
+QM = AgentSpec(
+    id="qm",
+    display_name="QM",
+    package="@yc-software/qm",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    required_system_text=("a helpful org-wide assistant for",),
+    capture_min_tools=1,
+    tap_mode="reverse",
+    tap_target="https://api.openai.com",
+    track_latest=False,
+    capture_timeout_seconds=1200,
+    latest_variant_ids=("native-local-web-turn",),
+    default_variant=_default(
+        capture_unavailable="Use the named native Docker deployment with local sandbox and real signed admin login."
+    ),
+    variants=(
+        _variant(
+            "native-local-web-turn",
+            "Native local deployment / web turn",
+            ("--no-yolo", "--", "-c", QM_TASK),
+            driver="local-task-api",
+            dimensions={
+                "entry": "published native CLI; Docker/PostgreSQL/local sandbox and web task",
+                "provider": "configured native OpenAI default",
+                "authentication": "native admin-login one-use token and actual cookie",
+                "tools": "native complete sandbox toolbox; no browser execution",
             },
         ),
     ),
@@ -3266,6 +3403,9 @@ AGENTS: dict[str, AgentSpec] = {
         ANYTHINGLLM,
         LIBRECHAT,
         VIBESDK,
+        DARK_MOON,
+        AUTOGPT,
+        QM,
         AGENTLINK,
         UFO,
         AGENTLAS_OS,

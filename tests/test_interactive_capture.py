@@ -16,12 +16,17 @@ from phistory.registry import get_agent
 def test_interactive_capture_uses_real_terminal_waits_for_ready_and_reaps_child(tmp_path, monkeypatch):
     script = tmp_path / "fake_terminal.py"
     script.write_text("""
-import json, os, sys, termios, time, tty
+import json, os, signal, sys, termios, time, tty
 from pathlib import Path
 assert sys.stdin.isatty() and sys.stdout.isatty()
 assert tuple(os.get_terminal_size()) == (100, 30)
 assert os.tcgetpgrp(sys.stdin.fileno()) == os.getpgrp()
 tty.setraw(sys.stdin.fileno())
+def shutdown(signum, frame):
+    print("native UI restoration " * 15000, flush=True)
+    Path(sys.argv[2]).write_text("exported after draining native terminal output")
+    sys.exit(0)
+signal.signal(signal.SIGINT, shutdown)
 print("owned_pid=" + str(os.getpid()), flush=True)
 print("\\x1b[36mReady for task\\x1b[0m", flush=True)
 task = b""
@@ -42,7 +47,8 @@ time.sleep(60)
     target = CaptureTarget(agent, VersionInfo("test"), variant, tmp_path)
     trace = tmp_path / ".tap/session/trace_fake.jsonl"
     monkeypatch.setattr(
-        "phistory.drivers.interactive.tap_command", lambda *args: [sys.executable, str(script), str(trace)]
+        "phistory.drivers.interactive.tap_command",
+        lambda *args: [sys.executable, str(script), str(trace), str(tmp_path / "prompt.md")],
     )
     context = CaptureRunContext(
         target, tmp_path / "prompt.md", tmp_path / ".tap", tmp_path, {"PATH": os.environ["PATH"]}
@@ -50,6 +56,8 @@ time.sleep(60)
     result = run_interactive_pty(context)
     records = [json.loads(line) for line in trace.read_text().splitlines()]
     assert len(records) == 2 and records[1]["request"]["body"]["messages"][0]["content"] == PROMPT
+    assert (tmp_path / "prompt.md").read_text() == "exported after draining native terminal output"
+    assert result.result.returncode == 0
     pid = int(result.result.stdout.split("owned_pid=", 1)[1].split()[0])
     with pytest.raises(ProcessLookupError):
         os.kill(pid, 0)

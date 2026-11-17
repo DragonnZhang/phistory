@@ -146,6 +146,11 @@ def capture_target(
             TemporaryDirectory(prefix="phistory-work-", ignore_cleanup_errors=True) as work_dir,
         ):
             env = _capture_env(working_target, bin_dir, Path(home_dir), inherited_env=inherited_env)
+            image_manifest = bin_dir.parent / "docker-image.json"
+            if target.agent.github_release_install == "docker":
+                image = json.loads(image_manifest.read_text())
+                env["PHISTORY_DOCKER_IMAGE"] = image["image_id"]
+                shutil.copyfile(image_manifest, variant_dir / "container-image.json")
             env["PWD"] = str(Path(work_dir))
             if target.agent.bootstrap_args:
                 run(
@@ -271,6 +276,7 @@ def capture_target(
                 },
                 "requested": target.variant.dimensions,
                 "observed": _trace_observation(working_target.trace_path, snapshot=selected_snapshot),
+                **({"container_runtime": image} if target.agent.github_release_install == "docker" else {}),
                 **(
                     {"host_runtime": json.loads(env["PHISTORY_NATIVE_HOST"])} if env.get("PHISTORY_NATIVE_HOST") else {}
                 ),
@@ -1104,6 +1110,8 @@ def _binary_version(
     *,
     inherited_env: Mapping[str, str] | None = None,
 ) -> str | None:
+    if target.agent.github_release_install == "docker":
+        return target.version.version
     executable = bin_dir / agent_executable(target.agent)
     if not executable.exists():
         return None

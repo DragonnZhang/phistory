@@ -496,7 +496,7 @@ import secrets
 from pathlib import Path
 source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
 os.chdir(source)
-(source / ".dev.vars").write_text("ENVIRONMENT=dev\nJWT_SECRET=" + secrets.token_hex(32) + "\nGOOGLE_AI_STUDIO_API_KEY=" + os.environ["GOOGLE_AI_STUDIO_API_KEY"] + "\nCLOUDFLARE_AI_GATEWAY_URL=http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "\n")
+(source / ".dev.vars").write_text("ENVIRONMENT=dev\nCUSTOM_DOMAIN=localhost\nJWT_SECRET=" + secrets.token_hex(32) + "\nGOOGLE_AI_STUDIO_API_KEY=" + os.environ["GOOGLE_AI_STUDIO_API_KEY"] + "\nCLOUDFLARE_AI_GATEWAY_URL=http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "\n")
 config = (source / "vite.config.ts").read_text()
 anchor = "configPath: 'wrangler.jsonc',"
 if config.count(anchor) != 1:
@@ -504,6 +504,104 @@ if config.count(anchor) != 1:
 private_config = source / "vite.phistory.config.ts"
 private_config.write_text(config.replace(anchor, anchor + "\nremoteBindings: false,"))
 os.execvp("bun", ["bun", "run", "dev", "--host", "127.0.0.1", "--port", os.environ["PHISTORY_SERVER_PORT"], "--config", str(private_config)])
+"""
+
+AUTOGPT_TASK = """
+import json
+import os
+import subprocess
+import time
+from pathlib import Path
+name = os.environ["PHISTORY_DOCKER_APP_NAME"]
+port = os.environ["PHISTORY_SERVER_PORT"]
+gateway = "http://" + os.environ["PHISTORY_DOCKER_HOST"] + ":" + os.environ["PHISTORY_TAP_PORT"] + "/v1"
+values = {"AUTOGPT_PUBLIC_URL": "http://localhost:" + port, "AUTH_ALLOW_NEW_ACCOUNTS": "true", "AUTH_REQUIRE_EMAIL_VERIFICATION": "false", "CHAT_API_KEY": os.environ["OPENAI_API_KEY"], "OPENAI_API_KEY": os.environ["OPENAI_API_KEY"], "CHAT_USE_CLAUDE_AGENT_SDK": "false", "CHAT_USE_CLAUDE_CODE_SUBSCRIPTION": "false", "FORCE_FLAG_COPILOT_SDK": "false", "CHAT_USE_OPENROUTER": "true", "CHAT_USE_LOCAL": "false", "CHAT_BASE_URL": gateway, "CHAT_AUX_BASE_URL": gateway, "GRAPHITI_LLM_BASE_URL": gateway, "GRAPHITI_EMBEDDER_BASE_URL": gateway}
+args = ["docker", "run", "-d", "--name", name, "--shm-size", "2g", "--ulimit", "nofile=65536:65536", "-p", "127.0.0.1:" + port + ":3000"]
+for key, value in values.items():
+    args.extend(["-e", key + "=" + value])
+subprocess.run([*args, os.environ["PHISTORY_DOCKER_IMAGE"]], check=True)
+deadline = time.monotonic() + 900
+while time.monotonic() < deadline:
+    state = json.loads(subprocess.check_output(["docker", "inspect", name], text=True))[0]["State"]
+    if state.get("Health", {}).get("Status") == "healthy":
+        Path(os.environ["PHISTORY_NATIVE_READY"]).touch()
+        while True:
+            time.sleep(1)
+    if not state.get("Running"):
+        raise RuntimeError("native AutoGPT appliance exited during full startup")
+    time.sleep(2)
+raise TimeoutError("native AutoGPT appliance did not become healthy")
+"""
+
+QM_TASK = r"""
+import json
+import os
+import shutil
+import subprocess
+import time
+from pathlib import Path
+deployment = Path(os.environ["PHISTORY_QM_DIR"])
+subprocess.run(["qm", "init", str(deployment), "--target", "docker", "--org", os.environ["PHISTORY_DOCKER_APP_NAME"], "--model-provider", "openai"], check=True)
+parser = Path(shutil.which("qm")).resolve().parents[1] / "src/config.js"
+path = deployment / "qm.config.jsonc"
+script = "import {readFileSync} from 'node:fs'; import {parseConfigJson} from " + json.dumps(parser.as_uri()) + "; console.log(JSON.stringify(parseConfigJson(readFileSync(process.argv[1],'utf8'))));"
+config = json.loads(subprocess.check_output(["node", "--input-type=module", "-e", script, str(path)], text=True))
+gateway = "http://" + os.environ["PHISTORY_DOCKER_HOST"] + ":" + os.environ["PHISTORY_TAP_PORT"]
+config.update(publicUrl="http://localhost:" + os.environ["PHISTORY_SERVER_PORT"], basePort=int(os.environ["PHISTORY_SERVER_PORT"]) - 2, services=["core", "auth"])
+config["sandbox"] = dict(config.get("sandbox") or {}, backend="local")
+config.setdefault("env", {}).setdefault("core", {}).update(OPENAI_BASE_URL=gateway + "/v1", PRIVATE_NETWORK_ALLOWED_ORIGINS=gateway)
+path.write_text(json.dumps(config, indent=2) + "\n")
+env_path = deployment / ".env"
+values = {"OPENAI_API_KEY": os.environ["OPENAI_API_KEY"], "AUTH_ALLOWED_EMAILS": "phistory@example.com", "ADMIN_GRANTS": "phistory@example.com:org_admin"}
+lines = env_path.read_text().splitlines()
+env_path.write_text("\n".join(line for line in lines if line.split("=",1)[0] not in values) + "\n" + "\n".join(key + "=" + value for key,value in values.items()) + "\n")
+subprocess.run(["qm", "up", "--yes"], cwd=deployment, check=True)
+Path(os.environ["PHISTORY_NATIVE_READY"]).touch()
+while True:
+    time.sleep(1)
+"""
+
+DARKMOON_TASK = r"""
+import hashlib
+import json
+import os
+import subprocess
+import time
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+for path in ["data", "darkmoon-settings/agents", "workflows", "reports", "sessions"]:
+    (source / path).mkdir(parents=True, exist_ok=True)
+(Path.home() / ".kube").mkdir(exist_ok=True)
+(source / ".opencode.env").write_text("OPENCODE_LOCAL_MODE=true\nOPENCODE_LOCAL_PROVIDER_ID=openai\nOPENCODE_LOCAL_PROVIDER_NAME=Phistory owned compatible endpoint\nOPENCODE_LOCAL_BASE_URL=http://" + os.environ["PHISTORY_DOCKER_HOST"] + ":" + os.environ["PHISTORY_TAP_PORT"] + "/v1\nOPENCODE_LOCAL_MODEL=gpt-4.1\nOPENCODE_LOCAL_API_KEY=phistory-fake-api-key\n")
+images = {"darkmoon": "ascit/darkmoon@sha256:1d17e1d148f4e4f90f24a6904dd4d4117e8b845c573ebb7d2b00585cebe60326", "opencode": "ascit/opencode-darkmoon@sha256:3ab36bc62953fb1ea5e1e8ee9c4ce78ee46faa3735932f9ce60b0c28385f713b"}
+(source / "docker-compose.phistory.json").write_text(json.dumps({"services": {key: {"image": value} for key, value in images.items()}}))
+subprocess.run(["docker", "compose", "up", "-d", "--no-build"], check=True)
+deadline = time.monotonic() + 600
+while time.monotonic() < deadline:
+    socket = subprocess.run(["docker", "compose", "exec", "-T", "opencode", "test", "-S", "/tmp/darkmoon-privacy.sock"])
+    mcp = subprocess.run(["docker", "compose", "exec", "-T", "opencode", "/usr/local/bin/opencode", "mcp", "list"], capture_output=True, text=True, timeout=60)
+    if socket.returncode == 0 and mcp.returncode == 0 and "connected" in mcp.stdout.lower():
+        print(mcp.stdout, flush=True)
+        break
+    time.sleep(2)
+else:
+    subprocess.run(["docker", "compose", "logs", "--tail", "100"])
+    raise TimeoutError("native DarkMoon privacy socket and full MCP did not become ready")
+checks = {"/root/.opencode/agents/pentest.md": "0beefa473d8fc5f05e53ccd4c0371e460fb297232ddde33aecf96d30fd48d7de", "/opt/darkmoon/plugins/darkmoon-privacy.ts": "d1d6149245fa8c96bfe3bfc8f794a14ea3206364ebbc7a934216cfd0bcbb0bb2", "/opt/darkmoon/mcp/server/src/server.py": "5074fad425e0a42459ede9113982f5bceb98d32cc159a203fd872803e21be818"}
+for path, expected in checks.items():
+    actual = subprocess.check_output(["docker", "compose", "exec", "-T", "opencode", "cat", path])
+    digest = hashlib.sha256(actual).hexdigest()
+    print(path, digest, flush=True)
+    if digest != expected:
+        raise RuntimeError("published native image differs from the inspected source: " + path)
+artifact = Path(os.environ["PHISTORY_CAPTURE_ARTIFACT_DIR"])
+(artifact / "container-images.json").write_text(subprocess.check_output(["docker", "image", "inspect", *images.values()], text=True))
+(artifact / "native-host-version.log").write_text(subprocess.check_output(["docker", "compose", "exec", "-T", "opencode", "/usr/local/bin/opencode", "--version"], text=True))
+(artifact / "native-mcp-boot.log").write_text(subprocess.check_output(["docker", "compose", "exec", "-T", "opencode", "cat", "/tmp/darkmoon-mcp-boot.log"], text=True))
+Path(os.environ["PHISTORY_NATIVE_READY"]).touch()
+while True:
+    time.sleep(1)
 """
 
 UFO_SETUP = """

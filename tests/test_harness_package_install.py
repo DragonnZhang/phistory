@@ -1,4 +1,6 @@
 import io
+import json
+import os
 import tarfile
 from dataclasses import replace
 from pathlib import Path
@@ -32,6 +34,58 @@ def test_pypi_extra_is_installed_without_changing_release_identity(tmp_path, mon
     result = packages.install_agent(agent, "0.6.1", tmp_path / "install")
     assert (result / "bub").exists()
     assert commands[-1][-1] == "bub[app]==0.6.1"
+
+
+def test_archive_preserves_inert_source_links_but_rejects_writing_through_them(tmp_path):
+    archive = tmp_path / "source.tar.gz"
+    for traverse in (False, True):
+        with tarfile.open(archive, "w:gz") as tar:
+            link = tarfile.TarInfo("repo/dev-worktree")
+            link.type = tarfile.SYMTYPE
+            link.linkname = "/upstream/developer/checkout"
+            tar.addfile(link)
+            if traverse:
+                payload = b"must not be written through a link"
+                member = tarfile.TarInfo("repo/dev-worktree/injected")
+                member.size = len(payload)
+                tar.addfile(member, io.BytesIO(payload))
+        output = tmp_path / str(traverse)
+        output.mkdir()
+        if traverse:
+            with pytest.raises(RuntimeError, match="traverses a symlink"):
+                packages._extract_archive(archive, output)
+            assert not (output / "repo").exists()
+        else:
+            packages._extract_archive(archive, output)
+            assert os.readlink(output / "repo/dev-worktree") == "/upstream/developer/checkout"
+
+
+def test_release_container_installs_actual_image_identity_without_python_package_substitution(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    commands = []
+    image = {
+        "Id": "sha256:owned-image-id",
+        "RepoDigests": ["official/image@sha256:real"],
+        "Config": {"Labels": {"org.opencontainers.image.revision": "source-revision"}},
+    }
+
+    def run(command, **kwargs):
+        commands.append(command)
+        return SimpleNamespace(stdout=json.dumps([image]))
+
+    monkeypatch.setattr(packages, "run", run)
+    agent = get_agent("autogpt")
+    installed = packages.install_agent(agent, "autogpt-platform-beta-v0.11.3", tmp_path / "install")
+    assert (installed / "python").is_file()
+    assert commands == [
+        ["docker", "pull", "significantgravitas/autogpt:v0.11.3"],
+        ["docker", "image", "inspect", "significantgravitas/autogpt:v0.11.3"],
+    ]
+    manifest = json.loads((installed.parent / "docker-image.json").read_text())
+    assert manifest["image_id"] == image["Id"]
+    assert manifest["repo_digests"] == image["RepoDigests"]
+    assert manifest["labels"] == image["Config"]["Labels"]
 
 
 def test_pypi_compatibility_requirements_share_resolution_and_invalidate_stale_installs(tmp_path, monkeypatch):

@@ -15,6 +15,7 @@ def tap_command(
     run_env: Mapping[str, str] | None = None,
     *,
     proxy_port: int = 0,
+    proxy_host: str | None = None,
 ) -> list[str]:
     return [
         sys.executable,
@@ -33,6 +34,7 @@ def tap_command(
         *_tap_mode_args(target),
         *(["--target", target.agent.tap_target] if target.agent.tap_target else []),
         *(["--port", str(proxy_port)] if proxy_port else []),
+        *(["--host", proxy_host] if proxy_host else []),
         "--",
         *[_expand_capture_path(arg, run_env) for arg in upstream_client_args(target.variant.run_args)],
     ]

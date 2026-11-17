@@ -11,13 +11,15 @@ import urllib.error
 import urllib.request
 import uuid
 from contextlib import ExitStack
+from dataclasses import replace
 from http.cookiejar import CookieJar
 from pathlib import Path
-from urllib.parse import quote, urlsplit
+from urllib.parse import parse_qs, quote, urlencode, urlsplit
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
 from phistory.drivers.catalog_gateway import PublicCatalogGateway
 from phistory.drivers.common import tap_command
+from phistory.drivers.docker_runtime import DOCKER_APPS, cleanup_docker_app, prepare_docker_env, wait_docker_ready
 from phistory.drivers.local_server import has_prompt_request, stop_process, wait_for_prompt
 from phistory.models import CommandResult
 
@@ -103,6 +105,7 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         check.bind(("127.0.0.1", 0))
         port = check.getsockname()[1]
     env = {**context.env, "PHISTORY_SERVER_PORT": str(port)}
+    env["PHISTORY_CAPTURE_ARTIFACT_DIR"] = str(context.prompt_path.parent)
     if context.target.agent.id == "anything-llm":
         with socket.socket() as check:
             check.bind(("127.0.0.1", 0))
@@ -161,17 +164,19 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         "required_tool_name_fragments": context.target.agent.required_tool_name_fragments,
     }
     proxy_port = 0
-    if context.target.agent.id in ("hivekeep", "anything-llm", "librechat", "vibesdk"):
+    if context.target.agent.id in {"hivekeep", "anything-llm", "librechat", "vibesdk"} | DOCKER_APPS:
         with socket.socket() as check:
             check.bind(("127.0.0.1", 0))
             proxy_port = check.getsockname()[1]
         env["PHISTORY_TAP_PORT"] = str(proxy_port)
+    proxy_host = prepare_docker_env(env) if context.target.agent.id in DOCKER_APPS else None
     argv = tap_command(
         context.target,
         context.prompt_path,
         context.tap_output_dir,
         env,
         **({"proxy_port": proxy_port} if proxy_port else {}),
+        **({"proxy_host": proxy_host} if proxy_host else {}),
     )
     context.tap_output_dir.mkdir(parents=True, exist_ok=True)
     log_path = context.tap_output_dir / "client.log"
@@ -196,6 +201,9 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         )
         try:
             api = LocalApi(port, deadline)
+            if context.target.agent.id in DOCKER_APPS:
+                api.base = f"http://localhost:{port}"
+                wait_docker_ready(env, process, deadline)
             if context.target.agent.id == "looptroop":
                 state_path = Path(env["LOOPTROOP_CONFIG_DIR"]) / "daemon.json"
                 while time.monotonic() < deadline:
@@ -215,11 +223,17 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
                 "librechat": "/api/config",
                 "vibesdk": "/api/auth/csrf-token",
             }
-            api.wait_ready(process, path=readiness.get(context.target.agent.id, "/"))
+            if context.target.agent.id != "dark-moon":
+                api.wait_ready(process, path=readiness.get(context.target.agent.id, "/"))
             if context.target.agent.id == "ouroboros":
                 api.wait_managed_tasks(process)
             try:
-                _submit_task(context, api, log, **({"catalog_gateway_url": gateway.base_url} if gateway else {}))
+                _submit_task(
+                    replace(context, env=env),
+                    api,
+                    log,
+                    **({"catalog_gateway_url": gateway.base_url} if gateway else {}),
+                )
             except Exception as exc:
                 if not has_prompt_request(context.tap_output_dir, task_marker, **requirements):
                     raise
@@ -232,6 +246,8 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
             failure = exc
         finally:
             stop_process(process)
+            if context.target.agent.id in DOCKER_APPS:
+                cleanup_docker_app(context.target.agent.id, env, log)
     output = log_path.read_text(encoding="utf-8", errors="replace")
     if failure is not None:
         raise RuntimeError(f"{failure}\nNative application log:\n{output[-6000:]}") from failure
@@ -240,6 +256,61 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
 
 def _submit_task(context: CaptureRunContext, api: LocalApi, log, *, catalog_gateway_url: str | None = None) -> None:
     match context.target.agent.id:
+        case "dark-moon":
+            subprocess.run(
+                ["bash", "darkmoon.sh", PROMPT, "--agent", "pentest", "--format", "json"],
+                cwd=context.env["PHISTORY_SOURCE_ROOT"],
+                env=context.env,
+                stdin=subprocess.DEVNULL,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                check=True,
+                timeout=api.remaining(180),
+            )
+        case "qm":
+            output = subprocess.check_output(
+                ["qm", "admin-login", "--email", "phistory@example.com"],
+                cwd=Path(context.env["PHISTORY_HOME"]) / "qm-deployment",
+                env=context.env,
+                text=True,
+                timeout=api.remaining(90),
+            )
+            links = [word for word in output.split() if "/auth/admin-login#token=" in word]
+            if len(links) != 1:
+                raise RuntimeError("native QM CLI did not issue exactly one admin login link")
+            token = parse_qs(urlsplit(links[0]).fragment)["token"][0]
+            request = urllib.request.Request(
+                api.base + "/auth/admin-login",
+                data=urlencode({"token": token}).encode(),
+                headers={"Content-Type": "application/x-www-form-urlencoded", "Origin": api.base},
+            )
+            with api.opener.open(request, timeout=api.remaining(90)):
+                pass
+            api.headers["Origin"] = api.base
+            with api.open("/api/turn", {"text": PROMPT}) as response:
+                response.read(1)
+        case "autogpt":
+            api.headers["Origin"] = api.base
+            api.request(
+                "/api/auth/sign-up/email",
+                {"email": "phistory@example.com", "password": secrets.token_urlsafe(24) + "Aa9!", "name": "Phistory"},
+            )
+            token = api.request("/api/auth/token")["token"]
+            api.headers["Authorization"] = "Bearer " + token
+            session = api.request("/_agpt/api/chat/sessions", {})
+            with api.open(
+                f"/_agpt/api/chat/sessions/{quote(session['id'], safe='')}/stream", {"message": PROMPT}
+            ) as stream:
+                while api.remaining(90):
+                    if has_prompt_request(
+                        context.tap_output_dir,
+                        PROMPT,
+                        minimum_tools=context.target.agent.capture_min_tools,
+                        required_system_text=context.target.agent.required_system_text,
+                    ):
+                        return
+                    if not stream.readline():
+                        return
         case "markus":
             api.request("/api/auth/login", {"email": "admin@markus.local", "password": context.env["ADMIN_PASSWORD"]})
             agents = api.request("/api/agents?lean=1")["agents"]

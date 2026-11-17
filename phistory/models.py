@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "github-source", "minimax-code"]
-GitHubReleaseInstall = Literal["wheel", "editable"]
+GitHubReleaseInstall = Literal["wheel", "editable", "docker"]
 CaptureDriver = Literal["oneshot", "dsh-web", "openagent-store", "local-task-api", "first-request", "interactive-pty"]
 HomeProfile = Literal[
     "none",
@@ -125,6 +125,7 @@ class AgentSpec:
     release_asset_binary: str | None = None
     release_manifest_url: str | None = None
     github_release_install: GitHubReleaseInstall = "wheel"
+    docker_image: str | None = None
     track_latest: bool = True
     pypi_extras: tuple[str, ...] = ()
     pypi_extra_requirements: tuple[str, ...] = ()
