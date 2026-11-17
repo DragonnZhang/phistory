@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-17 13:12 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-17 13:13 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-17 13:12 UTC
+Last capture update: 2026-11-17 13:13 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -138,6 +138,7 @@ Last capture update: 2026-11-17 13:12 UTC
 | Cheetahclaws | [3.5.90 - 2026-11-08](captures/cheetahclaws/3.5.90/variants/anthropic/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | Trashclaw | [6dce9edbd7c6633da75971156911636a7b073792](captures/trashclaw/6dce9edbd7c6633da75971156911636a7b073792/variants/default/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | MiniAGI | [f012aa41e46a7b7dea99d1358305f2fb605a6599](captures/mini-agi/f012aa41e46a7b7dea99d1358305f2fb605a6599/variants/think-api/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
+| CUGA | [0.4.5 - 2026-11-03](captures/cuga-agent/0.4.5/variants/hello-tools-api/prompt.md) | 1 | 1 | 2026-11-17 13:13 UTC |
 | AutoResearchClaw | [v0.5.0 - 2026-05-20](captures/autoresearchclaw/v0.5.0/variants/topic-init/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | Inkos | [1.8.0 - 2026-08-17](captures/inkos/1.8.0/variants/chat-openai/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 
