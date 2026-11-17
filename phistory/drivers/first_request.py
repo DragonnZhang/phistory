@@ -33,7 +33,9 @@ def run_first_request(context: CaptureRunContext) -> CaptureExecution:
             wait_for_prompt(
                 context.tap_output_dir,
                 process,
-                context.target.agent.required_user_text[0] if context.target.agent.required_user_text else PROMPT,
+                next(
+                    iter(context.target.agent.required_user_text or context.target.agent.required_system_text), PROMPT
+                ),
                 timeout=context.target.agent.capture_timeout_seconds,
                 minimum_tools=context.target.agent.capture_min_tools,
                 required_system_text=context.target.agent.required_system_text,

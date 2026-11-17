@@ -28,6 +28,8 @@ from phistory.task_entries import (
     OUROBOROS_SERVER,
     QUORUM_TASK,
     SELF_OPERATING_TASK,
+    UFO_SETUP,
+    UFO_TASK,
     WECHAT_REPLY_TASK,
     ZCODE_TASK,
 )
@@ -1764,6 +1766,87 @@ INKOS = AgentSpec(
 )
 
 
+DB_GPT = AgentSpec(
+    id="db-gpt",
+    display_name="DB-GPT",
+    package="eosphoros-ai/DB-GPT",
+    source="github-source",
+    source_state="isolated",
+    source_editable_projects=(
+        "packages/dbgpt-core[agent,client,simple_framework,framework,proxy_openai]",
+        "packages/dbgpt-ext[storage_chromadb]",
+    ),
+    python_runtime="3.11",
+    tap_client="python",
+    fake_env={"SILICONFLOW_API_KEY": "phistory-fake-api-key"},
+    bootstrap_args=("-c", "import tiktoken; tiktoken.get_encoding('cl100k_base'); tiktoken.get_encoding('o200k_base')"),
+    required_system_text=("You are a ReActToolMaster", "# ACTION SPACE Simple Description #"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("official-react-example",),
+    default_variant=_default(
+        capture_unavailable="The application is configurable; use its complete official ReAct task example with native memory and tool registration."
+    ),
+    variants=(
+        _variant(
+            "official-react-example",
+            "Official native ReAct / HybridMemory example",
+            ("--no-yolo", "--", "$PHISTORY_SOURCE_ROOT/examples/agents/react_agent_example.py"),
+            driver="first-request",
+            dimensions={
+                "entry": "complete official react_agent_example.py",
+                "model": "native SiliconFlow Qwen/Qwen2.5-Coder-32B-Instruct",
+                "memory": "native HybridMemory / persistent Chroma",
+                "tools": "official calculator, directory count, Terminate",
+                "protocol": "native text actions; native_function_calling unchanged",
+                "scope": "first ReAct request of official example",
+            },
+        ),
+    ),
+)
+
+UFO = AgentSpec(
+    id="ufo",
+    display_name="UFO LinuxAgent",
+    package="microsoft/UFO",
+    source="github-source",
+    github_source_install="requirements",
+    source_state="isolated",
+    python_runtime="3.10",
+    tap_client="python",
+    fake_env={
+        "OPENAI_API_KEY": "phistory-fake-api-key",
+        "UFO_MCP_API_KEY": "phistory-local-mcp-control",
+        "PHISTORY_UFO_CONTROL_KEY": "phistory-local-ufo-control",
+    },
+    bootstrap_args=("-c", UFO_SETUP),
+    required_system_text=("You are **LinuxAgent**",),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("linux-device-agent",),
+    default_variant=_default(
+        capture_unavailable="Windows UI agents require their platform; use the official native LinuxAgent session and real local Bash MCP."
+    ),
+    variants=(
+        _variant(
+            "linux-device-agent",
+            "Native LinuxAgent / authenticated UFO and Bash MCP",
+            ("--no-yolo", "--", "-c", UFO_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "native server, Linux MCP, WebSocket client request",
+                "model": "native APP_AGENT OpenAI gpt-4o",
+                "auth": "real isolated server token and UFO_MCP_API_KEY",
+                "config": "complete official agents template with fake model key",
+                "visual": "native Linux text-only; no screenshot or X server",
+                "scope": "LinuxAgent; Windows HostAgent/AppAgent not claimed",
+            },
+        ),
+    ),
+)
+
 AGENTLAS_OS = AgentSpec(
     id="agentlas-os",
     display_name="Agentlas OS",
@@ -1776,6 +1859,7 @@ AGENTLAS_OS = AgentSpec(
     extra_env={"HEPHAESTUS_AUTO_UPDATE": "0", "HEPHAESTUS_UPDATE_CHECK": "0"},
     recorded_env=("HEPHAESTUS_AUTO_UPDATE", "HEPHAESTUS_UPDATE_CHECK"),
     native_host=("@anthropic-ai/claude-code", "claude"),
+    capture_min_tools=1,
     bootstrap_args=("-c", AGENTLAS_SETUP),
     required_user_text=(
         "# Agentlas Core & Unified Command System",
@@ -1814,6 +1898,7 @@ LONG_HORIZON = AgentSpec(
     tap_client="python",
     fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
     native_host=("@openai/codex", "codex"),
+    capture_min_tools=1,
     bootstrap_args=("-c", LONG_HORIZON_SETUP),
     required_user_text=("You are the LongHorizon-Harness manager agent.", "Current management round: 1"),
     tap_mode="forward",
@@ -1938,7 +2023,7 @@ WECHAT_MAC_RPA = AgentSpec(
     required_system_text=("<instructions>",),
     capture_min_tools=1,
     tap_mode="forward",
-    track_latest=False,
+    track_latest=True,
     capture_timeout_seconds=180,
     latest_variant_ids=("portable-reply-api",),
     default_variant=_default(
@@ -2005,8 +2090,9 @@ AGENT_S = AgentSpec(
     python_runtime="3.11",
     tap_client="python",
     fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    required_system_text=("You are an expert in graphical user interfaces and Python code.",),
     tap_mode="forward",
-    track_latest=False,
+    track_latest=True,
     capture_timeout_seconds=300,
     latest_variant_ids=("s3-linux-desktop",),
     default_variant=_default(
@@ -2927,6 +3013,8 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        DB_GPT,
+        UFO,
         AGENTLAS_OS,
         LONG_HORIZON,
         OPENAGENTS,

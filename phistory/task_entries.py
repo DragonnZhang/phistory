@@ -394,3 +394,64 @@ from pathlib import Path
 os.environ["CURL_CA_BUNDLE"] = os.environ["SSL_CERT_FILE"]
 os.execv(str(Path(os.environ["PHISTORY_HOME"]) / "openagents/task"), ["openagents-native-microcoder-task"])
 """
+
+UFO_SETUP = """
+import os
+from pathlib import Path
+import yaml
+try:
+    import tiktoken
+except ImportError:
+    pass
+else:
+    tiktoken.get_encoding("cl100k_base")
+    tiktoken.get_encoding("o200k_base")
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+config = yaml.safe_load((source / "config/ufo/agents.yaml.template").read_text())
+for item in config.values():
+    if isinstance(item, dict) and "API_KEY" in item:
+        item["API_KEY"] = os.environ["OPENAI_API_KEY"]
+(source / "config/ufo/agents.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
+"""
+
+UFO_TASK = """
+import os
+import subprocess
+import sys
+import time
+import urllib.request
+import urllib.error
+os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
+services = []
+try:
+    services.append(subprocess.Popen([sys.executable, "-m", "ufo.client.mcp.http_servers.linux_mcp_server", "--host", "localhost", "--port", "8010"]))
+    services.append(subprocess.Popen([sys.executable, "-m", "ufo.server.app", "--host", "127.0.0.1", "--port", "5001", "--platform", "linux", "--api-key", os.environ["PHISTORY_UFO_CONTROL_KEY"]]))
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    deadline = time.monotonic() + 120
+    for url in ["http://localhost:8010/mcp", "http://127.0.0.1:5001/"]:
+        while time.monotonic() < deadline:
+            if any(process.poll() is not None for process in services):
+                raise RuntimeError("native UFO service exited during startup")
+            try:
+                with opener.open(url, timeout=2):
+                    break
+            except urllib.error.HTTPError as error:
+                if error.code < 500:
+                    break
+            except (OSError, urllib.error.URLError):
+                pass
+            time.sleep(0.25)
+        else:
+            raise RuntimeError("native UFO services did not become ready")
+    subprocess.run([sys.executable, "-m", "ufo.client.client", "--ws", "--ws-server", "ws://127.0.0.1:5001/ws?token=" + os.environ["PHISTORY_UFO_CONTROL_KEY"], "--client-id", "phistory_linux", "--platform", "linux", "--request", "Reply with one short sentence.", "--task_name", "phistory"], check=True)
+finally:
+    for process in services:
+        if process.poll() is None:
+            process.terminate()
+    for process in services:
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
+"""

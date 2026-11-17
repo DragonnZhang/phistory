@@ -421,7 +421,23 @@ def _install_github_release(
         elif python_version.is_file():
             venv_args.extend(["--python", python_version.read_text(encoding="utf-8").strip()])
         run(venv_args, timeout=120)
-        if (source_root / "uv.lock").is_file():
+        if agent.source_editable_projects:
+            run(
+                [
+                    "uv",
+                    "pip",
+                    "install",
+                    "--python",
+                    str(bin_dir / "python"),
+                    *[
+                        argument
+                        for project in agent.source_editable_projects
+                        for argument in ("--editable", str(source_root / project))
+                    ],
+                ],
+                timeout=INSTALL_TIMEOUT_SECONDS,
+            )
+        elif (source_root / "uv.lock").is_file():
             manifest = tomllib.loads((source_root / "pyproject.toml").read_text(encoding="utf-8"))
             required_uv = manifest.get("tool", {}).get("uv", {}).get("required-version", "")
             uv_command = (

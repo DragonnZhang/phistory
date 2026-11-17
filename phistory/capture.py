@@ -235,6 +235,7 @@ def capture_target(
                             if target.agent.github_source_install == "requirements"
                             else [],
                             "python_dependencies": list(target.agent.source_python_dependencies),
+                            "editable_projects": list(target.agent.source_editable_projects),
                             "build_commands": [list(command) for command in target.agent.source_build_commands],
                         }
                     }

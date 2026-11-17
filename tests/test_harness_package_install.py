@@ -143,6 +143,48 @@ def test_legacy_root_project_takes_precedence_over_nested_modern_packages(tmp_pa
     assert packages._find_source_root(tmp_path) == root
 
 
+def test_source_workspace_installs_both_native_projects_with_declared_extras(tmp_path, monkeypatch):
+    agent = get_agent("db-gpt")
+    install = tmp_path / "install"
+    commands = []
+    files = {
+        "pyproject.toml": b"[project]\nname='empty-workspace'\nversion='1'",
+        "uv.lock": b"original lock",
+        "packages/dbgpt-core/pyproject.toml": b"native core",
+        "packages/dbgpt-ext/pyproject.toml": b"native extension",
+    }
+
+    def download(url, output):
+        with tarfile.open(output, "w:gz") as archive:
+            for name, payload in files.items():
+                member = tarfile.TarInfo("source-root/" + name)
+                member.size = len(payload)
+                archive.addfile(member, io.BytesIO(payload))
+
+    def run(argv, **kwargs):
+        commands.append(argv)
+        if argv[:2] == ["uv", "venv"]:
+            (install / "bin").mkdir()
+            (install / "bin/python").touch()
+
+    monkeypatch.setattr(packages, "_download", download)
+    monkeypatch.setattr(packages, "run", run)
+    result = packages.install_agent(agent, "f" * 40, install)
+    source = packages.installed_source_root(result)
+    assert commands[1] == [
+        "uv",
+        "pip",
+        "install",
+        "--python",
+        str(install / "bin/python"),
+        "--editable",
+        str(source / agent.source_editable_projects[0]),
+        "--editable",
+        str(source / agent.source_editable_projects[1]),
+    ]
+    assert all((source / name).read_bytes() == payload for name, payload in files.items())
+
+
 def test_source_script_install_keeps_sibling_templates_and_resolves_immutable_revision(tmp_path, monkeypatch):
     from phistory.models import CommandResult
 

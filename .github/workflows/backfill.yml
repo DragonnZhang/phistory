@@ -49,6 +49,8 @@ on:
           - autoresearchclaw
           - inkos
           - markus
+          - wechat-mac-rpa
+          - agent-s
           - web3gpt
           - autoref
           - critic-training
