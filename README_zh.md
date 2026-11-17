@@ -10,7 +10,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 [Harness 源码归档](sources.html)保存 95 项调研中新增项目的提示词模板、装配代码与工具声明，保留完整原文件和来源，单独展示，不与真实请求捕获混用。
 
-> 每天自动检查新版本，归档最近更新于 **2026-11-17 14:05 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-11-17 14:14 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-11-17 14:05 UTC
+最近抓取更新：2026-11-17 14:14 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -143,6 +143,10 @@ uv run phistory render-site
 | CUGA | [0.4.5 - 2026-11-03](captures/cuga-agent/0.4.5/variants/hello-tools-api/prompt.md) | 1 | 1 | 2026-11-17 13:13 UTC |
 | AutoResearchClaw | [v0.5.0 - 2026-05-20](captures/autoresearchclaw/v0.5.0/variants/topic-init/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
 | Inkos | [1.8.0 - 2026-08-17](captures/inkos/1.8.0/variants/chat-openai/prompt.md) | 1 | 1 | 2026-11-17 13:12 UTC |
+| GPT Researcher | [ddd4db36208d9c8e49f3b2436efda97baecb5433](captures/gpt-researcher/ddd4db36208d9c8e49f3b2436efda97baecb5433/variants/deep-agent/prompt.md) | 1 | 1 | 2026-11-17 14:12 UTC |
+| DeerFlow | [2cc30714c935ed8f00920d7a285c5634c63fec37](captures/deer-flow/2cc30714c935ed8f00920d7a285c5634c63fec37/variants/embedded-openai/prompt.md) | 1 | 1 | 2026-11-17 14:13 UTC |
+| DeepAnalyze | [afc697a11675c59683b9f6596c3ab3b3d661182a](captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/prompt.md) | 1 | 1 | 2026-11-17 14:13 UTC |
+| localGPT | [34f3107f56a88203859092312231b945a711c619](captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/prompt.md) | 1 | 1 | 2026-11-17 14:14 UTC |
 
 ## 项目趋势
 

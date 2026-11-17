@@ -1938,7 +1938,7 @@
           "path": "source-captures/gpt-researcher/ec24f80a760e324e1df8"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "gpt-researcher"
     },
     {
@@ -2336,7 +2336,7 @@
           "path": "source-captures/deer-flow/47c1ea714c6cd7783a81"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "deer-flow"
     },
     {
@@ -7912,7 +7912,7 @@
           "path": "source-captures/localgpt/49d79fed1a7099fd4d02"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "localgpt"
     },
     {
@@ -8478,7 +8478,7 @@
           "path": "source-captures/deepanalyze/1eab91b25b9ffef79d2e"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "deepanalyze"
     },
     {

@@ -1,0 +1,70 @@
+{
+  "agent_id": "deepanalyze",
+  "agent": "DeepAnalyze",
+  "package": "ruc-datalab/DeepAnalyze",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": []
+  },
+  "version": "afc697a11675c59683b9f6596c3ab3b3d661182a",
+  "variant": {
+    "id": "vllm-client",
+    "label": "Native vLLM client · initial round",
+    "dimensions": {
+      "entry": "DeepAnalyzeVLLM.generate",
+      "model": "documented DeepAnalyze-8B alias",
+      "max_rounds": "1",
+      "transport": "HTTP capture endpoint"
+    }
+  },
+  "requested": {
+    "entry": "DeepAnalyzeVLLM.generate",
+    "model": "documented DeepAnalyze-8B alias",
+    "max_rounds": "1",
+    "transport": "HTTP capture endpoint"
+  },
+  "observed": {
+    "model": "DeepAnalyze-8B"
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/ruc-datalab/DeepAnalyze/archive/afc697a11675c59683b9f6596c3ab3b3d661182a.tar.gz",
+  "binary_version": "afc697a11675c59683b9f6596c3ab3b3d661182a",
+  "captured_at": "2026-11-17T14:13:49.560641+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44100478048",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44100478048"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 11.543,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nfrom deepanalyze import DeepAnalyzeVLLM\nfrom pathlib import Path\nDeepAnalyzeVLLM(\n    \"DeepAnalyze-8B\", api_url=\"http://deepanalyze.phistory.invalid/v1/chat/completions\",\n    max_rounds=1,\n).generate(\"Reply with one short sentence.\", workspace=str(Path.cwd()))\n"
+  ]
+}
