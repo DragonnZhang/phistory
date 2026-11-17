@@ -1,0 +1,69 @@
+{
+  "agent_id": "hive",
+  "agent": "Hive",
+  "package": "aden-hive",
+  "python_runtime": "3.12",
+  "package_extras": [
+    "tools"
+  ],
+  "version": "1.0.12",
+  "variant": {
+    "id": "queen-api",
+    "label": "Native Queen DM · local server API",
+    "dimensions": {
+      "entry": "native Queen independent session",
+      "model": "native preferred default",
+      "tools": "native full installed tools extra"
+    }
+  },
+  "requested": {
+    "entry": "native Queen independent session",
+    "model": "native preferred default",
+    "tools": "native full installed tools extra"
+  },
+  "observed": {
+    "model": "claude-sonnet-5-5"
+  },
+  "published_at": "2026-10-25T02:49:19.614445Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/b6/c6/2dfaee66cec56c4b9a6934d18b45dc2f9377bacc6d9d40a51a9431febca0/aden_hive-1.0.12-py3-none-any.whl",
+  "binary_version": "hive 1.0.12",
+  "captured_at": "2026-11-17T14:51:11.671423+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44107449049",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44107449049"
+  },
+  "tap_client": "hive",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 13.689,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "hive",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "serve",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "33409"
+  ]
+}
