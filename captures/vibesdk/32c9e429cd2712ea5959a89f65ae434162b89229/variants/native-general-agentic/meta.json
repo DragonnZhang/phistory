@@ -1,0 +1,100 @@
+{
+  "agent_id": "vibesdk",
+  "agent": "VibeSDK",
+  "package": "cloudflare/vibesdk",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": [
+      [
+        "bun",
+        "install",
+        "--frozen-lockfile"
+      ]
+    ]
+  },
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport os\nimport subprocess\nfrom pathlib import Path\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nsubprocess.run([\"bun\", \"run\", \"db:migrate:local\"], cwd=source, check=True)\n"
+    ],
+    "environment": {}
+  },
+  "version": "32c9e429cd2712ea5959a89f65ae434162b89229",
+  "variant": {
+    "id": "native-general-agentic",
+    "label": "Native General project / agentic builder",
+    "dimensions": {
+      "entry": "real Workers app, local D1/KV/R2/Durable Objects and WebSocket task",
+      "provider": "native Google model through configured compatible gateway",
+      "runtime": "native Vite/Cloudflare with local bindings",
+      "scope": "General project first agentic request"
+    }
+  },
+  "requested": {
+    "entry": "real Workers app, local D1/KV/R2/Durable Objects and WebSocket task",
+    "provider": "native Google model through configured compatible gateway",
+    "runtime": "native Vite/Cloudflare with local bindings",
+    "scope": "General project first agentic request"
+  },
+  "observed": {
+    "model": "google-ai-studio/gemini-3-flash-preview",
+    "tool_count": 15
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [
+      "You are an autonomous project builder specializing in Cloudflare Workers"
+    ],
+    "required_user_text": [],
+    "required_tool_name_fragments": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/cloudflare/vibesdk/archive/32c9e429cd2712ea5959a89f65ae434162b89229.tar.gz",
+  "binary_version": "32c9e429cd2712ea5959a89f65ae434162b89229",
+  "captured_at": "2026-11-17T18:46:32.275005+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44151053897",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44151053897"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 97.827,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--target",
+    "https://gateway.ai.cloudflare.com",
+    "--port",
+    "50541",
+    "--",
+    "-c",
+    "\nimport os\nimport secrets\nfrom pathlib import Path\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nos.chdir(source)\n(source / \".dev.vars\").write_text(\"ENVIRONMENT=dev\\nCUSTOM_DOMAIN=localhost\\nJWT_SECRET=\" + secrets.token_urlsafe(48) + \"Aa9!\\nGOOGLE_AI_STUDIO_API_KEY=\" + os.environ[\"GOOGLE_AI_STUDIO_API_KEY\"] + \"\\nCLOUDFLARE_AI_GATEWAY_URL=http://127.0.0.1:\" + os.environ[\"PHISTORY_TAP_PORT\"] + \"\\n\")\nconfig = (source / \"vite.config.ts\").read_text()\nanchor = \"configPath: 'wrangler.jsonc',\"\nif config.count(anchor) != 1:\n    raise RuntimeError(\"native Vite Cloudflare configuration no longer has its expected operator options\")\nprivate_config = source / \"vite.phistory.config.ts\"\nprivate_config.write_text(config.replace(anchor, anchor + \"\\nremoteBindings: false,\"))\nos.execvp(\"bun\", [\"bun\", \"run\", \"dev\", \"--host\", \"127.0.0.1\", \"--port\", os.environ[\"PHISTORY_SERVER_PORT\"], \"--config\", str(private_config)])\n"
+  ]
+}
