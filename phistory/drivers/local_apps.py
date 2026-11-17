@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import secrets
 import shutil
 import socket
 import subprocess
 import time
 import urllib.error
 import urllib.request
+import uuid
 from contextlib import ExitStack
 from http.cookiejar import CookieJar
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
 from phistory.drivers.catalog_gateway import PublicCatalogGateway
@@ -25,8 +28,9 @@ class LocalApi:
     def __init__(self, port: int, deadline: float):
         self.base = f"http://127.0.0.1:{port}"
         self.deadline = deadline
+        self.cookies = CookieJar()
         self.opener = urllib.request.build_opener(
-            urllib.request.ProxyHandler({}), urllib.request.HTTPCookieProcessor(CookieJar())
+            urllib.request.ProxyHandler({}), urllib.request.HTTPCookieProcessor(self.cookies)
         )
         self.headers = {"Content-Type": "application/json"}
 
@@ -36,7 +40,7 @@ class LocalApi:
             raise TimeoutError("native application capture exceeded its time budget")
         return min(limit, remaining)
 
-    def request(self, path: str, body: dict | None = None, *, method: str | None = None):
+    def open(self, path: str, body: dict | None = None, *, method: str | None = None):
         request = urllib.request.Request(
             self.base + path,
             data=json.dumps(body).encode() if body is not None else None,
@@ -44,11 +48,18 @@ class LocalApi:
             method=method or ("POST" if body is not None else "GET"),
         )
         try:
-            with self.opener.open(request, timeout=self.remaining(90)) as response:
-                return json.load(response)
+            return self.opener.open(request, timeout=self.remaining(90))
         except urllib.error.HTTPError as error:
             detail = error.read(4000).decode("utf-8", errors="replace")
             raise RuntimeError(f"native API {request.method} {path} failed ({error.code}): {detail}") from error
+
+    def request(self, path: str, body: dict | None = None, *, method: str | None = None):
+        with self.open(path, body, method=method) as response:
+            return json.load(response)
+
+    def request_bytes(self, path: str, body: dict | None = None):
+        with self.open(path, body) as response:
+            return response.read()
 
     def wait_ready(self, process: subprocess.Popen, *, path: str = "/") -> None:
         deadline = time.monotonic() + self.remaining(90)
@@ -150,7 +161,7 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         "required_tool_name_fragments": context.target.agent.required_tool_name_fragments,
     }
     proxy_port = 0
-    if context.target.agent.id in ("hivekeep", "anything-llm"):
+    if context.target.agent.id in ("hivekeep", "anything-llm", "librechat", "vibesdk"):
         with socket.socket() as check:
             check.bind(("127.0.0.1", 0))
             proxy_port = check.getsockname()[1]
@@ -198,7 +209,12 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
                     time.sleep(0.25)
                 else:
                     raise TimeoutError("native LoopTroop OpenCode supervision did not become ready")
-            readiness = {"web3gpt": "/api/chat", "hivekeep": "/api/onboarding/status"}
+            readiness = {
+                "web3gpt": "/api/chat",
+                "hivekeep": "/api/onboarding/status",
+                "librechat": "/api/config",
+                "vibesdk": "/api/auth/csrf-token",
+            }
             api.wait_ready(process, path=readiness.get(context.target.agent.id, "/"))
             if context.target.agent.id == "ouroboros":
                 api.wait_managed_tasks(process)
@@ -291,6 +307,40 @@ def _submit_task(context: CaptureRunContext, api: LocalApi, log, *, catalog_gate
             agent = api.request("/api/onboarding/configurator", {"providerId": provider["id"]})["agent"]
             if agent.get("name") != "Queenie" or agent.get("kind") != "configurator":
                 raise RuntimeError("native Hivekeep onboarding did not seed its real Queenie configurator")
+        case "librechat":
+            password = secrets.token_urlsafe(24) + "Aa9!"
+            api.headers["Origin"] = api.base
+            api.request(
+                "/api/auth/register",
+                {
+                    "name": "Phistory",
+                    "email": "phistory@example.com",
+                    "password": password,
+                    "confirm_password": password,
+                },
+            )
+            login = api.request("/api/auth/login", {"email": "phistory@example.com", "password": password})
+            api.headers["Authorization"] = "Bearer " + login["token"]
+            catalog = api.request("/api/agents/tools")
+            if '"calculator"' not in json.dumps(catalog):
+                raise RuntimeError("native LibreChat catalogue did not expose its calculator")
+            agent = api.request(
+                "/api/agents",
+                {"name": "Phistory", "provider": "openAI", "model": "gpt-6.1-sol", "tools": ["calculator"]},
+            )
+            api.request(
+                "/api/agents/chat",
+                {
+                    "text": PROMPT,
+                    "endpoint": "agents",
+                    "agent_id": agent["id"],
+                    "conversationId": "new",
+                    "parentMessageId": "00000000-0000-0000-0000-000000000000",
+                    "messageId": str(uuid.uuid4()),
+                },
+            )
+        case "vibesdk":
+            asyncio.run(_vibesdk_task(context, api))
         case "hive":
             session = api.request("/api/sessions", {"initial_phase": "independent", "initial_prompt": PROMPT})
             api.request(f"/api/sessions/{session['session_id']}/chat", {"message": PROMPT})
@@ -328,6 +378,59 @@ def _submit_task(context: CaptureRunContext, api: LocalApi, log, *, catalog_gate
                 raise RuntimeError(f"native Ouroboros task client exited {result.returncode}")
         case _:
             raise ValueError(f"no native task API for {context.target.agent.id}")
+
+
+async def _vibesdk_task(context: CaptureRunContext, api: LocalApi) -> None:
+    import aiohttp
+
+    api.headers["Origin"] = "http://localhost:5173"
+    csrf = api.request("/api/auth/csrf-token")["data"]["token"]
+    api.headers["X-CSRF-Token"] = csrf
+    api.headers["Cookie"] = "; ".join(f"{cookie.name}={cookie.value}" for cookie in api.cookies)
+    api.request(
+        "/api/auth/register",
+        {"email": "phistory@example.com", "password": secrets.token_urlsafe(24) + "Aa9!", "name": "Phistory"},
+    )
+    token = next((cookie.value for cookie in api.cookies if cookie.name == "accessToken"), None)
+    if not token:
+        raise RuntimeError("native VibeSDK registration did not issue its accessToken")
+    api.headers.pop("Cookie", None)
+    api.headers.pop("X-CSRF-Token", None)
+    api.headers["Authorization"] = "Bearer " + token
+    payload = api.request_bytes("/api/agent", {"query": PROMPT, "projectType": "general"})
+    records = [json.loads(line) for line in payload.decode().splitlines() if line.strip()]
+    created = next((record for record in records if record.get("agentId")), None)
+    if created is None:
+        raise RuntimeError(f"native VibeSDK creation did not return its agent ID: {payload[-2500:]!r}")
+    if created.get("behaviorType") != "agentic":
+        raise RuntimeError("native General project did not select its documented agentic behavior")
+    url = f"ws://{urlsplit(api.base).netloc}/api/agent/{quote(created['agentId'], safe='')}/ws"
+    headers = {"Authorization": "Bearer " + token, "Origin": api.headers["Origin"]}
+    async with aiohttp.ClientSession() as session, session.ws_connect(url, headers=headers) as ws:
+        started = False
+        while api.remaining(90):
+            if started and has_prompt_request(
+                context.tap_output_dir,
+                PROMPT,
+                minimum_tools=context.target.agent.capture_min_tools,
+                required_system_text=context.target.agent.required_system_text,
+                required_user_text=context.target.agent.required_user_text,
+                required_tool_name_fragments=context.target.agent.required_tool_name_fragments,
+            ):
+                return
+            try:
+                message = await ws.receive(timeout=1)
+            except asyncio.TimeoutError:
+                continue
+            if message.type == aiohttp.WSMsgType.TEXT:
+                data = json.loads(message.data)
+                if data.get("type") == "agent_connected" and not started:
+                    await ws.send_json({"type": "generate_all"})
+                    started = True
+                elif data.get("type") == "error":
+                    raise RuntimeError(f"native VibeSDK control error: {json.dumps(data)}")
+            elif message.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.ERROR):
+                raise RuntimeError("native VibeSDK control WebSocket closed before its primary request")
 
 
 def _mirix_task(context: CaptureRunContext, api: LocalApi) -> None:

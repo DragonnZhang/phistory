@@ -14,9 +14,22 @@ runs:
         sudo apt-get update
         sudo apt-get install -y libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
     - uses: oven-sh/setup-bun@v2
-      if: contains(format(',{0},', inputs.agents), ',empryo,') || contains(format(',{0},', inputs.agents), ',web3gpt,') || contains(format(',{0},', inputs.agents), ',hivekeep,')
+      if: contains(format(',{0},', inputs.agents), ',empryo,') || contains(format(',{0},', inputs.agents), ',web3gpt,') || contains(format(',{0},', inputs.agents), ',hivekeep,') || contains(format(',{0},', inputs.agents), ',vibesdk,')
       with:
         bun-version: latest
+    - name: Prepare owned native MongoDB
+      if: contains(format(',{0},', inputs.agents), ',librechat,')
+      shell: bash
+      run: |
+        docker run --rm -d --name phistory-mongodb -p 127.0.0.1:27017:27017 mongo:8.0.20
+        for attempt in $(seq 1 60); do
+          if docker exec phistory-mongodb mongosh --quiet --eval 'db.adminCommand({ping:1})'; then
+            exit 0
+          fi
+          sleep 1
+        done
+        docker logs phistory-mongodb
+        exit 1
     - name: Prepare native audio runtime
       if: contains(format(',{0},', inputs.agents), ',agenticseek,')
       shell: bash

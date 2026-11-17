@@ -47,7 +47,7 @@ def test_pypi_compatibility_requirements_share_resolution_and_invalidate_stale_i
 
     monkeypatch.setattr(packages, "run", run)
     result = packages.install_agent(agent, "1.5.8", install)
-    assert commands[-1][-3:] == ["self-operating-computer==1.5.8", "httpx==0.27.2", "setuptools==80.9.0"]
+    assert commands[-1][-3:] == ["self-operating-computer==1.5.8", "httpx==0.25.2", "setuptools==80.9.0"]
     assert packages.install_agent(agent, "1.5.8", install) == result
     assert len(commands) == 2
     changed = replace(agent, pypi_extra_requirements=("httpx==0.27.1", "setuptools==80.9.0"))

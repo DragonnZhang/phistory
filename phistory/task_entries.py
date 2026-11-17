@@ -471,6 +471,41 @@ finally:
         process.wait(timeout=10)
 """
 
+LIBRECHAT_TASK = """
+import os
+import secrets
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+base = "http://127.0.0.1:" + os.environ["PHISTORY_SERVER_PORT"]
+os.environ.update(MONGO_URI="mongodb://127.0.0.1:27017/phistory_" + secrets.token_hex(12), HOST="127.0.0.1", PORT=os.environ["PHISTORY_SERVER_PORT"], DOMAIN_CLIENT=base, DOMAIN_SERVER=base, ENDPOINTS="openAI,agents", OPENAI_MODELS="gpt-6.1-sol", OPENAI_REVERSE_PROXY="http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "/v1", SEARCH="false", USE_REDIS="false", OPENAI_MODERATION="false", ALLOW_EMAIL_LOGIN="true", ALLOW_REGISTRATION="true", ALLOW_UNVERIFIED_EMAIL_LOGIN="true", CREDS_KEY=secrets.token_hex(32), CREDS_IV=secrets.token_hex(16), JWT_SECRET=secrets.token_hex(32), JWT_REFRESH_SECRET=secrets.token_hex(32))
+os.execvp("npm", ["npm", "run", "backend"])
+"""
+
+VIBESDK_SETUP = """
+import os
+import subprocess
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+subprocess.run(["bun", "run", "db:migrate:local"], cwd=source, check=True)
+"""
+
+VIBESDK_TASK = r"""
+import os
+import secrets
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+(source / ".dev.vars").write_text("ENVIRONMENT=dev\nJWT_SECRET=" + secrets.token_hex(32) + "\nGOOGLE_AI_STUDIO_API_KEY=" + os.environ["GOOGLE_AI_STUDIO_API_KEY"] + "\nCLOUDFLARE_AI_GATEWAY_URL=http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "\n")
+config = (source / "vite.config.ts").read_text()
+anchor = "configPath: 'wrangler.jsonc',"
+if config.count(anchor) != 1:
+    raise RuntimeError("native Vite Cloudflare configuration no longer has its expected operator options")
+private_config = source / "vite.phistory.config.ts"
+private_config.write_text(config.replace(anchor, anchor + "\nremoteBindings: false,"))
+os.execvp("bun", ["bun", "run", "dev", "--host", "127.0.0.1", "--port", os.environ["PHISTORY_SERVER_PORT"], "--config", str(private_config)])
+"""
+
 UFO_SETUP = """
 import os
 from pathlib import Path

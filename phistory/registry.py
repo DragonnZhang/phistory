@@ -25,6 +25,7 @@ from phistory.task_entries import (
     GPT_RESEARCHER_TASK,
     HIVEKEEP_TASK,
     INTENTKIT_DATABASE_SETUP,
+    LIBRECHAT_TASK,
     LONG_HORIZON_SETUP,
     LONG_HORIZON_TASK,
     MINIAGI_TASK,
@@ -35,6 +36,8 @@ from phistory.task_entries import (
     SELF_OPERATING_TASK,
     UFO_SETUP,
     UFO_TASK,
+    VIBESDK_SETUP,
+    VIBESDK_TASK,
     WECHAT_REPLY_TASK,
     ZCODE_TASK,
 )
@@ -1886,6 +1889,79 @@ ANYTHINGLLM = AgentSpec(
     ),
 )
 
+LIBRECHAT = AgentSpec(
+    id="librechat",
+    display_name="LibreChat",
+    package="LibreChat-AI/LibreChat",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="isolated",
+    source_build_commands=(("npm", "ci", "--no-audit", "--no-fund"), ("npm", "run", "frontend")),
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    capture_min_tools=1,
+    required_tool_name_fragments=("calculator",),
+    tap_mode="reverse",
+    tap_target="https://api.openai.com",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("native-calculator-agent",),
+    default_variant=_default(
+        capture_unavailable="Use the named authenticated app agent with its native calculator tool."
+    ),
+    variants=(
+        _variant(
+            "native-calculator-agent",
+            "Native authenticated agent / calculator",
+            ("--no-yolo", "--", "-c", LIBRECHAT_TASK),
+            driver="local-task-api",
+            dimensions={
+                "entry": "real MongoDB, registration, agent and chat APIs",
+                "model": "configured OpenAI gpt-6.1-sol",
+                "tools": "native calculator",
+                "scope": "configured calculator agent; optional external integrations are not configured",
+            },
+        ),
+    ),
+)
+
+VIBESDK = AgentSpec(
+    id="vibesdk",
+    display_name="VibeSDK",
+    package="cloudflare/vibesdk",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="isolated",
+    source_build_commands=(("bun", "install", "--frozen-lockfile"),),
+    tap_client="python",
+    fake_env={"GOOGLE_AI_STUDIO_API_KEY": "phistory-fake-api-key"},
+    bootstrap_args=("-c", VIBESDK_SETUP),
+    required_system_text=("You are an autonomous project builder specializing in Cloudflare Workers",),
+    capture_min_tools=1,
+    tap_mode="reverse",
+    tap_target="https://gateway.ai.cloudflare.com",
+    track_latest=False,
+    capture_timeout_seconds=360,
+    latest_variant_ids=("native-general-agentic",),
+    default_variant=_default(
+        capture_unavailable="Use the named native General project and its authenticated agentic WebSocket task entry."
+    ),
+    variants=(
+        _variant(
+            "native-general-agentic",
+            "Native General project / agentic builder",
+            ("--no-yolo", "--", "-c", VIBESDK_TASK),
+            driver="local-task-api",
+            dimensions={
+                "entry": "real Workers app, local D1/KV/R2/Durable Objects and WebSocket task",
+                "provider": "native Google model through configured compatible gateway",
+                "runtime": "native Vite/Cloudflare with local bindings",
+                "scope": "General project first agentic request",
+            },
+        ),
+    ),
+)
+
 AGENTLINK = AgentSpec(
     id="agentlink",
     display_name="AgentLink",
@@ -1896,6 +1972,8 @@ AGENTLINK = AgentSpec(
     source_build_commands=(("npm", "ci", "--no-audit", "--no-fund"), ("npm", "run", "build:workspaces")),
     tap_client="python",
     fake_env={"AGENTLINK_OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={"NODE_USE_ENV_PROXY": "1"},
+    recorded_env=("NODE_USE_ENV_PROXY",),
     bootstrap_args=("-c", AGENTLINK_SETUP),
     capture_min_tools=1,
     tap_mode="forward",
@@ -2487,7 +2565,7 @@ SELF_OPERATING_COMPUTER = AgentSpec(
     display_name="Self-Operating Computer",
     package="self-operating-computer",
     source="pypi",
-    pypi_extra_requirements=("httpx==0.27.2", "setuptools==80.9.0"),
+    pypi_extra_requirements=("httpx==0.25.2", "setuptools==80.9.0"),
     python_runtime="3.11",
     tap_client="python",
     fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
@@ -3186,6 +3264,8 @@ AGENTS: dict[str, AgentSpec] = {
         LOOPTROOP,
         HIVEKEEP,
         ANYTHINGLLM,
+        LIBRECHAT,
+        VIBESDK,
         AGENTLINK,
         UFO,
         AGENTLAS_OS,

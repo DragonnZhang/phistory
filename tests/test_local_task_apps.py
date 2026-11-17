@@ -146,3 +146,32 @@ def test_local_api_preserves_native_login_cookie_for_owned_application_requests(
         finally:
             server.shutdown()
             thread.join(timeout=5)
+
+
+def test_local_api_reads_ndjson_without_json_coercion_and_preserves_http_errors():
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.rfile.read(int(self.headers["Content-Length"]))
+            if self.path == "/error":
+                self.send_response(409)
+                self.end_headers()
+                self.wfile.write(b'{"error":"native conflict"}')
+                return
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'{"stage":"created"}\n{"agentId":"actual-id"}\n')
+
+        def log_message(self, *args):
+            pass
+
+    with ThreadingHTTPServer(("127.0.0.1", 0), Handler) as server:
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            api = LocalApi(server.server_port, time.monotonic() + 10)
+            assert api.request_bytes("/stream", {}) == b'{"stage":"created"}\n{"agentId":"actual-id"}\n'
+            with pytest.raises(RuntimeError, match=r"POST /error failed \(409\).*native conflict"):
+                api.request("/error", {})
+        finally:
+            server.shutdown()
+            thread.join(timeout=5)
