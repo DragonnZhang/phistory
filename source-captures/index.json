@@ -1571,7 +1571,7 @@
           "path": "source-captures/autoresearchclaw/6dea07326bf432ae582e"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "autoresearchclaw"
     },
     {
@@ -4962,7 +4962,7 @@
           "path": "source-captures/nausicaa-harness/d385635d630f5453a441"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "nausicaa-harness"
     },
     {
@@ -6634,7 +6634,7 @@
           "path": "source-captures/mini-agi/703466d35169f2eefc5c"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "mini-agi"
     },
     {
@@ -6763,7 +6763,7 @@
           "path": "source-captures/octomind/1b972275033b36f463a1"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "octomind"
     },
     {
@@ -6967,7 +6967,7 @@
           "path": "source-captures/inkos/d7a5827b6466a711c4d3"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "inkos"
     },
     {
@@ -8553,7 +8553,7 @@
           "path": "source-captures/cheetahclaws/be3e874d5f62b917e806"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "cheetahclaws"
     },
     {
@@ -8612,7 +8612,7 @@
           "path": "source-captures/trashclaw/1f27faf48042546289ac"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "trashclaw"
     },
     {

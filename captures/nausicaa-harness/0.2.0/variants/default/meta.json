@@ -1,0 +1,63 @@
+{
+  "agent_id": "nausicaa-harness",
+  "agent": "Nausicaa Harness",
+  "package": "nausicaa-harness",
+  "version": "0.2.0",
+  "variant": {
+    "id": "default",
+    "label": "Default · configured OpenAI",
+    "dimensions": {
+      "model": "openai:gpt-5.4",
+      "observer": "native Teto enabled"
+    }
+  },
+  "requested": {
+    "model": "openai:gpt-5.4",
+    "observer": "native Teto enabled"
+  },
+  "observed": {
+    "model": "gpt-5.4",
+    "tool_count": 43
+  },
+  "published_at": "2026-09-19T21:57:36.293Z",
+  "tarball_url": "https://registry.npmjs.org/nausicaa-harness/-/nausicaa-harness-0.2.0.tgz",
+  "binary_version": "0.2.0",
+  "captured_at": "2026-11-17T13:12:08.914339+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44090235981",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44090235981"
+  },
+  "tap_client": "nausicaa",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 8.516,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "nausicaa",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--print",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "NAUSICAA_MODEL": "openai:gpt-5.4"
+  }
+}

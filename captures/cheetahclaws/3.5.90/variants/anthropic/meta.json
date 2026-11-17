@@ -1,0 +1,66 @@
+{
+  "agent_id": "cheetahclaws",
+  "agent": "Cheetahclaws",
+  "package": "cheetahclaws",
+  "version": "3.5.90",
+  "variant": {
+    "id": "anthropic",
+    "label": "Configured Anthropic · headless",
+    "dimensions": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6",
+      "max_turns": "1"
+    }
+  },
+  "requested": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6",
+    "max_turns": "1"
+  },
+  "observed": {
+    "model": "claude-sonnet-4-6",
+    "tool_count": 39
+  },
+  "published_at": "2026-11-08T17:48:43.836905Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/a7/91/e2a0ecc730c7555665d3fcbce4f9bbe7589e13a17290ee7cfb3bfac3cfd7/cheetahclaws-3.5.90-py3-none-any.whl",
+  "binary_version": "cheetahclaws v3.5.90",
+  "captured_at": "2026-11-17T13:12:12.993294+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44090235981",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44090235981"
+  },
+  "tap_client": "cheetahclaws",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 4.041,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "cheetahclaws",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-p",
+    "Reply with one short sentence.",
+    "--output-format",
+    "json",
+    "--max-turns",
+    "1"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "agent_id": "autoresearchclaw",
+  "agent": "AutoResearchClaw",
+  "package": "aiming-lab/AutoResearchClaw",
+  "python_runtime": "3.12",
+  "version": "v0.5.0",
+  "variant": {
+    "id": "topic-init",
+    "label": "Native topic-init pipeline stage",
+    "dimensions": {
+      "stage": "TOPIC_INIT",
+      "model": "native example gpt-4o",
+      "preflight": "connectivity probe skipped",
+      "tools": "none for this pipeline stage"
+    }
+  },
+  "requested": {
+    "stage": "TOPIC_INIT",
+    "model": "native example gpt-4o",
+    "preflight": "connectivity probe skipped",
+    "tools": "none for this pipeline stage"
+  },
+  "observed": {
+    "model": "gpt-4o"
+  },
+  "published_at": "2026-05-20T04:39:43Z",
+  "tarball_url": "https://github.com/aiming-lab/AutoResearchClaw/releases/tag/v0.5.0",
+  "binary_version": "v0.5.0",
+  "captured_at": "2026-11-17T13:12:26.223994+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44090235981",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44090235981"
+  },
+  "tap_client": "researchclaw",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 5.451,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "researchclaw",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "run",
+    "--config",
+    "$PHISTORY_HOME/source/config.researchclaw.example.yaml",
+    "--topic",
+    "Reply with one short sentence.",
+    "--output",
+    "$PHISTORY_HOME/research-run",
+    "--to-stage",
+    "TOPIC_INIT",
+    "--skip-preflight",
+    "--auto-approve"
+  ]
+}

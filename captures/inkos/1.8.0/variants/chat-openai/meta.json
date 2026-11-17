@@ -1,0 +1,78 @@
+{
+  "agent_id": "inkos",
+  "agent": "Inkos",
+  "package": "@actalk/inkos",
+  "bootstrap": {
+    "arguments": [
+      "init",
+      "--lang",
+      "en"
+    ],
+    "environment": {}
+  },
+  "version": "1.8.0",
+  "variant": {
+    "id": "chat-openai",
+    "label": "Configured custom OpenAI · CLI chat",
+    "dimensions": {
+      "entry": "CLI interact / pi Agent session",
+      "provider": "custom OpenAI",
+      "model": "gpt-4o"
+    }
+  },
+  "requested": {
+    "entry": "CLI interact / pi Agent session",
+    "provider": "custom OpenAI",
+    "model": "gpt-4o"
+  },
+  "observed": {
+    "model": "gpt-4o",
+    "tool_count": 6
+  },
+  "published_at": "2026-08-17T04:14:23.356Z",
+  "tarball_url": "https://registry.npmjs.org/@actalk/inkos/-/inkos-1.8.0.tgz",
+  "binary_version": "1.8.0",
+  "captured_at": "2026-11-17T13:12:49.976393+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44090235981",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44090235981"
+  },
+  "tap_client": "inkos",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 23.234,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "inkos",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "interact",
+    "--json",
+    "--message",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "INKOS_LLM_SERVICE": "custom",
+    "INKOS_LLM_PROVIDER": "openai",
+    "INKOS_LLM_BASE_URL": "https://api.openai.com/v1",
+    "INKOS_LLM_MODEL": "gpt-4o"
+  }
+}
