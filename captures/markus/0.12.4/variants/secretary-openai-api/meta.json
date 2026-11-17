@@ -1,0 +1,76 @@
+{
+  "agent_id": "markus",
+  "agent": "Markus",
+  "package": "@markus-global/cli",
+  "version": "0.12.4",
+  "variant": {
+    "id": "secretary-openai-api",
+    "label": "Native seeded Secretary / direct OpenAI API",
+    "dimensions": {
+      "entry": "native server / seeded Secretary message API",
+      "model": "configured direct OpenAI gpt-4.1",
+      "auth": "native local admin login and session cookie",
+      "browser": "NO_BROWSER suppresses dashboard opener"
+    }
+  },
+  "requested": {
+    "entry": "native server / seeded Secretary message API",
+    "model": "configured direct OpenAI gpt-4.1",
+    "auth": "native local admin login and session cookie",
+    "browser": "NO_BROWSER suppresses dashboard opener"
+  },
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 32
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [],
+    "required_user_text": [
+      "Reply with one short sentence."
+    ]
+  },
+  "published_at": "2026-11-14T17:48:13.858Z",
+  "tarball_url": "https://registry.npmjs.org/@markus-global/cli/-/cli-0.12.4.tgz",
+  "binary_version": "v0.12.4",
+  "captured_at": "2026-11-17T15:56:27.948741+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44119483299",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44119483299"
+  },
+  "tap_client": "markus",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 20.86,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "markus",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--config",
+    "$PHISTORY_HOME/.markus/markus.json",
+    "start"
+  ],
+  "capture_environment": {
+    "NO_BROWSER": "1"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "agent_id": "web3gpt",
+  "agent": "Web3GPT",
+  "package": "markeljan/web3gpt",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "build_commands": [
+      [
+        "bun",
+        "install",
+        "--frozen-lockfile"
+      ]
+    ]
+  },
+  "version": "1c9ba797563c2305bd32bb30f078c9be2d3e2d55",
+  "variant": {
+    "id": "builtin-agent-api",
+    "label": "Native anonymous built-in agent API",
+    "dimensions": {
+      "entry": "POST /api/chat / agent_web3gpt",
+      "model": "native gpt-6.1-terra / medium",
+      "auth": "native anonymous local route",
+      "redis": "native fail-open missing Redis; raw warning preserved",
+      "wallet": "no transaction submitted"
+    }
+  },
+  "requested": {
+    "entry": "POST /api/chat / agent_web3gpt",
+    "model": "native gpt-6.1-terra / medium",
+    "auth": "native anonymous local route",
+    "redis": "native fail-open missing Redis; raw warning preserved",
+    "wallet": "no transaction submitted"
+  },
+  "observed": {
+    "model": "gpt-6.1-terra",
+    "tool_count": 3
+  },
+  "capture_selection": {
+    "minimum_tools": 3,
+    "required_system_text": [],
+    "required_user_text": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/markeljan/web3gpt/archive/1c9ba797563c2305bd32bb30f078c9be2d3e2d55.tar.gz",
+  "binary_version": "1c9ba797563c2305bd32bb30f078c9be2d3e2d55",
+  "captured_at": "2026-11-17T15:54:36.726678+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44119483299",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44119483299"
+  },
+  "tap_client": "bun",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 17.085,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "bun",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "run",
+    "--cwd",
+    "$PHISTORY_HOME/source",
+    "dev",
+    "--hostname",
+    "127.0.0.1",
+    "--port",
+    "46839"
+  ]
+}
