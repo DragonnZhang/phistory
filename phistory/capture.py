@@ -226,6 +226,11 @@ def capture_target(
                 **({"python_runtime": target.agent.python_runtime} if target.agent.python_runtime else {}),
                 **({"package_extras": list(target.agent.pypi_extras)} if target.agent.pypi_extras else {}),
                 **(
+                    {"package_runtime_requirements": list(target.agent.pypi_extra_requirements)}
+                    if target.agent.pypi_extra_requirements
+                    else {}
+                ),
+                **(
                     {"package_layout": target.agent.release_asset_layout}
                     if target.agent.release_asset_layout != "binary"
                     else {}

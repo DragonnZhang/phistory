@@ -127,6 +127,7 @@ class AgentSpec:
     github_release_install: GitHubReleaseInstall = "wheel"
     track_latest: bool = True
     pypi_extras: tuple[str, ...] = ()
+    pypi_extra_requirements: tuple[str, ...] = ()
     capture_timeout_seconds: int = 1800
     release_asset_layout: Literal["binary", "bundle", "wheel"] = "binary"
     release_requirement_assets: tuple[str, ...] = ()

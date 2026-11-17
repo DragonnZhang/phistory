@@ -34,6 +34,27 @@ def test_pypi_extra_is_installed_without_changing_release_identity(tmp_path, mon
     assert commands[-1][-1] == "bub[app]==0.6.1"
 
 
+def test_pypi_compatibility_requirements_share_resolution_and_invalidate_stale_installs(tmp_path, monkeypatch):
+    agent = get_agent("self-operating-computer")
+    install = tmp_path / "install"
+    commands = []
+
+    def run(command, **kwargs):
+        commands.append(command)
+        if command[:2] == ["uv", "venv"]:
+            (install / "bin").mkdir(parents=True)
+            (install / "bin/python").touch()
+
+    monkeypatch.setattr(packages, "run", run)
+    result = packages.install_agent(agent, "1.5.8", install)
+    assert commands[-1][-3:] == ["self-operating-computer==1.5.8", "httpx==0.27.2", "setuptools==80.9.0"]
+    assert packages.install_agent(agent, "1.5.8", install) == result
+    assert len(commands) == 2
+    changed = replace(agent, pypi_extra_requirements=("httpx==0.27.1", "setuptools==80.9.0"))
+    packages.install_agent(changed, "1.5.8", install)
+    assert len(commands) == 4 and commands[-1][-2] == "httpx==0.27.1"
+
+
 @pytest.mark.parametrize("suffix,mode", [("tar.gz", "w:gz"), ("tar.xz", "w:xz")])
 def test_release_bundle_preserves_sidecars_launcher_name_and_cache(tmp_path, monkeypatch, suffix, mode):
     agent = replace(get_agent("jcode"), release_asset=f"jcode-linux-x86_64.{suffix}")

@@ -232,11 +232,24 @@ def _pypi_versions(agent: AgentSpec, *, include_prerelease: bool) -> list[Versio
     return sorted(versions, key=lambda item: (item.published_at or "", item.version))
 
 
+def _matches_extra_requirements(marker: Path, requirements: tuple[str, ...]) -> bool:
+    if not requirements:
+        return True
+    try:
+        return json.loads(marker.read_text(encoding="utf-8")) == list(requirements)
+    except (OSError, ValueError):
+        return False
+
+
 def _install_pypi(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     bin_dir = install_dir / "bin"
     executable = bin_dir / agent_executable(agent)
     complete = install_dir / ".phistory-python-package-installed"
-    if executable.exists() and (executable.name != "python" or complete.exists()):
+    if (
+        executable.exists()
+        and (executable.name != "python" or complete.exists())
+        and _matches_extra_requirements(complete, agent.pypi_extra_requirements)
+    ):
         return bin_dir
     if install_dir.exists():
         shutil.rmtree(install_dir)
@@ -247,12 +260,20 @@ def _install_pypi(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     )
     extras = f"[{','.join(agent.pypi_extras)}]" if agent.pypi_extras else ""
     run(
-        ["uv", "pip", "install", "--python", str(bin_dir / "python"), f"{agent.package}{extras}=={version}"],
+        [
+            "uv",
+            "pip",
+            "install",
+            "--python",
+            str(bin_dir / "python"),
+            f"{agent.package}{extras}=={version}",
+            *agent.pypi_extra_requirements,
+        ],
         timeout=INSTALL_TIMEOUT_SECONDS,
     )
     if not executable.exists():
         raise RuntimeError(f"PyPI install did not create executable: {executable}")
-    complete.touch()
+    complete.write_text(json.dumps(list(agent.pypi_extra_requirements)), encoding="utf-8")
     return bin_dir
 
 
@@ -318,7 +339,11 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
         return _install_github_release(agent, revision, install_dir, archive_url=url, editable=True)
     bin_dir = install_dir / "bin"
     complete = install_dir / ".phistory-source-installed"
-    if complete.exists() and (bin_dir / agent_executable(agent)).exists():
+    if (
+        complete.exists()
+        and (bin_dir / agent_executable(agent)).exists()
+        and _matches_extra_requirements(complete, agent.source_python_dependencies)
+    ):
         return bin_dir
     if install_dir.exists():
         shutil.rmtree(install_dir)
@@ -362,7 +387,7 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
             )
         if not (bin_dir / agent_executable(agent)).exists():
             raise RuntimeError("source requirements installation did not provide the runtime executable")
-        complete.touch()
+        complete.write_text(json.dumps(list(agent.source_python_dependencies)), encoding="utf-8")
         return bin_dir
     for directory in (roots[0] / "bin", roots[0] / "tools"):
         if directory.is_dir():
@@ -377,7 +402,7 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
         if system is None:
             raise RuntimeError(f"source runtime executable is unavailable: {agent_executable(agent)}")
         executable.symlink_to(system)
-    complete.touch()
+    complete.write_text(json.dumps(list(agent.source_python_dependencies)), encoding="utf-8")
     return bin_dir
 
 
