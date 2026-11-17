@@ -1787,7 +1787,6 @@ HIVEKEEP = AgentSpec(
     required_user_text=("[A new user just finished initial setup and opened the onboarding chat.",),
     capture_min_tools=1,
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("native-queenie-onboarding",),
     default_variant=_default(
@@ -1838,7 +1837,7 @@ LOOPTROOP = AgentSpec(
             dimensions={
                 "entry": "real daemon, GitHub project and ticket start",
                 "host": "native managed OpenCode",
-                "model": "configured OpenAI gpt-4.1 single-model council",
+                "model": "configured native two-model OpenAI council: gpt-4.1 and gpt-4.1-mini",
                 "scope": "first PROM1 interview, native read-only tool policy",
             },
         ),

@@ -69,6 +69,7 @@ def test_parse_default_agents():
         "autoresearchclaw",
         "inkos",
         "db-gpt",
+        "hivekeep",
         "ufo",
         "longhorizon-harness",
         "markus",

@@ -17,7 +17,7 @@ env:
   GH_TOKEN: ${{ github.token }}
   GITHUB_TOKEN: ${{ github.token }}
   # Legacy kimi ended at 1.51.0; 1.52.0 only prints a migration notice (kimi-cli#2666).
-  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,opencode,pi,omp,gemini-cli,goose,crush,mini-swe-agent,nanobot,bub,jcode,pi-rust,codewhale,opendev,kilocode,cline,letta-code,prime-agent,openinterpreter,fibona-agent,ctxagent,deepseek-reasonix,quorum-cli,tianshu-harness,octomind,headlong,openagent,nausicaa-harness,cheetahclaws,trashclaw,mini-agi,openmanus,cuga-agent,autoresearchclaw,inkos,db-gpt,ufo,longhorizon-harness,markus,wechat-mac-rpa,autoref,agent-s,critic-training,empryo,web3gpt,atomic-agent,hive,intentkit,mirix,ouroboros,zcode,agent-zero,raven,gpt-researcher,openevolve,deer-flow,omni-rewriter,agenticseek,nanomuse,pr-agent,deepanalyze,localgpt,bambooai,cowagent
+  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,opencode,pi,omp,gemini-cli,goose,crush,mini-swe-agent,nanobot,bub,jcode,pi-rust,codewhale,opendev,kilocode,cline,letta-code,prime-agent,openinterpreter,fibona-agent,ctxagent,deepseek-reasonix,quorum-cli,tianshu-harness,octomind,headlong,openagent,nausicaa-harness,cheetahclaws,trashclaw,mini-agi,openmanus,cuga-agent,autoresearchclaw,inkos,db-gpt,hivekeep,ufo,longhorizon-harness,markus,wechat-mac-rpa,autoref,agent-s,critic-training,empryo,web3gpt,atomic-agent,hive,intentkit,mirix,ouroboros,zcode,agent-zero,raven,gpt-researcher,openevolve,deer-flow,omni-rewriter,agenticseek,nanomuse,pr-agent,deepanalyze,localgpt,bambooai,cowagent
 
 jobs:
   capture:

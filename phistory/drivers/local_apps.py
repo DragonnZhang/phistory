@@ -241,8 +241,8 @@ def _submit_task(context: CaptureRunContext, api: LocalApi, log, *, catalog_gate
             profile = api.request("/api/profile")
             settings = {
                 "mainImplementer": "openai/gpt-4.1",
-                "councilMembers": json.dumps(["openai/gpt-4.1"]),
-                "minCouncilQuorum": 1,
+                "councilMembers": json.dumps(["openai/gpt-4.1", "openai/gpt-4.1-mini"]),
+                "minCouncilQuorum": 2,
             }
             profile = api.request("/api/profile", settings, method="PATCH" if profile else "POST")
             project = api.request(

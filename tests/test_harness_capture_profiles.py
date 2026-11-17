@@ -21,7 +21,6 @@ def test_unverified_profiles_require_explicit_selection():
         "looptroop",
         "anything-llm",
         "agentlink",
-        "hivekeep",
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
