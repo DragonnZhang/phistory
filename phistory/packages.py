@@ -240,7 +240,10 @@ def _install_pypi(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     if install_dir.exists():
         shutil.rmtree(install_dir)
     install_dir.mkdir(parents=True, exist_ok=True)
-    run(["uv", "venv", str(install_dir)], timeout=120)
+    run(
+        ["uv", "venv", str(install_dir), *(["--python", agent.python_runtime] if agent.python_runtime else [])],
+        timeout=120,
+    )
     extras = f"[{','.join(agent.pypi_extras)}]" if agent.pypi_extras else ""
     run(
         ["uv", "pip", "install", "--python", str(bin_dir / "python"), f"{agent.package}{extras}=={version}"],
@@ -310,7 +313,7 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
     if agent.github_source_install == "editable":
         return _install_github_release(agent, revision, install_dir, archive_url=url)
     bin_dir = install_dir / "bin"
-    complete = install_dir / ".phistory-scripts-installed"
+    complete = install_dir / ".phistory-source-installed"
     if complete.exists() and (bin_dir / agent_executable(agent)).exists():
         return bin_dir
     if install_dir.exists():
@@ -324,6 +327,25 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
     roots = list(source.iterdir())
     if len(roots) != 1 or not roots[0].is_dir():
         raise RuntimeError("source archive must contain exactly one repository root")
+    if agent.github_source_install == "requirements":
+        run(
+            [
+                "uv",
+                "venv",
+                str(install_dir),
+                "--allow-existing",
+                *(["--python", agent.python_runtime] if agent.python_runtime else []),
+            ],
+            timeout=120,
+        )
+        run(
+            ["uv", "pip", "install", "--python", str(bin_dir / "python"), "-r", str(roots[0] / "requirements.txt")],
+            timeout=INSTALL_TIMEOUT_SECONDS,
+        )
+        if not (bin_dir / agent_executable(agent)).exists():
+            raise RuntimeError("source requirements installation did not provide the runtime executable")
+        complete.touch()
+        return bin_dir
     for directory in (roots[0] / "bin", roots[0] / "tools"):
         if directory.is_dir():
             for command in directory.iterdir():
@@ -339,6 +361,14 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
         executable.symlink_to(system)
     complete.touch()
     return bin_dir
+
+
+def installed_source_root(bin_dir: Path) -> Path:
+    source = bin_dir.parent / "source"
+    roots = [path for path in source.iterdir() if path.is_dir()]
+    if len(roots) != 1:
+        raise RuntimeError(f"expected one installed source root in {source}")
+    return roots[0]
 
 
 def _install_github_release(
@@ -362,7 +392,9 @@ def _install_github_release(
         source_root = _find_source_root(source_dir)
         venv_args = ["uv", "venv", str(install_dir), "--allow-existing"]
         python_version = source_root / ".python-version"
-        if python_version.is_file():
+        if agent.python_runtime:
+            venv_args.extend(["--python", agent.python_runtime])
+        elif python_version.is_file():
             venv_args.extend(["--python", python_version.read_text(encoding="utf-8").strip()])
         run(venv_args, timeout=120)
         if (source_root / "uv.lock").is_file():
@@ -386,7 +418,10 @@ def _install_github_release(
                 timeout=INSTALL_TIMEOUT_SECONDS,
             )
     else:
-        run(["uv", "venv", str(install_dir)], timeout=120)
+        run(
+            ["uv", "venv", str(install_dir), *(["--python", agent.python_runtime] if agent.python_runtime else [])],
+            timeout=120,
+        )
         run(
             ["uv", "pip", "install", "--python", str(bin_dir / "python"), package_ref],
             timeout=INSTALL_TIMEOUT_SECONDS,

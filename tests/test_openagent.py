@@ -21,12 +21,14 @@ def test_store_driver_preserves_native_prompt_and_tools_instead_of_using_provide
         return native if path.startswith("/api/get-store") else True
 
     monkeypatch.setattr("phistory.drivers.openagent._api", api)
-    _configure_and_prompt(object())
+    credentials = ("local-client", "local-secret")
+    _configure_and_prompt(object(), credentials)
     updated = calls[2][1]
     assert updated == {**native, "modelProvider": "phistory", "externalApiKey": "phistory-local-store-key"}
     assert native["tools"] == ["native-tool"] and "modelProvider" not in native
     assert calls[-1][0] == "/api/v1/chat/completions"
     assert calls[-1][2] == {"bearer": "phistory-local-store-key"}
+    assert all(call[2] == {"basic_auth": credentials} for call in calls[:3])
     assert calls[-1][1]["messages"] == [{"role": "user", "content": PROMPT}]
     assert not any("test-provider" in call[0] for call in calls)
 
@@ -47,5 +49,7 @@ def test_local_api_checks_error_envelope_and_sends_store_bearer():
     assert request.get_header("Authorization") == "Bearer local-key"
     assert json.loads(request.data) == {"x": 1}
     assert request.full_url == "http://127.0.0.1:14000/api/example"
+    _api(opener, "/api/example", basic_auth=("local-client", "local-secret"))
+    assert opener.requests[-1].get_header("Authorization") == "Basic bG9jYWwtY2xpZW50OmxvY2FsLXNlY3JldA=="
     with pytest.raises(RuntimeError, match="rejected"):
         _api(Opener({"status": "error", "msg": "rejected"}), "/api/example")

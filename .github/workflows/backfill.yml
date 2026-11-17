@@ -40,6 +40,14 @@ on:
           - octomind
           - headlong
           - openagent
+          - nausicaa-harness
+          - cheetahclaws
+          - trashclaw
+          - mini-agi
+          - openmanus
+          - cuga-agent
+          - autoresearchclaw
+          - inkos
       variants:
         description: Optional comma-separated capture variant ids
         required: false

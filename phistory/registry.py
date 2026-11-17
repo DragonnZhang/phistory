@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, HomeProfile, TapMode
-from phistory.task_entries import CTXAGENT_PREFETCH, CTXAGENT_TASK, QUORUM_TASK
+from phistory.task_entries import BROWSER_USE_PREFETCH, CTXAGENT_PREFETCH, CTXAGENT_TASK, MINIAGI_TASK, QUORUM_TASK
 
 
 def _default(
@@ -1239,7 +1239,6 @@ OPENINTERPRETER = AgentSpec(
     recorded_env=("OPEN_INTERPRETER_NONINTERACTIVE",),
     home_profile="interpreter",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     default_variant=_default(
         ("--no-yolo", "--", "exec", "--skip-git-repo-check", "--ephemeral", "--json", "Reply with one short sentence."),
@@ -1258,7 +1257,6 @@ FIBONA = AgentSpec(
     fake_env={"FIBONA_API_KEY": "phistory-fake-api-key"},
     home_profile="fibona",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     latest_variant_ids=("minimal", "terminal"),
     default_variant=_default(
@@ -1287,7 +1285,6 @@ CTXAGENT = AgentSpec(
     home_profile="ctxagent",
     bootstrap_args=("-c", CTXAGENT_PREFETCH),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     latest_variant_ids=("paper-api",),
     default_variant=_default(
@@ -1320,7 +1317,6 @@ REASONIX = AgentSpec(
     fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
     home_profile="reasonix",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.", "--output-format", "json")),
 )
@@ -1335,7 +1331,6 @@ QUORUM = AgentSpec(
     extra_env={"OPENAI_MODELS": "gpt-4.1,gpt-4.1-mini", "QUORUM_ROUNDS_PER_AGENT": "1"},
     recorded_env=("OPENAI_MODELS", "QUORUM_ROUNDS_PER_AGENT"),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("standard-api",),
     default_variant=_default(
@@ -1367,7 +1362,6 @@ TIANSHU = AgentSpec(
     recorded_env=("RIVET_NO_UPDATE_CHECK",),
     home_profile="tianshu",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.", "--json")),
     variants=(
@@ -1395,8 +1389,14 @@ OCTOMIND = AgentSpec(
         "OCTOMIND_TELEMETRY": "0",
         "PHISTORY_OCTOMIND_TAP_COMMIT": "",
         "PHISTORY_OCTOMIND_TAP_REPOSITORY": "https://github.com/muvon/octomind-tap",
+        "PHISTORY_OCTOMIND_DEPENDENCIES": "",
     },
-    recorded_env=("OCTOMIND_TELEMETRY", "PHISTORY_OCTOMIND_TAP_COMMIT", "PHISTORY_OCTOMIND_TAP_REPOSITORY"),
+    recorded_env=(
+        "OCTOMIND_TELEMETRY",
+        "PHISTORY_OCTOMIND_TAP_COMMIT",
+        "PHISTORY_OCTOMIND_TAP_REPOSITORY",
+        "PHISTORY_OCTOMIND_DEPENDENCIES",
+    ),
     home_profile="octomind",
     tap_mode="forward",
     track_latest=False,
@@ -1430,7 +1430,6 @@ HEADLONG = AgentSpec(
     recorded_env=("SHELLM_THINKER_ENV", "SHELLM_MAX_ITERATIONS"),
     home_profile="headlong",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     default_variant=_default(
         ("--no-yolo", "--", "-c", '. "$HEADLONG_HOME/identities/phistory/activate"; thinkers step monolith'),
@@ -1453,7 +1452,14 @@ OPENAGENT = AgentSpec(
     release_asset="openagent_linux_x86_64",
     release_asset_binary="openagent_linux_x86_64",
     tap_client="openagent",
-    fake_env={},
+    fake_env={"clientSecret": "phistory-local-client-secret"},
+    extra_env={
+        "clientId": "phistory-local-client",
+        "casdoorApplication": "phistory",
+        "casdoorEndpoint": "",
+        "issuer": "",
+    },
+    recorded_env=("clientId", "casdoorApplication", "casdoorEndpoint", "issuer"),
     home_profile="openagent",
     tap_mode="forward",
     track_latest=False,
@@ -1469,7 +1475,263 @@ OPENAGENT = AgentSpec(
             "Local Store API · configured OpenAI",
             ("--no-yolo", "--", "serve"),
             driver="openagent-store",
-            dimensions={"entry": "native built-in Store completion API", "provider": "OpenAI", "model": "gpt-4.1"},
+            dimensions={
+                "entry": "native built-in Store completion API",
+                "provider": "OpenAI",
+                "model": "gpt-4.1",
+                "setup_auth": "configured local application Basic; no hosted Casdoor",
+            },
+        ),
+    ),
+)
+
+
+NAUSICAA = AgentSpec(
+    id="nausicaa-harness",
+    display_name="Nausicaa Harness",
+    package="nausicaa-harness",
+    tap_client="nausicaa",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={"NAUSICAA_MODEL": "openai:gpt-5.4"},
+    recorded_env=("NAUSICAA_MODEL",),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "--print", "Reply with one short sentence."),
+        label="Default · configured OpenAI",
+        dimensions={"model": "openai:gpt-5.4", "observer": "native Teto enabled"},
+    ),
+)
+
+CHEETAHCLAWS = AgentSpec(
+    id="cheetahclaws",
+    display_name="Cheetahclaws",
+    package="cheetahclaws",
+    source="pypi",
+    tap_client="cheetahclaws",
+    fake_env={},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("anthropic",),
+    default_variant=_default(
+        ("--no-yolo", "--", "-p", "Reply with one short sentence.", "--output-format", "json", "--max-turns", "1"),
+        capture_unavailable="Native default is local Ollama gemma4:e4b; current tap has no protocol-correct Ollama capture-only response. Use the configured Anthropic surface.",
+    ),
+    variants=(
+        _variant(
+            "anthropic",
+            "Configured Anthropic · headless",
+            ("--no-yolo", "--", "-p", "Reply with one short sentence.", "--output-format", "json", "--max-turns", "1"),
+            home_profile="cheetah-anthropic",
+            extra_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
+            dimensions={"provider": "anthropic", "model": "claude-sonnet-4-6", "max_turns": "1"},
+        ),
+    ),
+)
+
+TRASHCLAW = AgentSpec(
+    id="trashclaw",
+    display_name="Trashclaw",
+    package="Scottcjn/trashclaw",
+    source="github-source",
+    github_source_install="scripts",
+    tap_client="python3",
+    fake_env={},
+    extra_env={"TRASHCLAW_URL": "https://api.openai.com/v1", "TRASHCLAW_MAX_ROUNDS": "1"},
+    recorded_env=("TRASHCLAW_URL", "TRASHCLAW_MAX_ROUNDS"),
+    home_profile="trashclaw",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(
+        ("--no-yolo", "--", "$PHISTORY_SOURCE_ROOT/trashclaw.py", "--exec", "Reply with one short sentence."),
+        dimensions={
+            "transport": "explicit remote HTTP proxy endpoint; native payload has no model/auth",
+            "max_rounds": "1",
+        },
+    ),
+)
+
+MINIAGI = AgentSpec(
+    id="mini-agi",
+    display_name="MiniAGI",
+    package="muellerberndt/mini-agi",
+    source="github-source",
+    github_source_install="requirements",
+    python_runtime="3.11",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    home_profile="mini-agi",
+    bootstrap_args=("-c", "import tiktoken; tiktoken.encoding_for_model('gpt-4')"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("think-api",),
+    default_variant=_default(
+        capture_unavailable="The interactive CLI retries malformed dummy action answers indefinitely; use a bounded native think() API step."
+    ),
+    variants=(
+        _variant(
+            "think-api",
+            "Native think() · one step",
+            ("--no-yolo", "--", "-c", MINIAGI_TASK),
+            dimensions={
+                "entry": "MiniAGI.think",
+                "models": "gpt-4,gpt-3.5-turbo",
+                "action_protocol": "native text commands",
+            },
+        ),
+    ),
+)
+
+OPENMANUS = AgentSpec(
+    id="openmanus",
+    display_name="OpenManus",
+    package="FoundationAgents/OpenManus",
+    source="github-source",
+    github_source_install="requirements",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={"UV_OFFLINE": "1"},
+    recorded_env=("UV_OFFLINE",),
+    home_profile="openmanus",
+    bootstrap_args=("-c", BROWSER_USE_PREFETCH),
+    bootstrap_env={"UV_OFFLINE": "0"},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    default_variant=_default(
+        ("--no-yolo", "--", "$PHISTORY_SOURCE_ROOT/main.py", "--prompt", "Reply with one short sentence."),
+        label="Default · configured OpenAI, native browser MCP startup",
+        dimensions={
+            "provider": "OpenAI-compatible",
+            "model": "gpt-4o",
+            "browser_mcp": "native startup with pre-staged public package",
+        },
+    ),
+    variants=(
+        _variant(
+            "core",
+            "Configured OpenAI · browser MCP disabled",
+            ("--no-yolo", "--", "$PHISTORY_SOURCE_ROOT/main.py", "--prompt", "Reply with one short sentence."),
+            extra_env={"OPENMANUS_DISABLE_BROWSER_USE": "1"},
+            dimensions={"provider": "OpenAI-compatible", "model": "gpt-4o", "browser_mcp": "explicitly disabled"},
+        ),
+    ),
+)
+
+CUGA = AgentSpec(
+    id="cuga-agent",
+    display_name="CUGA",
+    package="cuga",
+    source="pypi",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={
+        "AGENT_SETTING_CONFIG": "settings.openai.toml",
+        "PHISTORY_CUGA_EXAMPLE_SOURCE": "https://raw.githubusercontent.com/cuga-project/cuga-agent/v0.4.4/docs/examples/hello_tools/main.py",
+        "PHISTORY_CUGA_EXAMPLE_SHA256": "",
+    },
+    recorded_env=("AGENT_SETTING_CONFIG", "PHISTORY_CUGA_EXAMPLE_SOURCE", "PHISTORY_CUGA_EXAMPLE_SHA256"),
+    home_profile="cuga",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("hello-tools-api",),
+    default_variant=_default(
+        capture_unavailable="CUGA is a caller-configured framework; the named official hello-tools SDK example supplies its real task and tool selection."
+    ),
+    variants=(
+        _variant(
+            "hello-tools-api",
+            "Official hello-tools SDK example · codeact",
+            ("--no-yolo", "--", "$PHISTORY_CUGA_EXAMPLE"),
+            dimensions={
+                "entry": "official v0.4.4 hello_tools example on current PyPI package",
+                "execution_mode": "native codeact",
+                "tool_scope": "two official example tools",
+            },
+        ),
+    ),
+)
+
+AUTORESEARCHCLAW = AgentSpec(
+    id="autoresearchclaw",
+    display_name="AutoResearchClaw",
+    package="aiming-lab/AutoResearchClaw",
+    source="github-release",
+    github_release_install="editable",
+    python_runtime="3.12",
+    tap_client="researchclaw",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    home_profile="researchclaw",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("topic-init",),
+    default_variant=_default(
+        capture_unavailable="The full research pipeline continues into external literature and experiments; use the named native TOPIC_INIT stage boundary for capture."
+    ),
+    variants=(
+        _variant(
+            "topic-init",
+            "Native topic-init pipeline stage",
+            (
+                "--no-yolo",
+                "--",
+                "run",
+                "--config",
+                "$PHISTORY_SOURCE_ROOT/config.researchclaw.example.yaml",
+                "--topic",
+                "Reply with one short sentence.",
+                "--output",
+                "$PHISTORY_HOME/research-run",
+                "--to-stage",
+                "TOPIC_INIT",
+                "--skip-preflight",
+                "--auto-approve",
+            ),
+            dimensions={
+                "stage": "TOPIC_INIT",
+                "model": "native example gpt-4o",
+                "preflight": "connectivity probe skipped",
+                "tools": "none for this pipeline stage",
+            },
+        ),
+    ),
+)
+
+INKOS = AgentSpec(
+    id="inkos",
+    display_name="Inkos",
+    package="@actalk/inkos",
+    tap_client="inkos",
+    fake_env={"INKOS_LLM_API_KEY": "phistory-fake-api-key"},
+    extra_env={
+        "INKOS_LLM_SERVICE": "custom",
+        "INKOS_LLM_PROVIDER": "openai",
+        "INKOS_LLM_BASE_URL": "https://api.openai.com/v1",
+        "INKOS_LLM_MODEL": "gpt-4o",
+    },
+    recorded_env=("INKOS_LLM_SERVICE", "INKOS_LLM_PROVIDER", "INKOS_LLM_BASE_URL", "INKOS_LLM_MODEL"),
+    bootstrap_args=("init", "--lang", "en"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("chat-openai",),
+    default_variant=_default(
+        capture_unavailable="A fresh Inkos project has no usable model/base URL; use the named configured custom/OpenAI CLI chat surface."
+    ),
+    variants=(
+        _variant(
+            "chat-openai",
+            "Configured custom OpenAI · CLI chat",
+            ("--no-yolo", "--", "interact", "--json", "--message", "Reply with one short sentence."),
+            dimensions={"entry": "CLI interact / pi Agent session", "provider": "custom OpenAI", "model": "gpt-4o"},
         ),
     ),
 )
@@ -1517,6 +1779,14 @@ AGENTS: dict[str, AgentSpec] = {
         OCTOMIND,
         HEADLONG,
         OPENAGENT,
+        NAUSICAA,
+        CHEETAHCLAWS,
+        TRASHCLAW,
+        MINIAGI,
+        OPENMANUS,
+        CUGA,
+        AUTORESEARCHCLAW,
+        INKOS,
     )
 }
 AGENT_ORDER = tuple(AGENTS)

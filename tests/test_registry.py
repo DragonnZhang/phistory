@@ -41,6 +41,13 @@ def test_parse_default_agents():
         "cline",
         "letta-code",
         "prime-agent",
+        "openinterpreter",
+        "fibona-agent",
+        "ctxagent",
+        "deepseek-reasonix",
+        "quorum-cli",
+        "tianshu-harness",
+        "headlong",
     ]
     assert "kimi" in AGENT_ORDER
     assert parse_agent_ids("kimi,kimi-code") == ["kimi", "kimi-code"]

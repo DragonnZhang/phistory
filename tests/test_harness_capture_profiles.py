@@ -14,15 +14,16 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
-        "openinterpreter",
-        "fibona-agent",
-        "ctxagent",
-        "deepseek-reasonix",
-        "quorum-cli",
-        "tianshu-harness",
         "octomind",
-        "headlong",
         "openagent",
+        "nausicaa-harness",
+        "cheetahclaws",
+        "trashclaw",
+        "mini-agi",
+        "openmanus",
+        "cuga-agent",
+        "autoresearchclaw",
+        "inkos",
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
@@ -144,6 +145,9 @@ def test_prime_preserves_bundle_and_bootstraps_kernel_before_offline_capture(tmp
 def test_octomind_preserves_native_role_and_records_independent_tap_revision(tmp_path, monkeypatch):
     revision = "b" * 40
     monkeypatch.setattr("phistory.runtime_setup.prepare_octomind_tap", lambda *_: revision)
+    monkeypatch.setattr(
+        "phistory.runtime_setup.prepare_octobrain", lambda *_: {"version": "octobrain 0.15.2", "sha256": "d" * 64}
+    )
     agent = get_agent("octomind")
     variant = agent.variant("http")
     item = CaptureTarget(agent, VersionInfo("0.72.0"), variant, tmp_path)
@@ -153,6 +157,7 @@ def test_octomind_preserves_native_role_and_records_independent_tap_revision(tmp
     assert "--model" not in variant.run_args
     assert "assistant:chief" not in variant.run_args
     assert env["PHISTORY_OCTOMIND_TAP_COMMIT"] == revision
+    assert json.loads(env["PHISTORY_OCTOMIND_DEPENDENCIES"])["octobrain"]["version"] == "octobrain 0.15.2"
     assert env["OCTOMIND_DATA_DIR"] == str(tmp_path / "home/.octomind")
 
 
@@ -166,3 +171,20 @@ def test_opendev_setup_marker_preserves_all_native_defaults(tmp_path):
 def test_reasonix_stored_key_preflight_uses_isolated_dotenv(tmp_path):
     env = _capture_env(target("deepseek-reasonix", tmp_path), tmp_path / "bin", tmp_path / "home")
     assert (Path(env["REASONIX_HOME"]) / ".env").read_text() == "DEEPSEEK_API_KEY=phistory-fake-api-key\n"
+
+
+def test_openmanus_config_and_workspace_are_copied_per_capture(tmp_path):
+    install = tmp_path / "install"
+    source = install / "source/openmanus"
+    (source / "config").mkdir(parents=True)
+    original = source / "config/config.toml"
+    original.write_text("native original")
+    item = target("openmanus", tmp_path)
+    first = _capture_env(item, install / "bin", tmp_path / "first")
+    second = _capture_env(item, install / "bin", tmp_path / "second")
+    assert first["PHISTORY_SOURCE_ROOT"] != second["PHISTORY_SOURCE_ROOT"]
+    assert first["PYTHONPATH"] == first["PHISTORY_SOURCE_ROOT"]
+    assert original.read_text() == "native original"
+    config = tomllib.loads((Path(first["PHISTORY_SOURCE_ROOT"]) / "config/config.toml").read_text())
+    assert config["llm"]["model"] == "gpt-4o"
+    assert config["llm"]["base_url"] == "https://api.openai.com/v1"

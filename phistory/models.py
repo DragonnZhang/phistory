@@ -43,6 +43,12 @@ HomeProfile = Literal[
     "octomind",
     "headlong",
     "openagent",
+    "cheetah-anthropic",
+    "trashclaw",
+    "mini-agi",
+    "openmanus",
+    "researchclaw",
+    "cuga",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -111,7 +117,8 @@ class AgentSpec:
     bootstrap_args: tuple[str, ...] = ()
     bootstrap_env: dict[str, str] = field(default_factory=dict)
     release_tag_prefix: str | None = None
-    github_source_install: Literal["editable", "scripts"] = "editable"
+    github_source_install: Literal["editable", "scripts", "requirements"] = "editable"
+    python_runtime: str | None = None
 
     def __post_init__(self) -> None:
         if self.capture_timeout_seconds < 1:

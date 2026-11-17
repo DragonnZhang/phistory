@@ -27,7 +27,7 @@ LEGACY_CLAUDE_FORWARD_PATCH = (
 
 
 def run_oneshot(context: CaptureRunContext) -> CaptureExecution:
-    argv = tap_command(context.target, context.prompt_path, context.tap_output_dir)
+    argv = tap_command(context.target, context.prompt_path, context.tap_output_dir, context.env)
     env, compatibility_patches = _prepare_claude_forward_compat(context, context.env)
     env = prepare_qoder_env(context, env)
     result = _run(argv, context, env)

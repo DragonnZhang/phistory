@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import http.cookiejar
 import json
 import socket
@@ -23,6 +24,7 @@ def run_openagent_store(context: CaptureRunContext) -> CaptureExecution:
     argv = tap_command(context.target, context.prompt_path, context.tap_output_dir)
     context.tap_output_dir.mkdir(parents=True, exist_ok=True)
     log_path = context.tap_output_dir / "client.log"
+    failure = None
     with log_path.open("w", encoding="utf-8") as log:
         process = subprocess.Popen(
             argv,
@@ -37,25 +39,29 @@ def run_openagent_store(context: CaptureRunContext) -> CaptureExecution:
             opener = urllib.request.build_opener(
                 urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()), urllib.request.ProxyHandler({})
             )
-            _signin_when_ready(opener, process)
-            _configure_and_prompt(opener)
+            credentials = (context.env["clientId"], context.env["clientSecret"])
+            _application_auth_when_ready(opener, process, credentials)
+            _configure_and_prompt(opener, credentials)
             wait_for_prompt(context.tap_output_dir, process, PROMPT)
+        except Exception as exc:
+            failure = exc
         finally:
             stop_process(process)
-    result = CommandResult(
-        tuple(argv), process.returncode or 0, log_path.read_text(encoding="utf-8", errors="replace"), ""
-    )
+    output = log_path.read_text(encoding="utf-8", errors="replace")
+    if failure is not None:
+        raise RuntimeError(f"{failure}\nOpenAgent client log:\n{output[-4000:]}") from failure
+    result = CommandResult(tuple(argv), process.returncode or 0, output, "")
     return CaptureExecution(tuple(argv), result)
 
 
-def _signin_when_ready(opener, process) -> None:
+def _application_auth_when_ready(opener, process, credentials: tuple[str, str]) -> None:
     deadline = time.monotonic() + 60
     last_error = None
     while time.monotonic() < deadline:
         if process.poll() is not None:
-            raise RuntimeError(f"OpenAgent exited before local sign-in ({process.returncode})")
+            raise RuntimeError(f"OpenAgent exited before local application auth ({process.returncode})")
         try:
-            _api(opener, "/api/signin", {"username": "admin", "password": "123"})
+            _api(opener, "/api/get-store?id=admin/store-built-in", basic_auth=credentials)
             return
         except (OSError, urllib.error.URLError) as exc:
             last_error = exc
@@ -63,7 +69,7 @@ def _signin_when_ready(opener, process) -> None:
     raise RuntimeError(f"OpenAgent local server did not become ready: {last_error}")
 
 
-def _configure_and_prompt(opener) -> None:
+def _configure_and_prompt(opener, credentials: tuple[str, str]) -> None:
     _api(
         opener,
         "/api/add-provider",
@@ -77,13 +83,14 @@ def _configure_and_prompt(opener) -> None:
             "state": "Active",
             "isDefault": True,
         },
+        basic_auth=credentials,
     )
     path = "/api/get-store?id=admin/store-built-in"
-    store = _api(opener, path)
+    store = _api(opener, path, basic_auth=credentials)
     if not isinstance(store, dict):
         raise RuntimeError("OpenAgent's native built-in Store was not returned")
     store = {**store, "modelProvider": "phistory", "externalApiKey": "phistory-local-store-key"}
-    _api(opener, "/api/update-store?id=admin/store-built-in", store)
+    _api(opener, "/api/update-store?id=admin/store-built-in", store, basic_auth=credentials)
     _api(
         opener,
         "/api/v1/chat/completions",
@@ -92,10 +99,20 @@ def _configure_and_prompt(opener) -> None:
     )
 
 
-def _api(opener, path: str, payload: dict | None = None, *, bearer: str | None = None):
+def _api(
+    opener,
+    path: str,
+    payload: dict | None = None,
+    *,
+    bearer: str | None = None,
+    basic_auth: tuple[str, str] | None = None,
+):
     headers = {"Content-Type": "application/json"}
     if bearer:
         headers["Authorization"] = f"Bearer {bearer}"
+    elif basic_auth:
+        credentials = base64.b64encode(":".join(basic_auth).encode()).decode("ascii")
+        headers["Authorization"] = f"Basic {credentials}"
     request = urllib.request.Request(
         f"http://127.0.0.1:{PORT}{path}",
         data=json.dumps(payload).encode() if payload is not None else None,

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import re
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 from phistory.models import CaptureTarget, TapMode
 
 
-def tap_command(target: CaptureTarget, prompt_path: Path, tap_output_dir: Path) -> list[str]:
+def tap_command(
+    target: CaptureTarget, prompt_path: Path, tap_output_dir: Path, run_env: Mapping[str, str] | None = None
+) -> list[str]:
     return [
         sys.executable,
         "-m",
@@ -23,8 +27,18 @@ def tap_command(target: CaptureTarget, prompt_path: Path, tap_output_dir: Path) 
         str(tap_output_dir),
         *_tap_mode_args(target),
         "--",
-        *upstream_client_args(target.variant.run_args),
+        *[_expand_capture_path(arg, run_env) for arg in upstream_client_args(target.variant.run_args)],
     ]
+
+
+def _expand_capture_path(arg: str, env: Mapping[str, str] | None) -> str:
+    match = re.match(r"^\$(PHISTORY_[A-Z_]+)(?=/|$)", arg)
+    if not match:
+        return arg
+    key = match[1]
+    if env is None or key not in env:
+        raise ValueError(f"capture command requires isolated path {key}")
+    return env[key] + arg[match.end() :]
 
 
 def upstream_client_args(run_args: tuple[str, ...]) -> list[str]:

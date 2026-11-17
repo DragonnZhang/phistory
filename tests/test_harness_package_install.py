@@ -163,3 +163,30 @@ def test_source_script_install_keeps_sibling_templates_and_resolves_immutable_re
     assert urls == [f"https://github.com/laude-institute/headlong/archive/{revision}.tar.gz"]
     with pytest.raises(ValueError, match="immutable"):
         packages.install_agent(agent, "main", tmp_path / "bad")
+
+
+def test_source_requirements_use_declared_python_and_retain_importable_source(tmp_path, monkeypatch):
+    agent = get_agent("mini-agi")
+    install = tmp_path / "install"
+    commands = []
+
+    def download(url, output):
+        with tarfile.open(output, "w:gz") as archive:
+            for name, content in {"requirements.txt": b"thinkgpt==0.0.6", "miniagi.py": b"native source"}.items():
+                member = tarfile.TarInfo("source-root/" + name)
+                member.size = len(content)
+                archive.addfile(member, io.BytesIO(content))
+
+    def run(argv, **kwargs):
+        commands.append(argv)
+        if argv[:2] == ["uv", "venv"]:
+            (install / "bin/python").touch()
+
+    monkeypatch.setattr(packages, "_download", download)
+    monkeypatch.setattr(packages, "run", run)
+    result = packages.install_agent(agent, "e" * 40, install)
+    assert commands[0][-2:] == ["--python", "3.11"]
+    assert commands[1][-2:] == ["-r", str(install / "source/source-root/requirements.txt")]
+    assert (packages.installed_source_root(result) / "miniagi.py").read_bytes() == b"native source"
+    assert packages.install_agent(agent, "e" * 40, install) == result
+    assert len(commands) == 2

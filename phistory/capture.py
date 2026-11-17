@@ -5,6 +5,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import time
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
@@ -196,6 +197,7 @@ def capture_target(
                 "agent_id": target.agent.id,
                 "agent": target.agent.display_name,
                 "package": target.agent.package,
+                **({"python_runtime": target.agent.python_runtime} if target.agent.python_runtime else {}),
                 **({"package_extras": list(target.agent.pypi_extras)} if target.agent.pypi_extras else {}),
                 **({"package_layout": "bundle"} if target.agent.release_asset_layout == "bundle" else {}),
                 **(
@@ -370,6 +372,7 @@ def _capture_env(
         **inherited,
         "PATH": f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}",
         "HOME": str(home),
+        "PHISTORY_HOME": str(home),
         "XDG_CONFIG_HOME": str(home / ".config"),
         "XDG_CACHE_HOME": str(home / ".cache"),
         "XDG_DATA_HOME": str(home / ".local" / "share"),
@@ -482,11 +485,13 @@ def _capture_env(
     if profile == "tianshu":
         env["RIVET_HOME"] = str(home / ".tianshu")
     if profile == "octomind" and prepare_runtime:
-        from phistory.runtime_setup import prepare_octomind_tap
+        from phistory.runtime_setup import prepare_octobrain, prepare_octomind_tap
 
         state = home / ".octomind"
+        env["PATH"] = f"{home / '.local/bin'}{os.pathsep}{env['PATH']}"
         env["OCTOMIND_DATA_DIR"] = str(state)
         env["PHISTORY_OCTOMIND_TAP_COMMIT"] = prepare_octomind_tap(state, env["PHISTORY_OCTOMIND_TAP_REPOSITORY"])
+        env["PHISTORY_OCTOMIND_DEPENDENCIES"] = json.dumps({"octobrain": prepare_octobrain(state, env)}, sort_keys=True)
     if profile == "headlong" and prepare_runtime:
         state = home / ".headlong"
         state.mkdir(parents=True, exist_ok=True)
@@ -500,6 +505,34 @@ def _capture_env(
     if profile == "openagent":
         env["driverName"] = "sqlite3"
         env["dataSourceName"] = str(home / "openagent.db")
+    if profile == "cheetah-anthropic":
+        state = home / ".cheetahclaws"
+        state.mkdir(parents=True, exist_ok=True)
+        (state / "config.json").write_text(json.dumps({"model": "claude-sonnet-4-6"}) + "\n", encoding="utf-8")
+    if profile in ("trashclaw", "mini-agi", "openmanus", "researchclaw"):
+        source = packages.installed_source_root(bin_dir)
+        if profile in ("openmanus", "researchclaw") and prepare_runtime:
+            isolated = home / "source"
+            shutil.copytree(source, isolated)
+            source = isolated
+        env["PHISTORY_SOURCE_ROOT"] = str(source)
+        env["PYTHONPATH"] = str(source)
+        if profile == "openmanus" and prepare_runtime:
+            config = source / "config" / "config.toml"
+            config.parent.mkdir(parents=True, exist_ok=True)
+            config.write_text(
+                '[llm]\nmodel = "gpt-4o"\nbase_url = "https://api.openai.com/v1"\napi_key = "phistory-fake-api-key"\nmax_tokens = 8192\ntemperature = 0.0\n',
+                encoding="utf-8",
+            )
+    if profile == "cuga":
+        env["CUGA_DBS_DIR"] = str(home / ".cuga" / "db")
+        env["CUGA_LOGGING_DIR"] = str(home / ".cuga" / "logs")
+        if prepare_runtime:
+            from phistory.runtime_setup import prepare_cuga_example
+
+            path, digest = prepare_cuga_example(home, env["PHISTORY_CUGA_EXAMPLE_SOURCE"])
+            env["PHISTORY_CUGA_EXAMPLE"] = str(path)
+            env["PHISTORY_CUGA_EXAMPLE_SHA256"] = digest
     if target.agent.node_runtime:
         env["NPM_CONFIG_CACHE"] = str(bin_dir.parents[2] / ".npm-runtime-cache")
     if target.agent.fake_chatgpt_auth:

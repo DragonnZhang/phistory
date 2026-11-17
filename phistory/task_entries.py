@@ -43,3 +43,19 @@ async def main():
 
 asyncio.run(main())
 """
+
+MINIAGI_TASK = """
+from miniagi import MiniAGI
+from exceptions import InvalidLLMResponseError
+
+agent = MiniAGI("gpt-4", "gpt-3.5-turbo", "Reply with one short sentence.", 4000, 2000)
+try:
+    agent.think()
+except InvalidLLMResponseError:
+    pass
+"""
+
+BROWSER_USE_PREFETCH = """
+import subprocess
+subprocess.run(["uvx", "browser-use", "--help"], check=True)
+"""

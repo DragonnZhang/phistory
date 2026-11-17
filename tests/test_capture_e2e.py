@@ -96,6 +96,19 @@ def test_stdin_task_is_passed_to_capture_process_and_subprocess(tmp_path, monkey
     assert result.stdout == text
 
 
+def test_capture_path_expansion_keeps_arguments_with_spaces_and_does_not_expand_code():
+    import pytest
+
+    from phistory.drivers.common import _expand_capture_path
+
+    env = {"PHISTORY_SOURCE_ROOT": "/isolated path/source"}
+    assert _expand_capture_path("$PHISTORY_SOURCE_ROOT/main.py", env) == "/isolated path/source/main.py"
+    code = 'print("$PHISTORY_SOURCE_ROOT/main.py")'
+    assert _expand_capture_path(code, env) == code
+    with pytest.raises(ValueError, match="requires isolated path"):
+        _expand_capture_path("$PHISTORY_SOURCE_ROOT/main.py", {})
+
+
 def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     bin_dir = tmp_path / "bin"
