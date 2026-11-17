@@ -1,0 +1,56 @@
+stdout:
+[claude-tap] 'bun' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] bun target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:45073
+[claude-tap] CA cert: /tmp/phistory-home-y7sley6j/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/web3gpt/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/variants/builtin-agent-api/.tap/2026-11-17/trace_155430.jsonl
+
+[claude-tap] launching bun: bun run --cwd /tmp/phistory-home-y7sley6j/source dev --hostname 127.0.0.1 --port 46839
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:45073
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-y7sley6j/.local/share/claude-tap/ca.pem
+$ next dev --hostname "127.0.0.1" --port "46839"
+▲ Next.js 16.4.6 (Turbopack)
+- Local:         http://127.0.0.1:46839
+- Network:       http://127.0.0.1:46839
+✓ Ready in 207ms
+✓ Running next.config.ts took 26ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+[2m2026-11-17T15:54:35.145Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+ GET /api/chat 405 in 710ms (next.js: 265ms, application-code: 445ms)
+rate limit check failed for chat:anon Error: Redis is not configured: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the legacy KV_REST_API_URL and KV_REST_API_TOKEN)
+    at resolveRedisCredentials (lib/redis.ts:25:9)
+    at createRedisClient (lib/redis.ts:40:8)
+    at Object.get (lib/redis.ts:56:16)
+    at hitRateLimit (lib/rate-limit.ts:62:31)
+    at POST (app/api/chat/route.ts:89:90)
+  23 |     }
+  24 |   }
+> 25 |   throw new Error(
+     |         ^
+  26 |     "Redis is not configured: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the legacy KV_REST_API_URL and KV_REST_API_TOKEN)"
+  27 |   )
+  28 | }
+ POST /api/chat 200 in 271ms (next.js: 1.1ms, application-code: 270ms)
+Native task returned after its captured request: Expecting value: line 1 column 1 (char 0)
+
+[claude-tap] shutting down bun... (Ctrl+C again to force)
+[?25h
+
+[claude-tap] bun exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/web3gpt/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/variants/builtin-agent-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/web3gpt/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/variants/builtin-agent-api/.tap/2026-11-17/trace_155430.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/web3gpt/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/variants/builtin-agent-api/.tap/2026-11-17/trace_155430.log
+  view:         /home/runner/work/phistory/phistory/captures/web3gpt/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/variants/builtin-agent-api/.tap/2026-11-17/trace_155430.html
+  prompt:       /home/runner/work/phistory/phistory/captures/web3gpt/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/variants/builtin-agent-api/prompt.md
+
+stderr:

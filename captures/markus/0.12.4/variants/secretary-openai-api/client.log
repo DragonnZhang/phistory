@@ -1,0 +1,100 @@
+stdout:
+[claude-tap] 'markus' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] markus target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:41179
+[claude-tap] CA cert: /tmp/phistory-home-vq2pqncn/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/markus/0.12.4/variants/secretary-openai-api/.tap/2026-11-17/trace_155614.jsonl
+
+[claude-tap] launching markus: markus --config /tmp/phistory-home-vq2pqncn/.markus/markus.json start
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:41179
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-vq2pqncn/.local/share/claude-tap/ca.pem
+     ███╗   ███╗ █████╗ ██████╗ ██╗  ██╗██╗   ██╗███████╗
+     ████╗ ████║██╔══██╗██╔══██╗██║ ██╔╝██║   ██║██╔════╝
+     ██╔████╔██║███████║██████╔╝█████╔╝ ██║   ██║███████╗
+     ██║╚██╔╝██║██╔══██║██╔══██╗██╔═██╗ ██║   ██║╚════██║
+     ██║ ╚═╝ ██║██║  ██║██║  ██║██║  ██╗╚██████╔╝███████║
+     ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+
+
+[K    Boot             markus CLI initialised
+
+[K    Config           loading ~/.markus/markus.json
+
+[K    LLM Providers    routing & credential resolution
+
+[K    Database         SQLite storage initialisation
+
+[K    Services         agent manager, task service, API server
+
+[K    Gateway          webhook adapters (Feishu, WebUI…)
+
+[K    Ready            server listening
+
+[K  ⠋ Boot             markus CLI initialised
+
+[K  ✓  Boot             markus CLI initialised
+
+--- Markus 启动 ---
+  [INFO] 日志文件: /tmp/phistory-home-vq2pqncn/.markus/logs/startup-2026-11-17.log
+
+[K  ⠙ Config           loading ~/.markus/markus.json
+
+[K  ✓  Config           config loaded from ~/.markus/markus.json
+
+[K  ⠹ LLM Providers    routing & credential resolution
+
+[K  ✗  LLM Providers    no valid LLM API key detected
+  [FAIL] 未检测到有效的 LLM API key *** 占位符不会被识别为有效 key
+  [INFO] 请选择配置方式:
+  [INFO]   1. 在浏览器中配置  → http://localhost:8056
+  [INFO]   2. 交互式配置    → 正在启动向导...
+
+  [INFO] 自动从环境变量/已知配置导入 LLM 设置...
+
+  ┌─────────────────────────────────────┐
+  │         Markus v0.12.4                │
+  │   AI Digital Workforce Platform     │
+  └─────────────────────────────────────┘
+  
+  Existing configuration found. Use --force to overwrite.
+
+[K  ○  LLM Providers    LLM not configured — server will start with disabl
+  [WARN] 仍未配置有效的 LLM key 服务将使用 disabled provider 启动
+  [INFO] 稍后可运行 markus init 或 markus model 重新配置
+
+
+[K  ⠸ Database         SQLite storage initialisation
+  [INFO] 正在启动服务...
+
+[K  ✓  Database         SQLite storage initialised
+
+[K  ✓  Services         services ready: agent manager, task service, api s
+
+  [INFO] API 已对局域网开放（监听 0.0.0.0:54819），同一网络内的其他设备可访问（需登录）
+  [INFO]   如需仅限本机：设置 → 网络与访问 → 访问范围 → 仅本机
+
+[K  ⠋ Gateway          webhook adapters (Feishu, WebUI…)
+
+[K  ✓  Gateway          webhook adapters: none
+  [OK] 出站通知分发已接线（三级路由：agent → instance → 全局）
+
+
+  Markus is running (12.5s) → http://localhost:54819
+
+[claude-tap] shutting down markus... (Ctrl+C again to force)
+
+Shutting down...
+
+[claude-tap] markus exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/markus/0.12.4/variants/secretary-openai-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    5
+  trace:        /home/runner/work/phistory/phistory/captures/markus/0.12.4/variants/secretary-openai-api/.tap/2026-11-17/trace_155614.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/markus/0.12.4/variants/secretary-openai-api/.tap/2026-11-17/trace_155614.log
+  view:         /home/runner/work/phistory/phistory/captures/markus/0.12.4/variants/secretary-openai-api/.tap/2026-11-17/trace_155614.html
+  prompt:       /home/runner/work/phistory/phistory/captures/markus/0.12.4/variants/secretary-openai-api/prompt.md
+
+stderr:
