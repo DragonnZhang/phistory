@@ -10,7 +10,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 [Harness 源码归档](sources.html)保存 95 项调研中新增项目的提示词模板、装配代码与工具声明，保留完整原文件和来源，单独展示，不与真实请求捕获混用。
 
-> 每天自动检查新版本，归档最近更新于 **2026-11-17 18:58 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-11-17 19:03 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-11-17 18:58 UTC
+最近抓取更新：2026-11-17 19:03 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -153,6 +153,7 @@ uv run phistory render-site
 | AutoGPT | [autogpt-platform-beta-v0.11.3 - 2026-11-15](captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/prompt.md) | 1 | 1 | 2026-11-17 18:32 UTC |
 | QM | [0.1.18 - 2026-11-11](captures/qm/0.1.18/variants/native-local-web-turn/prompt.md) | 1 | 1 | 2026-11-17 18:39 UTC |
 | Orkas | [3163c7ef1c2b03e21e6f85c6301515609361c570](captures/orkas/3163c7ef1c2b03e21e6f85c6301515609361c570/variants/native-electron-commander/prompt.md) | 1 | 1 | 2026-11-17 18:57 UTC |
+| Dyad | [63d28b887c1b62b8509373ba58d4b03573bb714a](captures/dyad/63d28b887c1b62b8509373ba58d4b03573bb714a/variants/native-electron-basic-agent/prompt.md) | 1 | 1 | 2026-11-17 19:03 UTC |
 | AgentLink | [5e6450f0a8f420991ddff5c4c17f921c5f40790c](captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/prompt.md) | 1 | 1 | 2026-11-17 18:39 UTC |
 | UFO LinuxAgent | [eae3c0a8d168c47cb10df0652e293e092eda1078](captures/ufo/eae3c0a8d168c47cb10df0652e293e092eda1078/variants/linux-device-agent/prompt.md) | 1 | 1 | 2026-11-17 16:51 UTC |
 | Agentlas OS | [6108604d8487519b820cac916c5061cd6e619688](captures/agentlas-os/6108604d8487519b820cac916c5061cd6e619688/variants/claude-core-ready-inline/prompt.md) | 1 | 2 | 2026-11-17 18:04 UTC |
