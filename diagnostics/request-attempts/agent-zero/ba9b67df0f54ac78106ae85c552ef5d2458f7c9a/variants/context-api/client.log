@@ -1,0 +1,285 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:39919
+[claude-tap] CA cert: /tmp/phistory-home-frrb0x5l/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/.tap/2026-11-17/trace_145141.jsonl
+
+[claude-tap] launching python: python -c 
+import asyncio
+import os
+import hashlib
+from pathlib import Path
+os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
+from plugins._model_config.helpers import model_config
+path = Path(model_config._get_presets_path())
+print("Native presets SHA-256:", hashlib.sha256(path.read_bytes()).hexdigest(), flush=True)
+print("Native selected preset:", model_config.resolve_preset(model_config.get_configured_preset_name()), flush=True)
+from agent import AgentContext, UserMessage
+from initialize import initialize_agent
+async def main():
+    context = AgentContext(initialize_agent())
+    task = context.communicate(UserMessage(message="Reply with one short sentence."))
+    await task.result()
+asyncio.run(main())
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:39919
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-frrb0x5l/.local/share/claude-tap/ca.pem
+Native presets SHA-256: c83f374f915f00bca55a54ae759cd3cce351d006ddae50ba3412fd9fb549afcf
+Native selected preset: {'name': 'Default', 'chat': {'provider': 'openrouter', 'name': 'openai/gpt-6.1-sol', 'api_base': '', 'ctx_length': 200000, 'ctx_history': 0.7, 'vision': True, 'max_embeds': 10, 'rl_requests': 0, 'rl_input': 0, 'rl_output': 0, 'kwargs': {}}, 'utility': {'provider': 'openrouter', 'name': 'openai/gpt-6-luna', 'api_base': '', 'ctx_length': 128000, 'ctx_input': 0.7, 'rl_requests': 0, 'rl_input': 0, 'rl_output': 0, 'kwargs': {}}, 'embedding': {'provider': 'huggingface', 'name': 'sentence-transformers/all-MiniLM-L6-v2', 'api_base': '', 'rl_requests': 0, 'rl_input': 0, 'kwargs': {}}}
+Initializing VectorDB...[0m
+[38;2;0;128;0mCreated knowledge directory: /tmp/phistory-home-frrb0x5l/source/usr/knowledge/fragments[0m
+Found 1 knowledge files in /tmp/phistory-home-frrb0x5l/source/knowledge, processing...[0m
+Processed 1 documents from 1 files.[0m
+Found 5 knowledge files in /tmp/phistory-home-frrb0x5l/source/knowledge/main, processing...[0m
+Processed 5 documents from 5 files.[0m
+[38;2;0;128;0mCreated knowledge directory: /tmp/phistory-home-frrb0x5l/source/knowledge/fragments[0m
+
+[38;2;255;165;0mCritical error occurred, retrying...[0m
+
+[38;2;255;165;0mThis error has occurred: Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 651, in handle_exception
+    raise exception # exception handling is done by extensions
+    ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 427, in monologue
+    prompt = await self.prepare_prompt(loop_data=self.loop_data)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 577, in prepare_prompt
+    loop_data.system = await self.get_system_prompt(self.loop_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 691, in get_system_prompt
+    await extension.call_extensions_async(
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 240, in call_extensions_async
+    await result
+  File "/tmp/phistory-home-frrb0x5l/source/plugins/_promptinclude/extensions/python/system_prompt/_16_promptinclude.py", line 28, in execute
+    result = await runtime.call_development_function(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/runtime.py", line 103, in call_development_function
+    password = _get_rfc_password()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/runtime.py", line 132, in _get_rfc_password
+    raise Exception("No RFC password, cannot handle RFC calls.")
+Exception: No RFC password, cannot handle RFC calls.
+. Proceed with your original task if possible.[0m
+
+[38;2;255;0;0mTraceback (most recent call last):
+Traceback (most recent call last):
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 651, in handle_exception
+    raise exception # exception handling is done by extensions
+    ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 427, in monologue
+    prompt = await self.prepare_prompt(loop_data=self.loop_data)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 577, in prepare_prompt
+    loop_data.system = await self.get_system_prompt(self.loop_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 691, in get_system_prompt
+    await extension.call_extensions_async(
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 240, in call_extensions_async
+    await result
+  File "/tmp/phistory-home-frrb0x5l/source/plugins/_promptinclude/extensions/python/system_prompt/_16_promptinclude.py", line 28, in execute
+    result = await runtime.call_development_function(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/runtime.py", line 103, in call_development_function
+    password = _get_rfc_password()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/runtime.py", line 132, in _get_rfc_password
+    raise Exception("No RFC password, cannot handle RFC calls.")
+Exception: No RFC password, cannot handle RFC calls.
+[0m
+
+[38;2;255;0;0mA0: No RFC password, cannot handle RFC calls.[0m
+
+[claude-tap] python exited with code 1
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/.tap/2026-11-17/trace_145141.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/.tap/2026-11-17/trace_145141.log
+  view:         /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/.tap/2026-11-17/trace_145141.html
+  prompt:       /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/prompt.md
+
+stderr:
+[claude-tap] warning: 
+14:51:42 - LiteLLM:WARNING: get_model_cost_map.py:144 - LiteLLM: Fetched model cost map has only 7 models (minimum=50). This may indicate a corrupted upstream file. Falling back to local backup.
+14:51:42 - LiteLLM:WARNING: get_model_cost_map.py:687 - LiteLLM: Fetched model cost map failed integrity check. Using local backup instead. url=https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
+Traceback (most recent call last):
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 651, in handle_exception
+    raise exception # exception handling is done by extensions
+    ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 427, in monologue
+    prompt = await self.prepare_prompt(loop_data=self.loop_data)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 577, in prepare_prompt
+    loop_data.system = await self.get_system_prompt(self.loop_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 691, in get_system_prompt
+    await extension.call_extensions_async(
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 240, in call_extensions_async
+    await result
+  File "/tmp/phistory-home-frrb0x5l/source/plugins/_promptinclude/extensions/python/system_prompt/_16_promptinclude.py", line 28, in execute
+    result = await runtime.call_development_function(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/runtime.py", line 103, in call_development_function
+    password = _get_rfc_password()
+               ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/runtime.py", line 132, in _get_rfc_password
+    raise Exception("No RFC password, cannot handle RFC calls.")
+Exception: No RFC password, cannot handle RFC calls.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<string>", line 17, in <module>
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/nest_asyncio.py", line 30, in run
+    return loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/nest_asyncio.py", line 98, in run_until_complete
+    return f.result()
+           ^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/futures.py", line 202, in result
+    raise self._exception.with_traceback(self._exception_tb)
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py", line 316, in __step_run_and_handle_result
+    result = coro.throw(exc)
+             ^^^^^^^^^^^^^^^
+  File "<string>", line 16, in main
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/defer.py", line 167, in result
+    return await loop.run_in_executor(None, _get_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/futures.py", line 289, in __await__
+    yield self  # This tells Task to wait for completion.
+    ^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py", line 385, in __wakeup
+    future.result()
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/futures.py", line 202, in result
+    raise self._exception.with_traceback(self._exception_tb)
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/defer.py", line 159, in _get_result
+    result = self._future.result(timeout)  # type: ignore
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py", line 314, in __step_run_and_handle_result
+    result = coro.send(None)
+             ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/defer.py", line 136, in _run
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 320, in _process_chain
+    await self.handle_exception("process_chain", e)
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 325, in handle_exception
+    raise exception # exception handling is done by extensions
+    ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 310, in _process_chain
+    response = await agent.monologue()  # type: ignore
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 557, in monologue
+    await self.handle_exception("monologue", e)
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 651, in handle_exception
+    raise exception # exception handling is done by extensions
+    ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/agent.py", line 544, in monologue
+    await self.handle_exception("message_loop", e)
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-frrb0x5l/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+helpers.errors.HandledException: No RFC password, cannot handle RFC calls.
