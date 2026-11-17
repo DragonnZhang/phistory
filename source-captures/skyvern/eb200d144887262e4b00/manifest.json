@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "skyvern",
+  "agent": "skyvern",
+  "repository": "Skyvern-AI/skyvern",
+  "snapshot": "eb200d144887262e4b00",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:30:21.836455+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44074505125",
+      "sha": "203bc31b10d62dac0658b1233be4eec19a67beee"
+    }
+  },
+  "files": [
+    {
+      "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+      "path": "skyvern/forge/prompts/skyvern/extract-action-dynamic.j2",
+      "sha256": "a0f44fa59bf0e9e21ccfb5013c6dd4fc669b0c9c764d5cc152339efbedb173a3",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/forge/prompts/skyvern/extract-action-dynamic.j2",
+      "url": "https://github.com/Skyvern-AI/skyvern/blob/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/forge/prompts/skyvern/extract-action-dynamic.j2"
+    },
+    {
+      "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+      "path": "skyvern/forge/prompts/skyvern/extract-action-static.j2",
+      "sha256": "db7cec95a582832af0bcb798e848e39561327e069457d8cf5d1654a0fca25dd0",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/forge/prompts/skyvern/extract-action-static.j2",
+      "url": "https://github.com/Skyvern-AI/skyvern/blob/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/forge/prompts/skyvern/extract-action-static.j2"
+    },
+    {
+      "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+      "path": "skyvern/utils/prompt_truncation.py",
+      "sha256": "9da03c2fe2860fa6a19341690700fc89a8aaf9fc6c390d0a0e576202d40252ed",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/utils/prompt_truncation.py",
+      "url": "https://github.com/Skyvern-AI/skyvern/blob/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/utils/prompt_truncation.py"
+    },
+    {
+      "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+      "path": "skyvern/webeye/actions/action_types.py",
+      "sha256": "09f999e67d3795bc0d594813c593d49b6cb52312ffbcc1faa5b709bca2906d2c",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/webeye/actions/action_types.py",
+      "url": "https://github.com/Skyvern-AI/skyvern/blob/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/webeye/actions/action_types.py"
+    },
+    {
+      "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+      "path": "skyvern/webeye/actions/actions.py",
+      "sha256": "45dd92259a55cce2bcc9660503078cd9a59b2fdd2a5790c06cf5df7698a853a0",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/webeye/actions/actions.py",
+      "url": "https://github.com/Skyvern-AI/skyvern/blob/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/webeye/actions/actions.py"
+    }
+  ]
+}

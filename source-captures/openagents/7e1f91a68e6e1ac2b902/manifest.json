@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "openagents",
+  "agent": "openagents",
+  "repository": "OpenAgentsInc/openagents",
+  "snapshot": "7e1f91a68e6e1ac2b902",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:30:21.696125+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44074505125",
+      "sha": "203bc31b10d62dac0658b1233be4eec19a67beee"
+    }
+  },
+  "files": [
+    {
+      "commit": "4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c",
+      "path": "coax/lib/microcoder/action.coax",
+      "sha256": "9ecebad36b881b11bda2ef6e0ab3f6afbe2eb5f895fb3f25da4e6cffd015300e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c/coax/lib/microcoder/action.coax",
+      "url": "https://github.com/OpenAgentsInc/openagents/blob/4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c/coax/lib/microcoder/action.coax"
+    },
+    {
+      "commit": "4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c",
+      "path": "coax/lib/microcoder/loop.coax",
+      "sha256": "9bea3bc5be047e3657f93ff23ec2c36c08986f4119696fa7a486fee7d59cc71e",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c/coax/lib/microcoder/loop.coax",
+      "url": "https://github.com/OpenAgentsInc/openagents/blob/4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c/coax/lib/microcoder/loop.coax"
+    },
+    {
+      "commit": "4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c",
+      "path": "coax/lib/microcoder/tools.coax",
+      "sha256": "e83bbf576bfd35630d4941c854a3bacd01c687224aee40ff82ce66297ee5ad31",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c/coax/lib/microcoder/tools.coax",
+      "url": "https://github.com/OpenAgentsInc/openagents/blob/4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c/coax/lib/microcoder/tools.coax"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "autoresearchclaw",
+  "agent": "AutoResearchClaw",
+  "repository": "aiming-lab/AutoResearchClaw",
+  "snapshot": "84f8305e914f7b2de28e",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:30:21.522152+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44074505125",
+      "sha": "203bc31b10d62dac0658b1233be4eec19a67beee"
+    }
+  },
+  "files": [
+    {
+      "commit": "be4ba4755bf1b52220f25e13b2293b5956590070",
+      "path": "prompts.default.yaml",
+      "sha256": "93fd9370c01dd3ee9bdeaf6d0767556805cdb5e283231febc701913f783267a5",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/be4ba4755bf1b52220f25e13b2293b5956590070/prompts.default.yaml",
+      "url": "https://github.com/aiming-lab/AutoResearchClaw/blob/be4ba4755bf1b52220f25e13b2293b5956590070/prompts.default.yaml"
+    },
+    {
+      "commit": "be4ba4755bf1b52220f25e13b2293b5956590070",
+      "path": "researchclaw/experiment/code_agent.py",
+      "sha256": "3dfde43fbb9733377521c2c4b54605aefc6a55b574706a3fbaea337fbc956f30",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/be4ba4755bf1b52220f25e13b2293b5956590070/researchclaw/experiment/code_agent.py",
+      "url": "https://github.com/aiming-lab/AutoResearchClaw/blob/be4ba4755bf1b52220f25e13b2293b5956590070/researchclaw/experiment/code_agent.py"
+    },
+    {
+      "commit": "be4ba4755bf1b52220f25e13b2293b5956590070",
+      "path": "researchclaw/mcp/tools.py",
+      "sha256": "97152eb4dc485771415a0fa69164166539eed817e072e14fb863a93c3105b84b",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/be4ba4755bf1b52220f25e13b2293b5956590070/researchclaw/mcp/tools.py",
+      "url": "https://github.com/aiming-lab/AutoResearchClaw/blob/be4ba4755bf1b52220f25e13b2293b5956590070/researchclaw/mcp/tools.py"
+    }
+  ]
+}

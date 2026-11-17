@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "inkos",
+  "agent": "inkos",
+  "repository": "Narcooo/inkos",
+  "snapshot": "d7a5827b6466a711c4d3",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:30:21.665799+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44074505125",
+      "sha": "203bc31b10d62dac0658b1233be4eec19a67beee"
+    }
+  },
+  "files": [
+    {
+      "commit": "53adac4e974b54dafda975edc4edd07cad364c18",
+      "path": "packages/core/src/harness/pi-tools.ts",
+      "sha256": "3752288ba4748b5d0c21bc5dde1b4df3d07765f7710ae35e8eeed366cfe75a10",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/53adac4e974b54dafda975edc4edd07cad364c18/packages/core/src/harness/pi-tools.ts",
+      "url": "https://github.com/Narcooo/inkos/blob/53adac4e974b54dafda975edc4edd07cad364c18/packages/core/src/harness/pi-tools.ts"
+    },
+    {
+      "commit": "53adac4e974b54dafda975edc4edd07cad364c18",
+      "path": "packages/core/src/harness/system-prompt.ts",
+      "sha256": "9c46d72535b7a63951c727024f8dd13436b0a598ae25e127c7a0dbc5e8ba40c9",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/53adac4e974b54dafda975edc4edd07cad364c18/packages/core/src/harness/system-prompt.ts",
+      "url": "https://github.com/Narcooo/inkos/blob/53adac4e974b54dafda975edc4edd07cad364c18/packages/core/src/harness/system-prompt.ts"
+    }
+  ]
+}

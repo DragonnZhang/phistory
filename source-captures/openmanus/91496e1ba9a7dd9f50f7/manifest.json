@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "openmanus",
+  "agent": "OpenManus",
+  "repository": "FoundationAgents/OpenManus",
+  "snapshot": "91496e1ba9a7dd9f50f7",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:30:21.592935+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44074505125",
+      "sha": "203bc31b10d62dac0658b1233be4eec19a67beee"
+    }
+  },
+  "files": [
+    {
+      "commit": "3309bf4e416fb1c74b008f3e86494439a31bad53",
+      "path": "app/agent/swe.py",
+      "sha256": "be1a1dd1cc7b5825d43c7be60b4ce73065c4f84dfa921d54bddff2d088229575",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/3309bf4e416fb1c74b008f3e86494439a31bad53/app/agent/swe.py",
+      "url": "https://github.com/FoundationAgents/OpenManus/blob/3309bf4e416fb1c74b008f3e86494439a31bad53/app/agent/swe.py"
+    },
+    {
+      "commit": "3309bf4e416fb1c74b008f3e86494439a31bad53",
+      "path": "app/agent/toolcall.py",
+      "sha256": "01d514133932e8d525eacc7d2bad043f21f109474ff5f69a00aeb3e6a4513adf",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/3309bf4e416fb1c74b008f3e86494439a31bad53/app/agent/toolcall.py",
+      "url": "https://github.com/FoundationAgents/OpenManus/blob/3309bf4e416fb1c74b008f3e86494439a31bad53/app/agent/toolcall.py"
+    },
+    {
+      "commit": "3309bf4e416fb1c74b008f3e86494439a31bad53",
+      "path": "app/prompt/manus.py",
+      "sha256": "3e1ed4e27d999b6e0f3455ecd491310cc4085bcd94d694d0907727ba3507eb09",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/3309bf4e416fb1c74b008f3e86494439a31bad53/app/prompt/manus.py",
+      "url": "https://github.com/FoundationAgents/OpenManus/blob/3309bf4e416fb1c74b008f3e86494439a31bad53/app/prompt/manus.py"
+    }
+  ]
+}
