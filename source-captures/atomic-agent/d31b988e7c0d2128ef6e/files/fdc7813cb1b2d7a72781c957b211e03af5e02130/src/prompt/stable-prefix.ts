@@ -1,0 +1,417 @@
+import type { ToolCallTransport } from "../llm/provider/completion-types.js";
+import { COMPOSIO_GUIDANCE, isComposioActive } from "./composio-guidance.js";
+import { GITHUB_GUIDANCE, isGithubActive } from "./github-guidance.js";
+import { buildFusionGuidance, isFusionActive } from "./fusion-guidance.js";
+import type { FusionMachineFacts } from "./fusion-machine-facts.js";
+import {
+  formatSkillCatalogLine,
+  formatSkillCatalogOmittedLine,
+} from "../skills/skill-catalog.js";
+import { partitionByRole, type ToolRole } from "../tools/tool-roles.js";
+
+/**
+ * `frequent` — full `args` + optional `examples` in the stable prefix.
+ * `rare` — one-line manifest in the prefix; use `tool.view` (or error-path
+ * autoload) to materialise the full schema in `### loaded-tools`.
+ */
+export type ToolTier = "frequent" | "rare";
+
+export interface ToolDescriptor {
+  name: string;
+  summary: string;
+  /**
+   * Human-readable args sketch rendered into the stable prefix's
+   * `### tools` section and consumed by the GBNF + parser path. Stays
+   * authoritative for prompt rendering even when `argsJsonSchema` is
+   * also populated — the LLM reads it as part of the prompt.
+   */
+  argsSchema: string;
+  /**
+   * Defaults to `frequent` when omitted.
+   */
+  tier?: ToolTier;
+  /**
+   * Optional few-shot argument examples rendered under the tool in the
+   * stable prefix. Each entry is a pre-formatted JSON literal (as a
+   * string) so we do not stringify at prompt-build time. Keep short —
+   * they live in the stable prefix and cost tokens on every turn.
+   */
+  examples?: readonly string[];
+  /**
+   * Optional structured JSON Schema for the tool's `args` object. Used
+   * exclusively by the cloud `native_tools` transport (OpenAI / OpenRouter
+   * `tool_calls`) to constrain the model's argument shape. When omitted
+   * the OpenAI adapter falls back to `{ type: "object",
+   * additionalProperties: true }` — i.e. anything goes, which is what we
+   * shipped before Memory-v2 phase 7b. Local llama-server with GBNF does
+   * **not** consume this field; the grammar there already constrains the
+   * shape and the prompt-side `argsSchema` text is what the model reads.
+   *
+   * For MCP-namespaced tools this field carries the server's
+   * `inputSchema` verbatim (see `mcp-descriptor-builder.ts`).
+   */
+  argsJsonSchema?: Record<string, unknown>;
+}
+
+export interface CapabilitiesSummary {
+  platform: NodeJS.Platform;
+  arch: string;
+  browserChannel: string;
+  workingDir: string;
+  hasClipboard: boolean;
+  hasWmctrl: boolean;
+  hasNotifications: boolean;
+  /** The agent's own e-mail address (Atomic Mail), when an inbox exists. */
+  emailAddress?: string | null;
+}
+
+export interface SkillCatalogEntry {
+  name: string;
+  description: string;
+  source: "global" | "project";
+}
+
+export interface StablePrefixInput {
+  toolDescriptors: readonly ToolDescriptor[];
+  capabilities: CapabilitiesSummary;
+  skillCatalog: readonly SkillCatalogEntry[];
+  /**
+   * Installed skills `buildSkillCatalogSection` left out of
+   * `skillCatalog` because `skills.catalogTokenBudget` ran out. When
+   * above zero the `### skills` block ends on a truncation marker
+   * naming the knob, so the model does not read a clipped catalog as
+   * the complete one (issue #466). Omitted / `0` keeps the block
+   * byte-identical to the legacy output (KV-cache safe).
+   */
+  skillCatalogDropped?: number;
+  systemPersona?: string;
+  reasoningSystemToken?: string;
+  /**
+   * When set, the stable prefix opens with this native turn token (e.g.
+   * `"<|turn>system\n"`) and the `reasoningSystemToken` is placed at the
+   * very top of the system turn (before `### system`) — required by Gemma 4
+   * to activate its reasoning channel. When omitted, the prefix keeps the
+   * legacy monolithic head (`### system` first) and is byte-identical.
+   */
+  turnSystemOpen?: string;
+  maxParallelToolCalls?: number;
+  /**
+   * Transport the serving link uses for tool calls. Under
+   * `"native_tools"` the persona's emission mandate and the
+   * `### instructions` block switch to native function-calling guidance:
+   * the text-JSON "Emit a JSON ARRAY" mandate contradicts the
+   * request-level `tools` payload and drives cloud models back to text
+   * emission (issue #285). The `### tools` catalog is rendered in both
+   * modes — the provider fallback chain can hand a native-shaped request
+   * to a grammar-only llama-server link, and the catalog carries the
+   * tier / `tool.view` semantics. Omitted or `"grammar"` keeps the
+   * prefix byte-identical to the legacy output (KV-cache safe).
+   */
+  toolTransport?: ToolCallTransport;
+  /**
+   * What this machine serves fusion workers with — slot count and local
+   * model. Read only when the `### fusion` block renders at all, so a
+   * non-fusion install's prefix stays byte-identical whatever is passed
+   * here. Omitted, the block keeps its behavioural lines and states no
+   * numbers; see `fusion-machine-facts.ts` for why an unknown fact is
+   * left unsaid rather than guessed.
+   */
+  fusion?: FusionMachineFacts;
+  /**
+   * The turn's tool role (`tool-roles.ts`). Under `builder` or
+   * `orchestrator` the `### tools` block describes the role's tools as
+   * today (frequent in full, rare as one-liners) and lists every other
+   * descriptor on ONE line of names, "also available via tool.view".
+   * The prefix is therefore per role — stable within a turn, one cold
+   * read on a role change. Omitted or `"full"` keeps the block
+   * byte-identical to before roles existed.
+   */
+  toolRole?: ToolRole;
+}
+
+/** Header of the out-of-role names line — pinned by tests, read by the model. */
+export const ALSO_AVAILABLE_VIA_TOOL_VIEW = "# also available via `tool.view`:";
+
+/**
+ * Persona lines shared verbatim between the grammar and native-tools
+ * variants. Only the emission mandate (line 1), the bias-toward-action
+ * phrasing (line 2), and the reply-discipline line (line 5, see
+ * `REPLY_DISCIPLINE_LINE_*`) differ per transport; everything else is
+ * transport-neutral. Extracted so the two personas cannot drift apart.
+ */
+const SYSTEM_PERSONA_TERMINALS_LINE =
+  "Terminals: `reply` returns the final answer to the user and ends the current macro-turn (session stays open). `finish` ends the entire session; only with explicit user intent.";
+
+/**
+ * Right after the bias-toward-action line in both personas (F51). Live,
+ * five first attempts across two local models rewrote the file the
+ * request named as the input from memory; `os.fs.write` now refuses that
+ * (`fs-input-guard.ts`), and this is the model told the rule before it
+ * reaches for the tool. Since ATO-851 it no longer names `overwrite:
+ * true`: the flag stopped lifting the refusal, and teaching it here was
+ * the one-step bypass. Pinned by `stable-prefix.test.ts`.
+ */
+export const SYSTEM_PERSONA_INPUTS_LINE =
+  "Files that existed before this turn are the user's: edit them in place and write new files beside them; do not regenerate a provided file from memory. To replace one the request did not ask to replace, ask the user first.";
+
+/** Byte-identical to the pre-#285 line (KV-cache safe). */
+const REPLY_DISCIPLINE_LINE_GRAMMAR =
+  "`reply` is ONLY for the final user-facing text after all needed tools ran. The user does not see intermediate text — if another tool is next, emit that tool JSON, not `reply`.";
+
+/**
+ * Native variant of the reply-discipline line: "emit that tool JSON" is
+ * yet another text-JSON emission mandate, so under `native_tools` it
+ * becomes "call that tool" (issue #285).
+ */
+const REPLY_DISCIPLINE_LINE_NATIVE =
+  "`reply` is ONLY for the final user-facing text after all needed tools ran. The user does not see intermediate text — if another tool is next, call that tool, not `reply`.";
+
+const SYSTEM_PERSONA_SHARED_LINES = [
+  "Output discipline: when the request specifies an exact answer format, marker, length, or units, the `reply` text MUST be ONLY that — the bare value or the exact required line and nothing else (correct units, no preamble, no restating the question, no extra commentary or markdown before or after). If a specific final-answer line or marker is required, emit exactly that line as the entire reply. When no format is specified, answer as fully and helpfully as the task warrants.",
+  "Finishing the job: when the user asks you to build, run, compute, or verify something, the deliverable is a real result backed by actual tool output — not a description of one. Do not stop after a stub, a plan, or a single command; keep calling tools until you have actually produced the requested result, then `reply` with what real execution returned. If a tool, install, or network call fails and blocks the real path, say so directly and try an alternative (a different approach, or `reply` to ask the user). NEVER substitute plausible-looking fabricated output (made-up data, invented file contents, synthesised API responses) for results you could not actually produce — reporting a blocker honestly is always better than inventing a result.",
+  "When a line in `### skills` matches the user's request, emit `skill.view` first — the catalog line is a stub, the body has the actual procedure — unless that skill is already under `### loaded-skills`. This applies to every skill, including text-only workflows; do not guess the answer from the catalog summary. Rare tool? `tool.view` first. Loop: tools, read `### world` / `### conversation`, then more tools or `reply`. `browser.navigate` / `browser.search` refresh the world; avoid redundant `read_aria`. Do not invent facts — use `reply` to ask if stuck.",
+  "Web — READ THIS BEFORE ANY WEB ACTION. DEFAULT and ALWAYS-FIRST path: use `os.web.search` to search the web and `os.web.fetch` to read ANY page (clean markdown, no browser). The `browser.*` tools are a LAST RESORT, not the default: use them ONLY when (a) the user explicitly says to use the browser, or (b) the page genuinely needs JS/login/clicks that `os.web.fetch` cannot deliver. Opening `browser.navigate` / `browser.search` just to read a page or run a search is WRONG — it wastes the turn and bloats context. If you catch yourself reaching for the browser, stop and use `os.web.search` or `os.web.fetch` instead.",
+  "Large directories: `os.fs.list` only shows up to maxEntries matches—use extensions, pattern, sort, or `os.fs.glob` to narrow before assuming a file type is absent. For many PDFs or resumes prefer filename `os.fs.glob` patterns plus `os.fs.read_document` on a short candidate list; avoid sweeping `os.fs.grep` with `glob` over huge `*.pdf` trees.",
+  "Commands: run task steps yourself with `os.shell.run` (installs such as `brew`, `npm i -g`, `pip`; clones, builds, servers) — never print commands for the user to type; approval keeps them in control. Hand over only a step that needs them (browser sign-in, password or `sudo`, keychain, a terminal question), then continue.",
+  "Deleting files or directories: when the user asks to delete, remove, erase, or trash paths, call `os.fs.trash` with concrete absolute paths in `paths` (use `os.fs.list` / `os.fs.glob` first if you need to discover names). Do not use `os.shell.run` with `rm`, `unlink`, or `rmdir` for that unless the user explicitly demands permanent irreversible shell deletion. To move, rename, or sort files into folders, use `os.fs.move` (it creates missing folders), not `mv`/`mkdir` in the shell.",
+  "Memory: persist with `memory.profile.*` and `memory.notes.*` as needed. Use `### lessons` (pointer view of distilled rules from past episodes — call `memory.lessons.recall { id }` to read the full principle), `### procedures` (pointer view of advisory how-to templates — call `memory.procedures.recall { id }` to read the `steps[]`; templates are guidance, not law — follow them or consciously deviate), `### recalled` / `### memory-index` and `memory.notes.recall` for past context. Store distilled facts, not full dumps. `### notice` in the tail is a hard nudge to change strategy.",
+];
+
+/**
+ * The stable prefix is the part of the prompt that must stay byte-stable
+ * within a session so llama.cpp can reuse its KV-cache. Order and spacing
+ * are intentional — changing any byte invalidates the slot.
+ */
+export const DEFAULT_SYSTEM_PERSONA = [
+  "You are atomic-agent, a local operator. Each step emits exactly one JSON array matching the tool grammar — no other prose.",
+  "Bias toward action: keep planning minimal; unless the user explicitly asked for analysis or explanation only, choose the next tool-call array quickly instead of long deliberation. If the template forces a separate reasoning or thinking block before JSON, keep that block to a few words (or effectively empty), then emit the array.",
+  SYSTEM_PERSONA_INPUTS_LINE,
+  SYSTEM_PERSONA_TERMINALS_LINE,
+  REPLY_DISCIPLINE_LINE_GRAMMAR,
+  ...SYSTEM_PERSONA_SHARED_LINES,
+].join("\n");
+
+/**
+ * Persona for the `native_tools` transport. The request already carries
+ * an OpenAI `tools` array with `tool_choice: "auto"`, so the persona must
+ * mandate the function-calling interface — repeating the grammar
+ * persona's "exactly one JSON array" line alongside a native `tools`
+ * payload is a dual mandate that measurably drives models back to
+ * text-JSON emission (issue #285: 0/6 native `tool_calls` under
+ * `native_tools`). Lines past the first two are shared with
+ * `DEFAULT_SYSTEM_PERSONA`.
+ */
+export const NATIVE_TOOLS_SYSTEM_PERSONA = [
+  "You are atomic-agent, a local operator. Each step calls tools through the native function-calling interface — never write tool-call JSON into the text of your answer, and never put your answer in the reasoning channel.",
+  "Bias toward action: keep planning minimal; unless the user explicitly asked for analysis or explanation only, choose the next tool call quickly instead of long deliberation. Keep any reasoning or thinking to a few words (or effectively empty), then make the call.",
+  SYSTEM_PERSONA_INPUTS_LINE,
+  SYSTEM_PERSONA_TERMINALS_LINE,
+  REPLY_DISCIPLINE_LINE_NATIVE,
+  ...SYSTEM_PERSONA_SHARED_LINES,
+].join("\n");
+
+/**
+ * `### rules` body shared verbatim between the transports. Only the
+ * emission-shape opener differs: grammar mandates the length-1 text
+ * array, native mandates the function-calling interface — leaving the
+ * grammar opener in place under `native_tools` re-creates the dual
+ * mandate the transport split exists to remove (issue #285).
+ */
+const RULES_SHARED_TAIL =
+  "Destructive or privileged tools may require user approval. If the user declines a call, do not retry it or reach the same result another way (another tool, a shell command); tell them it was not done and ask what they want instead. If `### skills` lists a playbook that fits the user goal, call `skill.view` first unless that skill is already under `### loaded-skills`; do not act on a catalog stub — the body has the procedure. This holds for every skill (text replies included), not just browser/shell shortcuts. Summaries in `# extras` list rare tools; call `tool.view` to load the full `args` schema into `### loaded-tools` before use. Large trees: narrow with `os.fs.list` filters or `os.fs.glob` before reading content; do not use `os.fs.grep` with broad binary globs (e.g. every `*.pdf`) across huge folders—use tight globs then `os.fs.read_document` on candidates.";
+
+/**
+ * The grammar transport's `### rules` line: the pre-#285 line with the
+ * declined-call sentence ATO-225 added to the shared tail. Stable within
+ * a build, so the KV-cache prefix still holds across turns.
+ */
+const GRAMMAR_RULES_LINE = `One tool-call array per step (including \`skill.view\`); a solo action is a length-1 array. ${RULES_SHARED_TAIL}`;
+
+const NATIVE_TOOLS_RULES_LINE = `One batch of tool calls per step (including \`skill.view\`), all through the native function-calling interface — never written out as JSON text; a solo action is a single call. ${RULES_SHARED_TAIL}`;
+
+/**
+ * Windows-only nudge appended after the persona. The default persona and
+ * examples are POSIX-flavoured (`grep`/`cat`/`rm`), so on Windows the model
+ * needs an explicit steer toward native `cmd.exe` equivalents. Rendered only
+ * when `capabilities.platform === "win32"`; other platforms keep the stable
+ * prefix byte-identical. Platform is fixed for the lifetime of a session, so
+ * this stays KV-cache stable within a session.
+ */
+export const WINDOWS_PLATFORM_HINT = [
+  "Windows environment: `os.shell.run` uses a `cmd.exe` subshell. Prefer native Windows commands — `findstr` (not grep), `where` (not which), `type` (not cat), `dir` (not `ls -la`), `copy`, `del`/`rmdir` semantics. Reference environment variables as `%VAR%` and use backslash `\\` path separators (e.g. `C:\\Users\\me\\file.txt`). Chain commands with `&&`, `||`, and pipe with `|`.",
+  "PowerShell cmdlets (`New-Item`, `Move-Item`, `Copy-Item`, `Get-ChildItem`, `Remove-Item`) do not exist in `cmd.exe` and fail as unrecognized commands — do not use them.",
+  "To move, rename or sort files into folders, call `os.fs.move` (`tool.view` it first), not `move`/`ren`/`mkdir` in the shell: it creates missing folders, takes paths with spaces as they are, and moves many files in one call. Only an empty folder needs the shell: `mkdir \"C:\\path\\Folder\"` (quote every path that contains spaces).",
+  "Deletion still goes through `os.fs.trash`, never `del`/`rmdir`, unless the user explicitly demands a permanent shell delete.",
+].join("\n");
+
+export function buildStablePrefix(input: StablePrefixInput): string {
+  // Present only while a Composio session is mounted, so an install
+  // with no key pays nothing for it and its prefix is byte-identical
+  // to before the integration existed.
+  const composioActive = isComposioActive(input.toolDescriptors);
+  // Same contract for GitHub: the `github.*` descriptors are only in
+  // the catalog while the hub holds a token.
+  const githubActive = isGithubActive(input.toolDescriptors);
+  const integrationsBlock = [
+    ...(composioActive ? [COMPOSIO_GUIDANCE] : []),
+    ...(githubActive ? [GITHUB_GUIDANCE] : []),
+  ];
+  // Same contract as the Composio block: present only while the tool it
+  // describes is mounted, so a non-fusion install pays zero bytes.
+  const fusionActive = isFusionActive(input.toolDescriptors);
+  const nativeTools = input.toolTransport === "native_tools";
+  const persona =
+    input.systemPersona ??
+    (nativeTools ? NATIVE_TOOLS_SYSTEM_PERSONA : DEFAULT_SYSTEM_PERSONA);
+  const maxParallelToolCalls = input.maxParallelToolCalls ?? 8;
+  // A role splits the catalog: its own tools render as they always
+  // have, the rest collapse to one line of names. `full` (or no role)
+  // puts everything on the inside, so the block below is byte-identical
+  // to the pre-role output — `outside` is empty and adds no line.
+  const { inRole, outside } = partitionByRole(
+    input.toolRole,
+    input.toolDescriptors,
+  );
+  const frequent: ToolDescriptor[] = [];
+  const rare: ToolDescriptor[] = [];
+  for (const d of inRole) {
+    if (d.tier === "rare") rare.push(d);
+    else frequent.push(d);
+  }
+  const commonBlock = frequent.map(formatToolFrequent).join("\n");
+  const extrasBlock = rare.map(formatToolRare).join("\n");
+  const outsideLine =
+    outside.length > 0
+      ? `${ALSO_AVAILABLE_VIA_TOOL_VIEW} ${outside.map((d) => d.name).join(", ")}`
+      : null;
+  const caps = formatCapabilities(input.capabilities);
+  const skillsDropped = input.skillCatalogDropped ?? 0;
+  const skills =
+    input.skillCatalog.length > 0
+      ? [
+          ...input.skillCatalog.map(formatSkillCatalogLine),
+          ...(skillsDropped > 0
+            ? [formatSkillCatalogOmittedLine(skillsDropped)]
+            : []),
+        ].join("\n")
+      : "(none installed)";
+  // Head ordering. With `turnSystemOpen` (Gemma 4 turn-framing) the system
+  // turn opens first and the reasoning token sits at the very top of it,
+  // before `### system`. Otherwise the legacy monolithic head is preserved
+  // byte-for-byte so qwen/plain KV-cache is untouched.
+  const head = input.turnSystemOpen
+    ? [
+        input.turnSystemOpen.trimEnd(),
+        ...(input.reasoningSystemToken
+          ? [input.reasoningSystemToken.trimEnd()]
+          : []),
+        `### system`,
+      ]
+    : [
+        `### system`,
+        ...(input.reasoningSystemToken
+          ? [input.reasoningSystemToken.trimEnd()]
+          : []),
+      ];
+  return [
+    ...head,
+    persona,
+    ...(input.capabilities.platform === "win32"
+      ? [``, WINDOWS_PLATFORM_HINT]
+      : []),
+    ``,
+    `### rules`,
+    nativeTools ? NATIVE_TOOLS_RULES_LINE : GRAMMAR_RULES_LINE,
+    ``,
+    `### skills`,
+    skills,
+    ``,
+    `### tools`,
+    `# common (full)`,
+    commonBlock,
+    ``,
+    `# extras (one-line; use \`tool.view\` { name: "<tool>" } for full schema)`,
+    extrasBlock,
+    ...(outsideLine !== null ? [outsideLine] : []),
+    ``,
+    `### capabilities`,
+    caps,
+    ``,
+    ...(integrationsBlock.length > 0
+      ? [`### integrations`, integrationsBlock.join("\n"), ``]
+      : []),
+    ...(fusionActive
+      ? [`### fusion`, buildFusionGuidance(input.fusion), ``]
+      : []),
+    `### instructions`,
+    // The emission instructions are the one transport-dependent block.
+    // Grammar links parse text-JSON (GBNF-constrained locally), so they
+    // mandate the array literal; native links carry an OpenAI `tools`
+    // payload, and repeating the text-JSON mandate there is a dual
+    // mandate that drives models back to text emission (issue #285).
+    // The `### tools` catalog above stays in both modes — see
+    // `StablePrefixInput.toolTransport`.
+    ...(nativeTools
+      ? [
+          `Call tools now, through the native function-calling interface (the \`tools\` your API request carries) — do NOT write tool-call JSON as text. The \`### tools\` catalog above is reference documentation for those same tools (tiers, examples, \`tool.view\`). For the final user-facing answer call \`reply\`, or answer in plain text.`,
+          `PARALLEL: when you need multiple INDEPENDENT actions (e.g. read 3 different files, run 2 globs, look up 4 git logs), emit up to ${maxParallelToolCalls} tool calls in the SAME response — they run in parallel and cut wall time by ~Nx.`,
+          `Emit a single tool call (no others alongside) when: it is \`reply\`/\`finish\`, may need approval (\`os.shell.run\`, \`os.fs.write\`, \`os.fs.edit\`, \`os.fs.trash\`, \`os.fs.patch\`, \`os.fs.restore\`, \`os.fs.move\`, \`os.fs.archive.extract\`, \`os.proc.kill\`, \`os.http.request\`, \`skill.run_script\`), or its args depend on a previous call's result.`,
+        ]
+      : [
+          `Emit a JSON ARRAY of tool calls now. Always start with \`[\` and end with \`]\`, even for a single call. Use \`reply\` for natural-language answers to the user.`,
+          `PARALLEL: when you need multiple INDEPENDENT actions (e.g. read 3 different files, run 2 globs, look up 4 git logs), put up to ${maxParallelToolCalls} calls in the SAME array — they run in parallel and cut wall time by ~Nx. Examples:`,
+          `  - one call: [{"tool":"os.fs.read","args":{"path":"a.ts"}}]`,
+          `  - parallel batch: [{"tool":"os.fs.read","args":{"path":"a.csv"}},{"tool":"os.fs.read","args":{"path":"b.csv"}},{"tool":"os.fs.read","args":{"path":"c.csv"}}]`,
+          `  - reply: [{"tool":"reply","args":{"text":"..."}}]`,
+          `Keep a call solo (length-1 array) when: it is \`reply\`/\`finish\`, may need approval (\`os.shell.run\`, \`os.fs.write\`, \`os.fs.edit\`, \`os.fs.trash\`, \`os.fs.patch\`, \`os.fs.restore\`, \`os.fs.move\`, \`os.fs.archive.extract\`, \`os.proc.kill\`, \`os.http.request\`, \`skill.run_script\`), or its args depend on a previous call's result.`,
+        ]),
+    ``,
+  ].join("\n");
+}
+
+/**
+ * Renders a frequent tool for the stable prefix: summary + `args` + optional examples.
+ */
+export function formatToolFrequent(descriptor: ToolDescriptor): string {
+  const head = `- ${descriptor.name} — ${descriptor.summary}\n  args: ${descriptor.argsSchema}`;
+  if (!descriptor.examples || descriptor.examples.length === 0) {
+    return head;
+  }
+  const examples = descriptor.examples.map((ex) => `    - ${ex}`).join("\n");
+  return `${head}\n  examples:\n${examples}`;
+}
+
+/** Renders a rare tool as a single-line manifest (no `args` in the prefix). */
+function formatToolRare(descriptor: ToolDescriptor): string {
+  return `- ${descriptor.name} — ${descriptor.summary}`;
+}
+
+/**
+ * Renders a loaded tool block for the variable tail (`### loaded-tools`).
+ * Uses the same shape as `formatToolFrequent` without `examples` if absent.
+ */
+export function formatToolForLoadedTail(
+  name: string,
+  summary: string,
+  argsSchema: string,
+  examples?: readonly string[],
+): string {
+  const head = `- ${name} — ${summary}\n  args: ${argsSchema}`;
+  if (!examples || examples.length === 0) return head;
+  const ex = examples.map((e) => `    - ${e}`).join("\n");
+  return `${head}\n  examples:\n${ex}`;
+}
+
+export function formatCapabilities(caps: CapabilitiesSummary): string {
+  return [
+    `platform: ${caps.platform}/${caps.arch}`,
+    `browser: ${caps.browserChannel}`,
+    `working_dir: ${caps.workingDir}`,
+    `clipboard: ${caps.hasClipboard ? "yes" : "no"}`,
+    `wmctrl: ${caps.hasWmctrl ? "yes" : "no"}`,
+    `notifications: ${caps.hasNotifications ? "yes" : "no"}`,
+    ...(caps.emailAddress
+      ? [`email: ${caps.emailAddress} (os.email.inbox / os.email.send)`]
+      : []),
+  ].join("\n");
+}

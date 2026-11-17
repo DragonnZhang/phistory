@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "codewhale",
+  "agent": "Codewhale",
+  "repository": "codewhale-hq/Codewhale",
+  "snapshot": "90b430084e4d6e06bfbf",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:44.751520+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+      "path": "crates/engine/src/core/engine/tool_setup.rs",
+      "sha256": "51df05b7717268e2403b7d3df08f814196f80ebcee7b7fe54a569d26dde6c180",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/core/engine/tool_setup.rs",
+      "url": "https://github.com/codewhale-hq/Codewhale/blob/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/core/engine/tool_setup.rs"
+    },
+    {
+      "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+      "path": "crates/engine/src/prompts/text.rs",
+      "sha256": "65427f5e544119c6c31b4c904d93da2920c579dc09325e59588ef3ec163bf12c",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/prompts/text.rs",
+      "url": "https://github.com/codewhale-hq/Codewhale/blob/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/prompts/text.rs"
+    },
+    {
+      "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+      "path": "crates/engine/src/tools/codemode.rs",
+      "sha256": "0a47795666e948c22985e46c9c99d0acb6e474064704512c8c21cea955ba9e8d",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/tools/codemode.rs",
+      "url": "https://github.com/codewhale-hq/Codewhale/blob/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/tools/codemode.rs"
+    },
+    {
+      "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+      "path": "crates/engine/src/tools/registry.rs",
+      "sha256": "81baa3ca891a8d3bff614071df3a362c950883d1ae31926cd69a3d2edf47cc7e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/tools/registry.rs",
+      "url": "https://github.com/codewhale-hq/Codewhale/blob/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/tools/registry.rs"
+    },
+    {
+      "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+      "path": "crates/engine/src/tools/subagent/mod.rs",
+      "sha256": "d8b056e9364b43849accd9e770f8cb1d119ae9784c90d7461b4451cc376c8186",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/tools/subagent/mod.rs",
+      "url": "https://github.com/codewhale-hq/Codewhale/blob/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/tools/subagent/mod.rs"
+    },
+    {
+      "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+      "path": "crates/engine/src/tools/truncate.rs",
+      "sha256": "3b9d29ca17985fc279bcfe232d75363e91f71a4b4947218b1d69eb5ab564b5d4",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/tools/truncate.rs",
+      "url": "https://github.com/codewhale-hq/Codewhale/blob/cc6207a5b49742bd324fd893e5db168e6fe783bd/crates/engine/src/tools/truncate.rs"
+    }
+  ]
+}

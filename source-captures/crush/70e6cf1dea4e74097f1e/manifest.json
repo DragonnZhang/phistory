@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "crush",
+  "agent": "Crush",
+  "repository": "charmbracelet/crush",
+  "snapshot": "70e6cf1dea4e74097f1e",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:44.417092+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0",
+      "path": "internal/agent/coordinator.go",
+      "sha256": "11693f9b1cbcea4ea865d3457e105587ec638e78f7960b69900f7b29d41f2248",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0/internal/agent/coordinator.go",
+      "url": "https://github.com/charmbracelet/crush/blob/5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0/internal/agent/coordinator.go"
+    },
+    {
+      "commit": "5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0",
+      "path": "internal/agent/templates/coder.md.tpl",
+      "sha256": "5e27c03aaefefd805b3724cfc9d62e28ed84ff9f35774228c596160f50989370",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0/internal/agent/templates/coder.md.tpl",
+      "url": "https://github.com/charmbracelet/crush/blob/5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0/internal/agent/templates/coder.md.tpl"
+    },
+    {
+      "commit": "5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0",
+      "path": "internal/agent/tools/bash.go",
+      "sha256": "687e069ad0967c63b1eab955bbc811c937e53b0ef381e2a25408e612e945549f",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0/internal/agent/tools/bash.go",
+      "url": "https://github.com/charmbracelet/crush/blob/5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0/internal/agent/tools/bash.go"
+    }
+  ]
+}

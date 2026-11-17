@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "openevolve",
+  "agent": "openevolve",
+  "repository": "algorithmicsuperintelligence/openevolve",
+  "snapshot": "be374669e51159e619e7",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:43.979250+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "73448d715968b3578d8458b16295e827edd2b6bf",
+      "path": "openevolve/prompt/sampler.py",
+      "sha256": "9e71234def141426fdf6372d9793301308dc55cdafe5f4d2a067ae9e1ee59eb3",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/73448d715968b3578d8458b16295e827edd2b6bf/openevolve/prompt/sampler.py",
+      "url": "https://github.com/algorithmicsuperintelligence/openevolve/blob/73448d715968b3578d8458b16295e827edd2b6bf/openevolve/prompt/sampler.py"
+    },
+    {
+      "commit": "73448d715968b3578d8458b16295e827edd2b6bf",
+      "path": "openevolve/prompts/defaults/diff_user.txt",
+      "sha256": "3fcfc9592b4f019eb07085b0c02855a0218007df15e3e6adeb301deff4124be7",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/73448d715968b3578d8458b16295e827edd2b6bf/openevolve/prompts/defaults/diff_user.txt",
+      "url": "https://github.com/algorithmicsuperintelligence/openevolve/blob/73448d715968b3578d8458b16295e827edd2b6bf/openevolve/prompts/defaults/diff_user.txt"
+    },
+    {
+      "commit": "73448d715968b3578d8458b16295e827edd2b6bf",
+      "path": "openevolve/prompts/defaults/system_message.txt",
+      "sha256": "d66ec30775d611aca71538742ff9201e8d1ce4cb3e5b076847aa2d8a32610e65",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/73448d715968b3578d8458b16295e827edd2b6bf/openevolve/prompts/defaults/system_message.txt",
+      "url": "https://github.com/algorithmicsuperintelligence/openevolve/blob/73448d715968b3578d8458b16295e827edd2b6bf/openevolve/prompts/defaults/system_message.txt"
+    }
+  ]
+}

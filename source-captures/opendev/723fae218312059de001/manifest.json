@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "opendev",
+  "agent": "opendev",
+  "repository": "opendev-to/opendev",
+  "snapshot": "723fae218312059de001",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:46.950392+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+      "path": "crates/opendev-agents/src/prompts/composer/factories.rs",
+      "sha256": "760678e8e91c681b5dda4a77adddb3c6b98929795452664c4c92c4a24ab1bc26",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-agents/src/prompts/composer/factories.rs",
+      "url": "https://github.com/opendev-to/opendev/blob/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-agents/src/prompts/composer/factories.rs"
+    },
+    {
+      "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+      "path": "crates/opendev-agents/src/react_loop/phases/tool_dispatch.rs",
+      "sha256": "3a8d7890ce99b125d897bb1f8ab6dd8fea969c4daa9c7967961f6d68881aef3e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-agents/src/react_loop/phases/tool_dispatch.rs",
+      "url": "https://github.com/opendev-to/opendev/blob/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-agents/src/react_loop/phases/tool_dispatch.rs"
+    },
+    {
+      "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+      "path": "crates/opendev-agents/templates/system/main/main-code-quality.md",
+      "sha256": "d847bd85b592132d69ac7966285127e312d8660c3ab65dd4b0192227b700bd0e",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-agents/templates/system/main/main-code-quality.md",
+      "url": "https://github.com/opendev-to/opendev/blob/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-agents/templates/system/main/main-code-quality.md"
+    },
+    {
+      "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+      "path": "crates/opendev-agents/templates/system/main/main-error-recovery.md",
+      "sha256": "73dc98e9c0b49a7f76a8b735798bf8d53d39308c0d525beb8b2ec2ccba74fb83",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-agents/templates/system/main/main-error-recovery.md",
+      "url": "https://github.com/opendev-to/opendev/blob/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-agents/templates/system/main/main-error-recovery.md"
+    },
+    {
+      "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+      "path": "crates/opendev-tools-impl/src/agents/tool_search.rs",
+      "sha256": "9b26b8291fa3f53ef3f989181860e3f10a4f041526f7d983de05362b0e8e8506",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-tools-impl/src/agents/tool_search.rs",
+      "url": "https://github.com/opendev-to/opendev/blob/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-tools-impl/src/agents/tool_search.rs"
+    },
+    {
+      "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+      "path": "crates/opendev-tools-impl/src/lib.rs",
+      "sha256": "3e0e41fe2566d0efa1b2df4d079f765f2627f32415f4c90c4e0266ef1ddeaacb",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-tools-impl/src/lib.rs",
+      "url": "https://github.com/opendev-to/opendev/blob/d32c660e4eed1a8e988d1fd58da88e41ba641d08/crates/opendev-tools-impl/src/lib.rs"
+    }
+  ]
+}

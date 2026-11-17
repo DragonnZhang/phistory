@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "skyvern",
+  "agent": "skyvern",
+  "repository": "Skyvern-AI/skyvern",
+  "snapshot": "0200be2ca2cb40c4e6b9",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:48.109917+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+      "path": "skyvern/forge/prompts/skyvern/extract-action-dynamic.j2",
+      "sha256": "a0f44fa59bf0e9e21ccfb5013c6dd4fc669b0c9c764d5cc152339efbedb173a3",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/forge/prompts/skyvern/extract-action-dynamic.j2",
+      "url": "https://github.com/Skyvern-AI/skyvern/blob/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/forge/prompts/skyvern/extract-action-dynamic.j2"
+    },
+    {
+      "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+      "path": "skyvern/forge/prompts/skyvern/extract-action-static.j2",
+      "sha256": "db7cec95a582832af0bcb798e848e39561327e069457d8cf5d1654a0fca25dd0",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/forge/prompts/skyvern/extract-action-static.j2",
+      "url": "https://github.com/Skyvern-AI/skyvern/blob/73fbad916fe82ca7c4552e062b5e61127cfee98c/skyvern/forge/prompts/skyvern/extract-action-static.j2"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "intentkit",
+  "agent": "intentkit",
+  "repository": "crestalnetwork/intentkit",
+  "snapshot": "9fa4cd13e4ed549072b3",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:44.611882+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "afc8cc44255210db6352f7437e569ed8b88ed5e1",
+      "path": "intentkit/core/executor.py",
+      "sha256": "ee537e449115fc047bda7092a51f8ab0882d9abf5f3cc9857262e22e63dd3393",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/afc8cc44255210db6352f7437e569ed8b88ed5e1/intentkit/core/executor.py",
+      "url": "https://github.com/crestalnetwork/intentkit/blob/afc8cc44255210db6352f7437e569ed8b88ed5e1/intentkit/core/executor.py"
+    },
+    {
+      "commit": "afc8cc44255210db6352f7437e569ed8b88ed5e1",
+      "path": "intentkit/core/lead/prompts.py",
+      "sha256": "e1edd2f850494188fbd9097316c49d32ea6cfaefa97d959a3d133909dbd7517b",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/afc8cc44255210db6352f7437e569ed8b88ed5e1/intentkit/core/lead/prompts.py",
+      "url": "https://github.com/crestalnetwork/intentkit/blob/afc8cc44255210db6352f7437e569ed8b88ed5e1/intentkit/core/lead/prompts.py"
+    }
+  ]
+}

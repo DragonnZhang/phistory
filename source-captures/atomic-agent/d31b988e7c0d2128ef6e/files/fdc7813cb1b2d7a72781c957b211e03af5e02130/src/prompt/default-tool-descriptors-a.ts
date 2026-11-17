@@ -1,0 +1,332 @@
+import { OS_FS_READ_CONTRACT } from "../tools/os/fs/fs-read-contract.js";
+import { OS_FS_LIST_CONTRACT } from "../tools/os/fs/fs-list-contract.js";
+import { OS_FS_GLOB_CONTRACT } from "../tools/os/fs/fs-glob-contract.js";
+import { OS_FS_GREP_CONTRACT } from "../tools/os/fs/fs-grep-contract.js";
+import { OS_FS_DIFF_CONTRACT } from "../tools/os/fs/fs-diff-contract.js";
+import { OS_FS_WATCH_CONTRACT } from "../tools/os/fs/fs-watch-contract.js";
+import { OS_FS_WRITE_CONTRACT } from "../tools/os/fs/fs-write-contract.js";
+import { OS_FS_EDIT_CONTRACT } from "../tools/os/fs/fs-edit-contract.js";
+import { OS_FS_PATCH_CONTRACT } from "../tools/os/fs/fs-patch-contract.js";
+import { OS_FS_TRASH_CONTRACT } from "../tools/os/fs/fs-trash-contract.js";
+import { OS_FS_RESTORE_CONTRACT } from "../tools/os/fs/fs-restore-contract.js";
+import { OS_FS_MOVE_CONTRACT } from "../tools/os/fs/fs-move-contract.js";
+import { OS_FS_LOCATE_PROJECT_CONTRACT } from "../tools/os/fs/fs-locate-project-contract.js";
+import { OS_FS_HASH_CONTRACT } from "../tools/os/fs/fs-hash-contract.js";
+import type { ToolDescriptor } from "./stable-prefix.js";
+
+/** First half of `DEFAULT_TOOL_DESCRIPTORS` (order is load-bearing). */
+export const DEFAULT_TOOL_DESCRIPTORS_A: readonly ToolDescriptor[] = [
+  {
+    name: "browser.navigate",
+    summary:
+      "Open a URL in the controlled browser tab. LAST RESORT — do NOT use this to read a page (use os.web.fetch) or to search (use os.web.search). Allowed ONLY when the user explicitly asks for the browser, or the page truly needs JS/login/clicks that os.web.fetch cannot deliver.",
+    argsSchema: "{ url: string }",
+  },
+  {
+    name: "browser.click",
+    summary: "Click a snapshot element by aria-ref from the latest read.",
+    argsSchema: "{ ref: string }",
+  },
+  {
+    name: "browser.type",
+    summary: "Type into a snapshot element; optional Enter.",
+    argsSchema: "{ ref: string, text: string, pressEnter?: boolean }",
+  },
+  {
+    name: "browser.read_aria",
+    summary:
+      "Capture the page as an ARIA text snapshot. mode: full (whole page), interactive (controls only), diff (changes since the last snapshot of this tab), region (the part under ref).",
+    argsSchema: "{ mode?: string, ref?: string }",
+  },
+  {
+    name: "browser.search",
+    summary:
+      "Web search in the live browser (opens the SERP, refreshes the world snapshot). LAST RESORT — to search the web use os.web.search instead. Allowed ONLY when the user explicitly asks to search via the browser, or you must then click/read the live results.",
+    argsSchema: "{ query: string, engine?: string }",
+  },
+  {
+    name: "browser.tabs",
+    summary: "List, switch, close, or open browser tabs.",
+    argsSchema: `{ action: "list" | "switch" | "close" | "new", index?: number, url?: string }`,
+  },
+  {
+    name: "browser.scroll",
+    summary:
+      "Scroll the page; does not refresh ARIA — read_aria after if needed.",
+    argsSchema: `{ direction: "up" | "down" | "top" | "bottom", amount?: "page" | "half" | number }`,
+  },
+  {
+    name: "browser.screenshot",
+    summary:
+      "JPEG of the page (viewport), the whole page (fullPage) or one element (ref); returns a path for vision.describe or reply.attachments.",
+    argsSchema: "{ ref?: string, fullPage?: boolean }",
+  },
+  {
+    name: "os.shell.run",
+    summary:
+      "Run a shell command in the working directory (may require approval). Not for deleting user files (use os.fs.trash when the user wants paths removed) or for moving, renaming or sorting them into folders (use os.fs.move), or for controlling a web browser (AppleScript, `open -a <browser> <url>`: use the browser tools). To run a command, `cmd` is required: the program, with its arguments in `args`, or a full command line. Run task steps (installs, clones, builds) yourself rather than telling the user to type them; hand over only a step the result says needs the user. A command still running at the default timeout comes back as a job: wait for it, kill it, or list jobs; `background: true` starts a server or watcher as a kept job at once.",
+    argsSchema:
+      "{ cmd: string, args: string[], cwd?: string, timeoutMs?: number, keep?: boolean, background?: boolean } | { wait: number /* job id */, timeoutMs?: number, keep?: boolean } | { kill: number } | { jobs: true }",
+  },
+  OS_FS_READ_CONTRACT.descriptor,
+  OS_FS_WRITE_CONTRACT.descriptor,
+  OS_FS_RESTORE_CONTRACT.descriptor,
+  OS_FS_TRASH_CONTRACT.descriptor,
+  OS_FS_LIST_CONTRACT.descriptor,
+  OS_FS_GLOB_CONTRACT.descriptor,
+  OS_FS_LOCATE_PROJECT_CONTRACT.descriptor,
+  OS_FS_GREP_CONTRACT.descriptor,
+  OS_FS_EDIT_CONTRACT.descriptor,
+  {
+    // Models reach for read_document on `.py` / `.ts` source files, hit the
+    // unsupported-extension error and burn a step guessing `format`. The
+    // summary therefore names the sibling tool explicitly: source code goes
+    // to os.fs.read, this one is for document extraction. It deliberately
+    // does NOT say "not for text files" — this tool does read .txt/.md/.csv
+    // as `plain`, and a summary that contradicts the tool is the same
+    // ambiguity one level up.
+    //
+    // `format` is spelled out as a closed set for the same reason: the bad
+    // guess in issue #113 was `format: "text"`, and a model that guesses it
+    // preemptively never sees the runtime hint.
+    name: "os.fs.read_document",
+    summary:
+      "Extract plain text from documents — PDF, Office, ODF, RTF (markers in output). NOT for source code: use os.fs.read. Read-only.",
+    argsSchema:
+      "{ path: string, format?: 'pdf' | 'docx' | 'doc' | 'xlsx' | 'rtf' | 'odt' | 'pptx' | 'plain', maxBytes?: number, maxPages?: number, pagesFrom?: number, pagesTo?: number, sheets?: (string | number)[], pageSeparators?: boolean, includeTables?: boolean }",
+  },
+  {
+    name: "os.fs.archive.list",
+    summary: "List archive entries (zip, tar, tar.gz, gz) without extracting.",
+    argsSchema: "{ path: string, format?: 'zip' | 'tar' | 'tar.gz' | 'gz' }",
+    tier: "rare",
+  },
+  {
+    name: "os.fs.archive.read_entry",
+    summary: "Read one archive entry without writing to disk. Read-only.",
+    argsSchema:
+      "{ path: string, entry: string, as?: 'utf8' | 'base64', maxBytes?: number, format?: 'zip' | 'tar' | 'tar.gz' | 'gz' }",
+    tier: "rare",
+  },
+  {
+    name: "os.fs.archive.extract",
+    summary: "Extract an archive to destDir (guarded; may require approval).",
+    argsSchema:
+      "{ path: string, destDir: string, overwrite?: boolean, followSymlinks?: boolean, include?: string[], limits?: { maxTotalBytes?: number, maxEntryBytes?: number, maxEntries?: number }, format?: 'zip' | 'tar' | 'tar.gz' | 'gz' }",
+    tier: "rare",
+  },
+  OS_FS_HASH_CONTRACT.descriptor,
+  OS_FS_DIFF_CONTRACT.descriptor,
+  OS_FS_PATCH_CONTRACT.descriptor,
+  OS_FS_WATCH_CONTRACT.descriptor,
+  {
+    name: "os.git.status",
+    summary: "Working tree status (porcelain) and current branch. Read-only.",
+    argsSchema: "{ repo?: string }",
+  },
+  {
+    name: "os.git.log",
+    summary: "Commit history with structured fields. Read-only.",
+    argsSchema:
+      "{ repo?: string, limit?: number, revisionRange?: string, path?: string }",
+  },
+  {
+    name: "os.git.diff",
+    summary: "Unified diff (working tree, index, or revisions). Read-only.",
+    argsSchema:
+      "{ repo?: string, revisionRange?: string, staged?: boolean, paths?: string[], context?: number }",
+  },
+  {
+    name: "os.git.show",
+    summary: "One commit: metadata, numstat, optional patch. Read-only.",
+    argsSchema: "{ repo?: string, revision?: string, patch?: boolean }",
+    tier: "rare",
+  },
+  {
+    name: "os.git.blame",
+    summary: "Per-line authorship for a file. Read-only.",
+    argsSchema:
+      "{ repo?: string, path: string, revision?: string, startLine?: number, endLine?: number }",
+    tier: "rare",
+  },
+  {
+    name: "os.git.branch",
+    summary:
+      "List branches; optional remotes, pattern, or contains. Read-only.",
+    argsSchema:
+      "{ repo?: string, includeRemote?: boolean, contains?: string, pattern?: string }",
+    tier: "rare",
+  },
+  {
+    name: "os.git.checkout",
+    summary:
+      "Switch to a branch, or create one first (may require approval). Never discards local changes.",
+    argsSchema:
+      "{ branch: string, create?: boolean, startPoint?: string, repo?: string }",
+  },
+  {
+    name: "os.git.commit",
+    summary:
+      "Stage (`paths` or `all`) and commit with `message` (may require approval). Neither → commits what is already staged.",
+    argsSchema:
+      "{ message: string, paths?: string[], all?: boolean, repo?: string }",
+  },
+  {
+    name: "os.git.push",
+    summary:
+      "Push the current (or named) branch to a remote, `-u` by default (may require approval). No force-push. Uses the connected GitHub token for github.com.",
+    argsSchema:
+      "{ remote?: string, branch?: string, setUpstream?: boolean, repo?: string }",
+  },
+  {
+    name: "github.whoami",
+    summary:
+      "The GitHub account behind the connected token, plus its scopes. Read-only.",
+    argsSchema: "{}",
+    tier: "rare",
+  },
+  {
+    name: "github.pr.list",
+    summary:
+      "List pull requests of a repo (default: origin of the working dir). Read-only.",
+    argsSchema: `{ repo?: string /* owner/name */, state?: "open" | "closed" | "all", limit?: number }`,
+    tier: "rare",
+  },
+  {
+    name: "github.pr.create",
+    summary:
+      "Open a pull request (may require approval). Push the branch with os.git.push first. `head`/`base`/`repo` default to the current branch, the repo's default branch and origin.",
+    argsSchema:
+      "{ title: string, body?: string, head?: string, base?: string, draft?: boolean, repo?: string /* owner/name */ }",
+    tier: "rare",
+  },
+  {
+    name: "github.issue.list",
+    summary:
+      "List issues of a repo (default: origin), PRs excluded. Read-only.",
+    argsSchema: `{ repo?: string /* owner/name */, state?: "open" | "closed" | "all", labels?: string[], limit?: number }`,
+    tier: "rare",
+  },
+  {
+    name: "github.issue.create",
+    summary: "File an issue (may require approval).",
+    argsSchema:
+      "{ title: string, body?: string, labels?: string[], repo?: string /* owner/name */ }",
+    tier: "rare",
+  },
+  {
+    name: "github.issue.comment",
+    summary:
+      "Comment on an issue or pull request by number (may require approval).",
+    argsSchema:
+      "{ number: number, body: string, repo?: string /* owner/name */ }",
+    tier: "rare",
+  },
+  {
+    name: "os.git.remote",
+    summary:
+      "List, add, re-point or remove remotes. add/set-url need Remote sync on and approval; URLs with embedded credentials are refused.",
+    argsSchema: `{ repo?: string, action?: "list" | "add" | "set-url" | "remove", name?: string, url?: string }`,
+    tier: "rare",
+  },
+  {
+    name: "os.git.fetch",
+    summary: "Fetch a remote (default origin) or all. Needs Remote sync on; approval-gated.",
+    argsSchema: "{ repo?: string, remote?: string, all?: boolean, prune?: boolean }",
+    tier: "rare",
+  },
+  {
+    name: "os.git.pull",
+    summary: "Pull the current branch's upstream, fast-forward only unless rebase. Needs Remote sync on; approval-gated.",
+    argsSchema: "{ repo?: string, remote?: string, branch?: string, rebase?: boolean }",
+    tier: "rare",
+  },
+  {
+    name: "os.git.push",
+    summary:
+      "Push a branch (default: current) to a remote (default origin); sets upstream on first push; never forces. Needs Remote sync on; approval-gated.",
+    argsSchema: "{ repo?: string, remote?: string, branch?: string }",
+    examples: ['{"remote":"origin"}'],
+    tier: "rare",
+  },
+  {
+    name: "os.git.clone",
+    summary: "Clone a repository into the working directory (or dest). Needs Remote sync on; approval-gated.",
+    argsSchema: "{ url: string, dest?: string, branch?: string, depth?: number }",
+    examples: ['{"url":"https://github.com/owner/repo.git"}'],
+    tier: "rare",
+  },
+  {
+    name: "os.git.init",
+    summary:
+      "Create a local git repository (no remote); optional repo-local identity. No-op on an existing repo. Approval like a file write.",
+    argsSchema:
+      "{ path?: string, initialBranch?: string, userName?: string, userEmail?: string }",
+    tier: "rare",
+  },
+  {
+    name: "os.git.add",
+    summary:
+      "Stage changes (`all` = everything, or `paths`); `unstage` reverses. Approval like a file write.",
+    argsSchema:
+      "{ repo?: string, paths?: string[], all?: boolean, unstage?: boolean }",
+    examples: ['{"all":true}'],
+  },
+  {
+    name: "os.git.commit",
+    summary:
+      "Commit staged changes with a message; `all` also commits tracked modifications. Approval like a file write.",
+    argsSchema: "{ repo?: string, message: string, all?: boolean }",
+    examples: ['{"message":"feat: add parser"}'],
+  },
+  {
+    name: "os.git.checkout",
+    summary:
+      "Switch branches; `create` makes a new one (optionally from `startPoint`). Branches only, never paths. Approval like a file write.",
+    argsSchema:
+      "{ repo?: string, branch: string, create?: boolean, startPoint?: string }",
+    tier: "rare",
+  },
+  {
+    name: "os.proc.list",
+    summary: "List processes (filter, limit). Read-only.",
+    argsSchema: "{ filter?: string, limit?: number }",
+  },
+  {
+    name: "os.proc.kill",
+    summary: "Send a signal to a PID (may require approval).",
+    argsSchema: `{ pid: number, signal?: "SIGTERM" | "SIGKILL" | "SIGINT" | "SIGHUP" }`,
+  },
+  {
+    name: "os.http.request",
+    summary:
+      "Raw HTTP GET/POST via curl for APIs/JSON; returns the body verbatim (no HTML extraction). Host allowlist + approval from config.http. To read a web page, use os.web.fetch.",
+    argsSchema:
+      "{ url: string, method?: 'GET' | 'POST', headers?: Record<string, string>, body?: string | object, timeoutMs?: number, followRedirects?: boolean }",
+  },
+  {
+    name: "os.web.search",
+    summary:
+      "Search the web via the configured provider (Exa by default with a DuckDuckGo fallback; SearXNG/Brave configurable; Exa/Brave can use env API keys). Returns compact title/url/snippet results. Use os.web.fetch to read a chosen result.",
+    argsSchema: `{ query: string, maxResults?: number }`,
+    examples: [
+      '{"query":"atomic agent local operator runtime","maxResults":5}',
+      '{"query":"latest llama.cpp server grammar cache_prompt slot_id"}',
+    ],
+  },
+  {
+    name: "os.web.fetch",
+    summary:
+      "Read a web page as readable markdown/text (cf-markdown → Readability → basic). GET only, no JS, no auth; SSRF-guarded; read-only. For raw API/JSON or POST, use os.http.request.",
+    argsSchema: `{ url: string, extractMode?: "markdown" | "text", maxChars?: number, timeoutMs?: number }`,
+    examples: [
+      '{"url":"https://example.com/article"}',
+      '{"url":"https://docs.example.com/guide","extractMode":"text","maxChars":20000}',
+    ],
+  },
+  // Appended rather than placed beside the other os.fs entries: the
+  // frozen Git duplicates above are pinned by catalog position
+  // (`tool-contract-conformance.test.ts`), and a rare tool renders as
+  // one line in `# extras` wherever it sits.
+  OS_FS_MOVE_CONTRACT.descriptor,
+];

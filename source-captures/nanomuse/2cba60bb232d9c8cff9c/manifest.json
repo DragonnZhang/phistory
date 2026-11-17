@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "nanomuse",
+  "agent": "nanoMuse",
+  "repository": "nano-muse/nanoMuse",
+  "snapshot": "2cba60bb232d9c8cff9c",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:46.659760+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9",
+      "path": "nanomuse/agent/core.py",
+      "sha256": "2174e0e07071800209b896869f255e7b89ae8b5b81781b47907faaa189216a36",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/agent/core.py",
+      "url": "https://github.com/nano-muse/nanoMuse/blob/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/agent/core.py"
+    },
+    {
+      "commit": "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9",
+      "path": "nanomuse/prompts.py",
+      "sha256": "d26facabe8b8b79f06fb0efbc309343bcedc105bd75bebf81349daf39d8d0a16",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/prompts.py",
+      "url": "https://github.com/nano-muse/nanoMuse/blob/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/prompts.py"
+    },
+    {
+      "commit": "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9",
+      "path": "nanomuse/tools/coding_tool.py",
+      "sha256": "1fc5e6996490efaded5c99e2ec2b8045adc4c0410bb71b93e9736c6696430d8a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/tools/coding_tool.py",
+      "url": "https://github.com/nano-muse/nanoMuse/blob/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/tools/coding_tool.py"
+    },
+    {
+      "commit": "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9",
+      "path": "nanomuse/tools/files.py",
+      "sha256": "0c814af1f0338370e16de7411284d7afa43edebc5fc6c0fbe9b7db027eaa29c8",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/tools/files.py",
+      "url": "https://github.com/nano-muse/nanoMuse/blob/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/tools/files.py"
+    },
+    {
+      "commit": "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9",
+      "path": "nanomuse/tools/shell.py",
+      "sha256": "774baae240e46da35b7997a7434e90188e2cce9a3309d55b7aa2c4e8a9198dfc",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/tools/shell.py",
+      "url": "https://github.com/nano-muse/nanoMuse/blob/8b32d43c946db2bbef6fae39c48a9fc608ebd8e9/nanomuse/tools/shell.py"
+    }
+  ]
+}

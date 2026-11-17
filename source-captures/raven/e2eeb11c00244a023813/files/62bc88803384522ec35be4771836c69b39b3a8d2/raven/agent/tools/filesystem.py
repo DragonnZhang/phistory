@@ -1,0 +1,988 @@
+"""File system tools: read, write, edit, list."""
+
+import asyncio
+import difflib
+import mimetypes
+import os
+import re
+import unicodedata
+from pathlib import Path
+from typing import Any
+
+from raven.agent import workdir
+from raven.agent.tools import remote_files, tree_walk
+from raven.contracts.tool import FileChange, Tool, ToolResult
+from raven.ops import remote_path
+from raven.utils.images import detect_image_mime
+
+_DIFF_MAX_LINES = 400
+# The approval preview reads the target before the call runs, on the gate's
+# path; a file this large is not read at all (the diff would be dropped by the
+# line cap anyway) and the prompt shows the path alone.
+_PREVIEW_MAX_BYTES = 256 * 1024
+
+#: How a page of a text file is read: this many bytes at a time, the line
+#: breaks counted as the bytes come and only the page's own lines decoded.
+#: ``read_text().splitlines()`` held the interpreter for the whole file --
+#: 7.5 s on a 1 GiB file (decode 2.7 s, split 4.8 s, measured 2026-10-13),
+#: during which nothing else ran: on a Raven node, no heartbeat answered;
+#: here, no turn served. Each step is now one chunk's, and the file is never
+#: whole in memory.
+_PAGE_CHUNK = 4 * 1024 * 1024
+
+# Where ``str.splitlines`` ends a line, as UTF-8 bytes: the two-byte ``\r\n``
+# first so it counts once, the one-byte breaks, then NEL, LS and PS.
+_LINE_BREAK = re.compile(rb"\r\n|[\n\r\x0b\x0c\x1c\x1d\x1e]|\xc2\x85|\xe2\x80[\xa8\xa9]")
+# The breaks other than ``\n``: a chunk with none splits on ``\n`` alone, the
+# common case, in one C call. Looked for one by one with ``in``, a search at
+# memchr speed; a regular expression over the same bytes took twenty times
+# as long (measured 2026-10-13 on a 1 GiB file: 80 ms a chunk against 4).
+_ODD_BREAKS = (b"\r", b"\x0b", b"\x0c", b"\x1c", b"\x1d", b"\x1e", b"\xc2\x85", b"\xe2\x80\xa8", b"\xe2\x80\xa9")
+
+
+def _split_lines(body: bytes) -> list[bytes]:
+    """``body`` cut at every break ``str.splitlines`` knows; the last piece is what follows the last break."""
+    odd = any(sign in body for sign in _ODD_BREAKS)
+    return _LINE_BREAK.split(body) if odd else body.split(b"\n")
+
+
+def _page_of_lines(handle: Any, start: int, limit: int) -> tuple[list[bytes], int]:
+    """Lines ``start`` to ``start + limit`` (0-based) of the bytes ``handle`` reads, and how many lines there are.
+
+    Exactly the lines ``read_text(encoding="utf-8").splitlines()`` would give,
+    read a chunk at a time and each chunk looked at once: the bytes of the
+    line in progress are kept only while that line may be on the page, so a
+    line longer than a chunk costs its length and nothing more, wherever it
+    falls. (Held whole and looked at again with every chunk, a file with no
+    break in it cost time square in its size: 256 MiB took half a minute.)
+    A break may straddle two chunks, so the bytes that could begin one are
+    held back until the next chunk says; the tail after the last break is a
+    line only when it holds something, as ``splitlines`` has it.
+    """
+    page: list[bytes] = []
+    total = 0
+    stop = start + limit
+    # The line in progress is line ``total``: its bytes, kept while it may be
+    # on the page, and whether it holds anything at all.
+    line: list[bytes] = []
+    begun = False
+
+    def wanted() -> bool:
+        return start <= total < stop
+
+    def feed(body: bytes) -> None:
+        nonlocal total, line, begun
+        head, *rest = _split_lines(body)
+        if head:
+            begun = True
+            if wanted():
+                line.append(head)
+        if not rest:
+            return
+        # The first break ends the line in progress, the pieces between
+        # breaks are whole lines, and the last piece begins the next line.
+        if wanted():
+            page.append(b"".join(line))
+        total += 1
+        line = []
+        *middle, last = rest
+        if middle:
+            if total < stop and total + len(middle) > start:
+                page.extend(middle[max(start - total, 0) : stop - total])
+            total += len(middle)
+        begun = bool(last)
+        if last and wanted():
+            line = [last]
+
+    kept = b""
+    while chunk := handle.read(_PAGE_CHUNK):
+        body = kept + chunk
+        hold = 2 if body.endswith(b"\xe2\x80") else (1 if body.endswith((b"\r", b"\xc2", b"\xe2")) else 0)
+        kept = body[len(body) - hold :] if hold else b""
+        feed(body[: len(body) - hold] if hold else body)
+    if kept:
+        feed(kept)
+    if begun:
+        if wanted():
+            page.append(b"".join(line))
+        total += 1
+    return page, total
+
+
+def _write_text_bytes(content: str) -> bytes:
+    """The bytes ``Path.write_text`` would leave on disk for ``content``.
+
+    It writes through a text layer with ``newline=None``, which translates
+    every ``\n`` to ``os.linesep`` -- so on a CRLF platform this is not the
+    plain UTF-8 encoding of the string.
+    """
+    return content.replace("\n", os.linesep).encode("utf-8")
+
+
+def _machine_of(path: str) -> str | None:
+    """The registered machine ``path`` is written for, or ``None`` for a path here (or one that names no machine)."""
+    try:
+        where = remote_path.target(path)
+    except remote_path.RemotePathError:
+        return None
+    return where.machine if where is not None else None
+
+
+def _is_a_device_spelling(path: str) -> bool:
+    """Whether ``path`` names a Windows device itself, colon spelling included (``NUL:``).
+
+    ``looks_remote`` reads the colon in ``NUL:`` as a machine prefix, so on a
+    Windows host this lets the reserved-name fence answer before the remote
+    path does. Only the head of a remote spelling -- the machine's id or
+    ``user@address``, before the separator -- can be the device instead of a
+    machine: everything after the separator is a path on that machine, where
+    ``nul`` and ``aux`` are ordinary file names and must reach it. On a POSIX
+    host this is ``False`` and the remote answer runs as it always did.
+    """
+    if not _WINDOWS or _url_argument(path):
+        return False
+    if not remote_path.looks_remote(path):
+        return any(_windows_device_stem(part) in _WINDOWS_DEVICE_NAMES for part in _supplied_components(Path(path)))
+    raw = path.strip()
+    return _windows_device_stem(raw.partition(":")[0]) in _WINDOWS_DEVICE_NAMES
+
+
+def _unified(before: str, after: str, name: str) -> str | None:
+    """Unified diff of one write, or None when there is nothing useful to show.
+
+    A UI cannot reconstruct this later: by the time the call is reported, the
+    content it replaced is already overwritten. A rewrite too large to render is
+    dropped whole rather than truncated -- half a diff reads as a smaller change
+    than the one that happened.
+    """
+    if before == after:
+        return None
+    out = list(
+        difflib.unified_diff(
+            before.splitlines(),
+            after.splitlines(),
+            fromfile=name,
+            tofile=name,
+            lineterm="",
+        )
+    )
+    if not out or len(out) > _DIFF_MAX_LINES:
+        return None
+    return "\n".join(out)
+
+
+# A DOS device name opens the device, not a file: ``nul`` maps to NUL in every
+# directory on every Windows version (CPython issue 95486). ``Path.resolve()``
+# cannot catch one: on Windows that is ``ntpath.realpath``, which maps only a
+# path that is exactly ``nul`` to ``\\.\NUL`` and hands ``<workspace>\nul``
+# back unchanged, so the allowed-dir check then accepts it. Windows' naming
+# rules hold for every path component, not only the last, and reach further
+# than the bare devices: a device name with or without a first extension
+# (``subdir/nul.md``), the superscript spellings (``COM¹.txt``, ``LPT²``), a
+# trailing dot or space (the bytes land in ``notes.md`` while the receipt
+# names ``notes.md.``), and a colon (``notes.md:hidden`` is an NTFS stream no
+# directory listing shows; ``NUL:`` is the device itself). The set and the
+# per-component order mirror CPython 3.13's ``ntpath.isreserved``, which
+# Python 3.12 cannot call: Microsoft's naming rules list COM/LPT 1-9 only, so
+# ``com0.txt`` is an ordinary file and stays one.
+_WINDOWS_DEVICE_NAMES = frozenset(
+    {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"}
+    | {f"COM{i}" for i in range(1, 10)}
+    | {f"LPT{i}" for i in range(1, 10)}
+    | {f"COM{s}" for s in "¹²³"}
+    | {f"LPT{s}" for s in "¹²³"}
+)
+
+
+def _is_reserved_windows_component(part: str) -> bool:
+    """Whether one path component is a reserved Windows name in one of its spellings."""
+    if part in (".", ".."):
+        return False
+    if part[-1:] in (".", " "):
+        return True
+    if ":" in part:
+        return True
+    return part.partition(".")[0].rstrip(" ").upper() in _WINDOWS_DEVICE_NAMES
+
+
+def _supplied_components(p: Path) -> tuple[str, ...]:
+    """The path components the caller wrote; the anchor (drive and root) is skipped.
+
+    The anchor names an operator-installed location, while Windows applies its
+    naming rules to everything the caller supplies, directory components
+    included.
+    """
+    return p.parts[1:] if (p.drive or p.root) else p.parts
+
+
+def _windows_device_stem(part: str) -> str:
+    """The device a component could name: its stem, before any stream colon or first extension."""
+    return part.partition(":")[0].partition(".")[0].rstrip(" ").upper()
+
+
+def _has_reserved_windows_component(p: Path) -> bool:
+    """Whether any component the caller supplied is a reserved Windows name."""
+    return any(_is_reserved_windows_component(part) for part in _supplied_components(p))
+
+
+def _url_argument(path: str) -> bool:
+    """Whether ``path`` is a URL rather than a path on this machine.
+
+    ``_URL_SCHEME_RE`` accepts a one-letter scheme, and Windows reads
+    ``C://work/nul`` as the drive path ``C:\\work\\nul`` -- a drive letter is a
+    local path, not a scheme, so the exemption needs two letters.
+    """
+    match = _URL_SCHEME_RE.match(path.strip())
+    return match is not None and len(match.group("scheme")) > 1
+
+
+# Read once: the platform of a process never changes, and keying the fence on
+# the module global keeps it testable off Windows (where ``os.name = "nt"``
+# cannot be patched without breaking ``Path`` itself).
+_WINDOWS = os.name == "nt"
+
+
+def resolve_path(
+    path: str,
+    workspace: Path | None = None,
+    allowed_dirs: tuple[Path, ...] = (),
+) -> Path:
+    """Resolve path against workspace (if relative) and enforce the allowed roots."""
+    # The tools echo the path into their result lines, and readers take a file back
+    # out of those lines; a line break in a path would let it forge another one.
+    if any(unicodedata.category(c) in ("Cc", "Zl", "Zp") for c in str(path)):
+        raise PermissionError(f"Path {path!r} contains a line break or control character")
+    p = Path(path).expanduser()
+    # A URL argument is not a path on this machine, so its scheme colon is not
+    # a stream spelling; the tool's not-found answer is the one that names the
+    # tool which can actually serve it, and this fence must not answer first.
+    if _WINDOWS and not _url_argument(path) and _has_reserved_windows_component(p):
+        raise PermissionError(f"Path {path!r} is a reserved name on Windows; choose a different name")
+    if not p.is_absolute() and workspace:
+        p = workspace / p
+    resolved = p.resolve()
+    if allowed_dirs:
+        for allowed in allowed_dirs:
+            try:
+                resolved.relative_to(Path(allowed).resolve())
+                return resolved
+            except ValueError:
+                continue
+        roots = ", ".join(str(d) for d in allowed_dirs)
+        raise PermissionError(f"Path {path} is outside allowed directories {roots}")
+    return resolved
+
+
+def _with_current_root(allowed_dirs: tuple[Path, ...], bound: Path | None) -> tuple[Path, ...]:
+    """Add the turn's *live* working-directory binding to the fence, when the fence is on.
+
+    Tools are constructed once for the loop's whole lifetime, before any turn's
+    working directory exists, so ``allowed_dirs`` can only ever carry the static
+    roots (agent home). The per-turn root reaches the fence here, at resolve
+    time, the same way ``ExecTool`` folds its per-call ``cwd`` into its roots.
+
+    ``bound`` must be the raw result of ``workdir.current()`` (or ``None`` for
+    a tool that does not follow the ambient binding at all) -- never a value
+    that already fell back to the tool's own ``workspace``. Folding in that
+    fallback would silently widen the fence to a root the operator never put
+    in ``allowed_dirs``. An empty ``allowed_dirs`` must stay empty regardless
+    -- that is the "fence disabled" signal ``resolve_path`` checks for.
+    """
+    if not allowed_dirs or bound is None:
+        return allowed_dirs
+    return (bound, *allowed_dirs)
+
+
+_URL_SCHEME_RE = re.compile(r"^(?P<scheme>[A-Za-z][A-Za-z0-9+.\-]*)://")
+_HOST_LIKE_RE = re.compile(r"^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/")
+
+
+def _elsewhere(path: str) -> str:
+    """The registered machines, for an absolute path this computer does not have."""
+    from raven.agent.tools.machine_exec import missing_here_note
+
+    return missing_here_note([path.strip()])
+
+
+def _missing(path: str) -> str:
+    """The refusal for a path that is not there, naming the tool that can reach it.
+
+    A URL resolves to a path that cannot exist, and "File not found" describes the
+    wrong problem: the file is not missing, the argument belongs to another tool.
+    Reported as a missing file it reads as a misspelling, so the caller tries the
+    same URL again with the workspace prefixed, percent-decoded, a directory up --
+    none of which can work, and the search that produced the URL stalls there.
+
+    Only the message changes: this answers inside the branch that has already found
+    nothing on disk, so a path that does resolve never reaches it.
+    """
+    raw = path.strip()
+    if match := _URL_SCHEME_RE.match(raw):
+        if match.group("scheme").lower() == "file":
+            return f"Error: {path} is a file:// URL; read_file takes a plain path -- try {raw[7:] or '/'}"
+        return (
+            f"Error: {path} is a URL, not a path on this machine. read_file only reads the "
+            "filesystem; fetch it with web_fetch, which returns the page as text."
+        )
+    if _HOST_LIKE_RE.match(raw):
+        return (
+            f"Error: File not found: {path} -- which reads as a URL rather than a path. "
+            "If it is one, fetch it with web_fetch; read_file only reads the filesystem."
+        )
+    return f"Error: File not found: {path}"
+
+
+class _FsTool(Tool):
+    """Shared base for filesystem tools — common init and path resolution."""
+
+    def __init__(
+        self,
+        workspace: Path | None = None,
+        allowed_dirs: tuple[Path, ...] = (),
+        *,
+        follow_binding: bool = True,
+    ):
+        self._workspace = workspace
+        self._allowed_dirs = allowed_dirs
+        # A sub-agent run is a background asyncio task that can outlive the turn
+        # that spawned it, since SubagentManager.spawn captures the workspace at
+        # spawn time; its tools must fence on the directory captured for that
+        # run, not on whatever the ambient ContextVar happens to hold when the
+        # task finally executes. The main loop's tools keep following the live
+        # binding as normal.
+        self._follow_binding = follow_binding
+
+    def _resolve(self, path: str) -> Path:
+        bound = workdir.current() if self._follow_binding else None
+        current_root = bound or self._workspace
+        return resolve_path(path, current_root, _with_current_root(self._allowed_dirs, bound))
+
+
+# ---------------------------------------------------------------------------
+# read_file
+# ---------------------------------------------------------------------------
+
+
+class ReadFileTool(_FsTool):
+    """Read file contents with optional line-based pagination."""
+
+    _MAX_CHARS = 128_000
+    _DEFAULT_LIMIT = 2000
+
+    @property
+    def name(self) -> str:
+        return "read_file"
+
+    @property
+    def description(self) -> str:
+        return (
+            "Read the contents of a file. Text files return numbered lines — use offset and limit to "
+            "paginate through large ones. Image files (PNG, JPEG, GIF, WebP, and other common formats) "
+            "return the picture itself, downscaled if needed."
+        )
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "The file path to read"},
+                "offset": {
+                    "type": "integer",
+                    "description": "Line number to start reading from (1-indexed, default 1)",
+                    "minimum": 1,
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of lines to read (default 2000)",
+                    "minimum": 1,
+                },
+            },
+            "required": ["path"],
+        }
+
+    # Sniffed from the first bytes, not the extension — a .txt that is really a
+    # PNG must not be decoded as UTF-8, and vice versa.
+    _MAGIC_SNIFF_BYTES = 32
+
+    def _read_image(self, fp: Path, mime: str) -> ToolResult:
+        """Image branch: preprocess, then hand back text *and* an image block.
+
+        ``model_text`` is deliberately self-sufficient. Providers that cannot put
+        an image in a tool result never see ``blocks``, and the same text is what
+        lands in session history, so it carries the metadata and the path rather
+        than pointing at a picture that may not be there.
+        """
+        from raven.agent.tools import media
+
+        payload, out_mime, meta = media.prepare_image(fp.read_bytes(), mime)
+        summary = media.describe_image(fp, meta)
+        return ToolResult(
+            model_text=summary,
+            display_text=f"{fp.name} ({meta['width']}x{meta['height']}, ~{meta['tokens']} tok)",
+            blocks=[
+                media.text_block(summary),
+                media.image_block(media.to_data_uri(payload, out_mime)),
+            ],
+        )
+
+    def _cut_line(self, line: str) -> str:
+        """One line of a page, as it is numbered: whole, here.
+
+        A tool with a budget per line cuts it here, before the page's budget
+        counts it, so a page of minified lines holds its lines and the page
+        that shows the head of one over-long line is never its answer
+        (Raven-Code's read cuts to 2000 characters with a mark).
+        """
+        return line
+
+    async def execute(self, path: str, offset: int = 1, limit: int | None = None, **kwargs: Any) -> str | ToolResult:
+        # A file on a registered machine is read there, by its Raven node.
+        if (
+            not _is_a_device_spelling(path)
+            and (remote := await remote_files.answer("read_file", path, {"offset": offset, "limit": limit})) is not None
+        ):
+            return remote
+        try:
+            fp = self._resolve(path)
+            if not fp.exists():
+                return _missing(path) + _elsewhere(path)
+            if not fp.is_file():
+                return f"Error: Not a file: {path}"
+
+            with fp.open("rb") as fh:
+                head = fh.read(self._MAGIC_SNIFF_BYTES)
+            sniffed = detect_image_mime(head)
+            mime = sniffed
+            if mime is None:
+                guessed = mimetypes.guess_type(fp.name)[0]
+                # Magic bytes only cover the four formats every target inlines, so
+                # a raster format Pillow can convert (BMP/TIFF/ICO) reaches this
+                # branch as an extension guess. A guess can be wrong both ways --
+                # .svg is XML with no Pillow decoder, a .png stub may hold text --
+                # so it is trusted provisionally and a decode failure falls back
+                # to the text path below rather than refusing to read the file.
+                if guessed and guessed.startswith("image/"):
+                    mime = guessed
+            if mime is not None:
+                from raven.agent.tools.media import ImageTooLargeError
+
+                try:
+                    return self._read_image(fp, mime)
+                except ImageTooLargeError as e:
+                    return f"Error: {e}"
+                except Exception as e:
+                    if sniffed is not None:
+                        return f"Error decoding image {path}: {e}"
+                    # An extension-only guess that would not decode: fall through.
+
+            if offset < 1:
+                offset = 1
+            start = offset - 1
+            with fp.open("rb") as fh:
+                raw_page, total = _page_of_lines(fh, start, limit or self._DEFAULT_LIMIT)
+            if total == 0:
+                return f"(Empty file: {path})"
+            if offset > total:
+                return f"Error: offset {offset} is beyond end of file ({total} lines)"
+
+            # Strict, as the whole-file decode was: a byte that is not UTF-8
+            # on the page refuses the read with the codec's own sentence.
+            lines = [self._cut_line(raw.decode("utf-8")) for raw in raw_page]
+            end = start + len(lines)
+            numbered = [f"{start + i + 1}| {line}" for i, line in enumerate(lines)]
+            result = "\n".join(numbered)
+
+            note = ""
+            if len(result) > self._MAX_CHARS:
+                trimmed, chars = [], 0
+                for line in numbered:
+                    chars += len(line) + 1
+                    if chars > self._MAX_CHARS:
+                        break
+                    trimmed.append(line)
+                if not trimmed:
+                    # The page's first line is over the budget by itself (a
+                    # minified script, a one-line JSON, a long CSV row): whole
+                    # lines within the budget left nothing, and the footer
+                    # sent the reader back to this very line, for ever
+                    # (measured 2026-10-15: "Showing lines 1-0 of 1. Use
+                    # offset=1"). Its head is shown instead, and the rest is
+                    # said to be out of offset's reach, since offset moves by
+                    # lines. The break the budget counts makes a line that
+                    # just fits land here too; it is shown whole, unremarked.
+                    prefix = f"{start + 1}| "
+                    room = max(self._MAX_CHARS - len(prefix), 0)
+                    trimmed = [prefix + lines[0][:room]]
+                    if len(lines[0]) > room:
+                        note = (
+                            f"\n\n(Line {start + 1} is {len(lines[0])} characters long; the first {room} are shown. "
+                            "offset moves by lines and cannot reach the rest of it: grep tells whether a piece is "
+                            "in it, and a shell command that cuts by bytes, such as cut -c, shows another stretch.)"
+                        )
+                end = start + len(trimmed)
+                result = "\n".join(trimmed) + note
+
+            if end < total:
+                result += f"\n\n(Showing lines {offset}-{end} of {total}. Use offset={end + 1} to continue.)"
+            else:
+                result += f"\n\n(End of file — {total} lines total)"
+            return result
+        except PermissionError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Error reading file: {e}"
+
+
+# ---------------------------------------------------------------------------
+# write_file
+# ---------------------------------------------------------------------------
+
+
+class WriteFileTool(_FsTool):
+    """Write content to a file."""
+
+    approval_kind = "file.write"
+
+    @property
+    def name(self) -> str:
+        return "write_file"
+
+    def approval_evidence(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The write as a diff against the file as it stands, before it happens."""
+        path = str(params.get("path") or "")
+        content = str(params.get("content") or "")
+        if (where := _machine_of(path)) is not None:
+            # The file is on another machine, so there is no file here to diff
+            # against; the card names the machine and shows the path as written.
+            return {"path": path, "machine": where}
+        try:
+            fp = self._resolve(path)
+        except PermissionError:
+            return {"path": path}
+        exists = fp.is_file()
+        before = ""
+        if exists:
+            try:
+                if fp.stat().st_size > _PREVIEW_MAX_BYTES:
+                    return {"path": str(fp), "created": False}
+                before = fp.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                return {"path": str(fp), "created": False}
+        after = before + content if params.get("mode") == "append" else content
+        return {"path": str(fp), "created": not exists, "diff": _unified(before, after, str(fp))}
+
+    @property
+    def description(self) -> str:
+        return (
+            "Write content to a file at the given path. Creates parent directories if needed. "
+            "Use mode=append to add to a file rather than replace it."
+        )
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "The file path to write to"},
+                "content": {"type": "string", "description": "The content to write"},
+                "mode": {
+                    "type": "string",
+                    "enum": ["overwrite", "append"],
+                    "description": (
+                        "append adds to the end of the file; overwrite (default) replaces it. "
+                        "Use append to continue a file you have already started -- adding to "
+                        "one written earlier, or building up long content across several calls."
+                    ),
+                },
+            },
+            "required": ["path", "content"],
+        }
+
+    @property
+    def truncation_hint(self) -> str:
+        return (
+            "Arguments cut off by that limit are discarded whole rather than partly saved, "
+            "so write the content across several calls: mode=overwrite to start a file, "
+            "mode=append to continue one you have already begun."
+        )
+
+    @property
+    def incomplete_hint(self) -> str:
+        return (
+            "arguments cut off that way are discarded whole rather than partly saved, so "
+            "send the content across several calls -- mode=overwrite to start a file, "
+            "mode=append to continue one you have already begun."
+        )
+
+    async def execute(self, path: str, content: str, mode: str = "overwrite", **kwargs: Any) -> str | ToolResult:
+        if mode not in ("overwrite", "append"):
+            return f"Error: unknown mode '{mode}' for write_file. Use 'overwrite' or 'append'."
+        # An empty append is refused rather than treated as a no-op: it is what
+        # a call cut off before its content field looks like, and the one thing
+        # it must never silently become is an overwrite.
+        if mode == "append" and not content:
+            return "Error: write_file with mode=append needs content; refusing to append nothing."
+        # A file on a registered machine is written there, by its Raven node.
+        if (
+            not _is_a_device_spelling(path)
+            and (remote := await remote_files.answer("write_file", path, {"content": content, "mode": mode}))
+            is not None
+        ):
+            return remote
+        try:
+            fp = self._resolve(path)
+            # Read before writing: a whole-file write carries no record of what
+            # it replaced, so a panel handed only the arguments draws every line
+            # of an overwrite as an addition.
+            before = ""
+            # Three states, not two, and the third is why this is a separate
+            # flag: absent, present and readable, present and not decodable as
+            # text. Only the first is a new file, and reporting the third as one
+            # would tell a client every line is an addition to a file that was
+            # already there.
+            previous: str | None = None
+            if fp.is_file():
+                try:
+                    before = previous = fp.read_text(encoding="utf-8")
+                except (UnicodeDecodeError, OSError):
+                    before = ""
+                    previous = None
+                    unreadable = True
+                else:
+                    unreadable = False
+            else:
+                unreadable = False
+            fp.parent.mkdir(parents=True, exist_ok=True)
+            if mode == "append":
+                with fp.open("a", encoding="utf-8") as handle:
+                    handle.write(content)
+                # Bytes, as the line says: ``len(content)`` counted characters, and a
+                # model sizing a CJK report off it read a third of its real length.
+                return f"Successfully appended {len(_write_text_bytes(content))} bytes to {fp}"
+            # The bytes decide, with no text gate in front of them. Text
+            # equality is wrong in both directions here: ``read_text`` folds
+            # CRLF to LF, so a CRLF file looks equal to the LF content that
+            # would replace it, and content carrying CRLF never looks equal to
+            # the file already holding exactly those bytes.
+            would_write = _write_text_bytes(content)
+            if fp.is_file():
+                try:
+                    unchanged = fp.read_bytes() == would_write
+                except OSError:
+                    # Reading to decide whether to write must not become a
+                    # precondition for writing: a POSIX mode-0200 file is
+                    # writable and unreadable, and overwriting one worked
+                    # before this check existed. An unreadable file is simply
+                    # not a no-op.
+                    unchanged = False
+                if unchanged:
+                    # A byte count for a rewrite that changed nothing reads as
+                    # progress, and ``model_text`` is the whole account of the
+                    # call the caller gets: a loop shrinking a file can rewrite
+                    # the same bytes several times before anything says
+                    # otherwise. Nothing is written, so there is no diff or
+                    # file_change to carry either.
+                    return ToolResult(
+                        f"File unchanged: {fp} already holds exactly these "
+                        f"{len(would_write)} bytes, so nothing was written.",
+                    )
+            fp.write_text(content, encoding="utf-8")
+            return ToolResult(
+                f"Successfully wrote {len(would_write)} bytes to {fp}",
+                diff=_unified(before, content, str(fp)),
+                # Beside the rendered diff, not instead of it: the unified form is
+                # what a text surface shows, and this is what a surface with its
+                # own diff view needs. Both come from strings already in hand, so
+                # neither costs a second read. Withheld entirely for a file that
+                # existed and could not be read, because there is no ``before``
+                # to give and every way of faking one misinforms the reader.
+                file_change=None if unreadable else FileChange(path=str(fp), after=content, before=previous),
+            )
+        except PermissionError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Error writing file: {e}"
+
+
+# ---------------------------------------------------------------------------
+# edit_file
+# ---------------------------------------------------------------------------
+
+
+def _find_match(content: str, old_text: str) -> tuple[str | None, int]:
+    """Locate old_text in content: exact first, then line-trimmed sliding window.
+
+    Both inputs should use LF line endings (caller normalises CRLF).
+    Returns (matched_fragment, count) or (None, 0).
+    """
+    if old_text in content:
+        return old_text, content.count(old_text)
+
+    old_lines = old_text.splitlines()
+    if not old_lines:
+        return None, 0
+    stripped_old = [line.strip() for line in old_lines]
+    content_lines = content.splitlines()
+
+    candidates = []
+    for i in range(len(content_lines) - len(stripped_old) + 1):
+        window = content_lines[i : i + len(stripped_old)]
+        if [line.strip() for line in window] == stripped_old:
+            candidates.append("\n".join(window))
+
+    if candidates:
+        return candidates[0], len(candidates)
+    return None, 0
+
+
+class EditFileTool(_FsTool):
+    """Edit a file by replacing text with fallback matching."""
+
+    approval_kind = "file.write"
+
+    @property
+    def name(self) -> str:
+        return "edit_file"
+
+    def approval_evidence(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The replacement as a diff of the two snippets.
+
+        The snippets, not the file: the file is read only if the edit runs, and
+        what the reader is asked to allow is exactly this substitution."""
+        path = str(params.get("path") or "")
+        old, new = str(params.get("old_text") or ""), str(params.get("new_text") or "")
+        if (where := _machine_of(path)) is not None:
+            return {"path": path, "machine": where, "created": False, "diff": _unified(old, new, path)}
+        try:
+            shown = str(self._resolve(path))
+        except PermissionError:
+            shown = path
+        return {"path": shown, "created": False, "diff": _unified(old, new, shown)}
+
+    @property
+    def description(self) -> str:
+        return (
+            "Edit a file by replacing old_text with new_text. "
+            "Supports minor whitespace/line-ending differences. "
+            "Set replace_all=true to replace every occurrence."
+        )
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "The file path to edit"},
+                "old_text": {"type": "string", "description": "The text to find and replace"},
+                "new_text": {"type": "string", "description": "The text to replace with"},
+                "replace_all": {
+                    "type": "boolean",
+                    "description": "Replace all occurrences (default false)",
+                },
+            },
+            "required": ["path", "old_text", "new_text"],
+        }
+
+    async def execute(
+        self,
+        path: str,
+        old_text: str,
+        new_text: str,
+        replace_all: bool = False,
+        **kwargs: Any,
+    ) -> str | ToolResult:
+        # A file on a registered machine is edited there, by its Raven node.
+        sent = {"old_text": old_text, "new_text": new_text, "replace_all": replace_all}
+        if (
+            not _is_a_device_spelling(path)
+            and (remote := await remote_files.answer("edit_file", path, sent)) is not None
+        ):
+            return remote
+        try:
+            fp = self._resolve(path)
+            if not fp.exists():
+                return f"Error: File not found: {path}"
+
+            raw = fp.read_bytes()
+            uses_crlf = b"\r\n" in raw
+            content = raw.decode("utf-8").replace("\r\n", "\n")
+            match, count = _find_match(content, old_text.replace("\r\n", "\n"))
+
+            if match is None:
+                return self._not_found_msg(old_text, content, path)
+            if count > 1 and not replace_all:
+                return (
+                    f"Warning: old_text appears {count} times. "
+                    "Provide more context to make it unique, or set replace_all=true."
+                )
+
+            norm_new = new_text.replace("\r\n", "\n")
+            new_content = content.replace(match, norm_new) if replace_all else content.replace(match, norm_new, 1)
+            if uses_crlf:
+                new_content = new_content.replace("\n", "\r\n")
+
+            fp.write_bytes(new_content.encode("utf-8"))
+            normalised = new_content.replace("\r\n", "\n")
+            return ToolResult(
+                f"Successfully edited {fp}",
+                # Compared line-for-line rather than passing the two snippets:
+                # `replace_all` can change several places at once, and the
+                # arguments alone do not say where.
+                diff=_unified(content, normalised, str(fp)),
+                # The whole file both ways. An edit's arguments carry only the
+                # replaced fragment, so a surface handed those would render a
+                # fragment as though it were the file.
+                file_change=FileChange(path=str(fp), after=normalised, before=content),
+            )
+        except PermissionError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Error editing file: {e}"
+
+    @staticmethod
+    def _not_found_msg(old_text: str, content: str, path: str) -> str:
+        lines = content.splitlines(keepends=True)
+        old_lines = old_text.splitlines(keepends=True)
+        window = len(old_lines)
+
+        best_ratio, best_start = 0.0, 0
+        for i in range(max(1, len(lines) - window + 1)):
+            ratio = difflib.SequenceMatcher(None, old_lines, lines[i : i + window]).ratio()
+            if ratio > best_ratio:
+                best_ratio, best_start = ratio, i
+
+        if best_ratio > 0.5:
+            diff = "\n".join(
+                difflib.unified_diff(
+                    old_lines,
+                    lines[best_start : best_start + window],
+                    fromfile="old_text (provided)",
+                    tofile=f"{path} (actual, line {best_start + 1})",
+                    lineterm="",
+                )
+            )
+            return f"Error: old_text not found in {path}.\nBest match ({best_ratio:.0%} similar) at line {best_start + 1}:\n{diff}"
+        return f"Error: old_text not found in {path}. No similar text found. Verify the file content."
+
+
+# ---------------------------------------------------------------------------
+# list_dir
+# ---------------------------------------------------------------------------
+
+
+class ListDirTool(_FsTool):
+    """List directory contents with optional recursion."""
+
+    _DEFAULT_MAX = 200
+
+    @property
+    def name(self) -> str:
+        return "list_dir"
+
+    @property
+    def description(self) -> str:
+        return (
+            "List the contents of a directory. "
+            "Set recursive=true to explore nested structure. "
+            "Common noise directories (.git, node_modules, __pycache__, etc.) are skipped below the "
+            "listed path; name one as the path to see inside it."
+        )
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "The directory path to list"},
+                "recursive": {
+                    "type": "boolean",
+                    "description": "Recursively list all files (default false)",
+                },
+                "max_entries": {
+                    "type": "integer",
+                    "description": "Maximum entries to return (default 200)",
+                    "minimum": 1,
+                },
+            },
+            "required": ["path"],
+        }
+
+    async def execute(
+        self,
+        path: str,
+        recursive: bool = False,
+        max_entries: int | None = None,
+        **kwargs: Any,
+    ) -> str:
+        params = {"recursive": recursive, "max_entries": max_entries}
+        if (
+            not _is_a_device_spelling(path)
+            and (remote := await remote_files.answer("list_dir", path, params)) is not None
+        ):
+            return str(remote)
+        try:
+            dp = self._resolve(path)
+            if not dp.exists():
+                return f"Error: Directory not found: {path}" + _elsewhere(path)
+            if not dp.is_dir():
+                return f"Error: Not a directory: {path}"
+
+            cap = max_entries or self._DEFAULT_MAX
+            if recursive:
+                items, total, incomplete = await asyncio.to_thread(self._walk_entries, dp, cap)
+            else:
+                entries = self._list_entries(dp)
+                items, total, incomplete = entries[:cap], len(entries), False
+
+            if not items and not incomplete:
+                return f"Directory {path} is empty"
+
+            result = "\n".join(items)
+            notes = []
+            if total > cap:
+                notes.append(f"truncated, showing first {cap} of {total} entries")
+            if incomplete:
+                notes.append(
+                    f"PARTIAL result: the listing hit its {tree_walk.WALK_DEADLINE_S:g}s traversal budget "
+                    "before finishing, so an entry's absence is not conclusive -- narrow the path or "
+                    "list without recursive"
+                )
+            if notes:
+                result = f"{result}\n\n({'; '.join(notes)})" if result else f"({'; '.join(notes)})"
+            return result
+        except PermissionError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Error listing directory: {e}"
+
+    @staticmethod
+    def _list_entries(dp: Path) -> list[str]:
+        return [
+            f"{'📁 ' if item.is_dir() else '📄 '}{item.name}"
+            for item in sorted(dp.iterdir())
+            if item.name not in tree_walk.IGNORE_DIRS
+        ]
+
+    @staticmethod
+    def _walk_entries(dp: Path, cap: int) -> tuple[list[str], int, bool]:
+        """Every entry under ``dp`` in path order, the total, and whether the walk finished.
+
+        Runs in a worker thread. Entries are ordered the way ``sorted(rglob)``
+        ordered them, by path components, so a directory's contents follow it.
+        """
+        found: list[tuple[tuple[str, ...], str]] = []
+        incomplete = False
+        last_root: str | None = None
+        rel_root = Path()
+        try:
+            for root, name, is_dir in tree_walk.walk(dp):
+                if root != last_root:
+                    last_root = root
+                    rel_root = Path(root).relative_to(dp)
+                rel = rel_root / name
+                found.append((rel.parts, f"{rel}/" if is_dir else str(rel)))
+        except TimeoutError:
+            incomplete = True
+        found.sort(key=lambda entry: entry[0])
+        return [shown for _, shown in found[:cap]], len(found), incomplete

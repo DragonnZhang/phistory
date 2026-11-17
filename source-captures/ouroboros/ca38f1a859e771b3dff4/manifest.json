@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "ouroboros",
+  "agent": "ouroboros",
+  "repository": "razzant/ouroboros",
+  "snapshot": "ca38f1a859e771b3dff4",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:47.528647+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+      "path": "ouroboros/tool_result_delivery.py",
+      "sha256": "ab253fa0091b1d0c0fa85c5eea5e3eae67a1dc35401622cd09db2128ec4ac114",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tool_result_delivery.py",
+      "url": "https://github.com/razzant/ouroboros/blob/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tool_result_delivery.py"
+    },
+    {
+      "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+      "path": "ouroboros/tools/compact_context.py",
+      "sha256": "31ed3ec37cf0151492ad7e151336eaba110271308adec47fd7e5bd315d60ee1a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tools/compact_context.py",
+      "url": "https://github.com/razzant/ouroboros/blob/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tools/compact_context.py"
+    },
+    {
+      "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+      "path": "ouroboros/tools/core.py",
+      "sha256": "180b2360522214b15c6a14a9a6c3e1e50b07748965061b908c9142be63b78b43",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tools/core.py",
+      "url": "https://github.com/razzant/ouroboros/blob/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tools/core.py"
+    },
+    {
+      "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+      "path": "ouroboros/tools/shell.py",
+      "sha256": "de2ab1cafa5bd2de7cb14fc48354ee6224fa53ac853a0d090d12074e082d9cb9",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tools/shell.py",
+      "url": "https://github.com/razzant/ouroboros/blob/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tools/shell.py"
+    },
+    {
+      "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+      "path": "ouroboros/tools/tool_discovery.py",
+      "sha256": "377979b9b995543697dcf53eb4cf6f377e1131f063301468c16f7cabe80f1079",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tools/tool_discovery.py",
+      "url": "https://github.com/razzant/ouroboros/blob/add0ce3296c722ef99a536c52f8dcddf36494b36/ouroboros/tools/tool_discovery.py"
+    },
+    {
+      "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+      "path": "prompts/SYSTEM.md",
+      "sha256": "e9263554b99e1fe0222f479867f6afebc8689d29dfe6cfd4bba45124a0f96b46",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/add0ce3296c722ef99a536c52f8dcddf36494b36/prompts/SYSTEM.md",
+      "url": "https://github.com/razzant/ouroboros/blob/add0ce3296c722ef99a536c52f8dcddf36494b36/prompts/SYSTEM.md"
+    }
+  ]
+}

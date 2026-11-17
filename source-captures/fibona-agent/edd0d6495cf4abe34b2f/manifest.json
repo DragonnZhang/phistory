@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "fibona-agent",
+  "agent": "Fibona",
+  "repository": "FibonaAI/fibona-agent",
+  "snapshot": "edd0d6495cf4abe34b2f",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:45.253257+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce",
+      "path": "bootstraps/minimal/init.py",
+      "sha256": "09adc008a6e8cb8f3b80fe8c6f4e1ed946e07576707bc386dc6ecd52d609f818",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce/bootstraps/minimal/init.py",
+      "url": "https://github.com/FibonaAI/fibona-agent/blob/53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce/bootstraps/minimal/init.py"
+    },
+    {
+      "commit": "53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce",
+      "path": "bootstraps/terminal/context.py",
+      "sha256": "f24f7535fed785b137cf28d940efac764c70fade66f628ebf4d367e64598a90f",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce/bootstraps/terminal/context.py",
+      "url": "https://github.com/FibonaAI/fibona-agent/blob/53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce/bootstraps/terminal/context.py"
+    },
+    {
+      "commit": "53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce",
+      "path": "bootstraps/terminal/init.py",
+      "sha256": "df3d574a28fbaa13e83fb0b62c42b7b77f5d6b679265e4fd2470f98306f443b4",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce/bootstraps/terminal/init.py",
+      "url": "https://github.com/FibonaAI/fibona-agent/blob/53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce/bootstraps/terminal/init.py"
+    },
+    {
+      "commit": "53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce",
+      "path": "core/agent.py",
+      "sha256": "22d5471ceca649be335c1e905ff624f6ba9926e05e15644e1efae95b893baaf1",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce/core/agent.py",
+      "url": "https://github.com/FibonaAI/fibona-agent/blob/53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce/core/agent.py"
+    }
+  ]
+}

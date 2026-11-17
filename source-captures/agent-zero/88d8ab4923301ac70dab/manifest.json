@@ -1,0 +1,591 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "agent-zero",
+  "agent": "agent-zero",
+  "repository": "agent0ai/agent-zero",
+  "snapshot": "88d8ab4923301ac70dab",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:44.806529+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "agent.py",
+      "sha256": "fd7fa584f2cdf7bf483a10542735853ffe65cacf9e2a701009f853d488b40b2e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/agent.py",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/agent.py"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_a0_connector/prompts/agent.system.tool.code_execution_remote.md",
+      "sha256": "eedcf1f0589016df901091a4b05aa8a0f718f98d097abd199126a2c4c8425e7f",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a0_connector/prompts/agent.system.tool.code_execution_remote.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a0_connector/prompts/agent.system.tool.code_execution_remote.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_a0_connector/prompts/agent.system.tool.computer_use_remote.md",
+      "sha256": "78b4e223f05c08519d8dfc45e0db62d68e03dcca146955cc8de010413e31132d",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a0_connector/prompts/agent.system.tool.computer_use_remote.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a0_connector/prompts/agent.system.tool.computer_use_remote.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_a0_connector/prompts/agent.system.tool.input_remote.md",
+      "sha256": "06a37aa3247dd46a4cf04071a6eb975e7f6f84ce0e060cc30ce224a988ef66c6",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a0_connector/prompts/agent.system.tool.input_remote.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a0_connector/prompts/agent.system.tool.input_remote.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_a0_connector/prompts/agent.system.tool.text_editor_remote.md",
+      "sha256": "87a8853cf07583e209a91cf21090469ce08b8f824c229769ef614d9879fddc7b",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a0_connector/prompts/agent.system.tool.text_editor_remote.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a0_connector/prompts/agent.system.tool.text_editor_remote.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_a2a_chat/prompts/agent.system.tool.a2a_chat.md",
+      "sha256": "587e3f7528fc2bd547d4aff8f0fc51f5a840f0d0bfca0ebb523881683d622749",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a2a_chat/prompts/agent.system.tool.a2a_chat.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_a2a_chat/prompts/agent.system.tool.a2a_chat.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_behavior_adjustment/prompts/agent.system.behavior.md",
+      "sha256": "5ebd283e08b54b7e0ab969f17ee93172a1db60f2030cbb6d7a3bcbe956be93cf",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_behavior_adjustment/prompts/agent.system.behavior.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_behavior_adjustment/prompts/agent.system.behavior.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_behavior_adjustment/prompts/agent.system.behavior_default.md",
+      "sha256": "f492ca48f817868f2afe7fa53b7752068b9aba613346cf5b0da1d7a585aa0ac6",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_behavior_adjustment/prompts/agent.system.behavior_default.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_behavior_adjustment/prompts/agent.system.behavior_default.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_behavior_adjustment/prompts/agent.system.tool.behavior.md",
+      "sha256": "4f3f7f26646fae8e9a99604b6e619830ea9815b5738ce76f09ec11bd90953581",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_behavior_adjustment/prompts/agent.system.tool.behavior.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_behavior_adjustment/prompts/agent.system.tool.behavior.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_browser/prompts/agent.system.tool.browser.md",
+      "sha256": "441db4b0d8ebd38b12a2842daecce06a1e7ea3e99e36dfe32f9cc01f22a59b69",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_browser/prompts/agent.system.tool.browser.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_browser/prompts/agent.system.tool.browser.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_code_execution/prompts/agent.system.tool.code_exe.md",
+      "sha256": "c9efac5e46b525b810c4ba5312217eb17208b3e732b371d8fb10795ac69ad577",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_code_execution/prompts/agent.system.tool.code_exe.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_code_execution/prompts/agent.system.tool.code_exe.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_code_execution/prompts/agent.system.tool.input.md",
+      "sha256": "334338f2661018620dc758ca7c4348ddfae8d261a27dc3bf56409f85af28ef65",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_code_execution/prompts/agent.system.tool.input.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_code_execution/prompts/agent.system.tool.input.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_document_query/prompts/agent.system.tool.document_query.md",
+      "sha256": "56fcf86798f6bb1e1af1ecb95f26b6549d9890c440c20da68e037fa57b885376",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_document_query/prompts/agent.system.tool.document_query.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_document_query/prompts/agent.system.tool.document_query.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_goal/prompts/agent.system.tool.goal.md",
+      "sha256": "923ffe70914eaee41e47f5cdee8638cdcf168e00b98b0ddbbee99a4b77377303",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_goal/prompts/agent.system.tool.goal.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_goal/prompts/agent.system.tool.goal.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_memory/prompts/agent.system.memories.md",
+      "sha256": "8761cef5aaedd9dfb0ede88ff732bef15492512efe8f75743921b166dc428c2c",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_memory/prompts/agent.system.memories.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_memory/prompts/agent.system.memories.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_memory/prompts/agent.system.solutions.md",
+      "sha256": "559693738641a0112c670fee3db9252b5bfb3ad35c1990a1daf450949859c3f8",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_memory/prompts/agent.system.solutions.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_memory/prompts/agent.system.solutions.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_memory/prompts/agent.system.tool.memory.md",
+      "sha256": "71446bcfdc415a4836dca5c4ef8ee5e88f94a0be498df8169e542026bd98b864",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_memory/prompts/agent.system.tool.memory.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_memory/prompts/agent.system.tool.memory.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_notify_user/prompts/agent.system.tool.notify_user.md",
+      "sha256": "fba91d310b9607b8a48a778b785758de0a465253812cac7da4f5ec71f14022eb",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_notify_user/prompts/agent.system.tool.notify_user.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_notify_user/prompts/agent.system.tool.notify_user.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_office/prompts/agent.system.tool.office_artifact.md",
+      "sha256": "ad2f0cdf8e79e0fea1797ff38c0f1c17ecef7faff7ef247fbd644b37139ee3b0",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_office/prompts/agent.system.tool.office_artifact.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_office/prompts/agent.system.tool.office_artifact.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_promptinclude/prompts/agent.system.promptinclude.md",
+      "sha256": "dfbd2334102607eaef38065d19a772638d3395e57be4a407397b9354463d2498",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_promptinclude/prompts/agent.system.promptinclude.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_promptinclude/prompts/agent.system.promptinclude.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_scheduler/prompts/agent.system.tool.scheduler.md",
+      "sha256": "f0b8c4870d8fd6539a925841dd2feb8faa74935513aa5daf34d61441b17d9194",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_scheduler/prompts/agent.system.tool.scheduler.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_scheduler/prompts/agent.system.tool.scheduler.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_search_engine/prompts/agent.system.tool.search_engine.md",
+      "sha256": "0e54de740d8421f97a204f1f7be1cb7996c557f011bded05e5fc0ae1d4333e89",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_search_engine/prompts/agent.system.tool.search_engine.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_search_engine/prompts/agent.system.tool.search_engine.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_text_editor/prompts/agent.system.tool.text_editor.md",
+      "sha256": "351a428d1f686fa86f4f133c1c3b52f4d02b81decc5a5667ebab3e3ecc4c7ed3",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_text_editor/prompts/agent.system.tool.text_editor.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_text_editor/prompts/agent.system.tool.text_editor.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "plugins/_wait/prompts/agent.system.tool.wait.md",
+      "sha256": "2b0dbe47a7b445b739653ee7693813f4286ea23de0faa80a81a729b0bd38a5ff",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_wait/prompts/agent.system.tool.wait.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/plugins/_wait/prompts/agent.system.tool.wait.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.datetime.md",
+      "sha256": "ec4710a9d9c24a378558deae0f8d0686ee3ac74ed30cd5ad9651331bfe9d8dcc",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.datetime.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.datetime.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.communication.md",
+      "sha256": "2dde6b34fe0b4180dfd46a16d0d51cfe2fb8022389eb7b7a1a954f19660241f1",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.communication.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.communication.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.communication.native.md",
+      "sha256": "eae041b07cf0012d0195c1786e73d2032746e5e5f3dc0cc66727456399bef4a4",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.communication.native.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.communication.native.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.communication_additions.md",
+      "sha256": "63bd2df74765045546b1857f64fe09a9cff4e83398231d8d24d2050a89a3be39",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.communication_additions.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.communication_additions.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.environment.md",
+      "sha256": "2624c074a33989566af0deb937e3bb43f5a1599a8b522e3a3906d7d3b7944051",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.environment.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.environment.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.md",
+      "sha256": "e2bce5d889933b19371eb3d51a986185faa00864fcc5984e4c30c0c7bf16f97a",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.role.md",
+      "sha256": "715fb0817ac916534899ce6a7984318960eea1998e1857e912e164a67048b5b3",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.role.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.role.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.solving.md",
+      "sha256": "48c00ccb0057524ce5d2a72c8babdeb7991c0086357183b1a8bc347e71006b13",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.solving.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.solving.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.specifics.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.specifics.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.specifics.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.tips.md",
+      "sha256": "d53417bf403442299ca8fdd21904086cb0a8a1b88632b68f3b2598f15e9e596c",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.tips.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.tips.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.main.tips.py",
+      "sha256": "b67bcea3812a0feea2c06a5069621fe5aa67466e1a78cee82322eb9599fac344",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.tips.py",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.main.tips.py"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.mcp_server.md",
+      "sha256": "0f033eb97ba1be343ad465304cb6d34042442e02230b37533a3c8bafc08dfff6",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.mcp_server.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.mcp_server.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.mcp_tool.md",
+      "sha256": "5f20c2e25e243e0eb350b4454b7e03f2c727ed717b8ac1113e32ba3acadcb311",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.mcp_tool.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.mcp_tool.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.mcp_tools.md",
+      "sha256": "136e4c1f3fbf7cca4897a2a418b4749b2df010ed2c4fbd6e3139d17e5c86397c",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.mcp_tools.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.mcp_tools.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.mcp_tools.native.md",
+      "sha256": "e82de7495af8f6eaf3ca4ff4d11698f1fd183115ef788e4df39b9afad693b8f7",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.mcp_tools.native.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.mcp_tools.native.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.projects.active.md",
+      "sha256": "0051b74550f1546c9595233ef70b2e76c06be5022bb82ae6fd48ac6dcf6e6e19",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.projects.active.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.projects.active.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.projects.inactive.md",
+      "sha256": "5524f13c5debee46438c06104e277ebde2e7a34b66613ed33425117888a163ba",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.projects.inactive.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.projects.inactive.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.projects.main.md",
+      "sha256": "a0c35a31c27b2235d212aefe5561fae41b2e0bedc8025fa1a2275504cd7f6ed4",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.projects.main.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.projects.main.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.response_tool_tips.md",
+      "sha256": "5973b164818bca82106aef58c40d1417aef0e8967424565f6192bdf449b076d3",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.response_tool_tips.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.response_tool_tips.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.secrets.md",
+      "sha256": "9303d263b06006713e9e59116783692fd141943857028942b1ed1019ba457276",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.secrets.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.secrets.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.skills.loaded.md",
+      "sha256": "ca5533b6eaf6919ad96a1bca59134b0ee380527fa2a26c7adc780cab94533096",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.skills.loaded.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.skills.loaded.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.skills.md",
+      "sha256": "eefc02d265277440ec07c927eaf1ad14816cc95125e6f598bc11f23168bbf0e5",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.skills.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.skills.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.skills.relevant.md",
+      "sha256": "a1ecc29ce16502a1a642cc1b532fb2ace42134ae4c5b7cff2afac2ca5147bed8",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.skills.relevant.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.skills.relevant.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.tool.call_sub.md",
+      "sha256": "b0ba7571475dd814dbacca976c7ac2bd272cff44105d73b32f53e92bc94bae52",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.call_sub.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.call_sub.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.tool.call_sub.py",
+      "sha256": "a02c8eb41a96b43abbe37b5a070c675f3ead487fdb83a700c3c159a4d4fd50a6",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.call_sub.py",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.call_sub.py"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.tool.parallel.md",
+      "sha256": "77e54e3c08f858e487148489f8f4b06aafa17fb0c072c560e4b18d8f5b32c1a4",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.parallel.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.parallel.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.tool.response.md",
+      "sha256": "ca1cce965f7f2dc0f9d0e70a49dcc5ffaeb1db7c4edb9f038148079ad9e987ae",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.response.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.response.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.tool.skills.md",
+      "sha256": "c4cf4bf850066053ebf9a14ff5a4fe3b7dd884b55cb5dc223537b7ff6fbcf245",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.skills.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tool.skills.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.tools.md",
+      "sha256": "1622847aabe01ff63092b97a6240a3682a640efd3e0faa4ea0549aa0b6e39fe2",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tools.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tools.md"
+    },
+    {
+      "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+      "path": "prompts/agent.system.tools_vision.md",
+      "sha256": "ceda368794a813db06b2d0f2534b0d2c737ba4eeccb5e102ae4dfcd47834a215",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tools_vision.md",
+      "url": "https://github.com/agent0ai/agent-zero/blob/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/prompts/agent.system.tools_vision.md"
+    }
+  ]
+}

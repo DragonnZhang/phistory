@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "openagent",
+  "agent": "openagent",
+  "repository": "the-open-agent/openagent",
+  "snapshot": "820f63f045562c7eb111",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:48.576072+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "ea553047aa49c567d99da0e2e69c7b456577ed7f",
+      "path": "model/util.go",
+      "sha256": "8067b46dc215d64717edefd870704be01ba1975f1baa6afa3ef9ba21ad14b1ba",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/ea553047aa49c567d99da0e2e69c7b456577ed7f/model/util.go",
+      "url": "https://github.com/the-open-agent/openagent/blob/ea553047aa49c567d99da0e2e69c7b456577ed7f/model/util.go"
+    },
+    {
+      "commit": "ea553047aa49c567d99da0e2e69c7b456577ed7f",
+      "path": "tool/local_file.go",
+      "sha256": "d52186d045b949685b8719fc86203ae6ee09dd76754f97351cc3ff609260aac2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/ea553047aa49c567d99da0e2e69c7b456577ed7f/tool/local_file.go",
+      "url": "https://github.com/the-open-agent/openagent/blob/ea553047aa49c567d99da0e2e69c7b456577ed7f/tool/local_file.go"
+    }
+  ]
+}

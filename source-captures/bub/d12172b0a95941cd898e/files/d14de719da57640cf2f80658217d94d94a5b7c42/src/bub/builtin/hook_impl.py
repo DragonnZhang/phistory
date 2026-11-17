@@ -1,0 +1,408 @@
+import sys
+from collections.abc import AsyncIterator
+from datetime import datetime
+from difflib import get_close_matches
+from pathlib import Path
+from typing import cast
+
+import republic
+import typer
+from loguru import logger
+
+from bub import inquirer as bub_inquirer
+from bub.builtin.agent import BubAgent
+from bub.builtin.onboarding import collect_model_config
+from bub.builtin.settings import load_session_settings, load_settings
+from bub.builtin.steering import InMemorySteeringInbox
+from bub.channels.admission import AdmitDecision, SteeringInbox, TurnSnapshot
+from bub.channels.base import Channel
+from bub.channels.contracts import MessageHandler
+from bub.channels.message import ChannelMessage, MediaItem
+from bub.core.commands import strip_command_prefix
+from bub.core.context import default_tape_context
+from bub.core.events import ToolCall, ToolCallDecision, ToolCallResult
+from bub.core.sidecars import TapeSidecar
+from bub.core.store import TapeStore
+from bub.core.tape import TapeContext, session_tape_name
+from bub.core.tools import Tool, is_content_result, render_result
+from bub.envelope import Envelope, content_of, field_of
+from bub.environment import Environment
+from bub.framework import BubFramework
+from bub.hooks import hookimpl
+from bub.model_selection import ModelChoice, ModelOptions
+from bub.prompt import UserContent
+from bub.streaming import AsyncStreamEvents
+from bub.turn import TurnState
+
+AGENTS_FILE_NAME = "AGENTS.md"
+DEFAULT_SYSTEM_PROMPT = """\
+<general_instruct>
+Call tools or skills to finish the task.
+</general_instruct>
+<context_contract>
+Excessively long context may cause model call failures. In this case, you MAY use tape.info to retrieve the token usage and you SHOULD use tape.handoff tool to shorten the retrieved history.
+</context_contract>
+"""
+
+
+class BuiltinImpl:
+    """Default hook implementations for basic runtime operations."""
+
+    def __init__(self, framework: BubFramework) -> None:
+        self.framework = framework
+        self._agent: BubAgent | None = None
+
+    def _get_agent(self, state: TurnState | None = None) -> BubAgent:
+        if state and "_runtime_agent" in state:
+            return cast("BubAgent", state["_runtime_agent"])
+        if self._agent is None:
+            self._agent = BubAgent(self.framework)
+        return self._agent
+
+    @staticmethod
+    async def _discard_message(_: ChannelMessage) -> None:
+        return
+
+    def _channel_choices(self) -> list[str]:
+        return [c for c in self.framework.get_channels(self._discard_message) if c != "cli"]
+
+    @staticmethod
+    def _default_enabled_channels(current_value: object, available_channels: list[str]) -> list[str]:
+        if isinstance(current_value, str) and current_value.strip() and current_value.strip().lower() != "all":
+            selected = [name.strip() for name in current_value.split(",") if name.strip() in available_channels]
+            return selected
+        return available_channels
+
+    @hookimpl
+    def resolve_session(self, message: ChannelMessage) -> str:
+        session_id = field_of(message, "session_id")
+        if session_id is not None and str(session_id).strip():
+            return str(session_id)
+        channel = str(field_of(message, "channel", "default"))
+        chat_id = str(field_of(message, "chat_id", "default"))
+        return f"{channel}:{chat_id}"
+
+    @hookimpl
+    async def load_state(self, message: ChannelMessage, session_id: str) -> TurnState:
+        lifespan = field_of(message, "lifespan")
+        if lifespan is not None:
+            await lifespan.__aenter__()
+        # SDK calls supply their agent before recovery so state comes from its store.
+        agent = field_of(message, "_runtime_agent")
+        if agent is None:
+            agent = self._get_agent()
+        state = {"session_id": session_id, "_runtime_agent": agent}
+        if context := field_of(message, "context_str"):
+            state["context"] = context
+        # Carry over per-session settings (model, reasoning effort, code mode) recorded
+        # on the session tape. Only settings a prior turn actually recorded are set, so
+        # a fresh/unknown session never inherits another session's choices.
+        state.update(await load_session_settings(agent.tape(session_tape_name(session_id, self.framework.workspace))))
+        if model := field_of(message, "context", {}).get("model"):
+            state["model"] = model
+        if thread_id := field_of(message, "context", {}).get("thread_id"):
+            state["_runtime_thread_id"] = thread_id
+        return state
+
+    @hookimpl
+    async def save_state(self, session_id: str, state: TurnState, message: ChannelMessage, model_output: str) -> None:
+        tp, value, traceback = sys.exc_info()
+        lifespan = field_of(message, "lifespan")
+        if lifespan is not None:
+            await lifespan.__aexit__(tp, value, traceback)
+        # Per-session completion overrides are persisted by their tools as tape
+        # events, so nothing to write here — this hook only closes the lifespan.
+
+    @hookimpl
+    async def build_prompt(self, message: ChannelMessage, session_id: str, state: TurnState) -> list[UserContent]:
+        content = content_of(message)
+        if strip_command_prefix(content, self._get_agent(state).command_prefix) is not None:
+            message.kind = "command"
+            return [content.strip()]
+        context = field_of(message, "context_str")
+        now = datetime.now().astimezone().isoformat(timespec="seconds")
+        context_prefix = f"{context}\n---Date: {now}---\n" if context else ""
+        text = f"{context_prefix}{content}"
+
+        prompt: list[UserContent] = [text]
+        for item in cast("list[MediaItem]", field_of(message, "media") or []):
+            if item.type not in {"image", "audio", "video"} or not (url := await item.get_url()):
+                continue
+            match item.type:
+                case "image":
+                    prompt.append(republic.image(url, media_type=item.mime_type))
+                case "audio":
+                    prompt.append(republic.audio(url, media_type=item.mime_type))
+                case "video":
+                    prompt.append(republic.video(url, media_type=item.mime_type))
+        return prompt
+
+    @hookimpl
+    async def run_model_stream(self, prompt: str | list[dict], session_id: str, state: TurnState) -> AsyncStreamEvents:
+        return await self._get_agent(state).run_stream(
+            session_id=session_id,
+            prompt=prompt,
+            state=state,
+            model=state.get("model"),
+        )
+
+    @hookimpl
+    def register_cli_commands(self, app: typer.Typer) -> None:
+        from bub.builtin import cli
+
+        app.command("run")(cli.run)
+        app.command("chat")(cli.chat)
+        app.add_typer(cli.login_app)
+        app.command("onboard")(cli.onboard)
+        app.command("hooks", hidden=True)(cli.list_hooks)
+        app.command("plugins")(cli.list_plugins)
+        app.command("gateway")(cli.gateway)
+        app.command("install")(cli.install)
+        app.command("uninstall")(cli.uninstall)
+        app.command("update")(cli.update)
+        if self.framework.default_command is None:
+            self.framework.default_command = "chat"
+
+    @hookimpl
+    def onboard_config(self, current_config: dict[str, object]) -> dict[str, object] | None:
+        config = collect_model_config(current_config)
+        available_channels = self._channel_choices()
+        default_channels = self._default_enabled_channels(current_config.get("enabled_channels"), available_channels)
+        enabled_channels = bub_inquirer.ask_checkbox(
+            "Channels",
+            choices=available_channels,
+            enabled=default_channels,
+        )
+
+        stream_output = bub_inquirer.ask_confirm("Stream output", default=bool(current_config.get("stream_output")))
+        config.update(enabled_channels=",".join(enabled_channels), stream_output=stream_output)
+        return config
+
+    @hookimpl
+    async def provide_model_options(
+        self,
+        session_id: str,
+        workspace: Path | None = None,
+    ) -> ModelOptions | None:
+        settings = load_settings()
+        tape = self._get_agent().tape(session_tape_name(session_id, workspace or self.framework.workspace))
+        current = (await load_session_settings(tape)).get("model") or settings.model
+        if not current:
+            return None
+        models = await settings.chat_model().list_all_models(settings.model_providers(current))
+        if current not in models:
+            models.insert(0, current)
+        return ModelOptions(models=[ModelChoice(id=model, name=model) for model in models], current_model=current)
+
+    def _read_agents_file(self, state: TurnState) -> str:
+        workspace = state.get("_runtime_workspace", str(Path.cwd()))
+        prompt_path = Path(workspace) / AGENTS_FILE_NAME
+        if not prompt_path.is_file():
+            return ""
+        try:
+            return prompt_path.read_text(encoding="utf-8").strip()
+        except OSError:
+            return ""
+
+    @hookimpl
+    def system_prompt(self, prompt: str | list[dict], state: TurnState) -> str:
+        # Append the content of AGENTS.md under workspace, if any
+        if not (instructions := self._read_agents_file(state)):
+            return DEFAULT_SYSTEM_PROMPT
+        return f"{DEFAULT_SYSTEM_PROMPT}\n\n<workspace_instruction>\n{instructions}\n</workspace_instruction>"
+
+    @hookimpl
+    def provide_channels(self, message_handler: MessageHandler) -> list[Channel]:
+        from bub.channels.cli import CliChannel
+        from bub.channels.telegram import TelegramChannel
+
+        # Channels are created before framework.running(); the agent is created on first use.
+        return [
+            TelegramChannel(on_receive=message_handler, command_prefix=load_settings().command_prefix),
+            CliChannel(on_receive=message_handler, get_agent=self._get_agent, workspace=self.framework.workspace),
+        ]
+
+    @hookimpl
+    async def on_error(self, stage: str, error: Exception, message: Envelope | None) -> None:
+        if message is not None:
+            outbound = ChannelMessage(
+                session_id=field_of(message, "session_id", "unknown"),
+                channel=field_of(message, "channel", "default"),
+                chat_id=field_of(message, "chat_id", "default"),
+                content=f"An error occurred at stage '{stage}': {error}",
+                kind="error",
+            )
+            await self.framework._hook_runtime.call_many("dispatch_outbound", message=outbound)
+
+    @hookimpl
+    async def dispatch_outbound(self, message: Envelope) -> bool:
+        content = content_of(message)
+        session_id = field_of(message, "session_id")
+        if field_of(message, "output_channel") != "cli":
+            logger.info("session.run.outbound session_id={} content={}", session_id, content)
+        return await self.framework.dispatch_via_channel_router(message)
+
+    @hookimpl
+    def render_outbound(
+        self,
+        message: Envelope,
+        session_id: str,
+        state: TurnState,
+        model_output: str,
+    ) -> list[ChannelMessage]:
+        outbound = ChannelMessage(
+            session_id=session_id,
+            channel=field_of(message, "channel", "default"),
+            chat_id=field_of(message, "chat_id", "default"),
+            content=model_output,
+            output_channel=field_of(message, "output_channel", "default"),
+            kind=field_of(message, "kind", "normal"),
+        )
+        return [outbound]
+
+    @hookimpl
+    async def provide_lifespan(self) -> AsyncIterator[None]:
+        from bub.builtin.shell_manager import shell_manager
+        from bub.builtin.subagents import subagent_manager
+
+        # Subagents stop before the shells they may have started.
+        async with shell_manager.lifespan(), subagent_manager.lifespan():
+            yield
+
+    @hookimpl
+    def provide_environment(self, session_id: str, workspace: Path) -> Environment:
+        from bub.environment import LocalEnvironment
+
+        return LocalEnvironment(workspace)
+
+    @hookimpl
+    def provide_tape_store(self) -> TapeStore:
+        import bub
+        from bub.builtin.store import FuzzyFileTapeStore
+
+        return FuzzyFileTapeStore(directory=bub.home / "tapes")
+
+    @hookimpl
+    def provide_tape_sidecar(self) -> TapeSidecar:
+        from bub.builtin.spill import SpillSettings, SpillStore
+        from bub.configure import ensure_config
+
+        return SpillStore(ensure_config(SpillSettings))
+
+    @hookimpl
+    def build_tape_context(self) -> TapeContext:
+        return default_tape_context()
+
+    @hookimpl
+    def provide_tools(self) -> list[Tool]:
+        from bub.builtin import codemode, spill, tools
+
+        return [*tools.TOOLS, *codemode.TOOLS, spill.spill_read]
+
+    @hookimpl
+    def provide_steering_inbox(self) -> SteeringInbox:
+        return InMemorySteeringInbox()
+
+    @hookimpl
+    async def admit_message(
+        self,
+        session_id: str,
+        message: Envelope,
+        turn: TurnSnapshot,
+    ) -> AdmitDecision | None:
+        channel_router = self.framework._channel_router
+        if channel_router is None:
+            return None
+        return await channel_router.admit_channel_message(session_id=session_id, message=message, turn=turn)
+
+    @hookimpl
+    async def before_tool_call(
+        self,
+        call: ToolCall,
+        state: TurnState,
+    ) -> ToolCallDecision | None:
+        """Recover hallucinated/unknown tool names without interrupting the turn.
+
+        When the model invokes a tool outside the current model-facing tool set,
+        replace it with a guidance ``tool_result`` so the model can re-issue a
+        valid call on the next step. Commands run the agent's tools directly and are left alone.
+        """
+        from bub.builtin.codemode import CODE_TOOLS_STATE_KEY
+        from bub.builtin.tools import TOOL_DESCRIBE_TOOL_NAME
+        from bub.core.tools import model_tools
+
+        if call.context is not None and call.context.command:
+            return None
+        agent = self._get_agent(state)
+
+        agent_tools = model_tools(agent.tools.values())
+        if "_runtime_tool_names" in state:
+            code_tools = state.get(CODE_TOOLS_STATE_KEY) or ()
+            available_tools = (*state["_runtime_tool_names"], *(tool_item.name for tool_item in code_tools))
+        else:
+            available_tools = tuple(tool_item.name for tool_item in agent_tools if tool_item.exposure != "code")
+        if call.tool in available_tools:
+            return None
+
+        describe_name = TOOL_DESCRIBE_TOOL_NAME.replace(".", "_")
+        if describe_name in available_tools and any(
+            tool_item.deferred and tool_item.name == call.tool for tool_item in agent_tools
+        ):
+            return ToolCallDecision.replace(
+                f"Tool `{call.tool}` is not loaded. Call `{describe_name}` with its name first."
+            )
+
+        matches = get_close_matches(call.tool, available_tools, n=3, cutoff=0.6)
+        if matches:
+            suggestions = "\n".join(f"- {name}" for name in matches)
+            guidance = f"Tool `{call.tool}` does not exist. Did you mean one of the following?\n{suggestions}"
+        elif "skill" in available_tools:
+            guidance = f"Tool `{call.tool}` does not exist. Invoke the `skill` tool to list available skills."
+        else:
+            guidance = f"Tool `{call.tool}` does not exist. No similar tool is available."
+        return ToolCallDecision.replace(guidance)
+
+    @hookimpl(trylast=True)
+    async def after_tool_call(
+        self,
+        call: ToolCall,
+        result: ToolCallResult,
+        state: TurnState,
+    ) -> None:
+        from bub.builtin.spill import SPILL_READ_MODEL_NAME, SPILL_SIDECAR_NAME, SpillStore
+
+        tape = state.get("_runtime_tape")
+        # Results of calls from run_code are structured values for the code, and results of
+        # commands go to the user; neither is model-facing text.
+        if tape is None or (call.context is not None and (call.context.code_mode or call.context.command)):
+            return
+        if SPILL_READ_MODEL_NAME not in state.get("_runtime_tool_names", ()):
+            return
+        spill = tape.get_sidecar(SPILL_SIDECAR_NAME)
+        if not isinstance(spill, SpillStore):
+            return
+
+        # Failed calls keep their error as is.
+        if result.error is not None:
+            return
+        tool_result = result.result
+
+        if is_content_result(tool_result):
+            # Bound the text; media stays inline.
+            blocks = tool_result["content"]
+            text = "".join(block["text"] for block in blocks if block.get("type") == "text")
+            bounded_text = await spill.spill_tool_result(tape, text, tool=call.tool, run_id=call.run_id)
+            if bounded_text != text:
+                media = [block for block in blocks if block.get("type") != "text"]
+                result.result = {**tool_result, "content": [{"type": "text", "text": bounded_text}, *media]}
+            return
+
+        rendered_result = render_result(tool_result)
+        bounded_result = await spill.spill_tool_result(
+            tape,
+            rendered_result,
+            tool=call.tool,
+            run_id=call.run_id,
+        )
+        if isinstance(tool_result, str) or bounded_result != rendered_result:
+            result.result = bounded_result

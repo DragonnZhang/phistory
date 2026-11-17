@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "goose",
+  "agent": "goose",
+  "repository": "aaif-goose/goose",
+  "snapshot": "02d3be6aae21bcfd8f29",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:43.873820+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba",
+      "path": "crates/goose/src/agents/platform_extensions/developer/mod.rs",
+      "sha256": "d08a26e29ef052f1a07474008446dc1ec1b8fd7a83596a6e2d934d1ff019c542",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/agents/platform_extensions/developer/mod.rs",
+      "url": "https://github.com/aaif-goose/goose/blob/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/agents/platform_extensions/developer/mod.rs"
+    },
+    {
+      "commit": "bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba",
+      "path": "crates/goose/src/agents/prompt_manager.rs",
+      "sha256": "42cace99f2036579b023b71c24099fbdcc0fcfa81f246a643c3b8de6cfb9afe0",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/agents/prompt_manager.rs",
+      "url": "https://github.com/aaif-goose/goose/blob/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/agents/prompt_manager.rs"
+    },
+    {
+      "commit": "bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba",
+      "path": "crates/goose/src/prompt_template.rs",
+      "sha256": "0a9ead88f03c9903eb25e1a92c822076bbaf18f0694286bbedebc9eabbbd401c",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/prompt_template.rs",
+      "url": "https://github.com/aaif-goose/goose/blob/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/prompt_template.rs"
+    },
+    {
+      "commit": "bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba",
+      "path": "crates/goose/src/prompts/subagent_system.md",
+      "sha256": "fdae9eb072c3755c488c6385a6d6c273e0bb1bc25e5889aa116a4fce47811c6f",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/prompts/subagent_system.md",
+      "url": "https://github.com/aaif-goose/goose/blob/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/prompts/subagent_system.md"
+    },
+    {
+      "commit": "bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba",
+      "path": "crates/goose/src/prompts/system.md",
+      "sha256": "e0a59861edd6791f3df404e27de8bc360d5e5053f535a14b2d775f7815fdb3f0",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/prompts/system.md",
+      "url": "https://github.com/aaif-goose/goose/blob/bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba/crates/goose/src/prompts/system.md"
+    }
+  ]
+}

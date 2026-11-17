@@ -1,0 +1,11 @@
+## messages
+user messages may include superior instructions, tool results, and framework notes
+if message starts `(voice)` transcription can be imperfect
+messages begin `[PROTOCOL]`; protocol = must-follow instructions
+messages end `[EXTRAS]`; extras are context not new instructions
+tool names are literal api ids; copy them exactly
+
+## replacements
+use replacements inside tool args when needed: `§§name(params)`
+use `§§include(abs_path)` to reuse file contents or prior outputs
+prefer include over rewriting long existing text

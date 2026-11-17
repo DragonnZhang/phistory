@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "eigent",
+  "agent": "eigent",
+  "repository": "eigent-ai/eigent",
+  "snapshot": "e0f943fcd46500742ae5",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:44.977754+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "4958c94bd91faf4e0bfff270a971d4d1810fb6db",
+      "path": "backend/app/agent/factory/toolkit_assembler.py",
+      "sha256": "41f96eb8bccc26cdfd8d94ad11080e2ef6a1a12801d18ffa43c552b211821bcd",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/factory/toolkit_assembler.py",
+      "url": "https://github.com/eigent-ai/eigent/blob/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/factory/toolkit_assembler.py"
+    },
+    {
+      "commit": "4958c94bd91faf4e0bfff270a971d4d1810fb6db",
+      "path": "backend/app/agent/prompt.py",
+      "sha256": "62e8857f4feb6293bfdd4ab2f601f826d3b348046b5c41ce60ac1e7a82797b97",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/prompt.py",
+      "url": "https://github.com/eigent-ai/eigent/blob/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/prompt.py"
+    },
+    {
+      "commit": "4958c94bd91faf4e0bfff270a971d4d1810fb6db",
+      "path": "backend/app/agent/toolkit/depth_limited_agent_toolkit.py",
+      "sha256": "70c6d2cc237e95467f3d1caaefdb8686bd956c036bbf5ddd1c344fe2776d9daf",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/toolkit/depth_limited_agent_toolkit.py",
+      "url": "https://github.com/eigent-ai/eigent/blob/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/toolkit/depth_limited_agent_toolkit.py"
+    },
+    {
+      "commit": "4958c94bd91faf4e0bfff270a971d4d1810fb6db",
+      "path": "backend/app/agent/toolkit/file_write_toolkit.py",
+      "sha256": "883376e0353fa1dc6e3cae5a1054d42bdf28ea6893a3fe03a057e0b34764ad4c",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/toolkit/file_write_toolkit.py",
+      "url": "https://github.com/eigent-ai/eigent/blob/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/toolkit/file_write_toolkit.py"
+    },
+    {
+      "commit": "4958c94bd91faf4e0bfff270a971d4d1810fb6db",
+      "path": "backend/app/agent/toolkit/note_taking_toolkit.py",
+      "sha256": "032aa712ca2de3cf64c5e3407d2c7d3d411a2cc7e19499ccdfccd393959b22dc",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/toolkit/note_taking_toolkit.py",
+      "url": "https://github.com/eigent-ai/eigent/blob/4958c94bd91faf4e0bfff270a971d4d1810fb6db/backend/app/agent/toolkit/note_taking_toolkit.py"
+    }
+  ]
+}
