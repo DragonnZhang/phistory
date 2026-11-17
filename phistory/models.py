@@ -44,6 +44,7 @@ HomeProfile = Literal[
     "headlong",
     "openagent",
     "cheetah-anthropic",
+    "cheetah-ollama",
     "trashclaw",
     "mini-agi",
     "openmanus",

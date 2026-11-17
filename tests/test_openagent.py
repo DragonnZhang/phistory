@@ -13,6 +13,8 @@ def test_store_driver_preserves_native_prompt_and_tools_instead_of_using_provide
         "prompt": "native prompt",
         "tools": ["native-tool"],
         "otherConfig": {"unchanged": True},
+        "fileTree": {"key": "/", "children": []},
+        "propertiesMap": {"computed": "value"},
     }
     calls = []
 
@@ -27,7 +29,7 @@ def test_store_driver_preserves_native_prompt_and_tools_instead_of_using_provide
     _configure_and_prompt(object(), credentials)
     updated = calls[2][1]
     assert updated == {
-        **native,
+        **{key: value for key, value in native.items() if key not in ("fileTree", "propertiesMap")},
         "owner": "admin",
         "name": "phistory-capture",
         "isDefault": False,

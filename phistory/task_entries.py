@@ -57,5 +57,8 @@ except InvalidLLMResponseError:
 
 BROWSER_USE_PREFETCH = """
 import subprocess
+import tiktoken
+tiktoken.encoding_for_model("gpt-4o")
+tiktoken.encoding_for_model("gpt-4")
 subprocess.run(["uvx", "browser-use", "--help"], check=True)
 """

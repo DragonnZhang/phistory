@@ -47,7 +47,14 @@ def test_parse_default_agents():
         "deepseek-reasonix",
         "quorum-cli",
         "tianshu-harness",
+        "octomind",
         "headlong",
+        "nausicaa-harness",
+        "trashclaw",
+        "mini-agi",
+        "cuga-agent",
+        "autoresearchclaw",
+        "inkos",
     ]
     assert "kimi" in AGENT_ORDER
     assert parse_agent_ids("kimi,kimi-code") == ["kimi", "kimi-code"]

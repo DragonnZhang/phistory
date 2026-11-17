@@ -1399,7 +1399,6 @@ OCTOMIND = AgentSpec(
     ),
     home_profile="octomind",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("http",),
     default_variant=_default(
@@ -1495,7 +1494,6 @@ NAUSICAA = AgentSpec(
     extra_env={"NAUSICAA_MODEL": "openai:gpt-5.4"},
     recorded_env=("NAUSICAA_MODEL",),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "--print", "Reply with one short sentence."),
@@ -1511,13 +1509,21 @@ CHEETAHCLAWS = AgentSpec(
     source="pypi",
     tap_client="cheetahclaws",
     fake_env={},
+    extra_env={"OLLAMA_BASE_URL": ""},
+    recorded_env=("OLLAMA_BASE_URL",),
+    home_profile="cheetah-ollama",
     tap_mode="forward",
     track_latest=False,
     capture_timeout_seconds=240,
-    latest_variant_ids=("anthropic",),
     default_variant=_default(
         ("--no-yolo", "--", "-p", "Reply with one short sentence.", "--output-format", "json", "--max-turns", "1"),
-        capture_unavailable="Native default is local Ollama gemma4:e4b; current tap has no protocol-correct Ollama capture-only response. Use the configured Anthropic surface.",
+        label="Default · native Ollama",
+        dimensions={
+            "provider": "native Ollama",
+            "model": "native gemma4:e4b",
+            "transport": "HTTP capture-only endpoint override",
+            "max_turns": "1",
+        },
     ),
     variants=(
         _variant(
@@ -1543,7 +1549,6 @@ TRASHCLAW = AgentSpec(
     recorded_env=("TRASHCLAW_URL", "TRASHCLAW_MAX_ROUNDS"),
     home_profile="trashclaw",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "$PHISTORY_SOURCE_ROOT/trashclaw.py", "--exec", "Reply with one short sentence."),
@@ -1566,7 +1571,6 @@ MINIAGI = AgentSpec(
     home_profile="mini-agi",
     bootstrap_args=("-c", "import tiktoken; tiktoken.encoding_for_model('gpt-4')"),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     latest_variant_ids=("think-api",),
     default_variant=_default(
@@ -1639,7 +1643,6 @@ CUGA = AgentSpec(
     recorded_env=("AGENT_SETTING_CONFIG", "PHISTORY_CUGA_EXAMPLE_SOURCE", "PHISTORY_CUGA_EXAMPLE_SHA256"),
     home_profile="cuga",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("hello-tools-api",),
     default_variant=_default(
@@ -1670,7 +1673,6 @@ AUTORESEARCHCLAW = AgentSpec(
     fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
     home_profile="researchclaw",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("topic-init",),
     default_variant=_default(
@@ -1720,7 +1722,6 @@ INKOS = AgentSpec(
     recorded_env=("INKOS_LLM_SERVICE", "INKOS_LLM_PROVIDER", "INKOS_LLM_BASE_URL", "INKOS_LLM_MODEL"),
     bootstrap_args=("init", "--lang", "en"),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     latest_variant_ids=("chat-openai",),
     default_variant=_default(

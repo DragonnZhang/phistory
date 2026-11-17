@@ -14,16 +14,9 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
-        "octomind",
         "openagent",
-        "nausicaa-harness",
         "cheetahclaws",
-        "trashclaw",
-        "mini-agi",
         "openmanus",
-        "cuga-agent",
-        "autoresearchclaw",
-        "inkos",
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
@@ -171,6 +164,16 @@ def test_opendev_setup_marker_preserves_all_native_defaults(tmp_path):
 def test_reasonix_stored_key_preflight_uses_isolated_dotenv(tmp_path):
     env = _capture_env(target("deepseek-reasonix", tmp_path), tmp_path / "bin", tmp_path / "home")
     assert (Path(env["REASONIX_HOME"]) / ".env").read_text() == "DEEPSEEK_API_KEY=phistory-fake-api-key\n"
+
+
+def test_cheetah_native_endpoint_override_preserves_fresh_model_and_no_auth(tmp_path):
+    item = target("cheetahclaws", tmp_path)
+    home = tmp_path / "home"
+    env = _capture_env(item, tmp_path / "bin", home)
+    assert env["OLLAMA_BASE_URL"] == "http://ollama.phistory.invalid"
+    assert not (home / ".cheetahclaws/config.json").exists()
+    assert not any(key.endswith("API_KEY") for key in env)
+    assert "--model" not in item.variant.run_args
 
 
 def test_openmanus_config_and_workspace_are_copied_per_capture(tmp_path):

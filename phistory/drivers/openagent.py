@@ -97,6 +97,8 @@ def _configure_and_prompt(opener, credentials: tuple[str, str]) -> None:
         "modelProvider": "phistory",
         "externalApiKey": "phistory-local-store-key",
     }
+    store.pop("fileTree", None)
+    store.pop("propertiesMap", None)
     _api(opener, "/api/add-store", store, basic_auth=credentials)
     created = _api(opener, "/api/get-store?id=admin/phistory-capture", basic_auth=credentials)
     if not isinstance(created, dict) or any(

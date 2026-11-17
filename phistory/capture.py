@@ -515,6 +515,9 @@ def _capture_env(
         state = home / ".cheetahclaws"
         state.mkdir(parents=True, exist_ok=True)
         (state / "config.json").write_text(json.dumps({"model": "claude-sonnet-4-6"}) + "\n", encoding="utf-8")
+    if profile == "cheetah-ollama":
+        (home / ".cheetahclaws").mkdir(parents=True, exist_ok=True)
+        env["OLLAMA_BASE_URL"] = "http://ollama.phistory.invalid"
     if profile in ("trashclaw", "mini-agi", "openmanus", "researchclaw"):
         source = packages.installed_source_root(bin_dir)
         if profile in ("openmanus", "researchclaw") and prepare_runtime:
