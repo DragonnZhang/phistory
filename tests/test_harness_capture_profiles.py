@@ -17,13 +17,10 @@ def test_unverified_profiles_require_explicit_selection():
         "agentlas-os",
         "longhorizon-harness",
         "openagents",
-        "markus",
         "wechat-mac-rpa",
         "agent-s",
         "devopsgpt",
-        "web3gpt",
         "self-operating-computer",
-        "ouroboros",
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates

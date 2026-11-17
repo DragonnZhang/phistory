@@ -48,6 +48,8 @@ on:
           - cuga-agent
           - autoresearchclaw
           - inkos
+          - markus
+          - web3gpt
           - autoref
           - critic-training
           - empryo
