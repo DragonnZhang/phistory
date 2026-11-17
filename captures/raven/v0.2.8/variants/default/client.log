@@ -1,0 +1,34 @@
+stdout:
+[claude-tap] 'raven' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] raven target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:44473
+[claude-tap] CA cert: /tmp/phistory-home-jm3gr1io/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/raven/v0.2.8/variants/default/.tap/2026-11-17/trace_142046.jsonl
+
+[claude-tap] launching raven: raven agent -m Reply with one short sentence. --config /tmp/phistory-home-jm3gr1io/raven/config.json --home /tmp/phistory-home-jm3gr1io/raven --workspace /tmp/phistory-home-jm3gr1io/work --no-markdown
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:44473
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-jm3gr1io/.local/share/claude-tap/ca.pem
+  Initialized workspace (10 files)
+Long-term memory is off: its LLM is not configured.
+Run `raven onboard` to set it up.
+
+🐦‍⬛ Raven
+captured
+
+  ↳ 0 in / 0 out tokens · cost unknown · 1 calls with unknown cost · 3.4s
+
+[claude-tap] raven exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/raven/v0.2.8/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    8
+  trace:        /home/runner/work/phistory/phistory/captures/raven/v0.2.8/variants/default/.tap/2026-11-17/trace_142046.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/raven/v0.2.8/variants/default/.tap/2026-11-17/trace_142046.log
+  view:         /home/runner/work/phistory/phistory/captures/raven/v0.2.8/variants/default/.tap/2026-11-17/trace_142046.html
+  prompt:       /home/runner/work/phistory/phistory/captures/raven/v0.2.8/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 
+Using config: /tmp/phistory-home-jm3gr1io/raven/config.json
+skill source 'hub' failed; treating as empty: hub error=None status='completed'
