@@ -1,0 +1,5839 @@
+import { createHash, randomUUID } from "node:crypto";
+import * as path from "path";
+import * as os from "os";
+import fs from "node:fs";
+
+import { getConfiguredMasterBypass } from "../adapters/vscode/agentLinkConfig.js";
+
+import { getWorkspaceRoots, tryGetFirstWorkspaceRoot } from "../util/paths.js";
+import type {
+  PreparedTerminalExecution,
+  TerminalCommandResult,
+  TerminalExecutionAttemptSummary,
+  TerminalExecutionAuditEvent,
+  TerminalExecuteOptions,
+  TerminalProvider,
+} from "../core/capabilities/terminal.js";
+import type { TerminalApprovalModeSnapshot } from "@agentlink/protocol/terminal";
+import type {
+  CommandExecutionPolicy,
+  ManagedNetworkRequest,
+  SandboxViolation,
+  TerminalExecutionRouteContext,
+  TerminalExecutionSecuritySummary,
+} from "@agentlink/protocol/terminal-security";
+import { SandboxCapabilityLaunchError } from "../core/capabilities/SandboxCapabilityLaunchError.js";
+import { TerminalDispatchRevokedError } from "../core/capabilities/TerminalDispatchRevokedError.js";
+import { TerminalAdmissionCancelledError } from "../terminal/terminalAdmissionQueue.js";
+import {
+  SandboxHelperFailure,
+  SandboxPtyLaunchError,
+  SandboxPreCommandLaunchError,
+  SandboxProtectedRootDriftError,
+  SandboxStructuralProtectionError,
+} from "../terminal/sandbox/SandboxRuntimeProvider.js";
+import { SandboxAvailabilityError } from "../terminal/sandbox/AgentTerminalProviderRouter.js";
+import { SandboxPreparationError } from "../terminal/sandbox/SandboxPreparationError.js";
+import {
+  NativeCommandEnvironmentError,
+  NativeShellStartupTimeoutError,
+} from "../terminal/native/NativeAgentExecutionError.js";
+import {
+  SandboxPreparationDriftError,
+  TerminalTargetRecoveryError,
+} from "../core/capabilities/terminalTargetError.js";
+import {
+  commandRuleMatches,
+  commandRulePolicyFingerprint,
+  type CommandRulePolicyEvaluation,
+} from "../approvals/commandRulePolicy.js";
+import type { ApprovalManager } from "../approvals/ApprovalManager.js";
+import type {
+  ApprovalPanelProvider,
+  NetworkApprovalResponse,
+} from "../approvals/ApprovalPanelProvider.js";
+import type { TrackerContext } from "../agent/AgentToolCallTracker.js";
+import {
+  splitCompoundCommand,
+  expandSubCommands,
+} from "../approvals/commandSplitter.js";
+import {
+  classifyCommand,
+  isCommandEligibleForReadOnlyExecution,
+  isCommandPathInsideWorkspace,
+  type ClassifiedCommand,
+  type CommandRiskCode,
+  type CommandTier,
+} from "../approvals/commandTierClassifier.js";
+import type { CommandApprovalPolicy } from "@agentlink/protocol/command-approval-policy";
+import {
+  commandReviewActionKey,
+  getCommandAutoApprovalEligibility,
+  isRoutineApproveForMeCommand,
+  isRoutineGitWorkflowNativeCommand,
+  canDiscountRuleAllowedSubCommands,
+  ruleAllowedSubCommandMask,
+  withoutRuleAllowedSubCommands,
+  type CommandReviewContextEntry,
+  type CommandApprovalReviewer,
+  type CommandApprovalReviewResult,
+  type CommandReviewTurnCircuit,
+  type RetainedCommandReviewDenials,
+} from "../approvals/commandApprovalReview.js";
+import { collectCommandReviewEvidenceWithMetadata } from "../approvals/commandReviewEvidence.js";
+import type {
+  ReviewPublicationContext,
+  ReviewPublicationHost,
+} from "../approvals/reviewPublicationPolicy.js";
+import type {
+  CommandRecoveryAttempt,
+  CommandReviewSummary,
+  SubCommandEntry,
+} from "@agentlink/protocol/approval-transport";
+import type { NetworkApprovalReviewer } from "../approvals/networkApprovalReview.js";
+import { filterOutput } from "../util/outputFilter.js";
+import {
+  isStreamableFilter,
+  outputFilterFromParams,
+  presentCommandOutput,
+  readStreamedOutputFilter,
+} from "../terminal/commandOutput.js";
+import { streamableOutputFilter } from "../terminal/output/StreamingOutputFilter.js";
+import { sandboxDockerRecovery } from "./sandboxDockerRecovery.js";
+import { buildSandboxPolicyEnvironment } from "../terminal/sandbox/sandboxEnvironmentPolicy.js";
+import { validateCommand } from "../util/pipeValidator.js";
+import { validateInteractiveCommand } from "../util/interactiveValidator.js";
+import { resolveBaselineProtectedGitMetadataForCwd } from "../terminal/sandbox/gitMetadataProtection.js";
+import { classifyPredictableGitMetadataWriter } from "../util/gitMetadataWriterClassifier.js";
+import { validateProtectedWriteCommand } from "../util/protectedWriteValidator.js";
+import {
+  maskShellHeredocBodies,
+  scanShellLexBoundaries,
+  scanShellLexTokens,
+  scanShellLexWords,
+  type ShellLexFinalState,
+} from "../util/shellLex.js";
+import { Semaphore } from "../util/Semaphore.js";
+import {
+  INLINE_FILE_TOKEN_RE,
+  assertNoInvalidInlineFileTokens,
+  InlineCommandFileError,
+  type InlineCommandFileInput,
+  type InlineCommandFilePreview,
+  materializeInlineCommandFiles,
+} from "../util/commandInlineFiles.js";
+
+const approvalGates = new Map<
+  string,
+  { semaphore: Semaphore; users: number }
+>();
+
+async function acquireApprovalGate(sessionId: string): Promise<() => void> {
+  let gate = approvalGates.get(sessionId);
+  if (!gate) {
+    gate = { semaphore: new Semaphore(1), users: 0 };
+    approvalGates.set(sessionId, gate);
+  }
+  gate.users += 1;
+  const release = await gate.semaphore.acquire();
+  return () => {
+    release();
+    gate.users -= 1;
+    if (gate.users === 0) approvalGates.delete(sessionId);
+  };
+}
+
+type CommandApprovalAudit =
+  | { by: "readonly_policy" }
+  | { by: "master_bypass" }
+  | { by: "explicit_rule" }
+  | { by: "recent_approval" }
+  | { by: "coordinator" }
+  | { by: "sandbox_verification"; rule_allowed_subcommands?: number }
+  | { by: "routine_tier"; tier: CommandTier; rule_allowed_subcommands?: number }
+  | {
+      by: "tier";
+      tier: CommandTier;
+      threshold: "safe" | "sensitive";
+      rule_allowed_subcommands?: number;
+    }
+  | {
+      by: "model_reviewer";
+      model: string;
+      tier: CommandTier;
+      outcome: "allow";
+      risk: "low" | "medium" | "high" | "critical";
+      user_authorization: "unknown" | "low" | "medium" | "high";
+      rationale: string;
+      review_id?: string;
+    }
+  | { by: "human"; prior_review?: PriorCommandReview }
+  | { by: "human_edited"; prior_review?: PriorCommandReview };
+
+/**
+ * The original automatic review a human then decided on. Kept immutable in
+ * the tool result so a later human override never replaces the denial.
+ */
+interface PriorCommandReview {
+  review_id: string;
+  status: CommandApprovalReviewResult["status"] | "stale";
+  outcome: CommandApprovalReviewResult["outcome"];
+  model: string;
+  risk?: CommandApprovalReviewResult["risk"];
+  rationale?: string;
+}
+
+/** Bounded re-reviews when human input arrives while a review is running. */
+const MAX_FRESH_REVIEW_ATTEMPTS = 2;
+
+const STALE_REVIEW_HUMAN_ONLY_REASON =
+  "New input from you arrived while this command was being reviewed. Your direct approval is required.";
+
+import {
+  appendAuthorizationDecision,
+  type AuthorizationAudit,
+  type AuthorizationDecision,
+  type ToolResult,
+} from "@agentlink/protocol/tool-result";
+
+export interface ExecuteCommandProviders {
+  terminalProvider?: TerminalProvider;
+  getCommandApprovalPolicy?: (sessionId: string) => CommandApprovalPolicy;
+  getCommandApprovalMode?: (sessionId: string) => TerminalApprovalModeSnapshot;
+  commandApprovalReviewer?: CommandApprovalReviewer;
+  networkApprovalReviewer?: NetworkApprovalReviewer;
+  commandReviewTurnCircuit?: CommandReviewTurnCircuit;
+  retainedCommandReviewDenials?: RetainedCommandReviewDenials;
+  isSessionActive?: (sessionId: string) => boolean;
+  toolAbortSignal?: AbortSignal;
+  /**
+   * Internal: follows toolAbortSignal only while the execute_command call
+   * runs, so a command's later network requests are not rejected by the
+   * routine abort when the call returns.
+   */
+  networkReviewAbortSignal?: AbortSignal;
+  getUserObjective?: (sessionId: string) => string | undefined;
+  getReviewContext?: (sessionId: string) => CommandReviewContextEntry[];
+  getReviewContextWithMetadata?: (
+    sessionId: string,
+  ) => ReturnType<
+    typeof import("../approvals/commandApprovalReview.js").buildCommandReviewContextWithMetadata
+  >;
+  reviewPublicationHost?: ReviewPublicationHost;
+  /** Advances on every direct human input, including input queued mid-run. */
+  getHumanInputRevision?: (sessionId: string) => number | undefined;
+  commandExecutionPolicy?: CommandExecutionPolicy;
+  /** Tools allowed in the originating provider request, for rejection guidance only. */
+  availableToolNames?: ReadonlySet<string>;
+}
+
+function prepareTerminalExecution(
+  provider: TerminalProvider,
+  options: TerminalExecuteOptions,
+  routeContext: TerminalExecutionRouteContext,
+): Promise<PreparedTerminalExecution> {
+  if (provider.prepareExecution) {
+    return provider.prepareExecution(options, routeContext);
+  }
+  const descriptor = Object.freeze({
+    ...options,
+    ...(options.env ? { env: Object.freeze({ ...options.env }) } : {}),
+    ...(options.sandboxInlineFiles
+      ? {
+          sandboxInlineFiles: Object.freeze(
+            options.sandboxInlineFiles.map((file) =>
+              Object.freeze({ ...file }),
+            ),
+          ),
+        }
+      : {}),
+  });
+  if (routeContext.requiredAuthority !== "native-agent") {
+    return Promise.reject(
+      new Error(
+        "Required Sandbox execution is unavailable. The compatibility provider cannot satisfy the host-owned route.",
+      ),
+    );
+  }
+  const security: TerminalExecutionSecuritySummary = {
+    auditId: randomUUID(),
+    route: "native",
+    executionSurface: "vscode-compatibility",
+    confinement: "native-unsandboxed",
+    routeReason: "unsupported-host",
+    ...routeContext,
+    executionPolicy: "native-legacy-v1",
+    preparedAt: Date.now(),
+  };
+  let available = true;
+  return Promise.resolve({
+    security,
+    execute: async () => {
+      if (!available) {
+        throw new Error("Prepared terminal execution is no longer available");
+      }
+      available = false;
+      const result = await provider.executeCommand(descriptor);
+      return { ...result, security };
+    },
+    dispose: () => {
+      available = false;
+    },
+  });
+}
+
+function sameDisplayedSecurityBasis(
+  left: TerminalExecutionSecuritySummary,
+  right: TerminalExecutionSecuritySummary,
+): boolean {
+  return (
+    left.route === right.route &&
+    left.executionSurface === right.executionSurface &&
+    left.confinement === right.confinement &&
+    left.routeReason === right.routeReason &&
+    left.approvalPolicySnapshot === right.approvalPolicySnapshot &&
+    left.approvalReviewerSnapshot === right.approvalReviewerSnapshot &&
+    left.executionPresetSnapshot === right.executionPresetSnapshot &&
+    left.requiredAuthority === right.requiredAuthority &&
+    left.permissionIntent === right.permissionIntent &&
+    left.approvalRequirement === right.approvalRequirement &&
+    left.authorityReason === right.authorityReason &&
+    left.commandApprovalPolicySnapshot ===
+      right.commandApprovalPolicySnapshot &&
+    left.commandExecutionPolicySnapshot ===
+      right.commandExecutionPolicySnapshot &&
+    left.executionPolicy === right.executionPolicy &&
+    left.sandbox?.attestationId === right.sandbox?.attestationId &&
+    left.sandbox?.attestationVersion === right.sandbox?.attestationVersion &&
+    left.sandbox?.policyVersion === right.sandbox?.policyVersion &&
+    left.sandbox?.profileId === right.sandbox?.profileId &&
+    left.sandbox?.backend === right.sandbox?.backend &&
+    left.sandbox?.architecture === right.sandbox?.architecture &&
+    JSON.stringify(left.sandbox?.capabilities) ===
+      JSON.stringify(right.sandbox?.capabilities) &&
+    JSON.stringify(left.sandbox?.grant) ===
+      JSON.stringify(right.sandbox?.grant) &&
+    JSON.stringify(left.sandbox?.environmentPolicy) ===
+      JSON.stringify(right.sandbox?.environmentPolicy)
+  );
+}
+
+function recordExecutionAudit(
+  provider: TerminalProvider,
+  type: TerminalExecutionAuditEvent["type"],
+  security: TerminalExecutionSecuritySummary,
+  detail: Pick<
+    TerminalExecutionAuditEvent,
+    "approvalBasis" | "failure" | "resultStatus"
+  > = {},
+): void {
+  provider.recordExecutionAudit?.({
+    type,
+    occurredAt: Date.now(),
+    auditId: security.auditId,
+    route: security.route,
+    routeReason: security.routeReason,
+    ...(security.sandbox
+      ? {
+          attestationId: security.sandbox.attestationId,
+          policyVersion: security.sandbox.policyVersion,
+          profileId: security.sandbox.profileId,
+        }
+      : {}),
+    ...detail,
+  });
+}
+
+function approvalModeFor(
+  providers: ExecuteCommandProviders,
+  sessionId: string,
+): TerminalApprovalModeSnapshot {
+  const provided = providers.getCommandApprovalMode?.(sessionId);
+  if (provided) return Object.freeze({ ...provided });
+  const commandApprovalPolicy =
+    providers.getCommandApprovalPolicy?.(sessionId) ?? "manual";
+  const approveForMe = commandApprovalPolicy === "approve-for-me";
+  return Object.freeze({
+    commandApprovalPolicy,
+    approvalPolicy: "on-request",
+    approvalReviewer: approveForMe ? "auto-review" : "user",
+    executionPreset: approveForMe ? "workspace-write" : "native-manual",
+  });
+}
+
+function routeContextFor(
+  approvalMode: TerminalApprovalModeSnapshot,
+  permissionIntent: "default" | "additional-permissions" | "native-escalation",
+  commandExecutionPolicySnapshot?: CommandExecutionPolicy,
+  explicitRuleAuthority = false,
+  requireSandbox = false,
+): TerminalExecutionRouteContext {
+  const executionPresetSnapshot = approvalMode.executionPreset;
+  const explicitEscalation = permissionIntent === "native-escalation";
+  const additionalPermissions = permissionIntent === "additional-permissions";
+  return Object.freeze({
+    approvalPolicySnapshot: approvalMode.approvalPolicy,
+    approvalReviewerSnapshot: approvalMode.approvalReviewer,
+    executionPresetSnapshot,
+    requiredAuthority: requireSandbox
+      ? "sandbox"
+      : explicitEscalation ||
+          explicitRuleAuthority ||
+          executionPresetSnapshot === "native-manual"
+        ? "native-agent"
+        : "sandbox",
+    permissionIntent,
+    approvalRequirement: explicitEscalation
+      ? "explicit-escalation"
+      : additionalPermissions
+        ? "explicit-permissions"
+        : "policy",
+    authorityReason: explicitRuleAuthority
+      ? "explicit-rule"
+      : explicitEscalation
+        ? "explicit-escalation"
+        : additionalPermissions
+          ? "additional-permissions"
+          : "approval-policy",
+    commandApprovalPolicySnapshot: approvalMode.commandApprovalPolicy,
+    ...(commandExecutionPolicySnapshot
+      ? { commandExecutionPolicySnapshot }
+      : {}),
+  });
+}
+
+function hasPolicyDrift(
+  providers: ExecuteCommandProviders,
+  sessionId: string,
+  routeContext: TerminalExecutionRouteContext,
+): boolean {
+  const current = approvalModeFor(providers, sessionId);
+  return (
+    current.commandApprovalPolicy !==
+      routeContext.commandApprovalPolicySnapshot ||
+    current.approvalPolicy !== routeContext.approvalPolicySnapshot ||
+    current.approvalReviewer !== routeContext.approvalReviewerSnapshot ||
+    current.executionPreset !== routeContext.executionPresetSnapshot ||
+    providers.commandExecutionPolicy !==
+      routeContext.commandExecutionPolicySnapshot
+  );
+}
+
+function policyDriftResult(
+  command: string,
+  security?: TerminalExecutionSecuritySummary,
+): ToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          status: "retry_required",
+          command,
+          reason:
+            "Command approval or execution policy changed while this command was pending. Retry to prepare and approve it under the current policy.",
+          ...(security ? { security } : {}),
+          security_failure: "policy_drift",
+          command_sent: false,
+        }),
+      },
+    ],
+  };
+}
+
+type ExecuteCommandRetryGuidance = {
+  code:
+    | "sandbox_cwd_outside_workspace"
+    | "sandbox_missing_capabilities"
+    | "sandbox_npm_cache_write"
+    | "sandbox_capability_unresolved"
+    | "sandbox_host_integration"
+    | "sandbox_node_oom"
+    | "sandbox_swiftpm_nested_sandbox"
+    | "sandbox_metal_toolchain_lookup"
+    | "sandbox_preparation_changed"
+    | "sandbox_preparation_failed"
+    | "sandbox_capability_launch_failed"
+    | "sandbox_pty_launch_failed"
+    | "sandbox_environment_too_large"
+    | "sandbox_structural_protection"
+    | "sandbox_protected_root_drift"
+    | "protected_git_metadata"
+    | "managed_network_ssh_git_transport"
+    | "managed_network_tls_trust"
+    | "managed_network_proxy_unaware_dns"
+    | "managed_network_connect_timeout"
+    | "pnpm_store_mismatch"
+    | "native_shell_startup_timeout"
+    | "native_command_environment_mismatch"
+    | "sandbox_unavailable";
+  message: string;
+  automatic_retry: false;
+  options: Array<Record<string, unknown>>;
+  prohibited_workarounds?: string[];
+};
+
+const GIT_NETWORK_SUBCOMMANDS = new Set([
+  "clone",
+  "fetch",
+  "pull",
+  "push",
+  "ls-remote",
+  "submodule",
+]);
+
+const SSH_GIT_FAILURE_PATTERNS = [
+  /ssh: connect to host/i,
+  /permission denied \(publickey\)/i,
+  /could not read from remote repository/i,
+  /could not resolve hostname/i,
+  /authentication method negotiation failed/i,
+  /connection closed by unknown port/i,
+];
+
+const TLS_TRUST_FAILURE_PATTERNS = [
+  /x509: certificate signed by unknown authority/i,
+  /tls: failed to verify certificate: x509: OSStatus -26276\b/i,
+];
+const GO_DEPENDENCY_SUBCOMMANDS = new Set(["build", "get", "run", "test"]);
+const GO_MOD_DEPENDENCY_SUBCOMMANDS = new Set(["download", "tidy", "vendor"]);
+const NODE_UNDICI_DNS_FAILURE_PATTERN =
+  /(?:TypeError:\s*)?fetch failed[\s\S]{0,1024}(?:\bENOTFOUND\b|\bEAI_AGAIN\b|getaddrinfo[^\n]*(?:failed|not known|temporary failure))/i;
+const PNPM_STORE_MISMATCH_PATTERN = /\bERR_PNPM_UNEXPECTED_STORE\b/i;
+const PNPM_STORE_LINKING_SUBCOMMANDS = new Set([
+  "add",
+  "install",
+  "i",
+  "update",
+  "up",
+  "remove",
+  "rm",
+  "unlink",
+  "prune",
+  "rebuild",
+  "import",
+  "deploy",
+]);
+
+const LOOPBACK_LISTEN_DENIAL_PATTERNS = [
+  /listen EPERM: operation not permitted 127\.0\.0\.1(?::\d+)?\b/i,
+  /listen EPERM: operation not permitted ::1(?::\d+)?\b/i,
+];
+
+const TURBOPACK_LISTENER_DENIAL_PATTERNS = [
+  /\bturbopack\b/i,
+  /(?:\bbind(?:ing)?\b[^\r\n]{0,80}\b(?:port|listener)\b|\blisten(?:er)?\b[^\r\n]{0,80}(?:\bEPERM\b|\bport\s+\d+\b)|\bport\s+\d+\b)/i,
+  /(?:operation not permitted|permission denied|os error 1)/i,
+];
+
+function outputHasTurbopackListenerDenial(output: string): boolean {
+  const lines = output.split(/\r?\n/);
+  return lines.some((_, index) => {
+    const causeChain = lines
+      .slice(index, index + 6)
+      .join("\n")
+      .slice(0, 2_048);
+    return TURBOPACK_LISTENER_DENIAL_PATTERNS.every((pattern) =>
+      pattern.test(causeChain),
+    );
+  });
+}
+
+const TSX_UNIX_SOCKET_DENIAL_PATTERN =
+  /listen\s+EPERM:\s+operation not permitted[^\r\n]*[\\/]tsx-\d+[\\/][^\s"']+\.pipe\b/i;
+
+const HOME_WRITE_DENIAL_PATTERNS = [
+  /(?:not written|error writing|failed to write|cannot write|unable to write)/i,
+  /(?:\bEPERM\b|operation not permitted|permission denied|read-only file system).*\b(?:create|mkdir|open|rename|symlink|link|truncate|unlink|write|writing)\b/i,
+  /\b(?:create|mkdir|open|rename|symlink|link|truncate|unlink|write|writing)\b.*(?:\bEPERM\b|operation not permitted|permission denied|read-only file system)/i,
+];
+
+const PROCESS_INSPECTION_DENIAL_PATTERNS = [
+  /(?:\/usr)?\/bin\/ps:?(?:\s+)?(?:operation not permitted|permission denied)/i,
+  /(?:operation not permitted|permission denied).*\b(?:\/usr)?\/bin\/ps\b/i,
+];
+
+const PROCESS_SIGNAL_DENIAL_PATTERNS = [
+  /\b(?:operation not permitted|permission denied)\b/i,
+];
+
+const INDIRECT_PROCESS_SIGNAL_DENIAL_PATTERNS = [
+  /\b(?:SIGTERM|signal|kill|terminate)\b.*\b(?:operation not permitted|permission denied)\b/i,
+  /\b(?:operation not permitted|permission denied)\b.*\b(?:SIGTERM|signal|kill|terminate)\b/i,
+];
+
+const CONTAINER_RUNTIME_DENIAL_PATTERNS = [
+  /(?:permission denied|operation not permitted).*(?:docker\.sock|colima)/i,
+  /(?:docker\.sock|colima).*(?:permission denied|operation not permitted)/i,
+];
+
+/**
+ * gh stores its token in the host credential store (macOS Keychain), which the
+ * sandbox cannot read. gh then reports the token as invalid even when the host
+ * login is fine, so this evidence must not be presented as a broken login.
+ */
+const GH_KEYRING_FAILURE_PATTERNS = [
+  /\btoken in keyring is invalid\b/i,
+  /\bfailed to (?:get|read|load|retrieve) (?:the )?(?:auth )?(?:token|credentials?) from (?:the )?(?:keyring|keychain)\b/i,
+  /\b(?:keyring|keychain)\b[^\r\n]{0,80}\b(?:operation not permitted|permission denied|access denied|not allowed)\b/i,
+];
+
+const NODE_OOM_PATTERNS = [
+  /fatal error:.*(?:heap out of memory|allocation failed)/i,
+  /javascript heap out of memory/i,
+  /reached heap limit/i,
+];
+
+const PROTECTED_GIT_DENIAL_PATTERNS = [
+  /(?:permission denied|operation not permitted|read-only file system|unable to create|could not create|failed to write)/i,
+  /(?:index\.lock|ORIG_HEAD\.lock|FETCH_HEAD|objects\/tmp_object_)/i,
+];
+
+const NODE_RUNNER_COMMANDS = new Set(["node", "npm", "npx", "pnpm", "yarn"]);
+
+/**
+ * SwiftPM wraps manifest compilation (and plugins) in its own `sandbox-exec`
+ * profile, which macOS refuses to nest inside AgentLink's Seatbelt sandbox.
+ */
+const SWIFTPM_NESTED_SANDBOX_PATTERN =
+  /sandbox-exec:\s*sandbox_apply:\s*Operation not permitted/i;
+const SWIFTPM_SANDBOXED_SUBCOMMANDS = new Set(["build", "test"]);
+const SWIFTPM_COMMAND_PREFIX = /^\s*swift\s+(?:build|test)(?=\s|$)/;
+
+function sandboxHelperFailureEvidence(error: SandboxHelperFailure) {
+  const retained = error.retainedOutput;
+  const preview = retained ? filterOutput(retained.output, {}) : undefined;
+  return {
+    error: filterOutput(error.message, {}).filtered,
+    error_code: error.code,
+    helper_failure_category: error.category,
+    terminal_id: error.identity.channelId,
+    command_id: error.identity.commandId,
+    generation: error.identity.generation,
+    command_sent: error.processLaunched,
+    process_launched: error.processLaunched,
+    may_have_side_effects: "unknown",
+    retry_safe: false,
+    failure_stage: error.processLaunched === true ? "execution" : "launch",
+    ...(retained
+      ? {
+          output: preview!.filtered.slice(-8000),
+          output_preview_truncated:
+            preview!.truncated ||
+            preview!.linesShown < preview!.totalLines ||
+            preview!.filtered.length > 8000,
+          output_complete: retained.complete,
+          output_finalized: retained.finalized,
+          output_total_bytes: retained.total_bytes,
+          output_retained_bytes: retained.retained_bytes,
+          output_dropped_bytes: retained.dropped_bytes,
+        }
+      : {}),
+    recovery:
+      "Inspect retained output using terminal_id and command_id before deciding whether to run another command. Helper failure does not establish the command's outcome; do not replay automatically.",
+  };
+}
+
+function singleCommandTokens(command: string): string[] | undefined {
+  const boundaryScan = scanShellLexBoundaries(command);
+  const tokenScan = scanShellLexTokens(command);
+  if (
+    boundaryScan.boundaries.length > 0 ||
+    boundaryScan.finalState.quote !== null ||
+    boundaryScan.finalState.danglingEscape ||
+    tokenScan.finalState.quote !== null ||
+    tokenScan.finalState.danglingEscape ||
+    /[`$<>&]/.test(command)
+  ) {
+    return undefined;
+  }
+  return tokenScan.tokens;
+}
+
+function isDirectCommand(command: string, executable: string): boolean {
+  return singleCommandTokens(command)?.[0] === executable;
+}
+
+function isDirectPnpmStoreLinkingCommand(command: string): boolean {
+  const tokens = singleCommandTokens(command);
+  return (
+    tokens?.[0] === "pnpm" &&
+    PNPM_STORE_LINKING_SUBCOMMANDS.has(tokens[1] ?? "")
+  );
+}
+
+function directGitNetworkCommandTokens(command: string): string[] | undefined {
+  const tokens = singleCommandTokens(command);
+  if (
+    !tokens ||
+    tokens[0] !== "git" ||
+    !GIT_NETWORK_SUBCOMMANDS.has(tokens[1] ?? "")
+  ) {
+    return undefined;
+  }
+  return tokens;
+}
+
+function compoundGitNetworkCommandTokens(command: string): string[][] {
+  return splitCompoundCommand(command)
+    .map(singleCommandTokens)
+    .filter(
+      (tokens): tokens is string[] =>
+        tokens !== undefined &&
+        tokens[0] === "git" &&
+        GIT_NETWORK_SUBCOMMANDS.has(tokens[1] ?? ""),
+    );
+}
+
+function hasUnquotedShellControlSyntax(command: string): boolean {
+  let quote: "single" | "double" | null = null;
+  for (let index = 0; index < command.length; index++) {
+    const ch = command[index];
+    if (ch === "\\" && quote !== "single") {
+      index++;
+      continue;
+    }
+    if (ch === "'" && quote !== "double") {
+      quote = quote === "single" ? null : "single";
+      continue;
+    }
+    if (ch === '"' && quote !== "single") {
+      quote = quote === "double" ? null : "double";
+      continue;
+    }
+    if (quote === "single") continue;
+    if (ch === "`" || (quote === null && ["<", ">", "&"].includes(ch))) {
+      return true;
+    }
+    if (ch === "$" && ["(", "{", "["].includes(command[index + 1] ?? "")) {
+      return true;
+    }
+  }
+  return quote !== null;
+}
+
+function isDirectGhCommand(command: string): boolean {
+  if (hasUnquotedShellControlSyntax(command)) return false;
+  const boundaryScan = scanShellLexBoundaries(command);
+  const tokenScan = scanShellLexTokens(command);
+  return (
+    boundaryScan.boundaries.length === 0 &&
+    !isMalformedShellState(boundaryScan.finalState) &&
+    !isMalformedShellState(tokenScan.finalState) &&
+    tokenScan.tokens[0] === "gh"
+  );
+}
+
+function isGhOnlyCommand(command: string): boolean {
+  const segments = splitCompoundCommand(command);
+  return (
+    segments.length > 0 &&
+    segments.every((segment) => isDirectGhCommand(segment))
+  );
+}
+
+function isExplicitSshGitRemote(value: string): boolean {
+  if (/^(?:ssh|git\+ssh):\/\//i.test(value)) return true;
+  return /^(?:[^/@:\s]+@(?:\[[0-9a-f:]+\]|[^/:\s]+)|(?:\[[0-9a-f:]+\]|[a-z0-9][a-z0-9.-]*\.[a-z]{2,})):[^/\s].+$/i.test(
+    value,
+  );
+}
+
+function managedNetworkSshGitGuidance(): ExecuteCommandRetryGuidance {
+  return {
+    code: "managed_network_ssh_git_transport",
+    message:
+      "Git-over-SSH is not carried automatically by managed HTTP/HTTPS/SOCKS networking. Use the repository's HTTPS URL to remain sandboxed, or make a separate explicitly reviewed native request for SSH.",
+    automatic_retry: false,
+    options: [
+      {
+        transport: "https",
+        sandbox_permissions: "require_managed_network",
+        reason_required: true,
+      },
+      {
+        transport: "ssh",
+        sandbox_permissions: "require_escalated",
+        reason_required: true,
+        reviewed_native_execution: true,
+      },
+    ],
+  };
+}
+
+function outsideWorkspaceCwdResult(input: {
+  command: string;
+  cwd: string;
+  workspaceRoots: readonly string[];
+  allowReviewedNativeOption: boolean;
+}): ToolResult {
+  const options: Array<Record<string, unknown>> = [
+    {
+      action: "open_or_add_workspace_root",
+      cwd: input.cwd,
+      active_workspace_roots: [...input.workspaceRoots],
+    },
+  ];
+  if (input.allowReviewedNativeOption) {
+    options.push({
+      cwd: input.cwd,
+      sandbox_permissions: "require_escalated",
+      reason_required: true,
+      reviewed_native_execution: true,
+    });
+  }
+  const retryGuidance: ExecuteCommandRetryGuidance = {
+    code: "sandbox_cwd_outside_workspace",
+    message:
+      "Sandbox execution requires cwd to be inside an active workspace root. Add or open the directory as a workspace root, or request native execution when command policy or review permits it.",
+    automatic_retry: false,
+    options,
+  };
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          status: "retry_required",
+          command: input.command,
+          cwd: input.cwd,
+          command_sent: false,
+          process_launched: false,
+          retry_safe: true,
+          failure_stage: "preparation",
+          retry_guidance: retryGuidance,
+        }),
+      },
+    ],
+  };
+}
+
+function isGhTlsFailure(command: string, output: string): boolean {
+  if (isGhOnlyCommand(command)) return true;
+  if (
+    !/\b(?:Get|Post|Put|Patch|Delete|Head) "?https?:\/\/(?:api\.)?github\.com\//i.test(
+      output,
+    )
+  ) {
+    return false;
+  }
+  return splitCompoundCommand(command).some((segment) =>
+    isDirectGhCommand(segment.replace(/^do\s+/, "")),
+  );
+}
+
+function isSpeakeasyTlsFailure(command: string, output: string): boolean {
+  if (!TLS_TRUST_FAILURE_PATTERNS.some((pattern) => pattern.test(output)))
+    return false;
+  if (!/(?:\bspeakeasy\b|app\.speakeasy\.com)/i.test(output)) return false;
+  return splitCompoundCommand(command).some((segment) => {
+    const tokens = singleCommandTokens(segment);
+    return (
+      tokens?.[0] === "speakeasy" ||
+      (tokens?.[0] === "mise" && tokens[1] === "run")
+    );
+  });
+}
+
+function isGoDependencyTlsFailure(command: string, output: string): boolean {
+  if (
+    !TLS_TRUST_FAILURE_PATTERNS.some((pattern) => pattern.test(output)) ||
+    !/\bproxy\.golang\.org\//i.test(output)
+  ) {
+    return false;
+  }
+  return splitCompoundCommand(command).some((segment) => {
+    const tokens = singleCommandTokens(segment);
+    if (!tokens) return false;
+    let commandIndex = 0;
+    while (/^[A-Za-z_][A-Za-z0-9_]*=/.test(tokens[commandIndex] ?? "")) {
+      commandIndex++;
+    }
+    if (tokens[commandIndex] !== "go") return false;
+    const subcommand = tokens[commandIndex + 1];
+    return (
+      GO_DEPENDENCY_SUBCOMMANDS.has(subcommand ?? "") ||
+      (subcommand === "mod" &&
+        GO_MOD_DEPENDENCY_SUBCOMMANDS.has(tokens[commandIndex + 2] ?? ""))
+    );
+  });
+}
+
+function goDependencyTlsGuidance(): ExecuteCommandRetryGuidance {
+  return {
+    code: "managed_network_tls_trust",
+    message:
+      "The completed Go command output shows a TLS validation failure while accessing proxy.golang.org. This identifies the client and reported failure, not its underlying cause. Go tests and dependency commands may have changed files before failing: inspect the command results and partial workspace changes first, then choose an exact reviewed retry only if needed. Do not replay the original command blindly or disable certificate verification.",
+    automatic_retry: false,
+    options: [
+      {
+        action: "inspect_partial_results_and_workspace_changes",
+        same_command: false,
+      },
+      {
+        action: "retry_exact_reviewed_go_step_after_inspection",
+        sandbox_permissions: "require_managed_network",
+        same_command: false,
+        inspect_partial_changes_first: true,
+      },
+      {
+        action: "request_exact_reviewed_native_go_step_after_inspection",
+        sandbox_permissions: "require_escalated",
+        same_command: false,
+        reason_required: true,
+        reviewed_native_execution: true,
+        inspect_partial_changes_first: true,
+      },
+    ],
+    prohibited_workarounds: [
+      "blindly_replay_original_command",
+      "disable_tls_verification",
+    ],
+  };
+}
+
+function attachManagedNetworkFailureGuidance(input: {
+  result: TerminalCommandResult;
+  command: string;
+  output: string;
+}): void {
+  const { result, command, output } = input;
+  const segments = splitCompoundCommand(command);
+  const isCompound = segments.length > 1;
+  const hasSshGitFailure =
+    compoundGitNetworkCommandTokens(command).length > 0 &&
+    SSH_GIT_FAILURE_PATTERNS.some((pattern) => pattern.test(output));
+  const hasGhTlsFailure =
+    isGhTlsFailure(command, output) &&
+    TLS_TRUST_FAILURE_PATTERNS.some((pattern) => pattern.test(output));
+  const successfulCompoundFailureEvidence =
+    result.exit_code === 0 &&
+    isCompound &&
+    (hasSshGitFailure || hasGhTlsFailure);
+  if (
+    hasRetryGuidance(result) ||
+    result.security?.route !== "sandbox" ||
+    (result.exit_code === 0 && !successfulCompoundFailureEvidence) ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    result.timed_out ||
+    result.output_complete === false ||
+    result.output_finalized === false
+  ) {
+    return;
+  }
+
+  const gitTokens = directGitNetworkCommandTokens(command);
+  let guidance: ExecuteCommandRetryGuidance | undefined;
+  if (
+    isDirectCommand(command, "curl") &&
+    result.exit_code === 28 &&
+    /curl:\s*\(28\)/i.test(output) &&
+    /\bhttp_status=000\b/.test(output) &&
+    /\bconnect_seconds=0(?:\.0+)?(?:\s|$)/.test(output) &&
+    /\btls_seconds=0(?:\.0+)?(?:\s|$)/.test(output)
+  ) {
+    guidance = {
+      code: "managed_network_connect_timeout",
+      message:
+        "curl timed out on the managed-network route and reported no established connection or TLS handshake. This does not establish provider latency or prove a proxy fault. Inspect managed-proxy connectivity and the client configuration; use a separately reviewed native connectivity check only if necessary, without replaying authenticated or mutating requests blindly.",
+      automatic_retry: false,
+      options: [
+        { action: "inspect_managed_proxy_connectivity", same_command: false },
+        {
+          action: "reviewed_native_connectivity_check",
+          same_command: false,
+          sandbox_permissions: "require_escalated",
+          reason_required: true,
+          reviewed_native_execution: true,
+        },
+      ],
+      prohibited_workarounds: [
+        "disable_tls_verification",
+        "blindly_replay_mutating_requests",
+      ],
+    };
+    Object.assign(result, {
+      network_failure_evidence: {
+        client: "curl",
+        exit_code: 28,
+        connection_established: false,
+        tls_handshake_established: false,
+        cause: "undetermined",
+      },
+    });
+  } else if (
+    (gitTokens || compoundGitNetworkCommandTokens(command).length > 0) &&
+    SSH_GIT_FAILURE_PATTERNS.some((pattern) => pattern.test(output))
+  ) {
+    if (isCompound) {
+      guidance = {
+        ...managedNetworkSshGitGuidance(),
+        message:
+          "The output matches a Git-over-SSH transport failure during this compound command, but does not establish which segment failed or the status of each segment. Identify and isolate the candidate Git network step before retrying; do not replay successful prefixes blindly.",
+        options: managedNetworkSshGitGuidance().options.map((option) => ({
+          ...option,
+          action: "isolate_candidate_git_network_step",
+          same_command: false,
+        })),
+        prohibited_workarounds: ["blindly_replay_successful_prefixes"],
+      };
+    } else {
+      guidance = managedNetworkSshGitGuidance();
+    }
+  } else if (isGoDependencyTlsFailure(command, output)) {
+    guidance = goDependencyTlsGuidance();
+  } else if (
+    (isGhTlsFailure(command, output) ||
+      isSpeakeasyTlsFailure(command, output)) &&
+    TLS_TRUST_FAILURE_PATTERNS.some((pattern) => pattern.test(output))
+  ) {
+    const compound = isCompound;
+    guidance = {
+      code: "managed_network_tls_trust",
+      message: compound
+        ? "Managed networking preserved server TLS, and the output contains a client trust failure. This does not establish which segment failed or the status of each segment. Repair host/client trust, identify and isolate the candidate step, then retry only that step; do not replay successful prefixes blindly or disable certificate verification."
+        : "Managed networking preserves server TLS and does not provide a replacement CA. Repair the host/client trust configuration before retrying; do not disable certificate verification or install an unverified proxy CA.",
+      automatic_retry: false,
+      options: [
+        {
+          action: compound
+            ? "isolate_failed_step_after_trust_repair"
+            : "fix_trust_and_retry",
+          sandbox_permissions: "require_managed_network",
+          same_command: !compound,
+        },
+        {
+          action: compound
+            ? "isolate_failed_step_for_reviewed_native_retry"
+            : "reviewed_native_retry",
+          sandbox_permissions: "require_escalated",
+          reason_required: true,
+          reviewed_native_execution: true,
+          same_command: !compound,
+        },
+      ],
+      prohibited_workarounds: [
+        "disable_tls_verification",
+        "inject_unverified_ca",
+        ...(compound ? ["blindly_replay_successful_prefixes"] : []),
+      ],
+    };
+  } else if (
+    isDirectCommand(command, "node") &&
+    NODE_UNDICI_DNS_FAILURE_PATTERN.test(output)
+  ) {
+    guidance = {
+      code: "managed_network_proxy_unaware_dns",
+      message:
+        "The command ran with AgentLink's managed public proxy, but this client attempted direct DNS resolution. Use a proxy-aware client or configure this exact client to use the supplied HTTP(S)/SOCKS proxy environment before retrying; AgentLink will not bypass mediation or retry natively.",
+      automatic_retry: false,
+      options: [
+        {
+          action: "retry_with_proxy_aware_client",
+          sandbox_permissions: "require_managed_network",
+          same_destination_approval_state: true,
+        },
+        {
+          action: "configure_node_undici_proxy_then_retry",
+          client: "node-undici",
+          sandbox_permissions: "require_managed_network",
+          same_command: true,
+          guidance:
+            "Use a reviewed undici ProxyAgent/EnvHttpProxyAgent setup; do not disable TLS verification.",
+        },
+      ],
+      prohibited_workarounds: [
+        "native_network_bypass",
+        "disable_tls_verification",
+      ],
+    };
+  }
+
+  if (guidance) {
+    Object.assign(result, { retry_guidance: guidance });
+  }
+}
+
+function hasRetryGuidance(result: TerminalCommandResult): boolean {
+  return "retry_guidance" in result;
+}
+
+function boundedPnpmStorePath(
+  output: string,
+  pattern: RegExp,
+): string | undefined {
+  const value = output.match(pattern)?.[1]?.trim();
+  if (
+    !value ||
+    value.length > 512 ||
+    value.includes("\0") ||
+    /[\r\n]/.test(value) ||
+    !path.isAbsolute(value)
+  ) {
+    return undefined;
+  }
+  return path.normalize(value);
+}
+
+function attachPnpmStoreMismatchGuidance(input: {
+  result: TerminalCommandResult;
+  command: string;
+  output: string;
+}): void {
+  const { result, command, output } = input;
+  if (
+    hasRetryGuidance(result) ||
+    result.exit_code === 0 ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    result.timed_out ||
+    result.output_complete === false ||
+    result.output_finalized === false ||
+    !isDirectPnpmStoreLinkingCommand(command) ||
+    !PNPM_STORE_MISMATCH_PATTERN.test(output)
+  ) {
+    return;
+  }
+
+  const existingStore = boundedPnpmStorePath(
+    output,
+    /currently linked from the store at\s+["']?([^"'\r\n]+)["']?/i,
+  );
+  const requestedStore = boundedPnpmStorePath(
+    output,
+    /(?:now wants to (?:use|link dependencies from) the store at|new store location is)\s+["']?([^"'\r\n]+)["']?/i,
+  );
+  Object.assign(result, {
+    retry_guidance: {
+      code: "pnpm_store_mismatch",
+      message:
+        "pnpm refused to modify dependencies because node_modules is linked to a different store. Inspect the active project configuration and existing linked store before retrying; do not delete node_modules or change the global store implicitly.",
+      automatic_retry: false,
+      options: [
+        {
+          action: "inspect_store_configuration",
+          commands: ["pnpm store path", "pnpm config get store-dir"],
+          ...(existingStore ? { detected_existing_store: existingStore } : {}),
+          ...(requestedStore ? { requested_store: requestedStore } : {}),
+        },
+        {
+          action: "choose_store_resolution",
+          guidance:
+            "After inspecting project and pnpm configuration, either retry with the intended store explicitly or perform a reviewed dependency reinstall using that selected store.",
+          destructive_cleanup_recommended: false,
+        },
+      ],
+    } satisfies ExecuteCommandRetryGuidance,
+  });
+}
+
+function isMiseTrustedConfigDenial(output: string): boolean {
+  return output
+    .split(/\r?\n/)
+    .some(
+      (line) =>
+        /(?:\.local[\\/]state[\\/]mise[\\/]trusted-configs|mise[\\/]trusted-configs)/i.test(
+          line,
+        ) &&
+        /(?:ln|link|symlink|operation not permitted|permission denied|\bEPERM\b)/i.test(
+          line,
+        ),
+    );
+}
+
+function outputHasHostHomeWriteDenial(
+  output: string,
+  workspaceRoots: readonly string[],
+): boolean {
+  const homePrefix = `${path.resolve(os.homedir())}${path.sep}`;
+  const excludedRoots = [...workspaceRoots, os.tmpdir()].map((root) =>
+    path.resolve(root),
+  );
+  const lines = output.split(/\r?\n/);
+  return lines.some((line, index) => {
+    const homePathStart = line.indexOf(homePrefix);
+    if (homePathStart === -1) return false;
+    const homePath = line.slice(homePathStart);
+    if (
+      excludedRoots.some((root) => homePath.startsWith(`${root}${path.sep}`))
+    ) {
+      return false;
+    }
+    const adjacentLines = [line, lines[index - 1], lines[index + 1]].filter(
+      (candidate): candidate is string => candidate !== undefined,
+    );
+    if (
+      adjacentLines.some((candidate) =>
+        HOME_WRITE_DENIAL_PATTERNS.some((pattern) => pattern.test(candidate)),
+      )
+    )
+      return true;
+    const npmCause = lines
+      .slice(Math.max(0, index - 3), index + 1)
+      .join("\n")
+      .slice(0, 1_024);
+    return (
+      /npm error code EPERM\b/i.test(npmCause) &&
+      /npm error syscall (?:open|mkdir|rename|symlink|unlink|write)\b/i.test(
+        npmCause,
+      )
+    );
+  });
+}
+
+function resolvesThroughToolchainShim(
+  executable: string,
+  cwd: string,
+  searchPath: string | undefined,
+): boolean {
+  const shimPath = /(?:^|[\\/])\.?(?:mise|asdf)[\\/](?:shims|bin)[\\/]/i;
+  if (executable.includes(path.sep)) return shimPath.test(executable);
+  if (!searchPath) return false;
+  for (const directory of searchPath.split(path.delimiter)) {
+    const candidate = path.resolve(cwd, directory, executable);
+    try {
+      fs.accessSync(candidate, fs.constants.X_OK);
+      if (!fs.statSync(candidate).isFile()) continue;
+      return shimPath.test(candidate);
+    } catch {
+      // Shell PATH lookup skips absent or non-executable candidates.
+    }
+  }
+  return false;
+}
+
+function knownSandboxSearchPath(
+  environment: Record<string, string> | undefined,
+  security: TerminalExecutionSecuritySummary | undefined,
+): string | undefined {
+  if (environment?.PATH !== undefined) return environment.PATH;
+  const policy = security?.sandbox?.environmentPolicy;
+  if (!policy || policy.useProfile || policy.setKeys.includes("PATH"))
+    return undefined;
+  return buildSandboxPolicyEnvironment({ PATH: process.env.PATH }, policy)
+    .environment.PATH;
+}
+
+function attachSandboxCapabilityRetryGuidance(input: {
+  result: TerminalCommandResult;
+  command: string;
+  output: string;
+  cwd: string;
+  toolchainPath?: string;
+  temporaryHome: boolean;
+  localBinding: boolean;
+  replayable: boolean;
+  hasHomeOverride: boolean;
+  allowTemporaryHome: boolean;
+  managedNetwork: boolean;
+  workspaceRoots: readonly string[];
+}): void {
+  const {
+    result,
+    command,
+    output,
+    temporaryHome,
+    localBinding,
+    replayable,
+    hasHomeOverride,
+    allowTemporaryHome,
+    managedNetwork,
+    workspaceRoots,
+  } = input;
+  if (
+    hasRetryGuidance(result) ||
+    !replayable ||
+    result.security?.route !== "sandbox" ||
+    result.security.confinement !== "verified-baseline" ||
+    (!managedNetwork &&
+      !localBinding &&
+      result.security.permissionIntent !== "default") ||
+    result.security.commandExecutionPolicySnapshot === "read-only" ||
+    result.exit_code === 0 ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    result.timed_out ||
+    result.termination_reason === "interactive_prompt" ||
+    result.output_complete === false ||
+    result.output_finalized === false
+  ) {
+    return;
+  }
+
+  const turbopackDenial = outputHasTurbopackListenerDenial(output);
+  const needsLocalBinding =
+    !localBinding &&
+    (LOOPBACK_LISTEN_DENIAL_PATTERNS.some((pattern) => pattern.test(output)) ||
+      turbopackDenial);
+  const hostHomeDenial = outputHasHostHomeWriteDenial(output, workspaceRoots);
+  const npmHomeDenial =
+    /(?:^|[\\/])\.npm(?:[\\/]|\b)/i.test(output) &&
+    splitCompoundCommand(command).some((segment) => {
+      const tokens = singleCommandTokens(segment);
+      return tokens?.[0] === "npm" || tokens?.[0] === "npx";
+    });
+  const needsHostConfiguration =
+    splitCompoundCommand(command).some((segment) => {
+      const executable = singleCommandTokens(segment)?.[0];
+      return (
+        ["mise", "asdf", "gcloud", "kubectl", "aws", "az", "gh"].includes(
+          path.basename(executable ?? ""),
+        ) ||
+        (!!executable &&
+          resolvesThroughToolchainShim(
+            executable,
+            input.cwd,
+            input.toolchainPath,
+          ))
+      );
+    }) ||
+    /(?:\bcredentials\.db\b|\bmise\b[^\r\n]*trust|[\\/](?:mise|\.asdf)[\\/]shims[\\/])/i.test(
+      output,
+    );
+  const needsTemporaryHome =
+    !needsHostConfiguration &&
+    !npmHomeDenial &&
+    allowTemporaryHome &&
+    !temporaryHome &&
+    !hasHomeOverride &&
+    hostHomeDenial &&
+    !isMiseTrustedConfigDenial(output) &&
+    !managedNetwork;
+  const needsReviewedHostHome =
+    allowTemporaryHome && hostHomeDenial && !temporaryHome && !hasHomeOverride;
+  const unresolvedLocalBinding = localBinding && turbopackDenial;
+  if (
+    !needsLocalBinding &&
+    !needsTemporaryHome &&
+    !needsReviewedHostHome &&
+    !unresolvedLocalBinding
+  )
+    return;
+
+  if (unresolvedLocalBinding) {
+    Object.assign(result, {
+      retry_guidance: {
+        code: "sandbox_capability_unresolved",
+        message: needsTemporaryHome
+          ? "The command still reported a Turbopack listener denial after local binding was granted, and it also needs a writable disposable HOME. Do not repeat the listener grant automatically; retry only the failed step with temporary_home when host credentials are unnecessary, or inspect the listener cause chain."
+          : "The command still reported a Turbopack listener denial after local binding was granted. Do not repeat the same grant automatically; inspect the cause chain or request a separately reviewed native diagnostic run.",
+        automatic_retry: false,
+        options: [
+          ...(needsTemporaryHome
+            ? [
+                {
+                  action: "isolate_failed_step_with_temporary_home",
+                  same_command: false,
+                  temporary_home: true,
+                },
+              ]
+            : []),
+          { action: "inspect_listener_denial", same_command: false },
+          ...(temporaryHome
+            ? []
+            : [
+                {
+                  action: "reviewed_native_diagnostic",
+                  same_command: true,
+                  sandbox_permissions: "require_escalated",
+                  reason_required: true,
+                  reviewed_native_execution: true,
+                },
+              ]),
+        ],
+      } satisfies ExecuteCommandRetryGuidance,
+    });
+    return;
+  }
+
+  const missingCapabilities = [
+    ...(needsTemporaryHome ? ["temporary_home"] : []),
+    ...(needsLocalBinding ? ["network.allow_local_binding"] : []),
+  ];
+  const compound = splitCompoundCommand(command).length > 1;
+  const option: Record<string, unknown> = {
+    action: compound
+      ? needsTemporaryHome
+        ? "isolate_failed_step_with_temporary_home"
+        : "isolate_failed_step_with_local_binding"
+      : "retry_with_missing_sandbox_capabilities",
+    same_command: !compound,
+    ...(needsTemporaryHome ? { temporary_home: true } : {}),
+    ...(needsLocalBinding
+      ? {
+          sandbox_permissions: "with_additional_permissions",
+          additional_permissions: {
+            network: { allow_local_binding: true },
+          },
+          reason_required: true,
+        }
+      : {}),
+  };
+  const options = needsTemporaryHome || needsLocalBinding ? [option] : [];
+  if (needsReviewedHostHome) {
+    options.push({
+      action: compound
+        ? "isolate_failed_step_for_reviewed_native_retry_preserving_host_home"
+        : "reviewed_native_retry_preserving_host_home",
+      same_command: !compound,
+      sandbox_permissions: "require_escalated",
+      reason_required: true,
+      reviewed_native_execution: true,
+    });
+  }
+  const npmCacheGuidance =
+    npmHomeDenial && hostHomeDenial && !needsHostConfiguration;
+  if (npmCacheGuidance) {
+    options.unshift({
+      action: "inspect_npm_cache_configuration",
+      same_command: false,
+      fresh_review_after_repair: true,
+    });
+  }
+  const guidance: ExecuteCommandRetryGuidance = {
+    code: npmCacheGuidance
+      ? "sandbox_npm_cache_write"
+      : "sandbox_missing_capabilities",
+    message: npmCacheGuidance
+      ? "npm reported a host-HOME cache write denial. Normal sandbox launches preserve HOME and provide a writable per-command npm cache. Inspect explicit env npm_config_cache aliases, inline exports, CLI --cache and npm logs-dir settings for an override. Remove the cache override to use sandbox storage, then request a fresh reviewed execution of only the failed step. Do not replace HOME, change npm authentication or trust mise/asdf configuration to fix a cache write. Explicit cache targets remain subject to filesystem restrictions."
+      : compound
+        ? `A step in this compound command failed with bounded evidence that the sandbox ${missingCapabilities.length ? `is missing ${missingCapabilities.join(" and ")}` : "denied a host-HOME write"}. Identify and retry only the failed step with the listed capability. If it needs host credentials or configuration, use the separately reviewed native option; a disposable HOME will not preserve them.`
+        : `The command failed with bounded evidence that the sandbox ${missingCapabilities.length ? `is missing ${missingCapabilities.join(" and ")}` : "denied a host-HOME write"}. Use a disposable HOME only when host credentials and configuration are unnecessary. If the command needs host credentials or configuration, use the separately reviewed native option. AgentLink will not broaden the sandbox automatically.`,
+    automatic_retry: false,
+    options,
+  };
+  Object.assign(result, {
+    retry_guidance: guidance,
+    missing_sandbox_capabilities: missingCapabilities,
+    ...(hostHomeDenial && needsHostConfiguration
+      ? {
+          temporary_home_unsuitable:
+            "The command or failure output identifies credential-backed configuration or mise/asdf toolchain state. A disposable HOME does not preserve that state; use the separately reviewed native option for the failed step.",
+        }
+      : {}),
+  });
+}
+
+async function attachProtectedGitMetadataRetryGuidance(input: {
+  result: TerminalCommandResult;
+  command: string;
+  output: string;
+  cwd: string;
+  workspaceRoots: readonly string[];
+}): Promise<void> {
+  const { result, command, output, cwd, workspaceRoots } = input;
+  const internalApplyFailure =
+    /^error:\s*['"]?git apply['"]? failed\s*$/im.test(output);
+  if (
+    hasRetryGuidance(result) ||
+    result.security?.route !== "sandbox" ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    !result.process_launched ||
+    !PROTECTED_GIT_DENIAL_PATTERNS.every((pattern) => pattern.test(output))
+  ) {
+    return;
+  }
+  const protection = await resolveBaselineProtectedGitMetadataForCwd(
+    cwd,
+    workspaceRoots,
+  ).catch(() => undefined);
+  if (!protection) return;
+  const normalizedMarker = protection.marker.replaceAll("\\", "/");
+  const normalizedOutput = output.replaceAll("\\", "/");
+  const referencesProtectedPath =
+    normalizedOutput.includes(normalizedMarker) ||
+    normalizedOutput
+      .split(/\r?\n/)
+      .some(
+        (line) =>
+          /(?:index\.lock|ORIG_HEAD\.lock|FETCH_HEAD|objects\/tmp_object_)/i.test(
+            line,
+          ) &&
+          /(?:permission denied|operation not permitted|read-only file system|unable to create|could not create|failed to write)/i.test(
+            line,
+          ),
+      );
+  if (!referencesProtectedPath) return;
+  if (result.exit_code === 0 && !internalApplyFailure) {
+    const protectedDenial = normalizedOutput.split(/\r?\n/).some((line) => {
+      if (!PROTECTED_GIT_DENIAL_PATTERNS.every((pattern) => pattern.test(line)))
+        return false;
+      const denial =
+        /^(?:fatal|error):\s*(?:unable to create|could not create|cannot open|failed to write)\s+(['"])(.+?)\1:\s*(?:permission denied|operation not permitted|read-only file system)\s*$/i.exec(
+          line,
+        );
+      if (!denial) return false;
+      const deniedPath = path.resolve(cwd, denial[2]);
+      return (protection.deniedWrite ?? [protection.marker]).some((root) => {
+        const relative = path.relative(root, deniedPath);
+        return (
+          relative !== "" &&
+          !relative.startsWith("..") &&
+          !path.isAbsolute(relative)
+        );
+      });
+    });
+    if (!protectedDenial) return;
+  }
+  Object.assign(result, {
+    retry_guidance: {
+      code: "protected_git_metadata",
+      message:
+        "The sandbox denied a write to this repository's protected Git metadata. Earlier steps may have changed repository state; inspect it before any reviewed native retry. AgentLink will not retry automatically.",
+      automatic_retry: false,
+      options: [
+        {
+          action: "reviewed_native_retry",
+          same_command: true,
+          sandbox_permissions: "require_escalated",
+          reason_required: true,
+          reviewed_native_execution: true,
+          command,
+          suggested_reason:
+            "The command needs to write protected repository Git metadata.",
+        },
+      ],
+    } satisfies ExecuteCommandRetryGuidance,
+    capability_code: "protected_git_metadata",
+    protected_path: protection.marker,
+    ...((internalApplyFailure || result.exit_code === 0) && {
+      failure_evidence: {
+        code: internalApplyFailure
+          ? "git_apply_failed"
+          : "protected_git_write_denied",
+        message: internalApplyFailure
+          ? "Git reported an internal apply failure. The shell exit code does not establish that staging succeeded; inspect the index before any reviewed retry."
+          : "Git reported a denied write to protected repository metadata. The shell exit code does not establish that every step succeeded; inspect repository state before any reviewed retry.",
+      },
+    }),
+  });
+}
+
+function attachSandboxNodeOomRetryGuidance(input: {
+  result: TerminalCommandResult;
+  command: string;
+  output: string;
+  replayable: boolean;
+}): void {
+  const { result, command, output, replayable } = input;
+  const tokens = singleCommandTokens(command);
+  if (
+    hasRetryGuidance(result) ||
+    !replayable ||
+    !tokens ||
+    !NODE_RUNNER_COMMANDS.has(tokens[0] ?? "") ||
+    result.security?.route !== "sandbox" ||
+    result.security.confinement !== "verified-baseline" ||
+    result.security.permissionIntent !== "default" ||
+    result.exit_code === 0 ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    result.timed_out ||
+    result.output_complete === false ||
+    result.output_finalized === false ||
+    !NODE_OOM_PATTERNS.some((pattern) => pattern.test(output))
+  ) {
+    return;
+  }
+
+  Object.assign(result, {
+    retry_guidance: {
+      code: "sandbox_node_oom",
+      message:
+        "Node exhausted its JavaScript heap. Retry the same command with a bounded larger heap only when the task needs it; AgentLink will not retry automatically.",
+      automatic_retry: false,
+      options: [
+        {
+          action: "retry_with_larger_node_heap",
+          same_command: true,
+          env: { NODE_OPTIONS: "--max-old-space-size=6144" },
+        },
+      ],
+    } satisfies ExecuteCommandRetryGuidance,
+  });
+}
+
+/**
+ * Recognise SwiftPM's nested manifest sandbox failing under AgentLink's
+ * sandbox and suggest disabling only SwiftPM's inner sandbox. The suggested
+ * retry stays inside AgentLink confinement (explicit sandbox intent rather
+ * than a default route that command rules could resolve to native) and is
+ * never run automatically.
+ */
+function attachSandboxSwiftPmNestedSandboxRetryGuidance(input: {
+  result: TerminalCommandResult;
+  command: string;
+  output: string;
+  replayable: boolean;
+  temporaryHome: boolean;
+}): void {
+  const { result, command, output, replayable, temporaryHome } = input;
+  const tokens = singleCommandTokens(command);
+  const prefix = SWIFTPM_COMMAND_PREFIX.exec(command);
+  if (
+    hasRetryGuidance(result) ||
+    !replayable ||
+    !tokens ||
+    !prefix ||
+    tokens[0] !== "swift" ||
+    !SWIFTPM_SANDBOXED_SUBCOMMANDS.has(tokens[1] ?? "") ||
+    tokens.includes("--disable-sandbox") ||
+    result.security?.route !== "sandbox" ||
+    result.security.confinement !== "verified-baseline" ||
+    result.security.permissionIntent !== "default" ||
+    result.exit_code === 0 ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    result.timed_out ||
+    result.output_complete === false ||
+    result.output_finalized === false ||
+    !SWIFTPM_NESTED_SANDBOX_PATTERN.test(output)
+  ) {
+    return;
+  }
+
+  const prefixEnd = prefix.index + prefix[0].length;
+  const retryCommand = `${command.slice(0, prefixEnd)} --disable-sandbox${command.slice(prefixEnd)}`;
+  Object.assign(result, {
+    retry_guidance: {
+      code: "sandbox_swiftpm_nested_sandbox",
+      message:
+        "SwiftPM could not start its own nested manifest sandbox inside AgentLink's sandbox (sandbox-exec: sandbox_apply). This is not a source or test failure. Retry with SwiftPM's inner sandbox disabled while AgentLink's sandbox stays in place. Keep Approve for Me enabled for this retry; if command policy has changed, stop and reassess instead of running it natively. The first attempt launched and may have produced build artifacts. AgentLink will not retry automatically.",
+      automatic_retry: false,
+      options: [
+        {
+          action: "retry_with_swiftpm_sandbox_disabled",
+          same_command: false,
+          command: retryCommand,
+          sandbox_permissions: "require_managed_network",
+          reason_required: true,
+          suggested_reason:
+            "SwiftPM's nested manifest sandbox cannot run inside AgentLink's sandbox; disable only SwiftPM's inner sandbox.",
+          ...(temporaryHome ? { temporary_home: true } : {}),
+          preserve_request_options: ["cwd", "env", "timeout"],
+        },
+      ],
+      prohibited_workarounds: [
+        "Do not switch to require_escalated or native execution solely to avoid SwiftPM's nested sandbox.",
+      ],
+    } satisfies ExecuteCommandRetryGuidance,
+  });
+}
+
+const METAL_TOOLCHAIN_LOOKUP_PATTERNS = [
+  /cannot execute tool '[\w.+-]+' due to missing Metal Toolchain/i,
+  /Failed querying assets for assetType \(com\.apple\.MobileAsset\.MetalToolchain\)/i,
+];
+
+/**
+ * Xcode's downloadable Metal Toolchain lives in a cryptex mount. Running its
+ * binaries works in the sandbox, but xcrun locates them through the
+ * MobileAsset service, which the sandbox deliberately blocks, so Apple reports
+ * the toolchain as missing. Explain that instead of implying a failed install.
+ */
+function attachSandboxMetalToolchainRetryGuidance(input: {
+  result: TerminalCommandResult;
+  command: string;
+  output: string;
+}): void {
+  const { result, command, output } = input;
+  if (
+    hasRetryGuidance(result) ||
+    result.security?.route !== "sandbox" ||
+    result.security.confinement !== "verified-baseline" ||
+    result.security.permissionIntent !== "default" ||
+    result.exit_code === 0 ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    result.timed_out ||
+    result.output_complete === false ||
+    result.output_finalized === false ||
+    !METAL_TOOLCHAIN_LOOKUP_PATTERNS.some((pattern) => pattern.test(output))
+  ) {
+    return;
+  }
+
+  Object.assign(result, {
+    retry_guidance: {
+      code: "sandbox_metal_toolchain_lookup",
+      message:
+        "This may not mean the Metal Toolchain is missing. Inside AgentLink's sandbox, xcrun and xcodebuild cannot query the MobileAsset service that locates the downloaded Metal Toolchain, so Apple reports it as missing even when it is installed. To stay in the sandbox, list /private/var/run/com.apple.security.cryptexd/mnt/ to find the versioned com.apple.MobileAsset.MetalToolchain-* mount, run the tool directly from its Metal.xctoolchain/usr/bin/ directory, and pass -fmodules-cache-path=<a writable directory such as the workspace build folder> to metal. Otherwise use the reviewed native retry. The first attempt launched; AgentLink will not retry automatically.",
+      automatic_retry: false,
+      options: [
+        {
+          action: "reviewed_native_retry",
+          same_command: true,
+          sandbox_permissions: "require_escalated",
+          reason_required: true,
+          reviewed_native_execution: true,
+          command,
+          suggested_reason:
+            "xcrun cannot locate the installed Metal Toolchain inside the sandbox.",
+        },
+      ],
+      prohibited_workarounds: [
+        "Do not reinstall the Metal Toolchain or Xcode because of this sandboxed error alone.",
+        "Do not request broad mach-lookup access.",
+      ],
+    } satisfies ExecuteCommandRetryGuidance,
+  });
+}
+
+function attachSandboxHostIntegrationRetryGuidance(input: {
+  result: TerminalCommandResult;
+  command: string;
+  output: string;
+  replayable: boolean;
+  temporaryHome: boolean;
+  cwd: string;
+  workspaceRoots: readonly string[];
+}): void {
+  const {
+    result,
+    command,
+    output,
+    replayable,
+    temporaryHome,
+    cwd,
+    workspaceRoots,
+  } = input;
+  if (
+    !hasRetryGuidance(result) &&
+    !result.timed_out &&
+    !result.backgrounded &&
+    result.termination_reason !== "interactive_prompt"
+  ) {
+    const guidance = sandboxDockerRecovery({
+      command,
+      cwd,
+      output,
+      security: result.security,
+      temporaryHome,
+      replayable,
+      exitCode: result.exit_code,
+      running: result.is_running,
+      complete: result.output_complete,
+      finalized: result.output_finalized,
+    });
+    if (guidance) {
+      Object.assign(result, { retry_guidance: guidance });
+      return;
+    }
+  }
+  const tsxUnixIpcEvidence = TSX_UNIX_SOCKET_DENIAL_PATTERN.test(output);
+  if (
+    hasRetryGuidance(result) ||
+    !replayable ||
+    result.security?.route !== "sandbox" ||
+    result.security.confinement !== "verified-baseline" ||
+    (result.security.permissionIntent !== "default" &&
+      !(
+        result.security.permissionIntent === "additional-permissions" &&
+        tsxUnixIpcEvidence
+      )) ||
+    result.exit_code === 0 ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    result.timed_out ||
+    result.output_complete === false ||
+    result.output_finalized === false
+  ) {
+    return;
+  }
+
+  const tokens = singleCommandTokens(command);
+  const segments = splitCompoundCommand(command);
+  const classified = classifyCommand(command, {
+    cwd,
+    workspaceRoots: [...workspaceRoots],
+  });
+  const isProjectToolchain =
+    classified.perSubCommand.length > 0 &&
+    classified.perSubCommand.every(
+      ({ result: classification }) =>
+        classification.code === "project_toolchain" &&
+        classification.tier !== "dangerous",
+    );
+  const isPsInspection =
+    tokens?.[0] === "ps" &&
+    PROCESS_INSPECTION_DENIAL_PATTERNS.some((pattern) => pattern.test(output));
+  const isDirectProcessSignal =
+    ["kill", "pkill", "killall"].includes(tokens?.[0] ?? "") &&
+    PROCESS_SIGNAL_DENIAL_PATTERNS.some((pattern) => pattern.test(output));
+  const isIndirectProcessSignal =
+    isProjectToolchain &&
+    INDIRECT_PROCESS_SIGNAL_DENIAL_PATTERNS.some((pattern) =>
+      pattern.test(output),
+    );
+  const isProcessSignal = isDirectProcessSignal || isIndirectProcessSignal;
+  const isMiseRun = segments.some((segment) => {
+    const segmentTokens = singleCommandTokens(segment);
+    return segmentTokens?.[0] === "mise" && segmentTokens[1] === "run";
+  });
+  const isContainerRuntimeDenial =
+    (tokens?.[0] === "docker" ||
+      tokens?.[0] === "colima" ||
+      isProjectToolchain ||
+      isMiseRun) &&
+    CONTAINER_RUNTIME_DENIAL_PATTERNS.some((pattern) => pattern.test(output));
+  const isTsxUnixIpcDenial =
+    tsxUnixIpcEvidence &&
+    (tokens?.[0] === "tsx" ||
+      (["npx", "pnpm", "yarn"].includes(tokens?.[0] ?? "") &&
+        tokens?.some((token) => /(?:^|[\\/])tsx(?:$|[\\/.])/i.test(token))));
+  const isMiseTrustDenial = isMiseRun && isMiseTrustedConfigDenial(output);
+  const isGhKeyringDenial =
+    segments.some((segment) => isDirectGhCommand(segment)) &&
+    GH_KEYRING_FAILURE_PATTERNS.some((pattern) => pattern.test(output));
+  if (result.security.permissionIntent !== "default" && !isTsxUnixIpcDenial)
+    return;
+  if (
+    !isPsInspection &&
+    !isProcessSignal &&
+    !isContainerRuntimeDenial &&
+    !isTsxUnixIpcDenial &&
+    !isMiseTrustDenial &&
+    !isGhKeyringDenial
+  )
+    return;
+
+  const compound = segments.length > 1;
+  const capability = isPsInspection
+    ? "host_process_inspection"
+    : isProcessSignal
+      ? "host_process_signal"
+      : isContainerRuntimeDenial
+        ? "container_runtime_socket"
+        : isTsxUnixIpcDenial
+          ? "unix_ipc_socket"
+          : isMiseTrustDenial
+            ? "mise_trusted_config"
+            : "host_credential_store";
+  const message =
+    capability === "host_credential_store"
+      ? "gh could not use its host keyring credentials inside the sandbox. The sandbox cannot read the host credential store, so this result does not establish that the host GitHub login is invalid; do not ask the user to re-authenticate on this evidence alone. Use the exact reviewed native check only when host credentials are needed. AgentLink will not retry or weaken the sandbox automatically."
+      : `The sandbox denied ${capability.replaceAll("_", " ")}. This workflow cannot be granted narrowly; use the exact reviewed native retry only when host access is necessary. AgentLink will not retry or weaken the sandbox automatically.`;
+  if (capability === "host_credential_store") {
+    Object.assign(result, {
+      credential_failure_evidence: {
+        client: "gh",
+        credential_store: "host_keyring",
+        host_login_status: "unverified",
+      },
+    });
+  }
+  Object.assign(result, {
+    retry_guidance: {
+      code: "sandbox_host_integration",
+      message,
+      automatic_retry: false,
+      options: [
+        {
+          action: compound
+            ? "isolate_failed_step_for_reviewed_native_retry"
+            : temporaryHome
+              ? "reviewed_native_retry_without_disposable_home"
+              : "reviewed_native_retry",
+          same_command: !compound,
+          sandbox_permissions: "require_escalated",
+          reason_required: true,
+          reviewed_native_execution: true,
+          ...(temporaryHome ? { temporary_home: false } : {}),
+        },
+      ],
+      prohibited_workarounds: [
+        "weaken_container_socket_permissions",
+        "grant_unrestricted_unix_ipc",
+        "disable_sandboxing_without_review",
+      ],
+    } satisfies ExecuteCommandRetryGuidance,
+  });
+}
+
+function sandboxCapabilityDenial(
+  result: TerminalCommandResult,
+): SandboxViolation | undefined {
+  if (
+    result.security?.route !== "sandbox" ||
+    result.exit_code === 0 ||
+    result.exit_code === null ||
+    result.backgrounded ||
+    result.is_running ||
+    result.timed_out ||
+    result.termination_reason === "interactive_prompt"
+  ) {
+    return undefined;
+  }
+  return result.sandbox?.violations?.[0];
+}
+
+const NATIVE_RETRY_ELIGIBLE_COMMAND_CODES = new Set<CommandRiskCode>([
+  "read_only",
+  "version_check",
+  "project_toolchain",
+]);
+
+function isNativeRetryEligibleDenial(
+  denial: SandboxViolation,
+  classified: ClassifiedCommand,
+): boolean {
+  return (
+    denial.operation !== "network-connect" &&
+    denial.operation !== "resource-limit" &&
+    classified.perSubCommand.length > 0 &&
+    classified.perSubCommand.every(
+      ({ result }) =>
+        result.tier !== "dangerous" &&
+        NATIVE_RETRY_ELIGIBLE_COMMAND_CODES.has(result.code),
+    )
+  );
+}
+
+function executionAttemptSummary(
+  attempt: 1 | 2,
+  result: TerminalCommandResult,
+  denial?: SandboxViolation,
+): TerminalExecutionAttemptSummary {
+  const processLaunched = result.process_launched ?? "unknown";
+  const commandSent = result.command_sent ?? "unknown";
+  const status = result.timed_out
+    ? "timed_out"
+    : result.termination_reason === "interactive_prompt"
+      ? "interactive_prompt"
+      : result.is_running || result.backgrounded
+        ? "running"
+        : "completed";
+  return {
+    attempt,
+    status,
+    route: result.security?.route ?? (attempt === 1 ? "sandbox" : "native"),
+    ...(result.security?.auditId ? { audit_id: result.security.auditId } : {}),
+    command_sent: commandSent,
+    process_launched: processLaunched,
+    retry_safe:
+      result.retry_safe ?? (commandSent === false && processLaunched === false),
+    may_have_side_effects:
+      processLaunched === "unknown" ? "unknown" : processLaunched,
+    exit_code: result.exit_code,
+    terminal_id: result.terminal_id,
+    execution_mode: result.execution_mode,
+    ...(denial ? { capability_denial: { ...denial } } : {}),
+  };
+}
+
+function unlaunchedAttemptSummary(
+  attempt: 2,
+  security: TerminalExecutionSecuritySummary,
+  status: "approval_denied" | "cancelled" | "failed",
+  failureStage: "preparation" | "approval" | "launch",
+): TerminalExecutionAttemptSummary {
+  return {
+    attempt,
+    status,
+    route: security.route,
+    audit_id: security.auditId,
+    command_sent: false,
+    process_launched: false,
+    retry_safe: true,
+    may_have_side_effects: false,
+    failure_stage: failureStage,
+  };
+}
+
+function commandRulePolicyFor(
+  approvalManager: ApprovalManager,
+  sessionId: string,
+  command: string,
+  cwd: string,
+): CommandRulePolicyEvaluation {
+  const evaluator = (
+    approvalManager as ApprovalManager & {
+      evaluateCommandRules?: ApprovalManager["evaluateCommandRules"];
+    }
+  ).evaluateCommandRules;
+  if (typeof evaluator === "function") {
+    return evaluator.call(approvalManager, sessionId, command, cwd);
+  }
+
+  // Compatibility for partial ApprovalManager implementations in adapters and
+  // tests. Legacy boolean approvals are equivalent to allow rules.
+  const commands = expandSubCommands(splitCompoundCommand(command));
+  const segments = (commands.length > 0 ? commands : [command.trim()]).map(
+    (segment) => {
+      const allowed = approvalManager.isCommandApproved(
+        sessionId,
+        segment,
+        cwd,
+      );
+      return {
+        command: segment,
+        decision: allowed ? ("allow" as const) : ("unmatched" as const),
+        matches: [],
+        explicitlyAllowed: allowed,
+      };
+    },
+  );
+  const allSegmentsApprovedByRule =
+    segments.length > 0 &&
+    segments.every((segment) => segment.decision === "allow");
+  return {
+    decision: allSegmentsApprovedByRule ? "allow" : "unmatched",
+    segments,
+    allSegmentsExplicitlyAllowed: allSegmentsApprovedByRule,
+    allSegmentsApprovedByRule,
+  };
+}
+
+async function reviewManagedNetworkRequest(
+  request: ManagedNetworkRequest,
+  signal: AbortSignal,
+  approvalManager: ApprovalManager,
+  approvalPanel: ApprovalPanelProvider,
+  providers: ExecuteCommandProviders,
+  approvalMode: TerminalApprovalModeSnapshot,
+  authorizationAudit: AuthorizationAudit,
+): Promise<"allow-once" | "reject"> {
+  const finish = (
+    decision: "allow-once" | "reject",
+    basis: AuthorizationDecision["basis"],
+    status: AuthorizationDecision["status"] = decision === "allow-once"
+      ? "authorized"
+      : "rejected",
+  ) => {
+    appendAuthorizationDecision(authorizationAudit, {
+      family: "managed-network",
+      basis,
+      decision: decision === "allow-once" ? "allow" : "deny",
+      status,
+    });
+    return decision;
+  };
+  if (
+    signal.aborted ||
+    isCommandApprovalCancelled(request.sessionId, providers)
+  ) {
+    return finish("reject", "host-policy", "cancelled");
+  }
+  const initialPolicy = approvalManager.evaluateNetworkRules(
+    request.sessionId,
+    request,
+  );
+  if (initialPolicy.decision === "forbidden") return finish("reject", "rule");
+  if (initialPolicy.decision === "allow") return finish("allow-once", "rule");
+
+  const requestSnapshot = structuredClone(request);
+  const requestKey = JSON.stringify(requestSnapshot);
+  const humanRevision = providers.getHumanInputRevision?.(request.sessionId);
+  const denialKey = `network:${humanRevision ?? "unknown"}:${createHash(
+    "sha256",
+  )
+    .update(
+      JSON.stringify({
+        command: request.command,
+        cwd: request.cwd,
+        host: request.host,
+        protocol: request.protocol,
+        port: request.port,
+      }),
+    )
+    .digest("hex")}`;
+  const retainedDenial = providers.retainedCommandReviewDenials?.has(
+    request.sessionId,
+    denialKey,
+  );
+  let review:
+    | import("../approvals/networkApprovalReview.js").NetworkApprovalReviewResult
+    | undefined;
+  // Explicit Prompt/Forbidden rules stay authoritative. Risky, unknown and
+  // unavailable reviews reach the human card, never silently widen networking.
+  if (
+    initialPolicy.decision !== "prompt" &&
+    approvalMode.approvalReviewer === "auto-review" &&
+    approvalMode.commandApprovalPolicy === "approve-for-me" &&
+    !retainedDenial &&
+    !providers.commandReviewTurnCircuit?.interrupted &&
+    providers.networkApprovalReviewer
+  ) {
+    try {
+      review = await providers.networkApprovalReviewer.review({
+        request: requestSnapshot,
+        userObjective: providers.getUserObjective?.(request.sessionId),
+        context: providers.getReviewContext?.(request.sessionId),
+        signal,
+      });
+    } catch {
+      finish("reject", "unknown", "unavailable");
+      // No valid reviewer response means human approval is still required.
+    }
+    if (review) {
+      providers.commandReviewTurnCircuit?.record(review);
+      appendAuthorizationDecision(authorizationAudit, {
+        family: "managed-network",
+        basis: review.source ?? "unknown",
+        reviewer: review.source,
+        decision: review.outcome,
+        status: review.status,
+        model: review.model,
+        risk: review.status === "reviewed" ? review.risk : undefined,
+        userAuthorization:
+          review.status === "reviewed" ? review.userAuthorization : undefined,
+      });
+    }
+    const currentPolicy = approvalManager.evaluateNetworkRules(
+      request.sessionId,
+      request,
+    );
+    if (
+      signal.aborted ||
+      isCommandApprovalCancelled(request.sessionId, providers) ||
+      hasNetworkApprovalModeDrift(providers, request.sessionId, approvalMode) ||
+      providers.getHumanInputRevision?.(request.sessionId) !== humanRevision ||
+      JSON.stringify(request) !== requestKey ||
+      JSON.stringify(requestSnapshot) !== requestKey ||
+      currentPolicy.key !== initialPolicy.key ||
+      currentPolicy.decision !== initialPolicy.decision
+    )
+      return finish("reject", "host-policy", "invalidated");
+    if (
+      review?.status === "reviewed" &&
+      review.outcome === "allow" &&
+      (review.risk === "low" || review.risk === "medium") &&
+      !providers.retainedCommandReviewDenials?.has(
+        request.sessionId,
+        denialKey,
+      ) &&
+      !providers.commandReviewTurnCircuit?.interrupted
+    ) {
+      // Remember a reviewed low/medium-risk destination for this session so
+      // later commands reaching the same exact site skip repeated reviews.
+      // The rule is visible and revocable like a human session approval;
+      // explicit Prompt/Forbidden rules still take priority. Failure to save
+      // only loses the shortcut, not this reviewed connection.
+      if (review.source) {
+        approvalManager.addNetworkRule(
+          request.sessionId,
+          { pattern: currentPolicy.key, mode: "exact", decision: "allow" },
+          "session",
+        );
+      }
+      return finish("allow-once", review.source ?? "unknown");
+    }
+    if (review?.status === "reviewed" && review.outcome === "deny") {
+      providers.retainedCommandReviewDenials?.retain(
+        request.sessionId,
+        denialKey,
+      );
+    }
+  }
+
+  const response = await approvalPanel.enqueueNetworkApproval({
+    request,
+    review,
+    signal,
+  }).promise;
+  if (
+    signal.aborted ||
+    isCommandApprovalCancelled(request.sessionId, providers) ||
+    hasNetworkApprovalModeDrift(providers, request.sessionId, approvalMode) ||
+    response.decision === "reject"
+  ) {
+    if (
+      response.decision === "reject" &&
+      !signal.aborted &&
+      !isCommandApprovalCancelled(request.sessionId, providers) &&
+      !hasNetworkApprovalModeDrift(providers, request.sessionId, approvalMode)
+    )
+      providers.retainedCommandReviewDenials?.retain(
+        request.sessionId,
+        denialKey,
+      );
+    const cancelled =
+      signal.aborted ||
+      isCommandApprovalCancelled(request.sessionId, providers);
+    const invalidated = hasNetworkApprovalModeDrift(
+      providers,
+      request.sessionId,
+      approvalMode,
+    );
+    return finish(
+      "reject",
+      cancelled || invalidated ? "host-policy" : "human",
+      cancelled ? "cancelled" : invalidated ? "invalidated" : "rejected",
+    );
+  }
+  providers.retainedCommandReviewDenials?.clear(request.sessionId, denialKey);
+  const currentPolicy = approvalManager.evaluateNetworkRules(
+    request.sessionId,
+    request,
+  );
+  if (
+    currentPolicy.key !== initialPolicy.key ||
+    currentPolicy.decision !== initialPolicy.decision
+  ) {
+    return finish("reject", "host-policy", "invalidated");
+  }
+  const scope = networkRuleScope(response);
+  if (scope) {
+    if (
+      !approvalManager.addNetworkRule(
+        request.sessionId,
+        { pattern: currentPolicy.key, mode: "exact", decision: "allow" },
+        scope,
+      )
+    ) {
+      return finish("reject", "host-policy", "invalidated");
+    }
+    return finish(
+      approvalManager.evaluateNetworkRules(request.sessionId, request)
+        .decision === "allow"
+        ? "allow-once"
+        : "reject",
+      "human",
+    );
+  }
+  return finish(
+    currentPolicy.decision === initialPolicy.decision ? "allow-once" : "reject",
+    "human",
+  );
+}
+
+function hasNetworkApprovalModeDrift(
+  providers: ExecuteCommandProviders,
+  sessionId: string,
+  expected: TerminalApprovalModeSnapshot,
+): boolean {
+  const current = approvalModeFor(providers, sessionId);
+  return (
+    current.commandApprovalPolicy !== expected.commandApprovalPolicy ||
+    current.approvalPolicy !== expected.approvalPolicy ||
+    current.approvalReviewer !== expected.approvalReviewer ||
+    current.executionPreset !== expected.executionPreset
+  );
+}
+
+function networkRuleScope(
+  response: NetworkApprovalResponse,
+): "session" | "project" | "global" | undefined {
+  switch (response.decision) {
+    case "allow-session":
+      return "session";
+    case "allow-project":
+      return "project";
+    case "allow-global":
+      return "global";
+    default:
+      return undefined;
+  }
+}
+
+async function protectedGitMetadataRetryResult(input: {
+  command: string;
+  originalCommand?: string;
+  cwd: string;
+  workspaceRoots: readonly string[];
+  hasEnvironmentOverrides: boolean;
+  inlineFiles: readonly InlineCommandFilePreview[] | undefined;
+  commandTemplate: string | undefined;
+}): Promise<ToolResult | undefined> {
+  const classification = classifyPredictableGitMetadataWriter({
+    command: input.command,
+    hasEnvironmentOverrides: input.hasEnvironmentOverrides,
+    hasInlineFiles: input.inlineFiles !== undefined,
+  });
+  if (!classification) return undefined;
+  const gitSubcommandFields =
+    classification.subcommands.length === 1
+      ? { git_subcommand: classification.subcommands[0] }
+      : { git_subcommands: [...classification.subcommands] };
+  const subcommandDescription =
+    classification.subcommands.length === 1
+      ? classification.subcommands[0]
+      : classification.subcommands.join(" and ");
+  const inlineRetryFields = input.inlineFiles
+    ? {
+        ...(input.commandTemplate
+          ? { command_template: input.commandTemplate }
+          : {}),
+        inline_files: input.inlineFiles.map(({ name, bytes, sha256 }) => ({
+          name,
+          bytes,
+          sha256,
+        })),
+        retry_guidance: {
+          code: "protected_git_metadata",
+          automatic_retry: false,
+          message: input.commandTemplate
+            ? "Temporary inline files are cleaned up after this preflight stop. Resubmit command_template with the original files payload and require_escalated for reviewed native execution; do not replay the materialised temporary paths."
+            : "The command was edited and its inline-file template cannot be replayed faithfully. Temporary files are cleaned up after this stop. Submit a new explicit invocation with the intended command and fresh inline files; do not restore the original template or replay temporary paths.",
+          options: input.commandTemplate
+            ? [
+                {
+                  action: "resubmit_inline_files",
+                  command: input.commandTemplate,
+                  sandbox_permissions: "require_escalated",
+                  reason_required: true,
+                  requires_original_files: true,
+                },
+              ]
+            : [],
+        },
+      }
+    : {};
+  let protection;
+  try {
+    protection = await resolveBaselineProtectedGitMetadataForCwd(
+      input.cwd,
+      input.workspaceRoots,
+      {
+        includeAbsentWorkspaceMarker:
+          classification.subcommands.includes("init"),
+      },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            status: "rejected",
+            command: input.command,
+            ...(input.originalCommand && input.originalCommand !== input.command
+              ? { original_command: input.originalCommand }
+              : {}),
+            reason: `Unable to verify protected Git metadata safely: ${message}`,
+            capability_code: "protected_git_metadata",
+            ...gitSubcommandFields,
+            command_sent: false,
+            process_launched: false,
+            retry_safe: true,
+            failure_stage: "validation",
+          }),
+        },
+      ],
+    };
+  }
+  if (!protection) return undefined;
+  const suggestedReason = `Git ${subcommandDescription} requires access to protected repository metadata and reviewed native execution.`;
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          status: "retry_required",
+          command: input.command,
+          ...(input.originalCommand && input.originalCommand !== input.command
+            ? { original_command: input.originalCommand }
+            : {}),
+          reason: input.inlineFiles
+            ? "The workspace sandbox keeps this repository's Git metadata read-only. Follow retry_guidance for a fresh inline-file invocation; the materialised command paths will be deleted. An applicable native allow rule or fresh review must authorise execution."
+            : "The workspace sandbox keeps this repository's Git metadata read-only. Retry the exact command with native escalation; an applicable native allow rule or fresh review must authorize it.",
+          capability_code: "protected_git_metadata",
+          ...gitSubcommandFields,
+          protected_path: protection.marker,
+          required_sandbox_permissions: "require_escalated",
+          suggested_reason: suggestedReason,
+          ...inlineRetryFields,
+          command_sent: false,
+          process_launched: false,
+          retry_safe: true,
+          failure_stage: "validation",
+        }),
+      },
+    ],
+  };
+}
+
+const INACTIVE_TERMINAL_CLEANUP_THRESHOLD = 5;
+const MAX_TERMINAL_CLEANUP_DETAILS = 20;
+const MAX_TRACKED_TERMINAL_CLEANUP_SCOPES = 256;
+const terminalCleanupWarningScopes = new Set<string>();
+const terminalCleanupScopeBySession = new Map<string, string>();
+
+type ExecuteCommandResult = TerminalCommandResult & {
+  terminal_cleanup?: {
+    warning: string;
+    inactive_count: number;
+    threshold: number;
+    terminals: Array<{ id: string; name: string }>;
+    terminals_omitted?: number;
+  };
+};
+
+function attachTerminalCleanupWarning(
+  result: ExecuteCommandResult,
+  terminalProvider: TerminalProvider,
+  sessionId: string,
+): void {
+  delete result.terminal_cleanup;
+  try {
+    const terminals = terminalProvider.listTerminals({ owner: undefined });
+    if (!Array.isArray(terminals)) return;
+
+    const owner =
+      terminals.find((terminal) => terminal.id === result.terminal_id)?.owner ??
+      terminals.find((terminal) => terminal.owner)?.owner;
+    const observedScopeKey = owner
+      ? `${owner.scopeId}\0${owner.generation}`
+      : undefined;
+    if (observedScopeKey) {
+      terminalCleanupScopeBySession.delete(sessionId);
+      terminalCleanupScopeBySession.set(sessionId, observedScopeKey);
+      if (
+        terminalCleanupScopeBySession.size > MAX_TRACKED_TERMINAL_CLEANUP_SCOPES
+      ) {
+        const oldestSessionId = terminalCleanupScopeBySession
+          .keys()
+          .next().value;
+        if (oldestSessionId !== undefined) {
+          terminalCleanupScopeBySession.delete(oldestSessionId);
+        }
+      }
+    }
+    const scopeKey =
+      observedScopeKey ??
+      terminalCleanupScopeBySession.get(sessionId) ??
+      `session:${sessionId}`;
+    const inactive = terminals.filter((terminal) => !terminal.busy);
+    if (inactive.length < INACTIVE_TERMINAL_CLEANUP_THRESHOLD) {
+      terminalCleanupWarningScopes.delete(scopeKey);
+      return;
+    }
+    if (terminalCleanupWarningScopes.has(scopeKey)) return;
+    if (
+      terminalCleanupWarningScopes.size >= MAX_TRACKED_TERMINAL_CLEANUP_SCOPES
+    ) {
+      const oldestScopeKey = terminalCleanupWarningScopes.values().next().value;
+      if (oldestScopeKey !== undefined) {
+        terminalCleanupWarningScopes.delete(oldestScopeKey);
+      }
+    }
+    terminalCleanupWarningScopes.add(scopeKey);
+
+    result.terminal_cleanup = {
+      warning: `There are ${inactive.length} inactive managed terminals. Close terminals you no longer need before opening more; use close_terminals when it is available in the current mode.`,
+      inactive_count: inactive.length,
+      threshold: INACTIVE_TERMINAL_CLEANUP_THRESHOLD,
+      terminals: inactive
+        .slice(0, MAX_TERMINAL_CLEANUP_DETAILS)
+        .map(({ id, name }) => ({ id, name })),
+      ...(inactive.length > MAX_TERMINAL_CLEANUP_DETAILS
+        ? {
+            terminals_omitted: inactive.length - MAX_TERMINAL_CLEANUP_DETAILS,
+          }
+        : {}),
+    };
+  } catch {
+    // Terminal cleanup is advisory and must never change the command result.
+  }
+}
+
+function unavailableExecuteCommandResult(command: string): ToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          error:
+            "Command execution is unavailable in this runtime. Provide a TerminalProvider to enable execute_command.",
+          command,
+          command_sent: false,
+        }),
+      },
+    ],
+  };
+}
+
+export async function handleExecuteCommand(
+  params: Parameters<typeof executeCommandWithAudit>[0],
+  approvalManager: ApprovalManager,
+  approvalPanel: ApprovalPanelProvider,
+  sessionId: string,
+  trackerCtx?: TrackerContext,
+  providers: ExecuteCommandProviders = {},
+): Promise<ToolResult> {
+  const authorizationAudit: AuthorizationAudit = {
+    decisions: [],
+    omittedCount: 0,
+  };
+  // The engine aborts a tool call's signal when the call returns, which for
+  // a background command is right after launch. Network review must still
+  // honour a real cancellation while the call runs, but not that routine
+  // end-of-call abort, so it watches a signal that stops following the tool
+  // signal once this handler returns.
+  const toolSignal = providers.toolAbortSignal;
+  const callScope = new AbortController();
+  const forwardAbort = () => callScope.abort(toolSignal?.reason);
+  if (toolSignal?.aborted) callScope.abort(toolSignal.reason);
+  else toolSignal?.addEventListener("abort", forwardAbort, { once: true });
+  let result: ToolResult;
+  try {
+    result = await executeCommandWithAudit(
+      params,
+      approvalManager,
+      approvalPanel,
+      sessionId,
+      trackerCtx,
+      { ...providers, networkReviewAbortSignal: callScope.signal },
+      authorizationAudit,
+    );
+  } finally {
+    toolSignal?.removeEventListener("abort", forwardAbort);
+  }
+  if (authorizationAudit.decisions.length || authorizationAudit.omittedCount) {
+    result.uiMeta = {
+      ...result.uiMeta,
+      authorizationAudit: {
+        ...authorizationAudit,
+        decisions: [...authorizationAudit.decisions],
+      },
+    };
+  }
+  return result;
+}
+
+async function executeCommandWithAudit(
+  params: {
+    command: string;
+    cwd?: string;
+    terminal_id?: string;
+    terminal_name?: string;
+    split_from?: string;
+    background?: boolean;
+    timeout?: number;
+    env?: Record<string, string>;
+    temporary_home?: true;
+    sandbox_permissions?:
+      | "use_default"
+      | "with_additional_permissions"
+      | "require_managed_network"
+      | "require_escalated";
+    additional_permissions?: {
+      network?: { allow_local_binding?: true };
+    };
+    files?: InlineCommandFileInput[];
+    output_head?: number;
+    output_tail?: number;
+    output_offset?: number;
+    output_grep?: string;
+    output_grep_context?: number;
+    force?: boolean;
+    force_reason?: string;
+    reason?: string;
+  },
+  approvalManager: ApprovalManager,
+  approvalPanel: ApprovalPanelProvider,
+  sessionId: string,
+  trackerCtx: TrackerContext | undefined,
+  providers: ExecuteCommandProviders,
+  authorizationAudit: AuthorizationAudit,
+): Promise<ToolResult> {
+  let commandToRun = params.command;
+  // Set only for automatic reviewer approvals: the human-input revision that
+  // review saw. Dispatch is revoked if newer human input has arrived since.
+  let reviewedHumanInputRevision: number | undefined;
+  let reviewedPublicationContext: ReviewPublicationContext | undefined;
+  const humanInputIsStale = () =>
+    (reviewedHumanInputRevision !== undefined &&
+      providers.getHumanInputRevision?.(sessionId) !==
+        reviewedHumanInputRevision) ||
+    (reviewedPublicationContext !== undefined &&
+      !providers.reviewPublicationHost?.isCurrent(
+        sessionId,
+        reviewedPublicationContext,
+      ));
+  try {
+    if (!params.command || params.command.trim().length === 0) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: "Command cannot be empty",
+              command_sent: false,
+            }),
+          },
+        ],
+      };
+    }
+
+    if (!providers.terminalProvider) {
+      return unavailableExecuteCommandResult(params.command);
+    }
+
+    const workspaceRoot = tryGetFirstWorkspaceRoot();
+
+    // Resolve cwd
+    let cwd = workspaceRoot ?? os.homedir();
+    if (params.cwd) {
+      cwd = path.isAbsolute(params.cwd)
+        ? params.cwd
+        : path.resolve(cwd, params.cwd);
+    }
+
+    const workspaceRoots = getWorkspaceRoots();
+    const requestedNativeEscalation =
+      params.sandbox_permissions === "require_escalated";
+    const requestedManagedNetwork =
+      params.sandbox_permissions === "require_managed_network";
+    const requestedAdditionalPermissions =
+      params.sandbox_permissions === "with_additional_permissions";
+    const requestedLocalBinding =
+      params.additional_permissions?.network?.allow_local_binding === true;
+    const temporaryHome = params.temporary_home === true;
+    if (requestedAdditionalPermissions !== requestedLocalBinding) {
+      return rejectedCommandResult(
+        params.command,
+        requestedAdditionalPermissions
+          ? 'sandbox_permissions="with_additional_permissions" currently requires additional_permissions.network.allow_local_binding=true.'
+          : 'additional_permissions requires sandbox_permissions="with_additional_permissions".',
+      );
+    }
+    if (
+      (requestedNativeEscalation ||
+        requestedManagedNetwork ||
+        requestedAdditionalPermissions) &&
+      !params.reason?.trim()
+    ) {
+      return rejectedCommandResult(
+        params.command,
+        `sandbox_permissions="${params.sandbox_permissions}" requires a non-empty reason explaining why the additional authority is needed.`,
+      );
+    }
+    const approvalMode = approvalModeFor(providers, sessionId);
+    const manualExecutionPreset =
+      approvalMode.executionPreset === "native-manual";
+    const nativeEscalation =
+      requestedNativeEscalation ||
+      (manualExecutionPreset &&
+        (requestedManagedNetwork || requestedAdditionalPermissions));
+    const managedNetwork = requestedManagedNetwork && !manualExecutionPreset;
+    const additionalPermissions =
+      requestedAdditionalPermissions && !manualExecutionPreset;
+    const localBinding = requestedLocalBinding && !manualExecutionPreset;
+    if (temporaryHome) {
+      if (nativeEscalation) {
+        return rejectedCommandResult(
+          params.command,
+          'temporary_home cannot be combined with sandbox_permissions="require_escalated" because native execution cannot provide a disposable sandbox-owned HOME.',
+        );
+      }
+      if (params.background) {
+        return rejectedCommandResult(
+          params.command,
+          "temporary_home is limited to foreground commands so its HOME remains available for the complete process lifecycle.",
+        );
+      }
+      if (approvalMode.commandApprovalPolicy !== "approve-for-me") {
+        return rejectedCommandResult(
+          params.command,
+          "temporary_home requires Approve for Me because it must run in the verified sandbox without native fallback.",
+        );
+      }
+    }
+    const initialRulePolicy = commandRulePolicyFor(
+      approvalManager,
+      sessionId,
+      params.command,
+      cwd,
+    );
+    if (initialRulePolicy.decision === "forbidden") {
+      return rejectedCommandResult(
+        params.command,
+        "Command execution is forbidden by an applicable command policy rule.",
+      );
+    }
+    let expectedRulePolicyFingerprint =
+      commandRulePolicyFingerprint(initialRulePolicy);
+    const explicitRuleAuthority =
+      initialRulePolicy.segments.length > 0 &&
+      initialRulePolicy.segments.every(
+        (segment) =>
+          (segment.decision === "allow" || segment.decision === "prompt") &&
+          segment.matches.some(({ rule }) =>
+            commandRuleMatches(segment.command, rule),
+          ),
+      );
+    const routeContext = routeContextFor(
+      approvalMode,
+      nativeEscalation
+        ? "native-escalation"
+        : managedNetwork || additionalPermissions
+          ? "additional-permissions"
+          : "default",
+      providers.commandExecutionPolicy,
+      explicitRuleAuthority,
+      temporaryHome ||
+        managedNetwork ||
+        additionalPermissions ||
+        providers.commandExecutionPolicy === "read-only",
+    );
+    const readOnlyPolicy =
+      routeContext.commandExecutionPolicySnapshot === "read-only";
+    if (
+      routeContext.requiredAuthority === "sandbox" &&
+      params.env &&
+      Object.prototype.hasOwnProperty.call(params.env, "HOME")
+    ) {
+      return rejectedCommandResult(
+        params.command,
+        "Sandbox environment override is reserved: HOME. Use temporary_home=true only when the command needs a fresh empty writable HOME that is deleted after completion; the host home remains readable by absolute path.",
+      );
+    }
+    if (
+      routeContext.requiredAuthority === "sandbox" &&
+      !isCommandPathInsideWorkspace(cwd, workspaceRoots)
+    ) {
+      return outsideWorkspaceCwdResult({
+        command: params.command,
+        cwd,
+        workspaceRoots,
+        allowReviewedNativeOption:
+          !readOnlyPolicy &&
+          !temporaryHome &&
+          !managedNetwork &&
+          !additionalPermissions,
+      });
+    }
+    if (readOnlyPolicy) {
+      if (requestedLocalBinding) {
+        return rejectedCommandResult(
+          params.command,
+          "Read-only command execution cannot request local listener binding.",
+        );
+      }
+      const rejectionReason = getReadOnlyCommandRejectionReason(
+        params,
+        cwd,
+        workspaceRoots,
+      );
+      if (rejectionReason) {
+        return readOnlyRejectedCommandResult(
+          params.command,
+          rejectionReason,
+          providers.availableToolNames,
+        );
+      }
+      if (routeContext.commandApprovalPolicySnapshot !== "approve-for-me") {
+        return rejectedCommandResult(
+          params.command,
+          "Read-only command execution requires Approve for Me because Sandbox terminals are disabled under the current command approval policy.",
+        );
+      }
+    }
+
+    // Master bypass check
+    const masterBypass = getConfiguredMasterBypass();
+
+    let commandEditedByUser = false;
+    let inlineRun: ReturnType<typeof materializeInlineCommandFiles> | undefined;
+    let inlineFiles: InlineCommandFilePreview[] | undefined;
+    let commandFinalizationDeferred = false;
+    let preparedExecution: PreparedTerminalExecution | undefined;
+    let inlineCleanupComplete = false;
+    const cleanupInlineRun = () => {
+      if (inlineCleanupComplete) return;
+      inlineCleanupComplete = true;
+      inlineRun?.cleanup();
+    };
+    let commitApprovalMutations: (() => void) | undefined;
+    let approvalFollowUp: string | undefined;
+    let approvalAudit: CommandApprovalAudit | undefined = readOnlyPolicy
+      ? { by: "readonly_policy" }
+      : !nativeEscalation &&
+          !managedNetwork &&
+          !additionalPermissions &&
+          masterBypass
+        ? { by: "master_bypass" }
+        : undefined;
+    let autoApprovedByTier:
+      | { tier: CommandTier; threshold: "safe" | "sensitive" }
+      | undefined;
+
+    if (params.files && params.files.length > 0) {
+      if (process.platform === "win32") {
+        return rejectedCommandResult(
+          params.command,
+          "execute_command files require a POSIX shell in this version; cmd.exe and PowerShell are not supported yet.",
+        );
+      }
+      try {
+        inlineRun = materializeInlineCommandFiles(params.command, params.files);
+        if (inlineRun) {
+          commandToRun = inlineRun.command;
+          inlineFiles = inlineRun.previews;
+        }
+      } catch (err) {
+        if (err instanceof InlineCommandFileError) {
+          return rejectedCommandResult(params.command, err.message);
+        }
+        throw err;
+      }
+    }
+
+    try {
+      // Reject malformed shell syntax before masterBypass or force=true can skip
+      // the normal command approval path.
+      const malformedCommandReason =
+        validateMalformedShellCommand(commandToRun);
+      if (malformedCommandReason) {
+        return malformedCommandResult(commandToRun, malformedCommandReason, {
+          ...(commandToRun !== params.command && {
+            commandTemplate: params.command,
+          }),
+        });
+      }
+
+      // Reject protected instruction/memory writes before masterBypass or force=true
+      // can skip the normal command approval path.
+      const protectedWriteViolation = validateProtectedWriteCommand(
+        commandToRun,
+        cwd,
+      );
+      if (protectedWriteViolation) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                status: "rejected",
+                command: commandToRun,
+                ...(commandToRun !== params.command && {
+                  command_template: params.command,
+                }),
+                reason: protectedWriteViolation.message,
+                protected_path: protectedWriteViolation.protectedPath,
+                command_sent: false,
+              }),
+            },
+          ],
+        };
+      }
+
+      // Reject disallowed command patterns (direct head/tail/cat/grep, piped filtering)
+      const commandViolation = validateCommand(
+        commandToRun,
+        providers.availableToolNames,
+      );
+      if (commandViolation) {
+        // force=true can only bypass "direct" violations (shell expansion false positives),
+        // never "pipe" violations — those have dedicated output_* params with no false positives.
+        const canBypass =
+          params.force &&
+          commandViolation.type === "direct" &&
+          params.force_reason;
+
+        if (!canBypass) {
+          const reason =
+            params.force && commandViolation.type === "pipe"
+              ? commandViolation.message +
+                "\n\nforce=true cannot bypass pipe filtering rejections. Use the output_grep/output_head/output_tail parameters instead."
+              : params.force && !params.force_reason
+                ? commandViolation.message +
+                  "\n\nforce=true requires a force_reason explaining why the rejection is a false positive."
+                : commandViolation.message;
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  status: "rejected",
+                  command: commandToRun,
+                  ...(commandToRun !== params.command && {
+                    command_template: params.command,
+                  }),
+                  reason,
+                  command_sent: false,
+                }),
+              },
+            ],
+          };
+        }
+      }
+
+      // Reject known interactive commands (editors, REPLs, TUI apps, etc.)
+      const interactiveViolation = validateInteractiveCommand(commandToRun);
+      if (interactiveViolation) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                status: "rejected",
+                command: commandToRun,
+                ...(commandToRun !== params.command && {
+                  command_template: params.command,
+                }),
+                reason: interactiveViolation.message,
+                command_sent: false,
+              }),
+            },
+          ],
+        };
+      }
+
+      const mediatedPublicNetwork =
+        routeContext.requiredAuthority === "sandbox" &&
+        routeContext.commandExecutionPolicySnapshot !== "read-only" &&
+        approvalMode.commandApprovalPolicy === "approve-for-me";
+      const directGitNetworkTokens = mediatedPublicNetwork
+        ? directGitNetworkCommandTokens(commandToRun)
+        : undefined;
+      if (directGitNetworkTokens?.slice(2).some(isExplicitSshGitRemote)) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                status: "retry_required",
+                command: commandToRun,
+                command_sent: false,
+                process_launched: false,
+                retry_safe: true,
+                failure_stage: "validation",
+                retry_guidance: managedNetworkSshGitGuidance(),
+              }),
+            },
+          ],
+        };
+      }
+
+      const terminalOptions = (
+        executionRouteContext = routeContext,
+      ): TerminalExecuteOptions => {
+        const routeUsesManagedNetwork =
+          executionRouteContext.requiredAuthority === "sandbox" &&
+          executionRouteContext.commandExecutionPolicySnapshot !==
+            "read-only" &&
+          approvalMode.commandApprovalPolicy === "approve-for-me";
+        return {
+          owner: undefined,
+          command: commandToRun,
+          cwd,
+          outputFilter: streamableOutputFilter(outputFilterFromParams(params)),
+          terminal_id: params.terminal_id,
+          terminal_name: params.terminal_name,
+          split_from: params.split_from,
+          background: params.background,
+          timeout: params.timeout ? params.timeout * 1000 : undefined,
+          admissionSignal: providers.toolAbortSignal,
+          assertDispatchAllowed: () => {
+            if (humanInputIsStale()) {
+              throw new TerminalDispatchRevokedError(STALE_DISPATCH_REASON);
+            }
+          },
+          env: params.env,
+          temporaryHome: temporaryHome || undefined,
+          sandboxSessionId: sessionId,
+          sandboxCapabilityRequest:
+            routeUsesManagedNetwork || localBinding
+              ? {
+                  ...(routeUsesManagedNetwork
+                    ? { unrestrictedPublicNetwork: true }
+                    : {}),
+                  ...(localBinding ? { allowLocalBinding: true } : {}),
+                }
+              : undefined,
+          onManagedNetworkRequest: routeUsesManagedNetwork
+            ? async (request, signal) => {
+                try {
+                  return await reviewManagedNetworkRequest(
+                    request,
+                    signal,
+                    approvalManager,
+                    approvalPanel,
+                    // `signal` follows the command's own lifetime; the tool
+                    // call only cancels review while the call is running.
+                    {
+                      ...providers,
+                      toolAbortSignal: providers.networkReviewAbortSignal,
+                    },
+                    approvalMode,
+                    authorizationAudit,
+                  );
+                } catch {
+                  appendAuthorizationDecision(authorizationAudit, {
+                    family: "managed-network",
+                    basis: "host-policy",
+                    decision: "deny",
+                    status: signal.aborted ? "cancelled" : "unavailable",
+                  });
+                  return "reject";
+                }
+              }
+            : undefined,
+          sandboxInlineFiles: inlineFiles?.map((file) => ({
+            name: file.name,
+            path: file.path,
+            bytes: file.bytes,
+            sha256: file.sha256,
+          })),
+          onTerminalAssigned: trackerCtx
+            ? (tid) => trackerCtx.setTerminalId(tid)
+            : undefined,
+          onCommandFinalizationDeferred: inlineRun
+            ? () => {
+                commandFinalizationDeferred = true;
+              }
+            : undefined,
+          onCommandFinalized: inlineRun ? cleanupInlineRun : undefined,
+        };
+      };
+      try {
+        preparedExecution = await prepareTerminalExecution(
+          providers.terminalProvider,
+          terminalOptions(),
+          routeContext,
+        );
+      } catch (error) {
+        if (
+          !(error instanceof SandboxAvailabilityError) ||
+          error.reason !== "runtime-unavailable" ||
+          routeContext.requiredAuthority !== "sandbox" ||
+          routeContext.commandApprovalPolicySnapshot !== "approve-for-me" ||
+          readOnlyPolicy ||
+          temporaryHome ||
+          managedNetwork ||
+          additionalPermissions ||
+          inlineFiles ||
+          params.terminal_id ||
+          params.terminal_name ||
+          params.split_from ||
+          params.background ||
+          isCommandApprovalCancelled(sessionId, providers) ||
+          hasPolicyDrift(providers, sessionId, routeContext)
+        ) {
+          throw error;
+        }
+        // Bounded categories only: the error message may carry host paths.
+        const sandboxFailureDetail = {
+          failure_reason: error.reason,
+          ...(error.diagnostic
+            ? { sandbox_diagnostic: { category: error.diagnostic.category } }
+            : {}),
+        };
+
+        const nativeRoute = routeContextFor(
+          approvalModeFor(providers, sessionId),
+          "native-escalation",
+          providers.commandExecutionPolicy,
+        );
+        const nativePreparation = await prepareTerminalExecution(
+          providers.terminalProvider,
+          terminalOptions(nativeRoute),
+          nativeRoute,
+        );
+        try {
+          const releaseGate = await acquireApprovalGate(sessionId);
+          let approval: Awaited<ReturnType<typeof approveSubCommands>>;
+          let ruleFingerprint: string;
+          try {
+            const recoveryKey = commandReviewActionKey({
+              command: commandToRun,
+              cwd,
+              security: nativePreparation.security,
+            });
+            if (
+              providers.commandReviewTurnCircuit?.hasRejectedRecovery(
+                recoveryKey,
+              )
+            ) {
+              return rejectedCommandResult(
+                commandToRun,
+                "Native recovery was already rejected for this command in the current turn.",
+              );
+            }
+            const rulePolicy = commandRulePolicyFor(
+              approvalManager,
+              sessionId,
+              commandToRun,
+              cwd,
+            );
+            ruleFingerprint = commandRulePolicyFingerprint(rulePolicy);
+            approval = await approveSubCommands(
+              splitCompoundCommand(commandToRun),
+              commandToRun,
+              approvalManager,
+              approvalPanel,
+              sessionId,
+              "The sandbox runtime could not start the command. Run this exact command outside the sandbox?",
+              cwd,
+              workspaceRoots,
+              {
+                displayCommand: commandToRun,
+                requireHumanApproval: true,
+                ruleFastPathAllowed: false,
+                allowRuleChanges: false,
+                skipAutomaticReviewer: true,
+                rulePolicy,
+                commandPolicyFingerprint: ruleFingerprint,
+                recoveryAttempt: {
+                  denialOperation: "sandbox-runtime",
+                  denialReason:
+                    "The sandbox runtime was unavailable before the command started.",
+                  firstAttemptRoute: "sandbox",
+                  commandSent: false,
+                  processLaunched: false,
+                  mayHaveSideEffects: false,
+                },
+                routeContext: nativeRoute,
+                providers,
+                security: nativePreparation.security,
+              },
+            );
+          } finally {
+            releaseGate();
+          }
+          if (
+            !approval.approved ||
+            approval.cancelled ||
+            approval.editedCommand ||
+            approval.policyDrift
+          ) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    status: approval.cancelled
+                      ? "cancelled"
+                      : approval.policyDrift
+                        ? "retry_required"
+                        : "rejected_by_user",
+                    command: commandToRun,
+                    cwd,
+                    reason:
+                      approval.reason ??
+                      "Native recovery was not approved for this exact command.",
+                    sandbox_failure: sandboxFailureDetail,
+                    command_sent: false,
+                    process_launched: false,
+                    retry_safe: false,
+                    failure_stage: "approval",
+                  }),
+                },
+              ],
+            };
+          }
+          if (
+            hasPolicyDrift(providers, sessionId, nativeRoute) ||
+            isCommandApprovalCancelled(sessionId, providers) ||
+            commandRulePolicyFingerprint(
+              commandRulePolicyFor(
+                approvalManager,
+                sessionId,
+                commandToRun,
+                cwd,
+              ),
+            ) !== ruleFingerprint
+          ) {
+            return policyDriftResult(commandToRun, nativePreparation.security);
+          }
+          let nativeResult: TerminalCommandResult;
+          try {
+            nativeResult = await nativePreparation.execute();
+          } catch (error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    status: "recovery_failed",
+                    error:
+                      error instanceof Error ? error.message : String(error),
+                    command: commandToRun,
+                    security: nativePreparation.security,
+                    command_sent: "unknown",
+                    process_launched: "unknown",
+                    retry_safe: false,
+                    failure_stage: "launch",
+                    execution_attempts: [
+                      {
+                        attempt: 1,
+                        status: "failed",
+                        route: "sandbox",
+                        command_sent: false,
+                        process_launched: false,
+                        retry_safe: false,
+                        may_have_side_effects: false,
+                        failure_stage: "preparation",
+                        ...sandboxFailureDetail,
+                      },
+                      {
+                        attempt: 2,
+                        status: "failed",
+                        route: "native",
+                        audit_id: nativePreparation.security.auditId,
+                        command_sent: "unknown",
+                        process_launched: "unknown",
+                        retry_safe: false,
+                        may_have_side_effects: "unknown",
+                        failure_stage: "launch",
+                      },
+                    ],
+                  }),
+                },
+              ],
+            };
+          }
+          nativeResult.security = nativePreparation.security;
+          nativeResult.approval = approval.approval;
+          nativeResult.follow_up = approval.followUp;
+          nativeResult.retry_lineage_id = randomUUID();
+          nativeResult.retry_safe = false;
+          const nativeAttempt = executionAttemptSummary(2, nativeResult);
+          nativeResult.retry_outcome =
+            nativeAttempt.status === "running"
+              ? undefined
+              : nativeAttempt.status === "completed"
+                ? "completed"
+                : "failed";
+          nativeResult.execution_attempts = [
+            {
+              attempt: 1,
+              status: "failed",
+              route: "sandbox",
+              command_sent: false,
+              process_launched: false,
+              retry_safe: false,
+              may_have_side_effects: false,
+              failure_stage: "preparation",
+              ...sandboxFailureDetail,
+            },
+            nativeAttempt,
+          ];
+          // Recovered output uses the same bounded filter as ordinary execution.
+          const retainedOutput = providers.terminalProvider.getRetainedOutput?.(
+            {
+              owner: undefined,
+              terminalId: nativeResult.terminal_id,
+              ...(nativeResult.command_id
+                ? { commandId: nativeResult.command_id }
+                : {}),
+            },
+          );
+          if (retainedOutput) {
+            nativeResult.output = retainedOutput.output;
+            nativeResult.output_complete = retainedOutput.complete;
+            nativeResult.output_finalized = retainedOutput.finalized;
+            nativeResult.output_total_bytes = retainedOutput.total_bytes;
+            nativeResult.output_retained_bytes = retainedOutput.retained_bytes;
+            nativeResult.output_dropped_bytes = retainedOutput.dropped_bytes;
+          } else if (nativeResult.output_complete === undefined) {
+            nativeResult.output_complete = true;
+            nativeResult.output_finalized = !nativeResult.is_running;
+          }
+          delete nativeResult.terminal_raw_output;
+          if (nativeResult.output_captured && nativeResult.output) {
+            Object.assign(
+              nativeResult,
+              presentCommandOutput({
+                output: nativeResult.output,
+                complete: nativeResult.output_complete !== false,
+                finalized: nativeResult.output_finalized !== false,
+                droppedBytes: nativeResult.output_dropped_bytes,
+                filter: outputFilterFromParams(params),
+                streamed: readStreamedOutputFilter(retainedOutput),
+              }),
+            );
+          }
+          return {
+            content: [{ type: "text", text: JSON.stringify(nativeResult) }],
+          };
+        } finally {
+          nativePreparation.dispose();
+        }
+      }
+      if (preparedExecution.security.route === "sandbox") {
+        const gitRetry = await protectedGitMetadataRetryResult({
+          command: commandToRun,
+          cwd,
+          workspaceRoots,
+          hasEnvironmentOverrides:
+            temporaryHome ||
+            Boolean(params.env && Object.keys(params.env).length > 0),
+          inlineFiles,
+          commandTemplate: inlineRun?.commandTemplate,
+        });
+        if (gitRetry) {
+          const revokedPreparation = preparedExecution;
+          preparedExecution = undefined;
+          revokedPreparation.dispose();
+          recordExecutionAudit(
+            providers.terminalProvider,
+            "preparation_revoked",
+            revokedPreparation.security,
+            { resultStatus: "protected_git_metadata" },
+          );
+          return gitRetry;
+        }
+      }
+
+      if (
+        nativeEscalation ||
+        managedNetwork ||
+        additionalPermissions ||
+        (!masterBypass && !readOnlyPolicy)
+      ) {
+        // Preserve approval order within a session without blocking other tabs.
+        const releaseGate = await acquireApprovalGate(sessionId);
+        try {
+          const subCommands = splitCompoundCommand(params.command);
+          const gatedRulePolicy = commandRulePolicyFor(
+            approvalManager,
+            sessionId,
+            params.command,
+            cwd,
+          );
+          expectedRulePolicyFingerprint =
+            commandRulePolicyFingerprint(gatedRulePolicy);
+          const approvalResult = await approveSubCommands(
+            subCommands,
+            params.command,
+            approvalManager,
+            approvalPanel,
+            sessionId,
+            params.reason,
+            cwd,
+            workspaceRoots,
+            {
+              displayCommand: commandToRun,
+              inlineFiles,
+              requireHumanApproval: inlineFiles !== undefined,
+              requireFreshReview: managedNetwork || additionalPermissions,
+              rulePolicy: gatedRulePolicy,
+              commandPolicyFingerprint:
+                commandRulePolicyFingerprint(gatedRulePolicy),
+              explicitNativeEscalation: nativeEscalation,
+              ruleFastPathAllowed: true,
+              hasEnvOverrides:
+                temporaryHome ||
+                Boolean(params.env && Object.keys(params.env).length > 0),
+              forceRequested: Boolean(params.force || params.force_reason),
+              publicationEnvironmentOpaque: Boolean(
+                params.terminal_id || params.terminal_name || temporaryHome,
+              ),
+              routeContext,
+              providers,
+              security: preparedExecution.security,
+              toolCallId: trackerCtx?.toolCallId,
+            },
+          );
+          reviewedHumanInputRevision =
+            approvalResult.reviewedHumanInputRevision;
+          reviewedPublicationContext = approvalResult.reviewPublicationContext;
+
+          if (approvalResult.policyDrift) {
+            const driftedPreparation = preparedExecution;
+            preparedExecution = undefined;
+            driftedPreparation.dispose();
+            recordExecutionAudit(
+              providers.terminalProvider,
+              "preparation_revoked",
+              driftedPreparation.security,
+              { failure: "policy_drift", resultStatus: "policy_drift" },
+            );
+            return policyDriftResult(
+              params.command,
+              driftedPreparation.security,
+            );
+          }
+
+          if (approvalResult.cancelled) {
+            recordExecutionAudit(
+              providers.terminalProvider,
+              "execution_cancelled",
+              preparedExecution.security,
+              { resultStatus: "approval_cancelled" },
+            );
+            return cancelledCommandResult(
+              params.command,
+              preparedExecution.security,
+            );
+          }
+
+          if (!approvalResult.approved) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    status: "rejected_by_user",
+                    command: params.command,
+                    reason: approvalResult.reason,
+                    ...(approvalResult.priorReview
+                      ? { prior_review: approvalResult.priorReview }
+                      : {}),
+                    security: preparedExecution.security,
+                    command_sent: false,
+                  }),
+                },
+              ],
+            };
+          }
+
+          if (approvalResult.editedCommand) {
+            commandEditedByUser = true;
+            commandToRun = approvalResult.editedCommand;
+            try {
+              assertNoInvalidInlineFileTokens(commandToRun);
+              if (commandToRun.match(INLINE_FILE_TOKEN_RE)) {
+                throw new InlineCommandFileError(
+                  "unresolved_token",
+                  "Edited command contains an unresolved $AL_FILE(name) token.",
+                );
+              }
+            } catch (err) {
+              if (err instanceof InlineCommandFileError) {
+                return rejectedCommandResult(commandToRun, err.message);
+              }
+              throw err;
+            }
+            const editedValidation = validateCommandBeforeExecution(
+              commandToRun,
+              cwd,
+              params.command,
+              providers.availableToolNames,
+            );
+            if (editedValidation) return editedValidation;
+            if (
+              commandRulePolicyFor(
+                approvalManager,
+                sessionId,
+                commandToRun,
+                cwd,
+              ).decision === "forbidden"
+            ) {
+              return rejectedCommandResult(
+                commandToRun,
+                "Edited command execution is forbidden by an applicable command policy rule.",
+              );
+            }
+            const editedGitRetry =
+              preparedExecution.security.route === "sandbox"
+                ? await protectedGitMetadataRetryResult({
+                    command: commandToRun,
+                    originalCommand: params.command,
+                    cwd,
+                    workspaceRoots,
+                    hasEnvironmentOverrides:
+                      temporaryHome ||
+                      Boolean(params.env && Object.keys(params.env).length > 0),
+                    inlineFiles,
+                    commandTemplate: undefined,
+                  })
+                : undefined;
+            if (editedGitRetry) {
+              const revokedPreparation = preparedExecution;
+              preparedExecution = undefined;
+              revokedPreparation.dispose();
+              recordExecutionAudit(
+                providers.terminalProvider,
+                "preparation_revoked",
+                revokedPreparation.security,
+                { resultStatus: "protected_git_metadata" },
+              );
+              return editedGitRetry;
+            }
+            const displayedSecurity = preparedExecution.security;
+            preparedExecution.dispose();
+            preparedExecution = await prepareTerminalExecution(
+              providers.terminalProvider,
+              terminalOptions(),
+              routeContext,
+            );
+            if (
+              !sameDisplayedSecurityBasis(
+                displayedSecurity,
+                preparedExecution.security,
+              )
+            ) {
+              return rejectedCommandResult(
+                commandToRun,
+                "The prepared execution security basis changed after the command edit. Review and approve the command again.",
+              );
+            }
+          }
+
+          commitApprovalMutations = approvalResult.commitMutations;
+          approvalFollowUp = approvalResult.followUp;
+          approvalAudit = approvalResult.approval;
+          if (approvalAudit) {
+            recordExecutionAudit(
+              providers.terminalProvider,
+              "approval_decided",
+              preparedExecution.security,
+              {
+                approvalBasis: approvalAudit.by,
+                resultStatus: "approved",
+              },
+            );
+          }
+          autoApprovedByTier = approvalResult.autoApprovedByTier;
+          if (hasPolicyDrift(providers, sessionId, routeContext)) {
+            const driftedPreparation = preparedExecution;
+            preparedExecution = undefined;
+            driftedPreparation.dispose();
+            recordExecutionAudit(
+              providers.terminalProvider,
+              "preparation_revoked",
+              driftedPreparation.security,
+              { failure: "policy_drift", resultStatus: "policy_drift" },
+            );
+            return policyDriftResult(commandToRun, driftedPreparation.security);
+          }
+          const preCommitRulePolicy = commandRulePolicyFor(
+            approvalManager,
+            sessionId,
+            commandEditedByUser ? commandToRun : params.command,
+            cwd,
+          );
+          if (
+            preCommitRulePolicy.decision === "forbidden" ||
+            (!commandEditedByUser &&
+              commandRulePolicyFingerprint(preCommitRulePolicy) !==
+                expectedRulePolicyFingerprint)
+          ) {
+            const driftedPreparation = preparedExecution;
+            preparedExecution = undefined;
+            driftedPreparation.dispose();
+            recordExecutionAudit(
+              providers.terminalProvider,
+              "preparation_revoked",
+              driftedPreparation.security,
+              { failure: "policy_drift", resultStatus: "rule_policy_drift" },
+            );
+            return policyDriftResult(commandToRun, driftedPreparation.security);
+          }
+          approvalResult.commitMutations?.();
+          commitApprovalMutations = undefined;
+          expectedRulePolicyFingerprint = commandRulePolicyFingerprint(
+            commandRulePolicyFor(
+              approvalManager,
+              sessionId,
+              commandEditedByUser ? commandToRun : params.command,
+              cwd,
+            ),
+          );
+        } finally {
+          releaseGate();
+        }
+      }
+
+      const currentRulePolicy = commandRulePolicyFor(
+        approvalManager,
+        sessionId,
+        commandEditedByUser ? commandToRun : params.command,
+        cwd,
+      );
+      if (currentRulePolicy.decision === "forbidden") {
+        const revokedPreparation = preparedExecution;
+        preparedExecution = undefined;
+        revokedPreparation.dispose();
+        recordExecutionAudit(
+          providers.terminalProvider,
+          "preparation_revoked",
+          revokedPreparation.security,
+          {
+            failure: "policy_drift",
+            resultStatus: "rejected",
+          },
+        );
+        return rejectedCommandResult(
+          commandToRun,
+          "Command execution is forbidden by an applicable command policy rule.",
+        );
+      }
+      if (
+        !commandEditedByUser &&
+        commandRulePolicyFingerprint(currentRulePolicy) !==
+          expectedRulePolicyFingerprint
+      ) {
+        const driftedPreparation = preparedExecution;
+        preparedExecution = undefined;
+        driftedPreparation.dispose();
+        recordExecutionAudit(
+          providers.terminalProvider,
+          "preparation_revoked",
+          driftedPreparation.security,
+          { failure: "policy_drift", resultStatus: "rule_policy_drift" },
+        );
+        return policyDriftResult(commandToRun, driftedPreparation.security);
+      }
+      if (hasPolicyDrift(providers, sessionId, routeContext)) {
+        const driftedPreparation = preparedExecution;
+        preparedExecution = undefined;
+        driftedPreparation.dispose();
+        recordExecutionAudit(
+          providers.terminalProvider,
+          "preparation_revoked",
+          driftedPreparation.security,
+          { failure: "policy_drift", resultStatus: "policy_drift" },
+        );
+        return policyDriftResult(commandToRun, driftedPreparation.security);
+      }
+      if (isCommandApprovalCancelled(sessionId, providers)) {
+        recordExecutionAudit(
+          providers.terminalProvider,
+          "execution_cancelled",
+          preparedExecution.security,
+          { resultStatus: "session_cancelled" },
+        );
+        return cancelledCommandResult(commandToRun, preparedExecution.security);
+      }
+      if (approvalAudit && (masterBypass || readOnlyPolicy)) {
+        recordExecutionAudit(
+          providers.terminalProvider,
+          "approval_fast_path_selected",
+          preparedExecution.security,
+          {
+            approvalBasis: approvalAudit.by,
+            resultStatus: "approved",
+          },
+        );
+      }
+
+      if (humanInputIsStale()) {
+        const stalePreparation = preparedExecution;
+        preparedExecution = undefined;
+        stalePreparation.dispose();
+        recordExecutionAudit(
+          providers.terminalProvider,
+          "preparation_revoked",
+          stalePreparation.security,
+          { resultStatus: "authorization_stale" },
+        );
+        return staleAuthorizationResult(
+          commandToRun,
+          stalePreparation.security,
+        );
+      }
+      commitApprovalMutations?.();
+      const execution = preparedExecution;
+      preparedExecution = undefined;
+      const executionHumanInputRevision =
+        providers.getHumanInputRevision?.(sessionId);
+      let result = await execution.execute();
+      result.security = execution.security;
+      const replayableWithNarrowSandboxCapabilities =
+        !inlineFiles &&
+        !commandEditedByUser &&
+        !params.terminal_id &&
+        !params.terminal_name &&
+        !params.split_from;
+      const hasHomeOverride = Boolean(
+        params.env &&
+        [
+          "HOME",
+          "XDG_CACHE_HOME",
+          "XDG_CONFIG_HOME",
+          "GOCACHE",
+          "GOLANGCI_LINT_CACHE",
+        ].some((name) => Object.hasOwn(params.env!, name)),
+      );
+      if (result.output) {
+        await attachProtectedGitMetadataRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          cwd,
+          workspaceRoots,
+        });
+        attachSandboxCapabilityRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          cwd,
+          temporaryHome,
+          localBinding,
+          replayable: replayableWithNarrowSandboxCapabilities,
+          hasHomeOverride,
+          allowTemporaryHome:
+            approvalMode.commandApprovalPolicy === "approve-for-me",
+          managedNetwork,
+          workspaceRoots,
+          toolchainPath: knownSandboxSearchPath(params.env, result.security),
+        });
+        attachSandboxNodeOomRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          replayable: replayableWithNarrowSandboxCapabilities,
+        });
+        attachSandboxSwiftPmNestedSandboxRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          replayable: replayableWithNarrowSandboxCapabilities,
+          temporaryHome,
+        });
+        attachSandboxMetalToolchainRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+        });
+        attachSandboxHostIntegrationRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          replayable: replayableWithNarrowSandboxCapabilities,
+          temporaryHome,
+          cwd,
+          workspaceRoots,
+        });
+      }
+
+      const capabilityDenial = sandboxCapabilityDenial(result);
+      if (capabilityDenial) {
+        const retryLineageId = randomUUID();
+        const firstAttempt = executionAttemptSummary(
+          1,
+          result,
+          capabilityDenial,
+        );
+        const retryClassification = classifyCommand(commandToRun, {
+          cwd,
+          workspaceRoots,
+        });
+        const retryGuidance = (
+          result as TerminalCommandResult & {
+            retry_guidance?: ExecuteCommandRetryGuidance;
+          }
+        ).retry_guidance;
+        const retryUnsupportedReason = hasRetryGuidance(result)
+          ? retryGuidance?.code === "sandbox_npm_cache_write"
+            ? "npm cache configuration needs inspection and repair before fresh failed-step review; native retry was not attempted."
+            : "A narrower reviewed sandbox retry is available; native retry was not attempted."
+          : temporaryHome
+            ? "Commands using temporary_home cannot switch to native execution because native execution cannot preserve the disposable HOME contract."
+            : !isNativeRetryEligibleDenial(
+                  capabilityDenial,
+                  retryClassification,
+                )
+              ? capabilityDenial.operation === "network-connect"
+                ? "Managed network capability review is required; native retry was not attempted."
+                : capabilityDenial.operation === "resource-limit"
+                  ? "Resource-limit denials are not retried outside the sandbox."
+                  : `Native retry was not attempted because the command is not a recognized read-only, version, or project-toolchain operation (${
+                      retryClassification.perSubCommand
+                        .map(
+                          ({ command, result }) => `${command}: ${result.code}`,
+                        )
+                        .join("; ") || "no classified command"
+                    }).`
+              : routeContext.commandApprovalPolicySnapshot !== "approve-for-me"
+                ? "Automatic native retry requires Approve for Me."
+                : readOnlyPolicy
+                  ? "Read-only execution policy does not permit native retry."
+                  : inlineFiles
+                    ? "Commands with temporary inline files cannot be replayed after sandbox completion."
+                    : commandEditedByUser
+                      ? "Commands edited during approval require a new explicit invocation before native retry."
+                      : params.terminal_id ||
+                          params.terminal_name ||
+                          params.split_from
+                        ? "Commands pinned to a terminal target cannot switch execution authority automatically."
+                        : undefined;
+
+        if (retryUnsupportedReason) {
+          result.capability_denial = { ...capabilityDenial };
+          result.retry_lineage_id = retryLineageId;
+          result.retry_outcome = "not_attempted";
+          result.retry_reason = retryUnsupportedReason;
+          result.execution_attempts = [firstAttempt];
+          result.retry_safe = firstAttempt.retry_safe;
+        } else {
+          const retryRulePolicy = commandRulePolicyFor(
+            approvalManager,
+            sessionId,
+            commandToRun,
+            cwd,
+          );
+          const retryRouteContext = routeContextFor(
+            approvalModeFor(providers, sessionId),
+            "native-escalation",
+            providers.commandExecutionPolicy,
+            false,
+          );
+          const retryReason = `The sandbox denied ${capabilityDenial.operation}${
+            capabilityDenial.target ? ` for ${capabilityDenial.target}` : ""
+          }: ${capabilityDenial.reason}`;
+          let retryExecution: PreparedTerminalExecution;
+          try {
+            retryExecution = await prepareTerminalExecution(
+              providers.terminalProvider,
+              terminalOptions(retryRouteContext),
+              retryRouteContext,
+            );
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : String(error);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "retry_failed",
+                      command: commandToRun,
+                      cwd,
+                      error: message,
+                      command_sent: firstAttempt.command_sent,
+                      process_launched: firstAttempt.process_launched,
+                      retry_safe: false,
+                      failure_stage: "preparation",
+                      capability_denial: { ...capabilityDenial },
+                      retry_lineage_id: retryLineageId,
+                      retry_outcome: "failed",
+                      execution_attempts: [
+                        firstAttempt,
+                        {
+                          attempt: 2,
+                          status: "failed",
+                          route: "native",
+                          command_sent: false,
+                          process_launched: false,
+                          retry_safe: true,
+                          may_have_side_effects: false,
+                          failure_stage: "preparation",
+                        },
+                      ],
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          try {
+            const releaseGate = await acquireApprovalGate(sessionId);
+            let retryApproval: Awaited<ReturnType<typeof approveSubCommands>>;
+            try {
+              retryApproval = await approveSubCommands(
+                splitCompoundCommand(commandToRun),
+                commandToRun,
+                approvalManager,
+                approvalPanel,
+                sessionId,
+                retryReason,
+                cwd,
+                workspaceRoots,
+                {
+                  displayCommand: commandToRun,
+                  requireHumanApproval: true,
+                  ruleFastPathAllowed: false,
+                  allowRuleChanges: true,
+                  skipAutomaticReviewer: true,
+                  recoveryAttempt: {
+                    denialOperation: capabilityDenial.operation,
+                    denialReason: capabilityDenial.reason,
+                    firstAttemptRoute: firstAttempt.route,
+                    commandSent: firstAttempt.command_sent,
+                    processLaunched: firstAttempt.process_launched,
+                    mayHaveSideEffects: firstAttempt.may_have_side_effects,
+                  },
+                  rulePolicy: retryRulePolicy,
+                  commandPolicyFingerprint:
+                    commandRulePolicyFingerprint(retryRulePolicy),
+                  hasEnvOverrides:
+                    temporaryHome ||
+                    Boolean(params.env && Object.keys(params.env).length > 0),
+                  forceRequested: Boolean(params.force || params.force_reason),
+                  publicationEnvironmentOpaque: Boolean(
+                    params.terminal_id || params.terminal_name || temporaryHome,
+                  ),
+                  routeContext: retryRouteContext,
+                  providers,
+                  security: retryExecution.security,
+                },
+              );
+            } finally {
+              releaseGate();
+            }
+
+            if (retryApproval.approval) {
+              recordExecutionAudit(
+                providers.terminalProvider,
+                "approval_decided",
+                retryExecution.security,
+                {
+                  approvalBasis: retryApproval.approval.by,
+                  resultStatus: "approved",
+                },
+              );
+            }
+            const retryStatus = retryApproval.cancelled
+              ? "cancelled"
+              : "approval_denied";
+            if (
+              retryApproval.policyDrift ||
+              retryApproval.cancelled ||
+              !retryApproval.approved ||
+              retryApproval.editedCommand
+            ) {
+              const reason = retryApproval.policyDrift
+                ? "Command approval or execution policy changed before the native retry."
+                : retryApproval.cancelled
+                  ? "Native retry approval was cancelled."
+                  : retryApproval.editedCommand
+                    ? "A native retry must use the exact command from the sandbox attempt; edited retries are not executed automatically."
+                    : (retryApproval.reason ??
+                      "Native retry was not approved.");
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify(
+                      {
+                        status: retryApproval.policyDrift
+                          ? "retry_required"
+                          : retryStatus === "cancelled"
+                            ? "cancelled"
+                            : "rejected_by_user",
+                        command: commandToRun,
+                        cwd,
+                        reason,
+                        security: retryExecution.security,
+                        command_sent: firstAttempt.command_sent,
+                        process_launched: firstAttempt.process_launched,
+                        retry_safe: false,
+                        failure_stage: "approval",
+                        capability_denial: { ...capabilityDenial },
+                        retry_lineage_id: retryLineageId,
+                        retry_outcome:
+                          retryStatus === "cancelled"
+                            ? "cancelled"
+                            : "approval_denied",
+                        execution_attempts: [
+                          firstAttempt,
+                          unlaunchedAttemptSummary(
+                            2,
+                            retryExecution.security,
+                            retryStatus,
+                            "approval",
+                          ),
+                        ],
+                      },
+                      null,
+                      2,
+                    ),
+                  },
+                ],
+              };
+            }
+
+            // The one-shot retry has its own human decision.
+            reviewedHumanInputRevision =
+              retryApproval.reviewedHumanInputRevision;
+            if (
+              hasPolicyDrift(providers, sessionId, retryRouteContext) ||
+              isCommandApprovalCancelled(sessionId, providers)
+            ) {
+              const policyDrift = hasPolicyDrift(
+                providers,
+                sessionId,
+                retryRouteContext,
+              );
+              recordExecutionAudit(
+                providers.terminalProvider,
+                policyDrift ? "preparation_revoked" : "execution_cancelled",
+                retryExecution.security,
+                policyDrift
+                  ? { failure: "policy_drift", resultStatus: "policy_drift" }
+                  : { resultStatus: "session_cancelled" },
+              );
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify(
+                      {
+                        status: policyDrift ? "retry_required" : "cancelled",
+                        command: commandToRun,
+                        cwd,
+                        reason:
+                          "Native retry was cancelled before execution because the session or policy changed.",
+                        security: retryExecution.security,
+                        command_sent: firstAttempt.command_sent,
+                        process_launched: firstAttempt.process_launched,
+                        retry_safe: false,
+                        failure_stage: "approval",
+                        capability_denial: { ...capabilityDenial },
+                        retry_lineage_id: retryLineageId,
+                        retry_outcome: "cancelled",
+                        execution_attempts: [
+                          firstAttempt,
+                          unlaunchedAttemptSummary(
+                            2,
+                            retryExecution.security,
+                            "cancelled",
+                            "approval",
+                          ),
+                        ],
+                      },
+                      null,
+                      2,
+                    ),
+                  },
+                ],
+              };
+            }
+
+            retryApproval.commitMutations?.();
+            const committedRetryRulePolicy = commandRulePolicyFor(
+              approvalManager,
+              sessionId,
+              commandToRun,
+              cwd,
+            );
+            if (committedRetryRulePolicy.decision === "forbidden") {
+              recordExecutionAudit(
+                providers.terminalProvider,
+                "preparation_revoked",
+                retryExecution.security,
+                {
+                  failure: "policy_drift",
+                  resultStatus: "rejected",
+                },
+              );
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify(
+                      {
+                        status: "rejected",
+                        command: commandToRun,
+                        cwd,
+                        reason:
+                          "Command execution is forbidden by an applicable command policy rule.",
+                        security: retryExecution.security,
+                        command_sent: firstAttempt.command_sent,
+                        process_launched: firstAttempt.process_launched,
+                        retry_safe: false,
+                        failure_stage: "approval",
+                        capability_denial: { ...capabilityDenial },
+                        retry_lineage_id: retryLineageId,
+                        retry_outcome: "approval_denied",
+                        execution_attempts: [
+                          firstAttempt,
+                          unlaunchedAttemptSummary(
+                            2,
+                            retryExecution.security,
+                            "approval_denied",
+                            "approval",
+                          ),
+                        ],
+                      },
+                      null,
+                      2,
+                    ),
+                  },
+                ],
+              };
+            }
+            let retryResult: TerminalCommandResult;
+            try {
+              retryResult = await retryExecution.execute();
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: JSON.stringify(
+                      {
+                        status: "retry_failed",
+                        command: commandToRun,
+                        cwd,
+                        error: message,
+                        security: retryExecution.security,
+                        ...(error instanceof SandboxHelperFailure
+                          ? sandboxHelperFailureEvidence(error)
+                          : {}),
+                        command_sent: firstAttempt.command_sent,
+                        process_launched: firstAttempt.process_launched,
+                        retry_safe: false,
+                        failure_stage: "launch",
+                        capability_denial: { ...capabilityDenial },
+                        retry_lineage_id: retryLineageId,
+                        retry_outcome: "failed",
+                        execution_attempts: [
+                          firstAttempt,
+                          {
+                            attempt: 2,
+                            status: "failed",
+                            route: retryExecution.security.route,
+                            audit_id: retryExecution.security.auditId,
+                            command_sent: "unknown",
+                            process_launched: "unknown",
+                            retry_safe: false,
+                            may_have_side_effects: "unknown",
+                            failure_stage: "launch",
+                            ...(error instanceof SandboxHelperFailure
+                              ? sandboxHelperFailureEvidence(error)
+                              : {}),
+                          },
+                        ],
+                      },
+                      null,
+                      2,
+                    ),
+                  },
+                ],
+              };
+            }
+            retryResult.security = retryExecution.security;
+            retryResult.approval = retryApproval.approval;
+            retryResult.follow_up = retryApproval.followUp;
+            retryResult.capability_denial = { ...capabilityDenial };
+            retryResult.retry_lineage_id = retryLineageId;
+            retryResult.retry_outcome = "completed";
+            retryResult.retry_safe = false;
+            retryResult.execution_attempts = [
+              firstAttempt,
+              executionAttemptSummary(2, retryResult),
+            ];
+            result = retryResult;
+          } finally {
+            retryExecution.dispose();
+          }
+        }
+      }
+
+      // Raw shell-integration output duplicates `output` and includes ANSI/control
+      // sequences. Keep it inside the terminal provider instead of sending both
+      // representations through the model-facing tool result.
+      delete result.terminal_raw_output;
+
+      // Apply output filtering and temp file saving. Background and timed-out
+      // commands may have a larger exact spool than the bounded display tail.
+      const retainedOutput = providers.terminalProvider.getRetainedOutput?.({
+        owner: undefined,
+        terminalId: result.terminal_id,
+        ...(result.command_id ? { commandId: result.command_id } : {}),
+      });
+      if (retainedOutput) {
+        result.output = retainedOutput.output;
+        result.output_complete = retainedOutput.complete;
+        result.output_finalized = retainedOutput.finalized;
+        result.output_total_bytes = retainedOutput.total_bytes;
+        result.output_retained_bytes = retainedOutput.retained_bytes;
+        result.output_dropped_bytes = retainedOutput.dropped_bytes;
+      } else if (result.output_complete === undefined) {
+        result.output_complete = true;
+        result.output_finalized = !result.is_running;
+      }
+      if (result.output) {
+        if (mediatedPublicNetwork && result.security?.route === "sandbox") {
+          attachManagedNetworkFailureGuidance({
+            result,
+            command: commandToRun,
+            output: result.output,
+          });
+        }
+        attachPnpmStoreMismatchGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+        });
+        await attachProtectedGitMetadataRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          cwd,
+          workspaceRoots,
+        });
+        attachSandboxCapabilityRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          cwd,
+          temporaryHome,
+          localBinding,
+          replayable: replayableWithNarrowSandboxCapabilities,
+          hasHomeOverride,
+          allowTemporaryHome:
+            approvalMode.commandApprovalPolicy === "approve-for-me",
+          managedNetwork,
+          workspaceRoots,
+          toolchainPath: knownSandboxSearchPath(params.env, result.security),
+        });
+        attachSandboxNodeOomRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          replayable: replayableWithNarrowSandboxCapabilities,
+        });
+        attachSandboxSwiftPmNestedSandboxRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          replayable: replayableWithNarrowSandboxCapabilities,
+          temporaryHome,
+        });
+        attachSandboxMetalToolchainRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+        });
+        attachSandboxHostIntegrationRetryGuidance({
+          result,
+          command: commandToRun,
+          output: result.output,
+          replayable: replayableWithNarrowSandboxCapabilities,
+          temporaryHome,
+          cwd,
+          workspaceRoots,
+        });
+      }
+      try {
+        providers.reviewPublicationHost?.observe({
+          sessionId,
+          command: commandToRun,
+          cwd,
+          workspaceRoots,
+          humanInputRevision: executionHumanInputRevision,
+          hasEnvOverrides: Boolean(
+            params.env && Object.keys(params.env).length,
+          ),
+          environmentOpaque: Boolean(
+            params.terminal_id || params.terminal_name || temporaryHome,
+          ),
+          signal: providers.toolAbortSignal,
+          result,
+        });
+      } catch {
+        // Receipt accounting is not an execution result or an approval gate.
+      }
+      if (result.output_captured && result.output) {
+        const filter = outputFilterFromParams(params);
+        const rawOutputLost =
+          result.output_dropped_bytes !== undefined
+            ? result.output_dropped_bytes > 0
+            : result.output_complete === false &&
+              result.output_finalized !== false;
+        // Streamed caller-filter matches survive raw-tail loss; they are
+        // read from retained output so the snapshot never enters the result.
+        const streamed =
+          rawOutputLost && isStreamableFilter(filter) && result.terminal_id
+            ? readStreamedOutputFilter(
+                providers.terminalProvider.getRetainedOutput?.({
+                  owner: undefined,
+                  terminalId: result.terminal_id,
+                  ...(result.command_id
+                    ? { commandId: result.command_id }
+                    : {}),
+                }),
+              )
+            : undefined;
+        Object.assign(
+          result,
+          presentCommandOutput({
+            output: result.output,
+            complete: result.output_complete !== false,
+            finalized: result.output_finalized !== false,
+            droppedBytes: result.output_dropped_bytes,
+            filter,
+            streamed,
+          }),
+        );
+      } else if (!result.output_captured && !result.output) {
+        result.output =
+          "Command execution was sent to the terminal, but no output was captured.";
+      }
+
+      if (inlineFiles) {
+        result.inline_files = inlineFiles.map((file) => ({
+          name: file.name,
+          bytes: file.bytes,
+          sha256: file.sha256,
+        }));
+        result.command_template = params.command;
+        result.command = commandToRun;
+      }
+
+      // If the user edited the command, include modification info
+      if (commandEditedByUser) {
+        result.command_modified = true;
+        result.original_command = params.command;
+        result.command = commandToRun;
+      }
+
+      if (approvalAudit && result.retry_outcome !== "completed") {
+        result.approval = approvalAudit;
+      }
+
+      if (autoApprovedByTier && result.retry_outcome !== "completed") {
+        result.auto_approved = {
+          by: "tier",
+          tier: autoApprovedByTier.tier,
+          threshold: autoApprovedByTier.threshold,
+        };
+      }
+
+      if (approvalFollowUp && result.retry_outcome !== "completed") {
+        result.follow_up = approvalFollowUp;
+      }
+
+      const modelResult = { ...result } as ExecuteCommandResult;
+      attachTerminalCleanupWarning(
+        modelResult,
+        providers.terminalProvider,
+        sessionId,
+      );
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(modelResult, null, 2) }],
+      };
+    } finally {
+      preparedExecution?.dispose();
+      if (!commandFinalizationDeferred) {
+        cleanupInlineRun();
+      }
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (err instanceof TerminalAdmissionCancelledError) {
+      return cancelledCommandResult(params.command);
+    }
+    if (err instanceof TerminalDispatchRevokedError) {
+      return staleAuthorizationResult(commandToRun);
+    }
+    if (err instanceof SandboxHelperFailure) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              {
+                status: "failed",
+                command: commandToRun,
+                ...(commandToRun !== params.command
+                  ? { original_command: params.command, command_modified: true }
+                  : {}),
+                ...sandboxHelperFailureEvidence(err),
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+      };
+    }
+    if (err instanceof SandboxPreparationError) {
+      const guidance = {
+        reserved_path_override:
+          'Sandbox PATH is host-managed and cannot be overridden through env. Remove env.PATH and put an inline export such as export PATH="/desired/bin:$PATH" before the command in each reviewed sandbox call. Shell changes do not persist between sandbox calls.',
+        reserved_environment_override:
+          "Remove the reported environment_keys from env. HOME, temporary directories, PATH, locale variables (including LANG and LC_ALL), proxy settings, loader settings, and other reserved entries are host-managed. Do not move reserved overrides inline to bypass this check.",
+        conflicting_npm_cache_overrides:
+          "The per-command env contains conflicting case-insensitive npm_config_cache aliases. Remove the duplicates or give them the same value; prefer one canonical npm_config_cache entry. No command was launched and no cache values are reported.",
+        unsupported_shell_profile:
+          "The attested sandbox helper does not support shellEnvironment.useProfile. Disable that host sandbox setting and request a fresh reviewed execution; do not bypass the sandbox or silently change host configuration.",
+        preparation_failed:
+          "Sandbox preparation failed before launch, not during availability attestation. Use preparation_diagnostic.phase and category to identify the failed check. Repair the indicated request or host setup before a fresh reviewed execution; do not repeatedly retry, relax protections, or switch to native execution.",
+      }[err.reason];
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "blocked",
+              error:
+                "The sandbox execution could not be prepared before launch.",
+              error_code: err.code,
+              preparation_failure: err.reason,
+              preparation_diagnostic: err.diagnostic ?? {
+                phase: "host_preparation",
+                category: "unclassified",
+              },
+              command: params.command,
+              command_sent: false,
+              process_launched: false,
+              retry_safe: false,
+              failure_stage: "preparation",
+              retry_guidance: {
+                code: err.code,
+                message: guidance,
+                automatic_retry: false,
+                options: [
+                  {
+                    action: "repair_sandbox_preparation_request_or_host",
+                    ...(err.diagnostic?.environment_keys
+                      ? { remove_env_keys: err.diagnostic.environment_keys }
+                      : {}),
+                    ...(err.diagnostic?.phase
+                      ? {
+                          check: err.diagnostic.phase,
+                          repair: {
+                            workspace_roots:
+                              "Verify all active workspace folders exist and are accessible to the host, then reopen any stale folder.",
+                            working_directory:
+                              "Choose an existing cwd inside an active workspace folder.",
+                            private_directories:
+                              "Check the host sandbox temporary-directory configuration, permissions, and free space.",
+                            inline_files:
+                              "Repair or recreate the reviewed inline file inputs.",
+                            git_protection:
+                              "Inspect workspace Git metadata integrity and permissions. Do not remove protected metadata.",
+                            workspace_policy_integrity:
+                              "Inspect workspace policy files and protected namespaces for inaccessible or invalid entries. Do not disable protection checks.",
+                            developer_toolchain:
+                              "Inspect the host developer-toolchain configuration and permissions.",
+                            trusted_runtime_roots:
+                              "Repair the installed sandbox runtime directories, then reload the host.",
+                            temporary_directory:
+                              "Repair the configured host temporary directory or its permissions.",
+                            environment:
+                              "Remove reported reserved keys or repair the host sandbox environment policy.",
+                            read_policy:
+                              "Repair the host sandbox read-root configuration without relaxing denied paths.",
+                            launch_binding:
+                              "Inspect the installed sandbox policy and runtime configuration before a fresh review.",
+                          }[err.diagnostic.phase],
+                        }
+                      : {}),
+                    fresh_review_after_repair: true,
+                  },
+                ],
+                prohibited_workarounds: ["native_security_bypass"],
+              } satisfies ExecuteCommandRetryGuidance,
+            }),
+          },
+        ],
+      };
+    }
+    if (err instanceof SandboxAvailabilityError) {
+      const category = err.diagnostic?.category;
+      const nodeRepair =
+        err.reason === "runtime-unavailable" &&
+        (category === "runtime_unavailable" ||
+          category === "runtime_node_unavailable");
+      const availabilityRepair =
+        category === "feature_disabled"
+          ? "Enable agentlink.terminal.enabled in the owning host to use sandbox execution, then retry. This is a configuration limit, not a missing Node executable."
+          : category === "remote_host" || category === "unsupported_host"
+            ? "Verified sandbox execution requires a supported local macOS or Linux extension host. Use a supported local host for this sandbox request; changing the Node path or repeatedly reloading this host cannot add sandbox support."
+            : category === "linux_sandbox_prerequisites_missing"
+              ? "This Linux host does not meet the bubblewrap sandbox prerequisites. The AgentLink output channel lists each failed check with its fix (for example installing bubblewrap, socat or ripgrep, or a user-namespace restriction). Report it to the user: the fix changes the host, and relaxing a host-wide namespace restriction is the user's decision. Retry after they repair it and reload the window."
+              : "Inspect the owning host's terminal configuration and AgentLink output channel to determine why required sandbox execution is unavailable. Repair the identified host limitation before retrying; do not assume Node is missing.";
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "blocked",
+              error:
+                err.reason === "runtime-unavailable"
+                  ? "The required sandbox runtime is unavailable. This request cannot use one-shot native recovery; inspect the runtime or request native execution separately."
+                  : "The required sandbox could not be verified. Native recovery is not offered for security or trust failures.",
+              error_code: "sandbox_unavailable",
+              failure_reason: err.reason,
+              ...(err.diagnostic ? { sandbox_diagnostic: err.diagnostic } : {}),
+              retry_guidance: {
+                code: "sandbox_unavailable",
+                message: nodeRepair
+                  ? "Repair the standalone Node runtime on the host: check agentlink.terminal.nodePath, replace a removed version-specific path with an existing executable (or clear it to use discovery), then reload the VS Code window to discard cached runtime resolution. Retry the same sandbox request only after repair."
+                  : err.reason === "runtime-unavailable"
+                    ? availabilityRepair
+                    : "Stop retrying commands. Inspect the AgentLink output channel for the failed sandbox check, verify the installed extension/runtime assets and workspace trust, then repair the host setup and reload. Do not disable checks or request native execution to bypass a security or trust failure.",
+                automatic_retry: false,
+                options: [
+                  {
+                    action: nodeRepair
+                      ? "repair_host_node_runtime_then_reload"
+                      : err.reason !== "runtime-unavailable"
+                        ? "inspect_host_sandbox_diagnostics_then_repair"
+                        : category === "feature_disabled"
+                          ? "enable_host_terminal_feature"
+                          : category === "remote_host" ||
+                              category === "unsupported_host"
+                            ? "use_supported_local_host"
+                            : category === "linux_sandbox_prerequisites_missing"
+                              ? "repair_linux_sandbox_prerequisites_then_reload"
+                              : "inspect_host_sandbox_availability",
+                    same_command_after_repair: true,
+                  },
+                ],
+                prohibited_workarounds: ["native_security_bypass"],
+              } satisfies ExecuteCommandRetryGuidance,
+              command: params.command,
+              command_sent: false,
+              process_launched: false,
+              retry_safe: false,
+              failure_stage: "preparation",
+            }),
+          },
+        ],
+      };
+    }
+    if (err instanceof SandboxPreparationDriftError) {
+      const retryGuidance: ExecuteCommandRetryGuidance = {
+        code: err.code,
+        message: err.message,
+        automatic_retry: false,
+        options: [{ action: "retry_same_command", same_command: true }],
+      };
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "retry_required",
+              error: message,
+              error_code: err.code,
+              changed_security_fields: err.changedFields,
+              retry_guidance: retryGuidance,
+              command: params.command,
+              command_sent: false,
+              process_launched: false,
+              retry_safe: true,
+              failure_stage: err.failureStage,
+            }),
+          },
+        ],
+      };
+    }
+    if (err instanceof NativeCommandEnvironmentError) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "retry_required",
+              error: err.message,
+              error_code: err.code,
+              terminal_id: err.terminalId,
+              environment_keys: err.environmentKeys,
+              environment_key_count: err.environmentKeyCount,
+              command: params.command,
+              command_sent: false,
+              process_launched: false,
+              retry_safe: true,
+              failure_stage: "preparation",
+              retry_guidance: {
+                code: err.code,
+                message:
+                  "The selected persistent terminal was created with different per-command env. The reported keys changed, were added, or were omitted. Reuse it only with the original env, or submit the same command and env without terminal_id or terminal_name to select a compatible idle terminal or create a new one. No environment values are reported and no terminal was changed automatically.",
+                automatic_retry: false,
+                options: [
+                  {
+                    action: "retry_without_terminal_target",
+                    omit_parameters: ["terminal_id", "terminal_name"],
+                    preserve_parameters: [
+                      "command",
+                      "cwd",
+                      "env",
+                      "sandbox_permissions",
+                    ],
+                    same_authority: true,
+                  },
+                ],
+              } satisfies ExecuteCommandRetryGuidance,
+            }),
+          },
+        ],
+      };
+    }
+    if (err instanceof TerminalTargetRecoveryError) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "retry_required",
+              error: message,
+              error_code: err.code,
+              target_failure: err.failure,
+              target_kind: err.target_kind,
+              target_value: err.target_value,
+              ...(err.required_authority
+                ? { required_authority: err.required_authority }
+                : {}),
+              ...(err.target_authorities
+                ? { target_authorities: err.target_authorities }
+                : {}),
+              compatible_terminals: err.compatible_terminals,
+              available_terminals: err.available_terminals,
+              retry_guidance: err.retry_guidance,
+              command: params.command,
+              command_sent: false,
+              process_launched: false,
+              retry_safe: true,
+              failure_stage: "preparation",
+            }),
+          },
+        ],
+      };
+    }
+    if (err instanceof SandboxProtectedRootDriftError) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "retry_required",
+              error: err.message,
+              error_code: err.code,
+              protected_root_change: err.details,
+              command: commandToRun,
+              ...(commandToRun !== params.command
+                ? { original_command: params.command, command_modified: true }
+                : {}),
+              command_sent: false,
+              process_launched: false,
+              retry_safe: true,
+              failure_stage: "launch",
+              retry_guidance: {
+                code: err.code,
+                message:
+                  "A protected file changed after this command's sandbox snapshot was prepared. The command did not start. Inspect the change and retry the same command to prepare and verify a fresh snapshot. If drift repeats, stop retrying and resolve the concurrent host mutation; do not bypass protection or use native execution just to ignore the change.",
+                automatic_retry: false,
+                options: [
+                  {
+                    action: "inspect_change_then_reprepare_same_command",
+                    same_command: true,
+                  },
+                ],
+                prohibited_workarounds: [
+                  "ignore_protected_root_changes",
+                  "native_security_bypass",
+                ],
+              } satisfies ExecuteCommandRetryGuidance,
+            }),
+          },
+        ],
+      };
+    }
+    if (err instanceof SandboxStructuralProtectionError) {
+      const isGitMetadata = err.details.path
+        .split(path.sep)
+        .some((entry) => entry === ".git");
+      const hardLink = err.details.kind === "hard_link";
+      const worktreeLock =
+        err.details.kind === "symbolic_link" &&
+        /(?:^|[\\/])\.git[\\/]worktrees[\\/][^\\/]+[\\/][^\\/]+(?:\.lock|-lock)$/.test(
+          err.details.path,
+        );
+      const allowReviewedWorktreeRetry =
+        worktreeLock &&
+        providers.commandExecutionPolicy !== "read-only" &&
+        !params.temporary_home &&
+        !params.files?.length;
+      const retryGuidance: ExecuteCommandRetryGuidance = {
+        code: err.code,
+        message: worktreeLock
+          ? "A symbolic-link lock in shared Git worktree metadata blocked sandbox preparation. It may belong to an active process. Inspect its ownership with a trusted host tool and preserve live locks; do not remove it just to run this command. Where offered, the exact command can instead receive a separate native review without changing the lock or sandbox policy."
+          : hardLink
+            ? `The sandbox found a protected ${isGitMetadata ? "Git metadata " : ""}file with an unexpected hard-link count before launch. Inspect all links to the reported protected file with a trusted host tool, remove only the unintended extra link, then retry the same command. Do not delete the reported protected file itself. AgentLink will not clean or ignore protected content automatically.`
+            : `The sandbox found an unsafe filesystem node inside ${isGitMetadata ? "protected Git metadata" : "a protected tree"} before launch. Inspect and remove the reported unexpected node with a trusted host tool, then retry the same command. AgentLink will not clean or ignore protected content automatically.`,
+        automatic_retry: false,
+        options: [
+          ...(allowReviewedWorktreeRetry
+            ? [
+                {
+                  action: "reviewed_native_retry_preserving_worktree_lock",
+                  command: commandToRun,
+                  ...(params.cwd ? { cwd: params.cwd } : {}),
+                  same_command: true,
+                  sandbox_permissions: "require_escalated",
+                  reason_required: true,
+                  reviewed_native_execution: true,
+                  preserve_reported_node: true,
+                },
+              ]
+            : []),
+          worktreeLock
+            ? {
+                action: "inspect_worktree_lock_ownership",
+                protected_path: err.details.path,
+                preserve_reported_node: true,
+                trusted_host_action_required: true,
+              }
+            : hardLink
+              ? {
+                  action: "inspect_hard_links_and_remove_extra_link",
+                  protected_file: err.details.path,
+                  alias_kind: err.details.kind,
+                  preserve_reported_file: true,
+                  same_command_after_cleanup: true,
+                  trusted_host_action_required: true,
+                }
+              : {
+                  action: "inspect_and_remove_unexpected_node",
+                  protected_path: err.details.path,
+                  alias_kind: err.details.kind,
+                  same_command_after_cleanup: true,
+                  trusted_host_action_required: true,
+                },
+        ],
+      };
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "retry_required",
+              error: err.message,
+              error_code: err.code,
+              protected_path: err.details.path,
+              alias_kind: err.details.kind,
+              retry_guidance: retryGuidance,
+              command: params.command,
+              command_sent: false,
+              process_launched: false,
+              retry_safe: true,
+              failure_stage: "launch",
+            }),
+          },
+        ],
+      };
+    }
+    if (err instanceof SandboxPreCommandLaunchError) {
+      const largestEnvironmentEntries = err.details.largestEnvironmentEntries;
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "retry_required",
+              error: err.message,
+              error_code: err.code,
+              command: params.command,
+              command_sent: false,
+              process_launched: false,
+              retry_safe: true,
+              failure_stage: "launch",
+              launch_size: {
+                required_bytes: err.details.requiredBytes,
+                limit_bytes: err.details.limitBytes,
+                headroom_bytes: err.details.headroomBytes,
+                argv_bytes: err.details.argvBytes,
+                environment_bytes: err.details.environmentBytes,
+                largest_environment_entries: largestEnvironmentEntries,
+              },
+              retry_guidance: {
+                code: "sandbox_environment_too_large",
+                message:
+                  "The final sandbox argv and environment exceed the operating-system launch limit. Reduce the named environment contributors before retrying; values are intentionally omitted.",
+                automatic_retry: false,
+                options: [
+                  {
+                    action: "reduce_environment_then_retry",
+                    same_command: true,
+                    contributor_names: largestEnvironmentEntries.map(
+                      (entry) => entry.name,
+                    ),
+                  },
+                ],
+              } satisfies ExecuteCommandRetryGuidance,
+            }),
+          },
+        ],
+      };
+    }
+    if (err instanceof SandboxCapabilityLaunchError) {
+      const retryGuidance: ExecuteCommandRetryGuidance = {
+        code: err.code,
+        message:
+          err.reason === "compile_failed"
+            ? "Sandbox policy compilation failed before launch. Stop retrying the command. Review the requested capabilities, command environment, and host sandbox policy for mismatches; then verify the installed runtime assets if the request is valid. The output channel records the bounded compile_failed reason, not the raw compiler exception. Correct the identified request, policy, or runtime problem before requesting a fresh reviewed execution; do not assume reinstalling or repeating the same command will fix it. A failed grant is not native authority."
+            : "The sandbox capability grant could not be activated before launch. Inspect the runtime failure before requesting a new execution; a failed or invalid grant is not native authority.",
+        automatic_retry: false,
+        options:
+          err.reason === "compile_failed"
+            ? [
+                {
+                  action: "inspect_sandbox_request_policy_and_runtime",
+                  fresh_review_after_repair: true,
+                },
+              ]
+            : [],
+        prohibited_workarounds: [
+          "native_security_bypass",
+          "reuse_failed_grant",
+        ],
+      };
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "blocked",
+              error:
+                "The sandbox capability grant could not be activated before launch.",
+              error_code: err.code,
+              capability_failure: err.reason,
+              retry_guidance: retryGuidance,
+              command: params.command,
+              command_sent: false,
+              process_launched: false,
+              retry_safe: false,
+              failure_stage: err.failureStage,
+            }),
+          },
+        ],
+      };
+    }
+    const lowerMessage = message.toLowerCase();
+    if (
+      lowerMessage.includes("native agent shell integration startup timed out")
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "retry_required",
+              error:
+                err instanceof NativeShellStartupTimeoutError
+                  ? err.message
+                  : "Native Agent shell integration startup timed out before command dispatch. Legacy unstructured startup output is omitted.",
+              error_code: "native_shell_startup_timeout",
+              ...(err instanceof NativeShellStartupTimeoutError
+                ? { startup_diagnostic: err.diagnostic }
+                : {}),
+              command: commandToRun,
+              ...(commandToRun !== params.command
+                ? { original_command: params.command, command_modified: true }
+                : {}),
+              command_sent: false,
+              process_launched: false,
+              retry_safe: true,
+              failure_stage: "launch",
+              retry_guidance: {
+                code: "native_shell_startup_timeout",
+                message:
+                  "The Native Agent shell did not become ready before the startup deadline; the command did not launch and that terminal was closed. startup_diagnostic reports safe shell/profile and launch-phase categories, plus a suspected prompt category when detected; raw startup output is withheld because it may contain credentials or private paths. In a normal VS Code terminal using the configured default profile (or host shell for fallback), check whether startup completes without prompts or hangs in .zshrc/.bashrc or a toolchain initializer. Repair the blocker before retrying the same command in a new terminal, omitting the closed terminal_id. Reloading alone does not repair shell startup; do not repeatedly retry or silently bypass user startup files.",
+                automatic_retry: false,
+                options: [
+                  {
+                    action: "inspect_host_shell_startup_then_repair",
+                    omit_parameters_after_repair: ["terminal_id"],
+                    same_command_after_repair: true,
+                  },
+                ],
+              } satisfies ExecuteCommandRetryGuidance,
+            }),
+          },
+        ],
+      };
+    }
+    if (
+      err instanceof SandboxPtyLaunchError ||
+      lowerMessage.includes(
+        "sandbox pty launch failed twice before the command started",
+      )
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              status: "retry_required",
+              error: message,
+              error_code: "sandbox_pty_launch_failed",
+              command: commandToRun,
+              ...(commandToRun !== params.command
+                ? { original_command: params.command, command_modified: true }
+                : {}),
+              ...(err instanceof SandboxPtyLaunchError
+                ? {
+                    terminal_id: err.identity.channelId,
+                    command_id: err.identity.commandId,
+                  }
+                : {}),
+              command_sent: false,
+              process_launched: false,
+              retry_safe: true,
+              failure_stage: "launch",
+              retry_guidance: {
+                code: "sandbox_pty_launch_failed",
+                message:
+                  "The sandbox could not create its PTY after one automatic retry, and the command did not start. Retry the same command; if this repeats, reload the VS Code window to recreate AgentLink's sandbox runtime.",
+                automatic_retry: false,
+                options: [{ action: "retry_same_command", same_command: true }],
+              } satisfies ExecuteCommandRetryGuidance,
+            }),
+          },
+        ],
+      };
+    }
+    const newlineRegexHint =
+      lowerMessage.includes("ripgrep error") &&
+      lowerMessage.includes("regex") &&
+      lowerMessage.includes("newline")
+        ? 'Your regex appears to contain a literal newline. Remove the literal newline from the command string and use escaped \\n with multiline mode instead (e.g. pattern: "foo\\nbar", plus --multiline).'
+        : undefined;
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            error: message,
+            ...(newlineRegexHint && { hint: newlineRegexHint }),
+            command: params.command,
+          }),
+        },
+      ],
+    };
+  }
+}
+
+function getReadOnlyCommandRejectionReason(
+  params: Parameters<typeof handleExecuteCommand>[0],
+  cwd: string,
+  workspaceRoots: string[],
+): string | undefined {
+  const unsupported = [
+    ["terminal_id", params.terminal_id],
+    ["terminal_name", params.terminal_name],
+    ["split_from", params.split_from],
+    ["background", params.background],
+    ["timeout", params.timeout],
+    ["env", params.env],
+    ["temporary_home", params.temporary_home],
+    ["files", params.files],
+    ["sandbox_permissions", params.sandbox_permissions],
+    ["force", params.force],
+    ["force_reason", params.force_reason],
+  ].find(([, value]) => value !== undefined);
+  if (unsupported) {
+    return `Read-only command execution does not allow the ${unsupported[0]} parameter`;
+  }
+  if (!isCommandPathInsideWorkspace(cwd, workspaceRoots)) {
+    return "Read-only command execution requires a working directory inside the workspace";
+  }
+
+  const eligibility = isCommandEligibleForReadOnlyExecution(params.command, {
+    cwd,
+    workspaceRoots,
+  });
+  if (!eligibility.eligible) {
+    return `Read-only command execution rejected ${eligibility.reason}`;
+  }
+  return undefined;
+}
+
+const READ_ONLY_REJECTION_RECOVERY =
+  "Use a dedicated read/search tool or a simpler classifier-recognized local read. Network reads and ambiguous commands require a writable foreground session with the normal approval flow.";
+
+/** True when any segment is a remote read (gh, curl, wget, or a networked git subcommand). */
+function isNetworkReadCommand(command: string): boolean {
+  return splitCompoundCommand(command).some((segment) => {
+    const tokens = singleCommandTokens(segment);
+    const words = tokens ?? segment.trim().split(/\s+/);
+    const executable = words[0];
+    if (executable === "gh" || executable === "curl" || executable === "wget") {
+      return true;
+    }
+    return (
+      executable === "git" &&
+      (GIT_NETWORK_SUBCOMMANDS.has(words[1] ?? "") ||
+        (words[1] === "remote" && words[2] === "update"))
+    );
+  });
+}
+
+function readOnlyNetworkRejectionRecovery(
+  availableToolNames: ReadonlySet<string> | undefined,
+): string {
+  const canAsk = availableToolNames
+    ? availableToolNames.has("ask_user")
+    : undefined;
+  const escalation =
+    canAsk === true
+      ? "If you are a background agent, call ask_user now: background questions go to the coordinator."
+      : canAsk === false
+        ? "If you are a background agent, report the missing evidence now in a concise status message or a blocked set_task_status instead of waiting for the final result."
+        : "If you are a background agent, call ask_user now if it is available (background questions go to the coordinator); otherwise report the missing evidence in a concise status message or a blocked set_task_status instead of waiting for the final result.";
+  return `This read-only session cannot run network commands such as gh, curl, wget, or git fetch/ls-remote. Do not retry through another network transport. ${escalation} Name the exact remote data you need (for example PR head/base SHAs, the diff, or CI status), then continue with local evidence only.`;
+}
+
+function readOnlyRejectedCommandResult(
+  command: string,
+  reason: string,
+  availableToolNames?: ReadonlySet<string>,
+): ToolResult {
+  const alternative =
+    command.includes("rg ") && !command.includes("--no-config")
+      ? "Use rg --no-config with workspace-local paths."
+      : command.includes("git diff")
+        ? "Use git diff --no-ext-diff --no-textconv for workspace inspection."
+        : undefined;
+  const networkRead = isNetworkReadCommand(command);
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          status: "rejected",
+          code: "readonly_policy_rejected",
+          command,
+          reason,
+          ...(alternative ? { recognized_alternative: alternative } : {}),
+          guardian_review_available: false,
+          recovery: networkRead
+            ? `${readOnlyNetworkRejectionRecovery(availableToolNames)} ${READ_ONLY_REJECTION_RECOVERY}`
+            : READ_ONLY_REJECTION_RECOVERY,
+          ...(networkRead ? { coordinator_evidence_needed: true } : {}),
+          command_sent: false,
+          process_launched: false,
+        }),
+      },
+    ],
+  };
+}
+
+const STALE_DISPATCH_REASON =
+  "New input from the user arrived after automatic review approved this command, so it was not run. Read the new input, then decide whether to run the command again.";
+
+function staleAuthorizationResult(
+  command: string,
+  security?: TerminalExecutionSecuritySummary,
+): ToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          status: "authorization_stale",
+          command,
+          reason: STALE_DISPATCH_REASON,
+          ...(security ? { security } : {}),
+          command_sent: false,
+          process_launched: false,
+          retry_safe: true,
+        }),
+      },
+    ],
+  };
+}
+
+function cancelledCommandResult(
+  command: string,
+  security?: TerminalExecutionSecuritySummary,
+): ToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          status: "cancelled",
+          command,
+          reason: "Command approval was cancelled before execution",
+          ...(security ? { security } : {}),
+          command_sent: false,
+        }),
+      },
+    ],
+  };
+}
+
+function rejectedCommandResult(command: string, reason: string): ToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          status: "rejected",
+          command,
+          reason,
+          command_sent: false,
+        }),
+      },
+    ],
+  };
+}
+
+function isMalformedShellState(state: ShellLexFinalState): boolean {
+  return state.quote !== null || state.danglingEscape;
+}
+
+function validateMalformedShellCommand(command: string): string | null {
+  const { maskedInput, unterminatedDelimiters } =
+    maskShellHeredocBodies(command);
+  if (unterminatedDelimiters.length > 0) {
+    return `Command has malformed shell syntax: missing heredoc terminator ${JSON.stringify(unterminatedDelimiters[0])}.`;
+  }
+  const finalStates = [
+    scanShellLexBoundaries(maskedInput).finalState,
+    scanShellLexWords(maskedInput).finalState,
+    scanShellLexTokens(maskedInput, {
+      escapeInSingleQuotes: true,
+      operators: [">>", ">", "<"],
+    }).finalState,
+  ];
+
+  if (!finalStates.some(isMalformedShellState)) return null;
+
+  return "Command has malformed shell syntax: close any open quotes and remove dangling trailing escapes before running.";
+}
+
+function malformedCommandResult(
+  command: string,
+  reason: string,
+  extra: { commandTemplate?: string; originalCommand?: string } = {},
+): ToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          status: "rejected",
+          command,
+          ...(extra.commandTemplate && {
+            command_template: extra.commandTemplate,
+          }),
+          ...(extra.originalCommand && {
+            original_command: extra.originalCommand,
+          }),
+          reason,
+          command_sent: false,
+        }),
+      },
+    ],
+  };
+}
+
+/**
+ * Approve sub-commands by showing a single dialog with the full command.
+ *
+ * - Split compound command, expand wrappers into separate sub-commands
+ * - Build enriched entries with existing matching rules
+ * - Run/Edit/Reject applies to the whole command at once
+ * - Always-visible per-sub-command rule editor with per-row scope
+ */
+async function approveSubCommands(
+  subCommands: string[],
+  fullCommand: string,
+  approvalManager: ApprovalManager,
+  approvalPanel: ApprovalPanelProvider,
+  sessionId: string,
+  reason: string | undefined,
+  cwd: string,
+  workspaceRoots: string[],
+  options?: {
+    displayCommand?: string;
+    inlineFiles?: InlineCommandFilePreview[];
+    requireHumanApproval?: boolean;
+    requireFreshReview?: boolean;
+    rulePolicy?: ReturnType<ApprovalManager["evaluateCommandRules"]>;
+    commandPolicyFingerprint?: string;
+    explicitNativeEscalation?: boolean;
+    ruleFastPathAllowed?: boolean;
+    allowRuleChanges?: boolean;
+
+    skipAutomaticReviewer?: boolean;
+    hasEnvOverrides?: boolean;
+    publicationEnvironmentOpaque?: boolean;
+    forceRequested?: boolean;
+    recoveryAttempt?: CommandRecoveryAttempt;
+    routeContext: TerminalExecutionRouteContext;
+    providers?: ExecuteCommandProviders;
+    security?: TerminalExecutionSecuritySummary;
+    toolCallId?: string;
+  },
+): Promise<{
+  approved: boolean;
+  reason?: string;
+  editedCommand?: string;
+  followUp?: string;
+  approval?: CommandApprovalAudit;
+  autoApprovedByTier?: { tier: CommandTier; threshold: "safe" | "sensitive" };
+  cancelled?: boolean;
+  policyDrift?: boolean;
+  /** Human-input revision an automatic reviewer approval was based on. */
+  reviewedHumanInputRevision?: number;
+  reviewPublicationContext?: ReviewPublicationContext;
+  priorReview?: PriorCommandReview;
+
+  commitMutations?: () => void;
+}> {
+  // Expand wrappers: ["cd /foo", "sudo npm install"] → ["cd /foo", "sudo", "npm install"]
+  const expanded = expandSubCommands(subCommands);
+
+  const reviewProviders = options?.providers;
+  const actionKey = commandReviewActionKey({
+    command: fullCommand,
+    cwd,
+    security: options?.security,
+  });
+  const retainedDenial =
+    reviewProviders?.retainedCommandReviewDenials?.has(sessionId, actionKey) ??
+    false;
+  let circuitInterrupted =
+    reviewProviders?.commandReviewTurnCircuit?.interrupted ?? false;
+
+  // Check if all expanded sub-commands are already approved. Recent one-time
+  // approvals are checked after project attribution is captured by enqueue.
+  const rulePolicy =
+    options?.rulePolicy ??
+    commandRulePolicyFor(approvalManager, sessionId, fullCommand, cwd);
+  if (rulePolicy.decision === "forbidden") {
+    return {
+      approved: false,
+      reason:
+        "Command execution is forbidden by an applicable command policy rule.",
+    };
+  }
+  // A full explicit Allow rule is standing user authority for the command and
+  // its requested route, capabilities, environment, and inline payloads. It
+  // therefore outranks Guardian freshness/retained-denial and human-only hints.
+  // Callers may disable this only when the same command is being re-executed
+  // after launch and needs a distinct one-shot recovery decision.
+  const allApproved =
+    options?.ruleFastPathAllowed !== false &&
+    rulePolicy.decision !== "prompt" &&
+    rulePolicy.allSegmentsExplicitlyAllowed;
+  if (allApproved) {
+    reviewProviders?.retainedCommandReviewDenials?.clear(sessionId, actionKey);
+    return { approved: true, approval: { by: "explicit_rule" } };
+  }
+
+  const classificationCommand = options?.inlineFiles?.length
+    ? (options.displayCommand ?? fullCommand)
+    : fullCommand;
+  const tierInfo = classifyCommand(classificationCommand, {
+    cwd,
+    workspaceRoots,
+  });
+  // Segments matched in full by an explicit Allow rule already carry standing
+  // user authority. Automatic decisions below judge only the remainder, so a
+  // risky but rule-allowed segment does not force review of a routine command.
+  // Recovery re-executions keep judging the whole command.
+  const ruleAllowedMask =
+    options?.ruleFastPathAllowed !== false && rulePolicy.decision !== "prompt"
+      ? ruleAllowedSubCommandMask(tierInfo, rulePolicy.segments)
+      : undefined;
+  const ruleAllowedCount = ruleAllowedMask?.filter(Boolean).length ?? 0;
+  const residualTierInfo =
+    ruleAllowedMask &&
+    ruleAllowedCount > 0 &&
+    canDiscountRuleAllowedSubCommands(
+      classificationCommand,
+      tierInfo,
+      ruleAllowedMask,
+    )
+      ? withoutRuleAllowedSubCommands(tierInfo, ruleAllowedMask)
+      : undefined;
+  // An empty remainder means every segment is covered but the full-rule fast
+  // path above declined it; keep judging the whole command in that case.
+  const autoTierInfo =
+    residualTierInfo && residualTierInfo.perSubCommand.length > 0
+      ? residualTierInfo
+      : tierInfo;
+  const ruleAllowedAudit =
+    autoTierInfo !== tierInfo
+      ? { rule_allowed_subcommands: ruleAllowedCount }
+      : {};
+  const policy =
+    options?.routeContext.commandApprovalPolicySnapshot ?? "manual";
+  const threshold = policy === "sensitive" ? "sensitive" : "safe";
+  const sandboxVerificationApproved =
+    policy === "approve-for-me" &&
+    rulePolicy.decision !== "prompt" &&
+    !options?.requireHumanApproval &&
+    !retainedDenial &&
+    !options?.requireFreshReview &&
+    !options?.inlineFiles?.length &&
+    !options?.hasEnvOverrides &&
+    !options?.forceRequested &&
+    options?.security?.route === "sandbox" &&
+    options.security.confinement === "verified-baseline" &&
+    options.routeContext.permissionIntent === "default" &&
+    workspaceRoots.some((root) => isCommandPathInsideWorkspace(cwd, [root])) &&
+    autoTierInfo.perSubCommand.length > 0 &&
+    autoTierInfo.perSubCommand.every(
+      ({ result }) => result.code === "project_toolchain",
+    );
+  if (sandboxVerificationApproved) {
+    return {
+      approved: true,
+      approval: { by: "sandbox_verification", ...ruleAllowedAudit },
+    };
+  }
+
+  const deterministicallyApproved =
+    rulePolicy.decision !== "prompt" &&
+    !options?.requireHumanApproval &&
+    !retainedDenial &&
+    !options?.requireFreshReview &&
+    options?.routeContext.permissionIntent !== "native-escalation" &&
+    ((autoTierInfo.tier === "safe" && policy !== "manual") ||
+      (autoTierInfo.tier === "sensitive" && policy === "sensitive"));
+  if (deterministicallyApproved) {
+    return {
+      approved: true,
+      approval: {
+        by: "tier",
+        tier: autoTierInfo.tier,
+        threshold,
+        ...ruleAllowedAudit,
+      },
+      autoApprovedByTier: { tier: autoTierInfo.tier, threshold },
+    };
+  }
+
+  // Routine reads, toolchain runs, workspace-bounded file operations, and
+  // routine Git publishing skip Guardian on the default route. Routine Git
+  // workflow may also skip it on native escalation, which it needs for
+  // protected Git metadata and SSH remotes. Force pushes, other network
+  // effects, unrecognized commands, other escalations, and retained denials
+  // keep the full review below.
+  const routineApproveForMeApproved =
+    policy === "approve-for-me" &&
+    rulePolicy.decision !== "prompt" &&
+    !options?.requireHumanApproval &&
+    !retainedDenial &&
+    !options?.requireFreshReview &&
+    !options?.inlineFiles?.length &&
+    !options?.hasEnvOverrides &&
+    !options?.forceRequested &&
+    !options?.recoveryAttempt &&
+    !circuitInterrupted &&
+    workspaceRoots.some((root) => isCommandPathInsideWorkspace(cwd, [root])) &&
+    ((options?.routeContext.permissionIntent === "default" &&
+      isRoutineApproveForMeCommand(autoTierInfo)) ||
+      (options?.routeContext.permissionIntent === "native-escalation" &&
+        isRoutineGitWorkflowNativeCommand(autoTierInfo)));
+  if (routineApproveForMeApproved) {
+    return {
+      approved: true,
+      approval: {
+        by: "routine_tier",
+        tier: autoTierInfo.tier,
+        ...ruleAllowedAudit,
+      },
+    };
+  }
+
+  const inlineFiles = options?.inlineFiles;
+  const hasEnvOverrides = Boolean(options?.hasEnvOverrides);
+  const forceRequested = Boolean(options?.forceRequested);
+  let commandReview: CommandReviewSummary | undefined;
+  let priorReview: PriorCommandReview | undefined;
+  let humanOnlyReason: string | undefined = options?.recoveryAttempt
+    ? options.recoveryAttempt.commandSent === false &&
+      options.recoveryAttempt.processLaunched === false
+      ? "The sandbox did not start this command. Running it outside the sandbox requires your direct approval."
+      : "This is a one-time second execution after a sandbox denial and requires your direct approval."
+    : circuitInterrupted
+      ? "Automatic command review stopped after repeated denials in this turn. Your direct approval is required."
+      : undefined;
+  const commandPolicyFingerprint =
+    options?.commandPolicyFingerprint ??
+    commandRulePolicyFingerprint(rulePolicy);
+  const recentApprovalLookup = (
+    approvalPanel as ApprovalPanelProvider & {
+      isCommandRecentlyApproved?: ApprovalPanelProvider["isCommandRecentlyApproved"];
+    }
+  ).isCommandRecentlyApproved;
+  const recentlyApproved = Boolean(
+    rulePolicy.decision !== "prompt" &&
+    !options?.requireHumanApproval &&
+    !retainedDenial &&
+    !options?.requireFreshReview &&
+    !options?.inlineFiles?.length &&
+    !options?.hasEnvOverrides &&
+    !options?.forceRequested &&
+    !circuitInterrupted &&
+    options?.security &&
+    recentApprovalLookup?.call(approvalPanel, {
+      command: fullCommand,
+      cwd,
+      sessionId,
+      security: options.security,
+      commandPolicyFingerprint,
+    }),
+  );
+  if (recentlyApproved) {
+    return { approved: true, approval: { by: "recent_approval" } };
+  }
+  if (
+    rulePolicy.decision !== "prompt" &&
+    policy === "approve-for-me" &&
+    !circuitInterrupted &&
+    !options?.skipAutomaticReviewer &&
+    reviewProviders?.commandApprovalReviewer
+  ) {
+    const eligibility = getCommandAutoApprovalEligibility({
+      classified: autoTierInfo,
+      cwd,
+      workspaceRoots,
+      inlineFiles,
+      security: options?.security,
+      hasEnvOverrides,
+      forceRequested,
+    });
+    if (!eligibility.eligible) {
+      humanOnlyReason = eligibility.reason;
+    } else {
+      const reviewedCommand = fullCommand;
+      const currentHumanInputRevision = () =>
+        reviewProviders.getHumanInputRevision?.(sessionId);
+      let review!: CommandApprovalReviewResult;
+      let reviewId = "";
+      let reviewedRevision: number | undefined;
+      let staleReview = false;
+      let reviewPublicationContext: ReviewPublicationContext | undefined;
+      // Context is read when each review starts. Human input received while a
+      // review is in flight makes that decision stale, so review once more
+      // against the newer context instead of approving under old authority.
+      for (let attempt = 0; attempt < MAX_FRESH_REVIEW_ATTEMPTS; attempt += 1) {
+        reviewId = randomUUID();
+        reviewedRevision = currentHumanInputRevision();
+        if (options?.security && reviewProviders.terminalProvider) {
+          recordExecutionAudit(
+            reviewProviders.terminalProvider,
+            "review_started",
+            options.security,
+          );
+        }
+        const contextSnapshot =
+          reviewProviders.getReviewContextWithMetadata?.(sessionId);
+        const collectedEvidence = collectCommandReviewEvidenceWithMetadata(
+          reviewedCommand,
+          { cwd, workspaceRoots },
+        );
+        reviewPublicationContext =
+          reviewProviders.reviewPublicationHost?.prepare({
+            sessionId,
+            command: reviewedCommand,
+            cwd,
+            workspaceRoots,
+            humanInputRevision: reviewedRevision,
+            hasEnvOverrides,
+            environmentOpaque: options?.publicationEnvironmentOpaque,
+            signal: reviewProviders.toolAbortSignal,
+          });
+        review = await reviewProviders.commandApprovalReviewer.review({
+          sessionId,
+          command: reviewedCommand,
+          cwd,
+          workspaceRoots,
+          reason,
+          userObjective: reviewProviders.getUserObjective?.(sessionId),
+          context:
+            contextSnapshot?.context ??
+            reviewProviders.getReviewContext?.(sessionId),
+          classified: tierInfo,
+          ...(ruleAllowedCount > 0 && ruleAllowedMask
+            ? { ruleAllowedSubCommands: ruleAllowedMask }
+            : {}),
+          security: options?.security,
+          inlineFiles,
+          evidence: collectedEvidence.evidence,
+          evidenceMetadata: {
+            ...contextSnapshot?.metadata,
+            ...collectedEvidence.metadata,
+          },
+          ...(contextSnapshot?.extendedHumanAuthority
+            ? { extendedHumanAuthority: contextSnapshot.extendedHumanAuthority }
+            : {}),
+          ...(reviewPublicationContext ? { reviewPublicationContext } : {}),
+          signal: reviewProviders.toolAbortSignal,
+          reviewId,
+          ...(reviewedRevision !== undefined
+            ? { humanInputRevision: reviewedRevision }
+            : {}),
+          ...(options?.toolCallId ? { toolCallId: options.toolCallId } : {}),
+        });
+        if (options?.security && reviewProviders.terminalProvider) {
+          recordExecutionAudit(
+            reviewProviders.terminalProvider,
+            "review_completed",
+            options.security,
+            { resultStatus: review.status },
+          );
+        }
+        staleReview =
+          currentHumanInputRevision() !== reviewedRevision ||
+          (reviewPublicationContext !== undefined &&
+            !reviewProviders.reviewPublicationHost?.isCurrent(
+              sessionId,
+              reviewPublicationContext,
+            ));
+        if (!staleReview || reviewProviders.toolAbortSignal?.aborted) break;
+      }
+      if (
+        options?.routeContext &&
+        hasPolicyDrift(reviewProviders, sessionId, options.routeContext)
+      ) {
+        return { approved: false, policyDrift: true };
+      }
+      priorReview = {
+        review_id: reviewId,
+        status: staleReview ? "stale" : review.status,
+        outcome: review.outcome,
+        model: review.model,
+        // Only the validated, user-facing decision summary, never raw provider
+        // output, reasoning, or failure bodies. Superseded reviews are not risk evidence.
+        ...(!staleReview && review.status === "reviewed"
+          ? {
+              risk: review.risk,
+              rationale: review.rationale.slice(0, 500),
+            }
+          : {}),
+      };
+      if (staleReview) {
+        // A decision made against superseded context is not a denial signal.
+        humanOnlyReason = STALE_REVIEW_HUMAN_ONLY_REASON;
+      } else {
+        const sessionActive =
+          reviewProviders.isSessionActive?.(sessionId) ??
+          !reviewProviders.toolAbortSignal?.aborted;
+        const circuitDecision =
+          reviewProviders.commandReviewTurnCircuit?.record(review);
+        if (circuitDecision?.explicitDenial) {
+          reviewProviders.retainedCommandReviewDenials?.retain(
+            sessionId,
+            actionKey,
+          );
+        }
+        if (circuitDecision?.interrupted) {
+          circuitInterrupted = true;
+          humanOnlyReason =
+            "Automatic command review stopped after repeated denials in this turn. Your direct approval is required.";
+        }
+        const reviewerApproved =
+          review.status === "reviewed" && review.outcome === "allow";
+        if (
+          reviewerApproved &&
+          sessionActive &&
+          !reviewProviders.toolAbortSignal?.aborted &&
+          reviewedCommand === fullCommand
+        ) {
+          reviewProviders.retainedCommandReviewDenials?.clear(
+            sessionId,
+            actionKey,
+          );
+          return {
+            approved: true,
+            approval: {
+              by: "model_reviewer",
+              model: review.model,
+              tier: tierInfo.tier,
+              outcome: "allow",
+              risk: review.risk,
+              user_authorization: review.userAuthorization,
+              rationale: review.rationale.slice(0, 500),
+              review_id: reviewId,
+            },
+            ...(reviewedRevision !== undefined
+              ? { reviewedHumanInputRevision: reviewedRevision }
+              : {}),
+            ...(reviewPublicationContext ? { reviewPublicationContext } : {}),
+          };
+        }
+        if (!reviewerApproved) {
+          commandReview = {
+            status: review.status,
+            outcome: review.outcome,
+            risk: review.risk,
+            userAuthorization: review.userAuthorization,
+            rationale: review.rationale.slice(0, 500),
+            model: review.model,
+          };
+        }
+      }
+    }
+  }
+  if (isCommandApprovalCancelled(sessionId, reviewProviders)) {
+    return { approved: false, cancelled: true };
+  }
+
+  const tierByCommand = new Map(
+    tierInfo.perSubCommand.map((entry) => [entry.command, entry.result]),
+  );
+
+  // Build enriched entries for ALL sub-commands (even already-approved ones)
+  const entries: SubCommandEntry[] = expanded.map((cmd) => {
+    const match = approvalManager.findMatchingCommandRule(sessionId, cmd, cwd);
+    if (match) {
+      return {
+        command: cmd,
+        existingRule: {
+          pattern: match.rule.pattern,
+          mode: match.rule.mode,
+          decision: match.rule.decision,
+          scope: match.scope,
+        },
+        tier: tierByCommand.get(cmd),
+      };
+    }
+    return { command: cmd, tier: tierByCommand.get(cmd) };
+  });
+
+  // Offer to turn automatic review back on only when the paused circuit is
+  // the reason Guardian did not decide, so resuming would actually review.
+  const automaticReviewPaused =
+    circuitInterrupted &&
+    !options?.recoveryAttempt &&
+    !options?.skipAutomaticReviewer &&
+    policy === "approve-for-me" &&
+    rulePolicy.decision !== "prompt" &&
+    Boolean(
+      reviewProviders?.commandReviewTurnCircuit &&
+      reviewProviders.commandApprovalReviewer,
+    );
+
+  // Show dialog with full command + enriched sub-command entries
+  let humanApprovalRequested = false;
+  const { promise, commitApprovalRecording = () => {} } =
+    approvalPanel.enqueueCommandApproval(
+      options?.displayCommand ?? fullCommand,
+      fullCommand,
+      {
+        subCommands: entries,
+        inlineFiles: options?.inlineFiles,
+        reason,
+        cwd,
+        commandReview,
+        humanOnlyReason,
+        ...(automaticReviewPaused ? { automaticReviewPaused: true } : {}),
+        recoveryAttempt: options?.recoveryAttempt,
+        commandPolicyFingerprint,
+        security: options?.security,
+        sessionId,
+        signal: reviewProviders?.toolAbortSignal,
+        deferApprovalRecording: true,
+        bypassRecentApproval:
+          circuitInterrupted ||
+          options?.requireFreshReview ||
+          options?.requireHumanApproval ||
+          Boolean(options?.inlineFiles?.length) ||
+          options?.hasEnvOverrides ||
+          options?.forceRequested,
+        skipApprovalRecording: Boolean(options?.recoveryAttempt),
+        onHumanApprovalRequested: () => {
+          humanApprovalRequested = true;
+          if (options?.security && options.providers?.terminalProvider) {
+            recordExecutionAudit(
+              options.providers.terminalProvider,
+              "human_approval_requested",
+              options.security,
+            );
+          }
+        },
+      },
+    );
+  const response = await promise;
+  if (
+    humanApprovalRequested &&
+    options?.security &&
+    options.providers?.terminalProvider
+  ) {
+    recordExecutionAudit(
+      options.providers.terminalProvider,
+      "human_approval_responded",
+      options.security,
+      {
+        resultStatus: isCommandApprovalCancelled(sessionId, reviewProviders)
+          ? "cancelled"
+          : response.decision,
+      },
+    );
+  }
+
+  if (isCommandApprovalCancelled(sessionId, reviewProviders)) {
+    return { approved: false, cancelled: true };
+  }
+  if (
+    options?.routeContext &&
+    reviewProviders &&
+    hasPolicyDrift(reviewProviders, sessionId, options.routeContext)
+  ) {
+    return { approved: false, policyDrift: true };
+  }
+
+  if (response.decision === "resume-review") {
+    if (!automaticReviewPaused) {
+      return {
+        approved: false,
+        reason: "Automatic review is not paused for this command.",
+        ...(priorReview ? { priorReview } : {}),
+      };
+    }
+    // The user turned automatic review back on for the rest of this turn.
+    // Nothing was approved; review this exact command again from the start.
+    reviewProviders?.commandReviewTurnCircuit?.resume();
+    return approveSubCommands(
+      subCommands,
+      fullCommand,
+      approvalManager,
+      approvalPanel,
+      sessionId,
+      reason,
+      cwd,
+      workspaceRoots,
+      options,
+    );
+  }
+
+  if (response.decision === "reject") {
+    if (options?.recoveryAttempt) {
+      reviewProviders?.commandReviewTurnCircuit?.rejectRecovery(actionKey);
+    }
+    return {
+      approved: false,
+      reason: response.rejectionReason,
+      ...(priorReview ? { priorReview } : {}),
+    };
+  }
+
+  let mutationsCommitted = false;
+  const commitMutations = () => {
+    if (mutationsCommitted) return;
+    mutationsCommitted = true;
+    commitApprovalRecording();
+    for (const rule of options?.allowRuleChanges === false
+      ? []
+      : (response.rules ?? [])) {
+      if (rule.mode === "skip" || rule.scope === "skip" || !rule.pattern)
+        continue;
+      const saved = approvalManager.addCommandRule(
+        sessionId,
+        {
+          pattern: rule.pattern,
+          mode: rule.mode,
+          decision: rule.decision,
+        },
+        rule.scope,
+        cwd,
+      );
+      if (!saved) {
+        throw new Error(
+          `Could not save the ${rule.scope} command approval. The command was not executed; check the approval config path and try again.`,
+        );
+      }
+    }
+  };
+
+  if (response.editedCommand) {
+    return {
+      approved: true,
+      approval: {
+        by: "human_edited",
+        ...(priorReview ? { prior_review: priorReview } : {}),
+      },
+      editedCommand: response.editedCommand,
+      followUp: response.followUp,
+      commitMutations,
+    };
+  }
+  // A direct human approval outranks an earlier guardian denial of the same
+  // action, so stop the retained denial from blocking fast paths on repeats.
+  if (!response.coordinatorApproval) {
+    reviewProviders?.retainedCommandReviewDenials?.clear(sessionId, actionKey);
+  }
+  return {
+    approved: true,
+    approval: response.coordinatorApproval
+      ? { by: "coordinator" }
+      : response.recentApproval
+        ? { by: "recent_approval" }
+        : {
+            by: "human",
+            ...(priorReview ? { prior_review: priorReview } : {}),
+          },
+    followUp: response.followUp,
+    commitMutations,
+  };
+}
+
+function isCommandApprovalCancelled(
+  sessionId: string,
+  providers: ExecuteCommandProviders | undefined,
+): boolean {
+  return Boolean(
+    providers?.toolAbortSignal?.aborted ||
+    (providers?.isSessionActive && !providers.isSessionActive(sessionId)),
+  );
+}
+
+function validateCommandBeforeExecution(
+  command: string,
+  cwd: string,
+  originalCommand?: string,
+  availableToolNames?: ReadonlySet<string>,
+): ToolResult | null {
+  const malformedCommandReason = validateMalformedShellCommand(command);
+  if (malformedCommandReason) {
+    return malformedCommandResult(command, malformedCommandReason, {
+      ...(originalCommand && { originalCommand }),
+    });
+  }
+
+  const protectedWriteViolation = validateProtectedWriteCommand(command, cwd);
+  if (protectedWriteViolation) {
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            status: "rejected",
+            command,
+            ...(originalCommand && { original_command: originalCommand }),
+            reason: protectedWriteViolation.message,
+            protected_path: protectedWriteViolation.protectedPath,
+            command_sent: false,
+          }),
+        },
+      ],
+    };
+  }
+
+  const commandViolation = validateCommand(command, availableToolNames);
+  if (commandViolation) {
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            status: "rejected",
+            command,
+            ...(originalCommand && { original_command: originalCommand }),
+            reason: commandViolation.message,
+            command_sent: false,
+          }),
+        },
+      ],
+    };
+  }
+
+  const interactiveViolation = validateInteractiveCommand(command);
+  if (interactiveViolation) {
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            status: "rejected",
+            command,
+            ...(originalCommand && { original_command: originalCommand }),
+            reason: interactiveViolation.message,
+            command_sent: false,
+          }),
+        },
+      ],
+    };
+  }
+
+  return null;
+}

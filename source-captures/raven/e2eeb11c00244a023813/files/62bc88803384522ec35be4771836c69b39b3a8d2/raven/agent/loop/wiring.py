@@ -1,0 +1,2331 @@
+"""Construction-time wiring: providers, bindings, tool registration, playbooks,
+workdir and sinks.
+"""
+
+from __future__ import annotations
+
+import asyncio
+from typing import TYPE_CHECKING
+
+from raven.a2a_client.tool import A2aTool
+from raven.acp_client.asker import held_question
+from raven.agent import knowledge_scope
+from raven.agent.loop._shared import (
+    SEARCH_PROVIDERS,
+    Any,
+    AskUserTool,
+    Callable,
+    ConnectionAddTool,
+    EditFileTool,
+    ExecTool,
+    FindTool,
+    GrepTool,
+    ImageGenerateTool,
+    ImageSearchTool,
+    ListDirTool,
+    LLMProvider,
+    MessageTool,
+    ModelBinding,
+    Path,
+    ReadFileTool,
+    SpawnTool,
+    SpeechGenerateTool,
+    VideoGenerateTool,
+    WebFetchTool,
+    WebSearchTool,
+    WriteFileTool,
+    active_binding,
+    image_search_vendor,
+    logger,
+    resolve_vendor_key,
+    workdir,
+)
+from raven.agent.subagent import charter as charter_mod
+from raven.agent.subagent.role import is_subagent_process
+from raven.agent.tools.ask_user import DEFAULT_TIMEOUT_S
+from raven.contracts.token_strategy import UsageSnapshot
+from raven.providers import effort_levels
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from raven.agent.subagent.charter import Charter
+    from raven.agent.subagent.delegate import DelegateTable
+    from raven.agent.tools.deliverables import DeliverableStore
+    from raven.config.raven import SkillForgeRouterConfig
+    from raven.config.schema import PlaybookConfig
+    from raven.providers.pool import ProviderPool
+    from raven.skill_hub import SkillHubClient
+
+
+#: What the iteration cap is held under for the length of a turn.
+_CAP_KEY = "agents.defaults.maxToolIterations"
+#: Same, for the effort every model call of the turn is sent at.
+_EFFORT_KEY = "agents.defaults.reasoningEffort"
+#: Same, for the switch both personalization gates of a turn read.
+_PERSONALIZATION_KEY = "agents.defaults.enablePersonalization"
+#: Both web vendors under one key: they come out of one section, and a turn
+#: that searches and fetches must not straddle an edit between the two.
+_WEB_VENDORS_KEY = "tools.web.providers"
+
+
+class WiringMixin:
+    """Construction-time wiring: providers, bindings, tool registration, playbooks,
+    workdir and sinks."""
+
+    def _report_reserved_disabled_tools(self) -> None:
+        """Tell the operator about an off switch the loop cannot honour.
+
+        All this function does now. Withholding a tool is decided per request by
+        :meth:`_withheld_tool_names`, which is what makes a switch flipped now
+        take effect on the next turn -- this used to *unregister* the tool, and a
+        preference expressed by destroying its subject is one that cannot be
+        reversed: nothing remembered what to put back.
+
+        Two groups are exempt, and both are theirs by ownership rather than by
+        policy. :meth:`_sync_mcp_meta_tools` registers the five MCP meta-tools
+        while some connected server serves resources or prompts and withdraws them
+        when none does, so it owns those names for the life of the loop.
+        ``tool_search`` and ``tool_call`` are owned the same way by
+        :meth:`_register_default_tools`, and ``tools.tool_search.enabled`` is the
+        switch that speaks for them. An entry naming either group is a preference
+        nothing can act on -- reported here once, ignored where the array is built.
+
+        Run after :meth:`_register_default_tools` and after MCP connect, so an
+        entry naming a tool from either group is resolvable by the time it is
+        checked. Silent on misses: an eval config commonly carries an over-broad
+        list that is a no-op in this build.
+
+        Reads the same two sources as :meth:`_withheld_tool_names`, so the notice
+        is about the entry the operator can actually see -- most of them are in
+        the config file, which is no longer copied into ``_disabled_tools``.
+        """
+        from raven.agent.tools.tool_search import META_TOOL_NAMES, TOOL_SEARCH_NAME
+        from raven.config.live import disabled_tool_names
+        from raven.mcp.prompts import PROMPT_TOOL_NAMES
+        from raven.mcp.resources import RESOURCE_TOOL_NAMES
+
+        entries = set(disabled_tool_names(self._live_config)) | self._disabled_tools
+        if not entries:
+            return
+        mcp_reserved = RESOURCE_TOOL_NAMES | PROMPT_TOOL_NAMES
+        for entry in sorted(entries):
+            if entry in self._disabled_tools_reserved_warned:
+                continue
+            resolved = self.tools.resolve_configured(entry)
+            if any(name in mcp_reserved for name in resolved):
+                self._disabled_tools_reserved_warned.add(entry)
+                logger.warning(
+                    "tools.disabled_tools names '{}', which raven registers and withdraws on its "
+                    "own as MCP servers serving resources or prompts come and go. The entry has "
+                    "no effect; remove it to keep the config honest.",
+                    entry,
+                )
+            elif any(name in META_TOOL_NAMES for name in resolved):
+                self._disabled_tools_reserved_warned.add(entry)
+                # One remedy per name, because the two are not owned the same
+                # way: tools.tool_search.enabled decides whether tool_search is
+                # registered at all, while tool_call is registered whatever that
+                # switch says -- it is the only route to a schema-hidden tool.
+                # A shared "turn the fold off" line sent an operator who wrote
+                # tool_call here to a setting that leaves it exactly where it was.
+                remedy = (
+                    "turn the fold off with tools.tool_search.enabled, which is what registers it"
+                    if TOOL_SEARCH_NAME in resolved
+                    else "this deploy has no switch for it: it is the only route to a tool whose "
+                    "schema is not in the array, so it is registered whatever the fold is doing"
+                )
+                logger.warning(
+                    "tools.disabled_tools names '{}', which raven owns for the life of the loop. "
+                    "The entry has no effect; remove it, or {}.",
+                    entry,
+                    remedy,
+                )
+
+    def _withheld_tool_names(self) -> frozenset[str]:
+        """Which tools are not on offer right now, read live.
+
+        The registry asks this when it assembles a tool array. Reserved names are
+        removed here rather than at the switch: ``_sync_mcp_meta_tools`` owns the
+        five MCP meta-tools for the life of the loop (it registers them while some
+        connected server serves resources or prompts and withdraws them when none
+        does), so an entry naming one is a preference the loop cannot honour --
+        reported above, ignored here.
+
+        ``tool_search`` and ``tool_call`` are reserved for that reason and one
+        more. Their absence from the array is how ``ToolSearchStrategy`` reads
+        "this request has no search route", and it answers by shipping every
+        schema instead -- so an off switch here would not slim the array, it would
+        unfold it, and mid-turn at that, because this source is read once per
+        assembly. The switch that speaks for the fold is
+        ``tools.tool_search.enabled``.
+
+        Constructor-supplied names are unioned in because an eval harness passes
+        them directly rather than through a config file; a file-less run would
+        otherwise lose its blacklist entirely. Nothing copies the config's own
+        list in there -- see the note in ``__init__`` on why that made the switch
+        one-way.
+        """
+        from raven.agent.tools.tool_search import META_TOOL_NAMES
+        from raven.config.live import disabled_tool_names
+        from raven.mcp.prompts import PROMPT_TOOL_NAMES
+        from raven.mcp.resources import RESOURCE_TOOL_NAMES
+
+        configured = set(disabled_tool_names(self._live_config)) | set(self._disabled_tools)
+        withheld: set[str] = set()
+        for entry in configured:
+            withheld.update(self.tools.resolve_configured(entry))
+        withheld.update(self._unconfigured_tool_names())
+        # Nothing to search is not a tool to offer. Read from the turn's own
+        # binding rather than from config, so attaching a base takes effect on
+        # the next model call and detaching every base takes the tool away
+        # again -- both directions, mid-conversation.
+        if not knowledge_scope.selected():
+            withheld.add("knowledge_search")
+        return frozenset(withheld - (RESOURCE_TOOL_NAMES | PROMPT_TOOL_NAMES | META_TOOL_NAMES))
+
+    def _unconfigured_tool_names(self) -> set[str]:
+        """Registered tools whose config asks for nothing right now, read live.
+
+        The old registration gate, moved to the withheld axis so it works in
+        both directions while the process runs. The rules themselves are
+        unchanged: a media tool counts as configured only when its own section
+        names a model or a key -- an OpenRouter key set for chat alone must not
+        surface tools that bill per call -- and web_search counts a key from
+        the file or the environment, or a selected vendor that needs none.
+
+        Gates the built-in INSTANCE, by identity: plugin tools register last
+        precisely so one can shadow a built-in by name -- subclassing it or
+        not -- and whatever replaced the entry carries its own credential
+        story, which the built-in's config section says nothing about. An
+        ``isinstance`` check read a plugin *subclass* as the built-in itself
+        and withheld it on the built-in's empty section.
+        """
+        media = self.media_config
+        gated = getattr(self, "_config_gated_tools", {})
+        names: set[str] = set()
+        for cls, kind, fallback in (
+            (ImageGenerateTool, "image", media.image),
+            (SpeechGenerateTool, "speech", media.speech),
+            (VideoGenerateTool, "video", media.video),
+        ):
+            if self.tools.get(cls.name) is not gated.get(cls.name):
+                continue
+            cfg = self._live_media_config(kind, fallback)
+            if not (cfg.api_key or cfg.model):
+                names.add(cls.name)
+        search = self.tools.get(WebSearchTool.name)
+        # Asked of the tool, not restated here: it resolves the selected
+        # vendor's key from the live reader below or from that vendor's own
+        # environment variable. A predicate spelled out again here was reading
+        # SERPER_API_KEY whatever the deployment had chosen, which withheld a
+        # keyed Tavily search.
+        if search is not None and search is gated.get(WebSearchTool.name) and not search.ready:
+            names.add(WebSearchTool.name)
+        pictures = self.tools.get(ImageSearchTool.name)
+        if pictures is not None and pictures is gated.get(ImageSearchTool.name) and not pictures.api_key:
+            names.add(ImageSearchTool.name)
+        # A contributed tool that declared ``configured()`` at the door answers
+        # for itself on this same lane (the paper is in
+        # raven/contracts/plugin_surface.py): the built-ins above are judged by
+        # identity because their section is the loop's to read, while a plugin's
+        # credential story is its own. Read off the admitted ``ToolSpec``, never
+        # off the live object, and asked per assembly, so a section added or
+        # emptied in Settings surfaces or withdraws the tool on the next turn
+        # without a restart. A declaration that raises is logged and read as
+        # configured: offering a tool that will answer with its own error beats
+        # losing the assembly.
+        for name in self.tools.names():
+            if self.tools.get(name) is gated.get(name):
+                continue
+            spec = self.tools.spec_of(name)
+            if spec is None or spec.configured is None:
+                continue
+            try:
+                offered = bool(spec.configured())
+            except Exception as exc:
+                logger.warning("tool {} could not say whether it is configured: {}", name, exc)
+                continue
+            if not offered:
+                names.add(name)
+        return names
+
+    def _live_exec_extra_deny(self) -> list[str] | None:
+        """The exec deny extras the file names now; None keeps the boot extras."""
+        from raven.config.live import exec_extra_deny_patterns
+
+        return exec_extra_deny_patterns(self._live_config)
+
+    def _live_web_search_key(self) -> str:
+        """The selected vendor's search key the file names now, else the boot value.
+
+        The boot value is the lane eval harnesses pass a key through with no
+        file behind it; a file with a section governs entirely, including an
+        empty value, which is how a key gets revoked without a restart.
+
+        Both key layouts are read live, canonical slot first, in the same order
+        ``WebToolsConfig.vendor_key`` resolves them: reading only the
+        pre-vendor leaf made the restart-free behaviour reachable exclusively
+        by the layout this schema retired, so a key pasted into the slot the
+        settings page writes -- Serper's included -- left the tool withheld
+        until the next process. The leaf is Serper's alone, hence consulted
+        only when Serper is the selection.
+        """
+        return self._live_vendor_key(self.web_search_provider)
+
+    def _media_config_reader(self, kind: str, fallback) -> "Callable[[], Any]":
+        def read():
+            return self._live_media_config(kind, fallback)
+
+        return read
+
+    def _live_media_config(self, kind: str, fallback):
+        """The media section the file names now; the boot config when it names none.
+
+        The boot config is the lane eval harnesses pass a section through with
+        no file behind it, and the last good answer while the file is mid-write.
+        """
+        from raven.config.live import media_tool_config, resolve_media_selection
+
+        cfg = media_tool_config(self._live_config, kind)
+        return resolve_media_selection(fallback, kind) if cfg is None else cfg
+
+    def _routed_target_ready(self, target: str, needs: "Sequence[str]") -> bool:
+        """Whether ``target``'s own lane can spend what its route declared it spends.
+
+        Answers for the routed product, not for this loop. A lane is configured
+        from its product folder first and inherits from the host only where the
+        folder is silent, so a host credential is the wrong thing to measure in
+        both directions: a lane equipped by its own ``.env`` would be refused on
+        a host that holds nothing, and a host equipped for something the lane
+        cannot use would open a route into a pipeline that has no key for the
+        surface it actually calls.
+
+        ``needs`` is the route's own declaration (:data:`ROUTE_REQUIREMENTS`);
+        an empty one never reaches here, because a route that declares nothing
+        is not probed at all. A requirement this raven does not have a question
+        for is warned about and treated as met -- a manifest written for a later
+        version must not silently lose its route on an older one.
+
+        Re-read per dispatch, so a key pasted into Settings or into the
+        product's ``.env`` opens the route without a restart.
+
+        The Jina reader key is deliberately not counted: ``web_fetch`` is
+        registered with or without one (see ``WebFetchConfig``), so it says
+        something about extraction quality and nothing about whether a lane can
+        search.
+        """
+        for need in needs:
+            if need == "image_generation":
+                if not self._lane_generates_images(target):
+                    return False
+            elif need == "image_search":
+                if not self._lane_searches_images(target):
+                    return False
+            else:
+                logger.warning(
+                    "A route to {!r} declares the requirement {!r}, which this raven cannot measure; "
+                    "treating it as met",
+                    target,
+                    need,
+                )
+        return True
+
+    def _lane_generates_images(self, target: str) -> bool:
+        """Whether ``target`` has a picture generator: its own key, else the host's.
+
+        ``product_image_key`` is the whole folder side, including the branch an
+        explicit image key hides: with no image key anywhere and an OpenRouter
+        endpoint, the launcher lets the key paying for the lane's words pay for
+        its pictures, so a folder holding only its own LLM key can still draw.
+
+        The fallback is the inheritance the product launchers perform -- a
+        folder supplying nothing is configured from the host's
+        ``tools.media.image`` -- so the two readers cannot disagree about a lane
+        that was going to inherit anyway.
+
+        A folder pinning its pictures to a provider is answered for that provider
+        (:meth:`_pinned_lane_generates_images`).
+        """
+        from raven.agent.subagent.vendored_agents import product_image_key, product_image_pin
+        from raven.agent.tools.media_gen import _OpenRouterMediaTool
+
+        host = self._live_media_config("image", self.media_config.image)
+        provider, model = product_image_pin(target)
+        if provider:
+            return self._pinned_lane_generates_images(target, provider, model, host)
+        if product_image_key(target):
+            return True
+        return _OpenRouterMediaTool.has_key(host)
+
+    def _pinned_lane_generates_images(self, target: str, provider: str, model: str, host) -> bool:
+        """Whether a lane pinned to ``provider`` draws, by the launcher's rule for the pin.
+
+        A mirror of ``configure_image_generation`` in the agent launchers, not a
+        call into it: a launcher can run on an older raven, so the rule is stated
+        twice and a test renders each case through both. The launcher refuses a
+        provider the image tool cannot run on, and a switch off the host's image
+        provider without a model of the lane's own. A switch leaves the host's
+        image key behind with the rest of its endpoint: the lane pays with its own
+        image key or the host's key for the provider it switched to, and with no
+        key at a base of its own. Only OpenRouter takes the key that pays for the
+        lane's words, which on the lane's own key is the only OpenRouter key its
+        render holds. Read-only, like every readiness question.
+        """
+        from raven.agent.subagent.vendored_agents import product_image_key, product_llm_key, product_secret
+        from raven.agent.tools.media_gen import _OpenRouterMediaTool
+        from raven.config.schema import live_media_tool_config, media_provider
+        from raven.providers.registry import canonical_provider_name, find_by_name
+
+        wanted = canonical_provider_name(provider)
+        spec = find_by_name(wanted)
+        if spec is None or not getattr(spec, "image_api", False):
+            return False
+        runs_on = media_provider(host) if host is not None else ""
+        if wanted != runs_on and not model:
+            return False
+        if product_image_key(target):
+            return True
+        if product_secret(target, "IMAGE_API_BASE"):
+            return False
+        if wanted == runs_on:
+            return _OpenRouterMediaTool.has_key(host)
+        if wanted == "openrouter" and product_llm_key(target):
+            return False
+        found = live_media_tool_config({"provider": wanted, "model": model}, self._live_config.get("providers"))
+        return _OpenRouterMediaTool.has_key(found)
+
+    def _lane_searches_images(self, target: str) -> bool:
+        """Whether ``target`` can search for pictures: its vendor's key, its own or the host's.
+
+        The vendor is the target's own where the target holds the host tool out
+        and searches through its own plugin (:func:`product_picture_vendor`), else
+        the one ``image_search`` itself speaks to -- the selected search vendor
+        where that vendor has an image surface, Serper otherwise
+        (:func:`raven.agent.tools.web.image_search_vendor`) -- and the key is
+        resolved the way the lane resolves it: the product folder's own
+        ``<PRODUCT>_<VENDOR>_API_KEY`` first, then the host's slot for that vendor
+        (which the launcher copies into the lane's config), then the vendor's bare
+        environment variable, which a launched product inherits. Not
+        :meth:`_live_web_search_key`: that answers for ``web_search`` on a vendor
+        that may search pages only.
+        """
+        import os
+
+        from raven.agent.subagent.vendored_agents import product_picture_vendor, product_secret
+
+        def key_for(vendor: str) -> str:
+            return (
+                product_secret(target, f"{vendor.upper()}_API_KEY")
+                or self._live_vendor_key(vendor)
+                or os.environ.get(SEARCH_PROVIDERS[vendor].env_var, "")
+            )
+
+        vendor = product_picture_vendor(target) or image_search_vendor(self.web_search_provider, key_for)
+        return bool(key_for(vendor))
+
+    def _live_vendor_key(self, vendor: str) -> str:
+        """One named web vendor's key the file holds now, whatever the host selected.
+
+        The selection-free half of :meth:`_live_web_search_key`, resolved in the
+        same order: the canonical vendor slot, then the pre-vendor leaf that is
+        Serper's alone, then the boot value.
+        """
+        from raven.config.live import live_vendor_key
+
+        return live_vendor_key(self._live_config, vendor, boot=self._web_key(vendor))
+
+    @property
+    def provider(self) -> LLMProvider:
+        """The provider of the binding the running turn entered.
+
+        A property, not an attribute: the model is per session now, so there
+        is no single answer to cache on the loop. Outside a turn (startup, a
+        one-shot CLI call) this is the configured default.
+        """
+        binding = active_binding()
+        return binding.provider if binding is not None else self._default_binding.provider
+
+    @property
+    def model(self) -> str:
+        """The model id of the binding the running turn entered."""
+        binding = active_binding()
+        return binding.model if binding is not None else self._default_binding.model
+
+    @property
+    def context_window_tokens(self) -> int:
+        """How much the binding of the running turn can hold.
+
+        A property for the same reason ``provider`` and ``model`` are: two
+        sessions can be on models of different sizes at once, so a single int
+        on the loop has no answer that is right for both. Outside a turn this
+        is the configured default's window.
+        """
+        binding = active_binding() or self._default_binding
+        return binding.context_window
+
+    def _turn_scope(self):
+        """Hold the settings a turn reads more than once, from here on.
+
+        Entered beside ``use_binding`` at the turn boundary and for the same
+        reason: one turn, one answer. The cap is resolved here rather than at
+        its first read, which happens after context assembly.
+        """
+        from raven.config.live import hold_for_this_turn, max_tool_iterations, reasoning_effort
+
+        return hold_for_this_turn(
+            **{
+                _CAP_KEY: max_tool_iterations(self._live_config),
+                _EFFORT_KEY: reasoning_effort(self._live_config),
+            }
+        )
+
+    def _with_live_window(self, binding: ModelBinding) -> ModelBinding:
+        """This turn's binding, carrying the window the config has right now.
+
+        Resolved once per turn and then held, like the pair it rides on: the
+        budget is read several times while a turn runs -- history trimming, the
+        compaction check, the usage report -- and a number that moved between
+        those reads would leave one turn disagreeing with itself. Re-read at the
+        next turn, which is what makes a window set on a settings surface apply
+        without bringing the gateway back.
+
+        The same object comes back when the number has not changed, so the
+        binding keeps the window it already resolved from the rates catalogue
+        rather than resolving it again every turn.
+        """
+        from dataclasses import replace
+
+        from raven.config.live import context_window_tokens
+
+        configured = context_window_tokens(self._live_config)
+        if configured == binding.configured_window:
+            return binding
+        return replace(binding, configured_window=configured)
+
+    @property
+    def default_reasoning_effort(self) -> str | None:
+        """The effort a call runs at when the session pinned none.
+
+        The provider holds a configured default too, but it is frozen at
+        construction on purpose (see ``ResolvingProvider``: a credentials
+        refresh must not import a live ``agents`` section), so an edit reached
+        it only at a restart. Sent as an explicit argument instead, which is
+        the path a session's pinned effort already takes.
+
+        None is an answer, not an absence: the turn sends it as an explicit
+        None, which the provider takes as its own default (nothing on the
+        wire). Leaving the key out instead let the provider fill it from that
+        frozen copy, so a key cleared on a running gateway kept every call at
+        the word it booted with (``session_effort.in_force`` says the rule).
+        """
+        from raven.config.live import held, reasoning_effort
+
+        return held(_EFFORT_KEY, lambda: reasoning_effort(self._live_config))
+
+    def session_reasoning_effort(
+        self,
+        session_key: str | None,
+        pick: str | None = None,
+        model: str | None = None,
+    ) -> str | None:
+        """The reasoning effort this session's own calls run at, short of a hook's override.
+
+        ``session_effort.in_force`` over this loop's inputs: the pick the caller
+        read off the session's record, the session's mode's word, and the
+        configured default as the file has it now. ``model`` is the id the loop
+        was handed for this turn -- the router's pick when it made one, else the
+        session's own -- and bounds the **pick** (``session_effort.clamp``): a
+        level it does not declare, by LiteLLM's table or its provider overlay,
+        is dropped rather than sent. The mode's word and the configured default
+        are not narrowed here; they are not this conversation's pick and were
+        sent as they stand before the pick existed. Beside ``session_tier`` for
+        the reason it gives -- the turn and the RPC need the one rule, and the
+        policy it reads lives here -- and reached on ``self`` by the turn, so
+        nothing imports anything new.
+        """
+        from raven.agent import session_effort
+        from raven.providers.overlay import declared_for
+        from raven.providers.registry import find_by_model, split_model_id
+
+        model_id = model or (
+            self.session_model(session_key) if session_key and self.has_session_binding(session_key) else self.model
+        )
+        provider, _rest = split_model_id(model_id)
+        if not provider:
+            spec = find_by_model(model_id)
+            provider = getattr(spec, "name", "") if spec else ""
+        levels = effort_levels.levels_for(
+            model_id,
+            declared_for(self._live_config.get("providers") or {}, provider, model_id),
+        )
+        valid_pick = session_effort.clamp(pick, levels)
+        if pick is not None and valid_pick is None:
+            logger.debug(
+                "session {}: reasoning effort {} is not declared by {}; using the session default",
+                session_key,
+                pick,
+                model_id,
+            )
+        return session_effort.in_force(
+            valid_pick,
+            self.session_policy(session_key or "").reasoning_effort,
+            self.default_reasoning_effort,
+        )
+
+    @property
+    def personalization_enabled(self) -> bool:
+        """Whether the personalization flow runs, as the file has it now.
+
+        ``configure_personalization`` still sets what a process was built with;
+        the file answers when it has an opinion, so a switch on a settings
+        surface reaches the next turn.
+        """
+        from raven.config.live import held, personalization_enabled
+
+        configured = held(_PERSONALIZATION_KEY, lambda: personalization_enabled(self._live_config))
+        return self.enable_personalization if configured is None else configured
+
+    @property
+    def max_iterations(self) -> int:
+        """The ReAct cap a turn runs under when its session pinned none.
+
+        Read live rather than frozen at build for the reason the permission
+        mode is: a cap is a sentence about the next turn, not work to redo.
+        A turn holds the value it starts on (``run_turn`` passes it to
+        ``hold_for_this_turn``), because the cap is first read after context
+        assembly -- which can spend minutes in the curator -- and an edit made
+        in that window would otherwise change the request already running.
+        """
+        from raven.config.live import held, max_tool_iterations
+
+        configured = held(_CAP_KEY, lambda: max_tool_iterations(self._live_config))
+        return configured or self._default_max_iterations
+
+    @property
+    def provider_pool(self) -> "ProviderPool | None":
+        """Where a model id becomes a model id plus the credential for it."""
+        return self._provider_pool
+
+    @property
+    def default_binding(self) -> ModelBinding:
+        """What a session with no switch of its own runs on."""
+        return self._default_binding
+
+    def set_session_policy(
+        self,
+        session_key: str,
+        *,
+        max_iterations: int | None = None,
+        mode: str = "",
+        mode_overlay: dict | None = None,
+        reasoning_effort: str | None = None,
+    ) -> None:
+        """Record the operating policy this session's next turn runs under.
+
+        Nothing running is touched: a turn reads its policy once at its start,
+        so a switch lands on the session's next turn -- the same contract the
+        model picker states.
+        """
+        from raven.agent.loop._shared import SessionPolicy
+
+        self._session_policies[session_key] = SessionPolicy(
+            max_iterations=max_iterations,
+            mode=mode,
+            mode_overlay=dict(mode_overlay or {}),
+            reasoning_effort=reasoning_effort or None,
+        )
+
+    def session_policy(self, session_key: str):
+        """The session's policy, or the loop-wide defaults as one."""
+        from raven.agent.loop._shared import SessionPolicy
+
+        return self._session_policies.get(session_key, SessionPolicy())
+
+    def session_tier(self, session_key: str | None) -> str:
+        """The sub-agent effort tier in force for this session.
+
+        One rule with one home. Two callers need it and they are not interchangeable:
+        the manager reads it per dispatch, and a turn freezes it at its start so a
+        switch arriving mid-turn lands on the next one. Both used to spell the
+        expression out, so a change to how a tier is found had two places to reach.
+
+        Lives here because the policy does: `session_policy` and `set_session_policy`
+        are the pair it is derived from. Both callers reach it on `self` -- the loop is
+        one object assembled from these mixins -- so nothing imports anything new.
+        """
+        return self.session_policy(session_key or "").mode or self._default_tier
+
+    def binding_for_session(self, session_key: str) -> ModelBinding:
+        """The binding this session runs on: its own switch, else the default.
+
+        A new session has no entry, so it starts on the configured default
+        rather than on whatever the last session switched to.
+
+        A session whose choice is on disk but not yet in memory is restored here,
+        on first ask. That is what makes the choice outlive a restart on *every*
+        surface: the overrides live in this process, the session record is the
+        only place they survive, and hanging the read off a TUI-only resume call
+        meant a conversation on a channel came back on the default with its
+        choice sitting unread in its own record.
+        """
+        binding = self._session_bindings.get(session_key)
+        if binding is None:
+            self._restore_once(session_key)
+            binding = self._session_bindings.get(session_key)
+        if binding is not None:
+            fresh = self._rebound(binding)
+            if fresh is not binding:
+                self._session_bindings[session_key] = fresh
+            return fresh
+        fresh = self._rebound(self._default_binding)
+        if fresh is not self._default_binding:
+            # Adopt the pool's object as the default, through the setter so the
+            # out-of-turn fallbacks (subagents, context engine, consolidator)
+            # follow the same credential edit. Adopting is also what keeps the
+            # identity stable: compared against a default that never moves, the
+            # pool's instance would read as "provider changed" on every ask and
+            # the transport-verdict caches would never survive a turn.
+            self.set_default_binding(fresh)
+        return fresh
+
+    def _rebound(self, binding: ModelBinding) -> ModelBinding:
+        """The same pair, re-asked from the pool -- so an edited credential
+        serves the session's next turn instead of its next process.
+
+        The pool already drops its cache when the credentials fingerprint
+        changes; what was missing was a caller asking it again. Asked every
+        time rather than behind a change gate: the unchanged round trip is
+        1.6 ms (measured; the supplier reloads the config for the
+        fingerprint), which is noise at turn entry, and a gate shared across
+        sessions let the first asker consume the change for all of them.
+
+        A pair that can no longer be built -- the credential was removed, not
+        rotated -- keeps the binding it has: a turn on the provider that
+        answered a second ago beats no turn at all, matching what
+        ``restore_session_model`` does with the same failure.
+        """
+        pool = self._provider_pool
+        if pool is None:
+            return binding
+        provider_name = getattr(binding.provider, "provider_name", "") or ""
+        if not provider_name:
+            # A provider that cannot name its vendor cannot be re-paired safely:
+            # deriving one from the model id is a guess about whose credential
+            # pays, and the gateway's default is a ResolvingProvider -- a
+            # multi-vendor dispatcher that a single direct binding must never
+            # replace. Its credential liveness is its own concern; this path
+            # refreshes only pairs the pool built.
+            return binding
+        try:
+            fresh = pool.bind(binding.model, provider_name)
+        except Exception as exc:
+            logger.warning("cannot rebuild the provider for {!r} ({}); keeping the current one", binding.model, exc)
+            return binding
+        if fresh.provider is not binding.provider:
+            self._forget_transport_verdicts()
+        return fresh
+
+    def _restore_once(self, session_key: str) -> None:
+        """Read this session's stored model, at most once per key per process.
+
+        The negative answer is remembered too. Most sessions never switched, and
+        without that this would re-read a record on every turn to learn the same
+        nothing.
+        """
+        if session_key in self._restore_attempted:
+            return
+        self._restore_attempted.add(session_key)
+        sessions = getattr(self, "sessions", None)
+        if sessions is None or self._provider_pool is None:
+            return
+        try:
+            record = sessions.peek(session_key)
+        except Exception as exc:
+            logger.debug("cannot read session {!r} to restore its model: {}", session_key, exc)
+            return
+        metadata = getattr(record, "metadata", None) or {}
+        model = metadata.get("model")
+        if model:
+            self.restore_session_model(session_key, model, metadata.get("provider"))
+
+    def stored_session_permission_mode(self, session_key: str) -> str | None:
+        """The permission mode this session chose in an earlier process, off its record.
+
+        The gate's reader for ``permissions/session.py``: consulted once per
+        unknown conversation, the same record and the same tolerance for an
+        unreadable one as ``_restore_once`` applies to the model.
+        """
+        sessions = getattr(self, "sessions", None)
+        if sessions is None:
+            return None
+        try:
+            record = sessions.peek(session_key)
+        except Exception as exc:
+            logger.debug("cannot read session {!r} to restore its permission mode: {}", session_key, exc)
+            return None
+        metadata = getattr(record, "metadata", None) or {}
+        mode = metadata.get("permissions_mode")
+        return mode if isinstance(mode, str) and mode else None
+
+    def session_model(self, session_key: str) -> str:
+        """What to show this session's user, which is not the global default."""
+        return self.binding_for_session(session_key).model
+
+    def has_session_binding(self, session_key: str) -> bool:
+        """Did this session switch, or is it just following the default?
+
+        ``session_model`` cannot answer that -- it falls back to the default,
+        so it never returns None. Callers that must distinguish "chose this"
+        from "inherited this" ask here.
+
+        Restores first, so a session that switched before a restart answers yes
+        rather than being reported as having inherited the default.
+        """
+        if session_key not in self._session_bindings:
+            self._restore_once(session_key)
+        return session_key in self._session_bindings
+
+    def restore_session_model(self, session_key: str, model: str, provider_name: str | None = None) -> None:
+        """Put a session back on the model it was last switched to.
+
+        Session overrides live in memory, so without this a restart moves every
+        switched session back to the default and the user's choice lasts exactly
+        as long as the process. A model that can no longer be built (a credential
+        since removed) leaves the session on the default rather than failing the
+        turn that asked.
+
+        Normally reached through ``_restore_once``, which supplies the stored
+        pair; kept public for a caller that has the pair already.
+        """
+        self._restore_attempted.add(session_key)
+        pool = self._provider_pool
+        if pool is None or not model:
+            return
+        try:
+            self.set_session_binding(session_key, pool.bind(model, provider_name))
+        except Exception as exc:
+            # Broad on purpose. Building a provider imports a vendor module and
+            # checks credentials, so the failures reachable here are open-ended
+            # -- ``MissingCredentialsError`` is one that did not exist when this
+            # guard was first written, and it escaped a tuple of three. A resume
+            # that lands on the default is a worse session; a resume that raises
+            # is no session at all.
+            logger.warning("session {!r} cannot resume on {!r} ({}); using the default", session_key, model, exc)
+
+    def set_session_binding(self, session_key: str, binding: ModelBinding) -> None:
+        """Switch one session, leaving every other session where it was.
+
+        Applied immediately and still safe mid-turn: a turn resolves its
+        binding once at ``run_turn`` entry and holds it in a context var for
+        its whole tree, including anything it detaches. So a switch during a
+        turn cannot move that turn -- it lands on the next one -- and no
+        parking is needed to arrange that.
+        """
+        self._session_bindings[session_key] = binding
+        self._forget_transport_verdicts()
+
+    def clear_session_binding(self, session_key: str) -> None:
+        """Drop a session's override so it follows the default again.
+
+        Deliberately does not mark the key as consulted. The one caller is
+        ``session.delete``, which unlinks the record before this runs, so there
+        is nothing left for a later ask to read back in -- and a session that
+        somehow kept its record is better served by re-reading it than by a
+        marking that claims we looked when we did not.
+        """
+        self._session_bindings.pop(session_key, None)
+        # The Persona goes with the session for the same reason the binding
+        # does: a deleted session has nothing left to run as, and this is the
+        # one place that says a session is over.
+        self._session_personas.pop(session_key, None)
+
+    def _forget_transport_verdicts(self) -> None:
+        """Drop the capability verdicts a new provider may answer differently.
+
+        Both caches key on a model id but are computed from the provider serving
+        it, so a rebuild that keeps the id keeps the old endpoint's answer. The
+        reachable case is an ``apiBase`` repointed at a box with different
+        capabilities, or a re-authenticated provider: the credentials
+        fingerprint changes, the pool builds a new provider, the model id does
+        not move -- and images stay dropped from tool results for the life of
+        the process, with nothing in the log to say why.
+
+        Cleared wholesale rather than per binding: the loop now holds several
+        providers at once, and the key does not say which one answered.
+        """
+        self._image_tool_result_ok.clear()
+        self._vision_ok.clear()
+
+    def bind_session_charter(self, session_key: str, payload: Any) -> None:
+        """Hold the charter a dispatch brought, for that session's next turn.
+
+        Held aside rather than applied here, for the reason
+        ``ToolRegistry.bind_session_tools`` gives: the handler that accepts a
+        dispatch cannot open the turn's scope, because it submits the turn and
+        the turn runs on a task that inherits nothing from it. One process
+        serves every session on a connection, so this is keyed by session and
+        never global.
+        """
+        charter = charter_mod.parse(payload)
+        if charter is None:
+            self._session_charters.pop(session_key, None)
+            return
+        # The worker-side counterpart of the host's "N worker(s) for this turn".
+        # Without it the only record that a brief crossed the process boundary
+        # is the behaviour it produced, and a charter that was dropped on the
+        # way looks exactly like one that was never written.
+        logger.info(
+            "agent playbook: charter staged for this session ({} tool(s), {} check(s){})",
+            "all" if charter.tools is None else len(charter.tools),
+            len(charter.checks),
+            ", judge" if charter.code else "",
+        )
+        self._session_charters[session_key] = charter
+
+    def _take_session_charter(self, session_key: str) -> "Charter | None":
+        """The charter staged for this session, consumed.
+
+        Consumed rather than read: a charter describes one dispatch. Leaving it
+        would hold the next turn of the same session to a brief written for the
+        last one, and a resumable instance takes many turns on one session.
+        """
+        return self._session_charters.pop(session_key, None)
+
+    def adopt_session_persona(self, session_key: str, resolution: Any) -> None:
+        """Make this session run as the Persona that was just generated.
+
+        The generating turn itself does not run as it -- that turn saves the
+        artifact and reports it, and a coordinator whose ``intake`` gates on
+        trip dates would refuse to answer that. What is adopted here is read by
+        every *later* turn of the session, which is the experience the Persona
+        was written for.
+        """
+        if getattr(resolution, "coordinator_charter", None) is None:
+            self.bind_session_harness(session_key, None)
+            return
+        self.bind_session_harness(session_key, resolution.artifact_name or "", spec=resolution.spec)
+
+    def bind_session_harness(self, session_key: str, name: str | None, *, spec: Any = None) -> str | None:
+        """Freeze a Harness onto this session, for every turn it takes.
+
+        A snapshot rather than a name to look up later: the window the user
+        opened keeps the Harness they chose, so editing the library entry --
+        or deleting it -- does not rewrite or break a conversation already
+        running on it. It rides the session's own metadata, so it survives a
+        restart the way a pinned workdir does.
+
+        ``None`` unbinds. ``spec`` is for a caller that already holds the
+        Harness; everything else names one in the library.
+        """
+        self._session_personas.pop(session_key, None)
+        session = self.sessions.get_or_create(session_key)
+        if name is None:
+            session.metadata.pop("harness", None)
+            return None
+        if spec is None:
+            stored = self._playbooks.spec(name) if self._playbooks is not None else None
+            spec = getattr(stored, "harness", None)
+            if spec is None:
+                raise ValueError(f"no stored Harness named {name!r}")
+        # ``exclude_unset`` for the reason ``UnifiedPlaybookSpec.block_dump``
+        # gives: a nested default re-emitted here reads back as an explicit
+        # choice, and ``Checks.impl`` then fails validation as a disabled field.
+        session.metadata["harness"] = {
+            "name": name,
+            "spec": spec.model_dump(by_alias=True, exclude_none=True, exclude_unset=True),
+        }
+        logger.info("agent playbook: session bound to Harness {} ({} worker(s))", name or "?", len(spec.delegate))
+        return name
+
+    def session_harness_name(self, session_key: str) -> str | None:
+        """The Harness this session is bound to, by name, for a client to show."""
+        held = self.sessions.get_or_create(session_key).metadata.get("harness")
+        return str(held.get("name") or "") or None if isinstance(held, dict) else None
+
+    def session_persona(self, session_key: str) -> "tuple[Charter, Any] | None":
+        """This session's bound Harness as seats, or ``None`` for an ordinary one.
+
+        Rebuilt from the frozen snapshot rather than from the library, and
+        cached per session because it is asked once a turn.
+        """
+        held = self._session_personas.get(session_key)
+        if held is not None:
+            return held
+        raw = self.sessions.get_or_create(session_key).metadata.get("harness")
+        if not isinstance(raw, dict) or not isinstance(raw.get("spec"), dict):
+            return None
+        try:
+            from raven.playbook.agent_generator import build_coordinator_charter, build_table
+            from raven.playbook.agent_spec import AgentPlaybookSpec
+
+            spec = AgentPlaybookSpec.model_validate(raw["spec"])
+            charter = build_coordinator_charter(spec)
+        except Exception:  # noqa: BLE001 - a Harness this build cannot read is not a reason to lose the turn
+            logger.opt(exception=True).warning("agent playbook: session Harness could not be rebuilt; running plain")
+            return None
+        if charter is None:
+            return None
+        seats = (charter, build_table(spec, {}))
+        self._session_personas[session_key] = seats
+        return seats
+
+    async def _resolve_playbook_turn(self, req: Any, session_key: str, binding: Any):
+        """Generate, persist and bind the Harness selected by this turn's mode."""
+        from raven.playbook.agent_generator import HarnessResolution
+
+        cfg = self._playbook_config
+        if cfg is None or not cfg.enabled or getattr(cfg, "agent_harness", "default") != "generate":
+            return HarnessResolution()
+        asked = getattr(req, "playbook_mode", None)
+        mode = asked or getattr(cfg, "default_generation_mode", "task")
+        if mode == "off":
+            return HarnessResolution()
+        if is_subagent_process() or getattr(req, "direct_target", None) is not None:
+            return HarnessResolution()
+        # A Persona is minted only for a turn that asked for one. The config's
+        # default says what this deployment generates, not that every message
+        # is a request to be given an identity -- and read as the latter it
+        # was: a reader typing "hi" spent a model call minting a Persona,
+        # bound the conversation to it, and heard the assistant volunteer a
+        # draft nobody had asked about. A Task artifact configures workers for
+        # the turn in hand and carries no identity, so the default still
+        # reaches it.
+        if mode == "persona" and asked != "persona":
+            return HarnessResolution()
+        try:
+            from raven.playbook.agent_generator import (
+                PersonaPlaybookGenerator,
+                TaskPlaybookGenerator,
+                persona_roster_profile,
+                task_roster_profile,
+            )
+
+            metas = list(self.subagents.list_agents())
+            agents = [a.name for a in metas]
+            if not agents:
+                return HarnessResolution()
+            tool_catalog = self.tools.get_definitions()
+            query = getattr(req, "text", "") or ""
+            if mode == "persona":
+                profiles = {meta.name: persona_roster_profile(meta) for meta in metas}
+                names = self._playbooks.names() if self._playbooks is not None else []
+                resolution = await PersonaPlaybookGenerator(binding.provider, binding.model).resolve(
+                    query,
+                    agents,
+                    tool_catalog,
+                    profiles,
+                    names,
+                )
+            else:
+                profiles = {meta.name: task_roster_profile(meta) for meta in metas}
+                resolution = await TaskPlaybookGenerator(binding.provider, binding.model).resolve(
+                    query,
+                    agents,
+                    tool_catalog,
+                    profiles,
+                )
+            if resolution.active:
+                # Only a Persona is a draft. A Task artifact is the record of
+                # a graph the turn is about to run and its Workflow is compiled
+                # into it when the turn ends (``_finish_playbook_turn``), so
+                # holding one back would leave that compile nothing to update.
+                if getattr(resolution, "generation_mode", None) == "persona":
+                    resolution = self._hold_generated_harness(resolution, query, session_key)
+                else:
+                    resolution = self._persist_generated_harness(resolution, query)
+        except Exception:  # noqa: BLE001 - setup must not cost the turn
+            logger.opt(exception=True).warning("agent playbook: resolution failed; running unconfigured")
+            return HarnessResolution()
+        table = resolution.table
+        if table:
+            logger.info("agent playbook: {} worker(s) for this turn: {}", len(table.workers), table.labels())
+        return resolution
+
+    def _hold_generated_harness(self, resolution: Any, query: str, session_key: str):
+        """Hold a validated Harness as this session's draft; nothing is written.
+
+        A generated Persona is an answer on screen, not a library entry. The
+        page that asked for it saves it by name (``playbooks.draft_save``) or
+        lets it go, and until then the library is untouched -- which is the
+        whole difference from what this did before: a row was written on every
+        turn that generated one, so a reader who asked twice ended up with
+        ``travel-planner`` and ``travel-planner-2`` and nothing saying which of
+        the two they had meant to keep.
+
+        The draft still binds to the session (``adopt_session_persona`` runs on
+        the resolution this returns), because running as the Persona you just
+        described is the point of describing it; saving is what makes it
+        outlive the conversation.
+        """
+        if resolution.spec is None:
+            return resolution
+        from dataclasses import replace
+
+        artifact = self._generated_artifact(resolution, query)
+        self._session_drafts[session_key] = artifact
+        logger.info("playbook: holding generated Harness {!r} as {}'s draft", artifact.name, session_key)
+        return replace(resolution, artifact_name=artifact.name, persisted=False)
+
+    def _generated_artifact(self, resolution: Any, query: str):
+        """The library artifact a generated Harness would be saved as."""
+        import re
+
+        from raven.playbook.unified import PlaybookMatch, UnifiedPlaybookSpec
+
+        description = (resolution.description or query.strip().splitlines()[0])[:200]
+        keywords = [word.lower() for word in re.findall(r"[A-Za-z0-9][A-Za-z0-9_-]{2,}", query)[:8]]
+        return UnifiedPlaybookSpec(
+            name=resolution.artifact_name or resolution.spec.name,
+            description=description,
+            match=PlaybookMatch(summary=description, keywords=keywords or [description[:80]]),
+            harness=resolution.spec,
+        )
+
+    def _persist_generated_harness(self, resolution: Any, query: str):
+        """Save a validated Harness now; persistence failure never blocks binding.
+
+        The Task path's own. A Persona goes through ``_hold_generated_harness``
+        instead, because a Persona is something a reader decides to keep.
+        """
+        if self._playbooks is None or resolution.spec is None:
+            return resolution
+        from dataclasses import replace
+
+        artifact = self._generated_artifact(resolution, query)
+        try:
+            artifact, path = self._save_generated_artifact(artifact)
+            self._playbooks.adopt(artifact.name)
+            logger.info("playbook: saved generated Harness {!r} at {}", artifact.name, path)
+            return replace(
+                resolution,
+                spec=artifact.harness,
+                artifact_name=artifact.name,
+                persisted=True,
+            )
+        except Exception:  # noqa: BLE001 - persistence must not cost the turn
+            logger.opt(exception=True).warning("playbook: generated Harness could not be saved; using it in memory")
+            return resolution
+
+    def session_draft(self, session_key: str):
+        """The Persona this session generated and has not saved, or ``None``."""
+        return self._session_drafts.get(session_key)
+
+    def save_session_draft(self, session_key: str, name: str | None = None) -> str:
+        """Write this session's draft to the library, and answer its saved name.
+
+        The name is the reader's to choose: the generator proposes one, and the
+        page may send another. A collision takes the first free numeric suffix,
+        the way every other generated artifact does -- but now only when a
+        reader asked for the save, so the suffix means two Personas were kept,
+        not two turns were taken.
+        """
+        artifact = self._session_drafts.get(session_key)
+        if artifact is None:
+            raise ValueError("this session has no generated Persona to save")
+        if self._playbooks is None:
+            raise RuntimeError("Playbook runtime is unavailable")
+        wanted = (name or artifact.name).strip()
+        if not wanted:
+            raise ValueError("a Persona needs a name")
+        if wanted != artifact.name:
+            harness = artifact.harness
+            if harness is not None:
+                harness = harness.model_copy(update={"name": wanted})
+            artifact = artifact.model_copy(update={"name": wanted, "harness": harness})
+        saved, path = self._save_generated_artifact(artifact)
+        self._playbooks.adopt(saved.name)
+        self._session_drafts.pop(session_key, None)
+        logger.info("playbook: saved Persona {!r} at {}", saved.name, path)
+        return saved.name
+
+    def discard_session_draft(self, session_key: str) -> bool:
+        """Drop this session's unsaved Persona; ``True`` when there was one."""
+        return self._session_drafts.pop(session_key, None) is not None
+
+    def _save_generated_artifact(self, artifact: Any):
+        """Atomically save under the requested name or the first numeric suffix."""
+        if self._playbooks is None:
+            raise RuntimeError("Playbook runtime is unavailable")
+        from raven.playbook.store import PlaybookExistsError
+
+        base = artifact.name
+        attempt = 1
+        while True:
+            name = base if attempt == 1 else f"{base}-{attempt}"
+            harness = artifact.harness
+            if harness is not None:
+                harness = harness.model_copy(update={"name": name})
+            candidate = artifact.model_copy(update={"name": name, "harness": harness})
+            try:
+                return candidate, self._playbooks.store.save(candidate)
+            except PlaybookExistsError:
+                attempt += 1
+
+    async def _write_worker_table(self, req: Any, session_key: str, binding: Any) -> "DelegateTable | None":
+        """Backward-compatible table-only face used by focused tests."""
+        return (await self._resolve_playbook_turn(req, session_key, binding)).table
+
+    async def _finish_playbook_turn(self, resolution: Any, capture: Any, binding: Any) -> None:
+        """Update a Task artifact with proven Workflow evidence and save the run."""
+        if self._playbooks is None:
+            return
+        from raven.playbook.run_record import RunRecordStore
+
+        try:
+            capture.saved_playbook = resolution.artifact_name if resolution.persisted else None
+            if resolution.capture_workflow and capture.dags and not resolution.selected_playbook:
+                from raven.playbook.workflow_compiler import WorkflowCompiler
+
+                evidence = capture.dags[-1]
+                # The evidence's own Harness, when the run extended it with a
+                # derived role, is what the compiled graph names. Falling back to
+                # the resolution's keeps a run that moved nothing compiled against
+                # exactly the Harness the turn was given.
+                harness = evidence.harness if evidence.harness is not None else resolution.spec
+                artifact = await WorkflowCompiler(binding.provider, binding.model).compile(
+                    query=capture.query,
+                    dag=evidence.spec,
+                    run_id=capture.run_id,
+                    harness=harness,
+                    name_hint=resolution.artifact_name,
+                    description_hint=resolution.description,
+                )
+                store = self._playbooks.store
+                if resolution.persisted:
+                    # The compiler parameterizes a proven graph; it does not own
+                    # artifact identity. Keep the numeric suffix chosen by the
+                    # atomic Harness save even when the model ignores nameHint,
+                    # and stamp it on the Harness too: a run's frozen table was
+                    # built before a save collision could rename the artifact.
+                    stored_harness = (
+                        harness.model_copy(update={"name": resolution.artifact_name}) if harness is not None else None
+                    )
+                    artifact = artifact.model_copy(update={"name": resolution.artifact_name, "harness": stored_harness})
+                    path = store.save(artifact, overwrite=True)
+                else:
+                    artifact, path = self._save_generated_artifact(artifact)
+                self._playbooks.adopt(artifact.name)
+                capture.saved_playbook = artifact.name
+                logger.info("playbook: updated Task artifact {!r} with Workflow at {}", artifact.name, path)
+            capture.finish()
+        except Exception as exc:  # noqa: BLE001 - persistence must not replace the user's answer
+            logger.opt(exception=True).warning("playbook: turn finalization failed")
+            capture.finish(status="completed", error=str(exc))
+        finally:
+            try:
+                path = RunRecordStore(self._playbooks.store.root).save(capture)
+                logger.info("playbook: saved run record {}", path)
+            except Exception:  # noqa: BLE001 - record failure must not cost the turn
+                logger.opt(exception=True).warning("playbook: run record could not be saved")
+
+    def set_default_binding(self, binding: ModelBinding) -> None:
+        """Change what new sessions start on.
+
+        Sessions that already switched keep their own binding; sessions that
+        never did pick this up on their next turn. Subsystem fallbacks are
+        re-pointed too, for the paths that run outside a turn and therefore
+        have no binding to read.
+        """
+        self._default_binding = binding
+        self._forget_transport_verdicts()
+        self.subagents.set_provider(binding.provider, binding.model)
+        self.context_engine.set_provider(binding.provider, binding.model)
+        self.memory_consolidator.set_provider(binding.provider, binding.model)
+
+    def set_provider(self, provider: LLMProvider, model: str) -> None:
+        """Change the default binding, from a pair a caller already built.
+
+        No production caller today -- every switch path goes through the pool
+        and lands on ``set_default_binding`` or ``set_session_binding``. Kept as
+        the pair-free entry point for an embedder that has a provider in hand,
+        which is why it carries the current default's window forward: a window
+        the user pinned belongs to whatever they run, and building the binding
+        without it here would drop it the day this grows a caller. Taken from
+        the binding rather than re-read from the file, because a caller holding
+        a provider of its own need not be one this process loaded a config for;
+        a turn re-reads the file anyway (see ``_with_live_window``).
+        """
+        self.set_default_binding(ModelBinding(provider, model, self._default_binding.configured_window))
+
+    def configure_personalization(self, enable: bool) -> None:
+        """Global switch for the 4-step personalization flow (PAHF-inspired).
+
+        When enabled, each message goes through:
+          Step 1 - classify:          classify() — does this request need a preference question?
+          Step 2 - pre-action interaction: ask one question if needed, extract and store the answer
+          Step 3 - execute:           normal agent loop (unchanged)
+          Step 4 - post-action learn: post_learn() runs in background after every response
+
+        Disabled by default. Enable via config: agents.defaults.enable_personalization: true
+        """
+        self.enable_personalization = enable
+        logger.info("Personalization flow: {}", "enabled" if enable else "disabled")
+
+    @property
+    def web_search_provider(self) -> str:
+        """The search vendor a call runs on, as the file has it now.
+
+        The keys have been read live since they landed and resolve against this
+        selection (``_live_web_search_key``), so a vendor frozen at startup was
+        the half that kept the pair on the old endpoint. Held for the turn, like
+        the rest of them.
+        """
+        from raven.config.live import default_live, held, web_providers
+
+        configured = held(_WEB_VENDORS_KEY, lambda: web_providers(default_live()))
+        return configured[0] or self._boot_web_search_provider
+
+    @property
+    def web_fetch_provider(self) -> str:
+        """The fetch vendor a call runs on. See :attr:`web_search_provider`."""
+        from raven.config.live import default_live, held, web_providers
+
+        configured = held(_WEB_VENDORS_KEY, lambda: web_providers(default_live()))
+        return configured[1] or self._boot_web_fetch_provider
+
+    def _web_key(self, vendor: str) -> str | None:
+        return resolve_vendor_key(vendor, self.web_provider_keys, self.search_api_key, self.jina_api_key)
+
+    async def _record_image_usage(self, usage: UsageSnapshot) -> None:
+        tracker = self.strategies.get("usage_tracker")
+        if tracker is not None:
+            await tracker.after_llm_call({}, usage)
+
+    def _register_default_tools(self) -> None:
+        """Register the default set of tools."""
+        allowed_dirs = (self.workspace,) if self.restrict_to_workspace else ()
+        for cls in (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool, GrepTool, FindTool):
+            self.tools.register(cls(workspace=self.workspace, allowed_dirs=allowed_dirs))
+        # Only beside a history strategy that puts refs where the model reads
+        # them: next to one that does not, the tool is a capability the model
+        # reaches for and is always told "found nothing". Read with a default
+        # because an engine slotted in through the runtime door need not
+        # subclass the contract.
+        if getattr(self.context_engine, "mints_source_refs", False):
+            from raven.agent.tools.context_retrieve import ContextRetrieveTool
+
+            self.tools.register(ContextRetrieveTool(self.sessions))
+        if self._deliverables is not None:
+            from raven.agent.tools.deliver import DeliverFilesTool
+
+            self.tools.register(
+                DeliverFilesTool(self._deliverables, workspace=self.workspace, allowed_dirs=allowed_dirs)
+            )
+        self.tools.register(
+            ExecTool(
+                working_dir=str(self.workspace),
+                timeout=self.exec_config.timeout,
+                restrict_to_workspace=self.restrict_to_workspace,
+                path_append=self.exec_config.path_append,
+                executor=self._executor,
+                extra_allowed_dirs=(self.workspace,),
+                record_writes=True,
+                shadow=self._command_shadow,
+            )
+        )
+        # The registry writer beside exec's machine channel, for the products
+        # that run work on the owner's machines. Registered on the flag rather
+        # than withheld: this is a deploy-time product choice, not a credential
+        # that may arrive mid-session, and five product tool faces are pinned
+        # against a tool boarding uninvited.
+        if self.connection_add:
+            self.tools.register(ConnectionAddTool())
+        # web_search and the media tools register whatever the config holds and
+        # are *withheld* while their section asks for nothing -- see
+        # ``_unconfigured_tool_names``. Registration used to be the gate, which
+        # made the switch one-way: a key added while the process ran could not
+        # surface a tool nothing had registered. Withholding is reversible per
+        # model call, and the tools read their key through a live reader, so the
+        # same edit that lifts the veil also serves the call.
+        # The exact objects the config gate below may judge. Identity, not
+        # type: a plugin that shadows one of these names -- even with a
+        # subclass -- replaces the entry, and the built-in's config section
+        # says nothing about the replacement's credential story.
+        # The material this conversation was pointed at. Registered always and
+        # withheld where nothing was picked, which is the reversible direction:
+        # a reader who attaches a base mid-conversation gets the tool on the
+        # next model call rather than on the next process.
+        from raven.agent.tools.knowledge import KnowledgeSearchTool
+
+        self.tools.register(KnowledgeSearchTool())
+        self._config_gated_tools: dict[str, Any] = {}
+        web_search = WebSearchTool(
+            api_key=self._live_web_search_key,
+            proxy=self.web_proxy,
+            provider=lambda: self.web_search_provider,
+        )
+        self.tools.register(web_search)
+        self._config_gated_tools[web_search.name] = web_search
+        # Pictures: the selected vendor's image surface where it has one, Serper's
+        # otherwise, on that vendor's key, gated and withheld the same way -- and
+        # only where `tools.web.search.images` asks for the tool at all, so a lane
+        # that never places a picture keeps the tool face it had.
+        if self.image_search:
+            # Both halves follow the selection: the picture vendor is derived
+            # from it, so freezing either one pins the pair to the boot choice.
+            def picture_vendor() -> str:
+                return image_search_vendor(self.web_search_provider, self._web_key)
+
+            image_search = ImageSearchTool(
+                api_key=lambda: self._live_vendor_key(picture_vendor()),
+                proxy=self.web_proxy,
+                provider=picture_vendor,
+            )
+            self.tools.register(image_search)
+            self._config_gated_tools[image_search.name] = image_search
+        # web_fetch registers the same way and is never withheld: Jina needs no
+        # key, so a keyed backend selected without one is replaced by Jina
+        # rather than left to fail.
+        # The substitution moved into the tool, which asks it per call: decided
+        # here it outlived the key that would have stopped it.
+        self.tools.register(
+            WebFetchTool(
+                api_key=lambda: self._live_vendor_key(self.web_fetch_provider),
+                proxy=self.web_proxy,
+                provider=lambda: self.web_fetch_provider,
+            )
+        )
+        # The shared browser's tools. Registered always and withheld through
+        # ``configured()`` while the browser extra is not installed, so the
+        # schema carries no verbs that can only answer with an install hint;
+        # the panel is where a reader learns the extra exists.
+        from raven.agent.tools.browser import browser_tools
+
+        for tool in browser_tools():
+            self.tools.register(tool)
+        # Media tools (image/speech/video) are opt-in: a tool is registered only
+        # when the user configured it (a model or apiKey under tools.media.<tool>),
+        # which Config.effective_media_config() surfaces as a resolved key/model.
+        # An OpenRouter key set for chat alone never enables them.
+        media = self.media_config
+        media_tools = (
+            (ImageGenerateTool, "image", media.image),
+            (SpeechGenerateTool, "speech", media.speech),
+            (VideoGenerateTool, "video", media.video),
+        )
+        for cls, kind, tool_cfg in media_tools:
+            tool = cls(
+                self._media_config_reader(kind, tool_cfg),
+                workspace=self.workspace,
+                proxy=media.proxy,
+                output_subdir=media.output_subdir,
+                restrict_to_workspace=self.restrict_to_workspace,
+                usage_recorder=self._record_image_usage if kind == "image" else None,
+            )
+            self.tools.register(tool)
+            self._config_gated_tools[tool.name] = tool
+        self.tools.register(MessageTool())
+        # Not registered at all for a sub-agent, rather than hidden from the
+        # schema: hiding leaves the tool in the registry, which is exactly how the
+        # graph controls stay reachable through ``tool_call``, so it closes nothing.
+        if not is_subagent_process():
+            self._register_orchestration_tools()
+        # The question responder is a per-transport singleton, late-bound via
+        # set_broker once the transport (TUI RPC server / gateway hub) exists.
+        self.tools.register(AskUserTool(timeout_s=self.ask_user_config.timeout))
+        # The plugin market, reachable from the conversation. Unconditional: the
+        # catalog ships in the wheel and the connection manager is this loop's
+        # own, so the only thing that ever made this impossible was the tool not
+        # existing -- an agent asked to connect an integration could reach the
+        # engine no other way than telling the user to go to the panel.
+        from raven.agent.tools.plughub import PluginTool
+
+        self.tools.register(PluginTool(loop=self, registry=self.tools))
+        # Its settings writers and its restart are lent later by the entrance
+        # (rpc bootstrap, gateway); until then it reads and writes raw settings.
+        # A sub-agent is not given it: the configuration is the host's.
+        if not is_subagent_process():
+            from raven.agent.tools.raven_config import GUIDE_SKILL_ID as _CONFIG_GUIDE
+            from raven.agent.tools.raven_config import RavenConfigTool
+
+            self.tools.register(
+                RavenConfigTool(
+                    guide_skill_id=self._shipped_guide(_CONFIG_GUIDE),
+                    session_model=lambda key: (self.session_model(key), self.has_session_binding(key)),
+                    tool_names=lambda: self.tools.names(),
+                )
+            )
+        if self.cron_service:
+            # Function-scope import on purpose: the cron tool is cargo the loop must
+            # not name at module level (tests/test_l3_open_world.py counts module-level
+            # imports), so the edge stays lazy and the loop is fully loaded when it fires.
+            from raven.proactive_engine.schedulers.cron.tool import CronTool
+
+            self.tools.register(CronTool(self.cron_service))
+
+        # Plugin-contributed tools (e.g. EverOS's ``understand_media``).
+        # Registered last so a plugin can override a built-in by name if
+        # it deliberately contributes the same name; ``_withheld_tool_names``
+        # still runs afterward and can strip any of them. A tool that declares
+        # ``bind_runtime`` is granted the loop's late-bound handles in
+        # ``_bind_plugin_runtime``, not here: the handles carry organs (the
+        # playbook funnel) assembled after even this registry is populated.
+        for tool in self.plugin_tools:
+            # A same-name replacement of ``exec`` reports the files its commands
+            # wrote and removed, as the built-in does. Asked before the door:
+            # measuring raises the tool's ceiling, and the registry reads the
+            # ceiling off the spec it admits, never off the tool afterwards.
+            measure_writes = getattr(tool, "measure_writes", None)
+            if tool.name == "exec" and callable(measure_writes):
+                measure_writes(self._command_shadow)
+            self.tools.register(tool)
+
+        # Skill retrieval tools (body -> scripts). Both are source-agnostic and
+        # both serve local/everos straight from the registry, so both register
+        # whenever the registry is reachable; a Hub endpoint only adds their
+        # ``hub/`` branch. Gating ``read_skill`` on the client would take the
+        # body-fetch route away from the skills that ship with Raven, whose
+        # ``inject: description`` entry advertises exactly that route.
+        skill_registry = getattr(
+            getattr(self.context, "skills", None),
+            "registry",
+            None,
+        )
+        if skill_registry is not None or self._skill_hub_client is not None:
+            from raven.agent.tools.skill_hub import FindSkillTool, ReadSkillTool, UseSkillTool
+            from raven.config.live import skill_hub_enabled
+
+            self.tools.register(
+                ReadSkillTool(
+                    client=self._skill_hub_client,
+                    registry=skill_registry,
+                    min_safety=self._skill_min_safety,
+                    blocklist=self._skill_blocklist,
+                    blocklist_reader=self._skill_blocklist_reader,
+                    enabled_reader=lambda: skill_hub_enabled(self._live_config),
+                ),
+            )
+            # Pull-mode discovery: search on the model's own terms through the
+            # same router the context engine retrieves with.
+            self.tools.register(
+                FindSkillTool(
+                    lambda: getattr(self.context_engine, "skills_router", None),
+                    hub_wired=self._skill_hub_client is not None,
+                    enabled_reader=lambda: skill_hub_enabled(self._live_config),
+                    min_safety=self._skill_min_safety,
+                    blocklist=self._skill_blocklist,
+                    blocklist_reader=self._skill_blocklist_reader,
+                ),
+            )
+            self.tools.register(
+                UseSkillTool(
+                    client=self._skill_hub_client,
+                    registry=skill_registry,
+                    min_safety=self._skill_min_safety,
+                    blocklist=self._skill_blocklist,
+                    blocklist_reader=self._skill_blocklist_reader,
+                    enabled_reader=lambda: skill_hub_enabled(self._live_config),
+                    auto_install=self._skill_auto_install,
+                    install_audit_path=(
+                        self.workspace / "skills" / "hub" / "installs.jsonl"
+                        if self._skill_hub_client is not None
+                        else None
+                    ),
+                ),
+            )
+
+        # Progressive tool disclosure. Registered last so the catalog it
+        # searches covers every built-in/plugin tool above; MCP tools join
+        # later (registered in ``_connect_mcp``) and the strategy picks them up
+        # since it re-reads the registry each turn.
+        #
+        # ``tool_call`` is registered whatever the config says, because folding
+        # is not the only thing that keeps a tool out of the schema: every
+        # ``hide_from_schema`` tool above (the DAG controls) is dispatchable and
+        # unnameable without it, and this feature is off by default. Only
+        # ``tool_search`` and the fold itself turn on with the switch.
+        from raven.agent.tools.tool_search import (
+            DEFAULT_ALWAYS_VISIBLE,
+            ToolCallTool,
+            ToolSearchController,
+            ToolSearchStrategy,
+            ToolSearchTool,
+        )
+        from raven.config.schema import ToolSearchConfig
+
+        cfg = self._tool_search_config or ToolSearchConfig()
+        always = set(DEFAULT_ALWAYS_VISIBLE) | set(cfg.always_visible)
+        self.tool_search_controller = ToolSearchController(
+            self.tools,
+            always_visible=always,
+            search_result_limit=cfg.search_result_limit,
+            compaction_threshold=cfg.compaction_threshold,
+        )
+        self.tools.register(ToolCallTool(self.tool_search_controller))
+        if cfg.enabled:
+            self.tools.register(ToolSearchTool(self.tool_search_controller))
+            # ``first=True``: filter the tool list before CacheOptimizer marks
+            # the final tool with ``cache_control`` (else the marked tool may be
+            # filtered out and the breakpoint lost).
+            self.strategies.register(
+                ToolSearchStrategy(self.tool_search_controller),
+                first=True,
+            )
+
+    def _register_orchestration_tools(self) -> None:
+        """Every tool that hands work to another agent, or steers a hand-off already running.
+
+        Grouped into one method so the sub-agent gate has a single place to
+        refuse, rather than a condition repeated over six registrations that a
+        seventh would quietly not get.
+        """
+        self.tools.register(SpawnTool(manager=self.subagents))
+        # Outbound A2A: hands work to an external agent rather than one this
+        # process manages, but it is still a hand-off this method's gate must
+        # cover -- see raven.agent.subagent.role.WITHHELD_FROM_SUBAGENT.
+        #
+        # Only with a peer configured. This one schema costs about 157 tokens in
+        # the `tools` array of every turn of every conversation -- measured off a
+        # captured provider call, not estimated; the total is pinned by
+        # tests/test_agent_loop_token_budget.py -- and a host with no peers has
+        # nowhere to send a message. Reaching an agent that needs no credential
+        # still means listing its origin with `credential` empty, which
+        # `a2a_client.peers.auth_headers` sends no header for -- so nothing
+        # becomes unreachable, it only has to be declared.
+        if self.a2a_config.peers:
+            self.tools.register(A2aTool(self.a2a_config))
+        # Sub-agent DAG orchestration. Registered unconditionally now that
+        # the agent table always holds the package's built-in rows: the tool used
+        # to be gated on an enabled third-party entry existing, because without one
+        # its roster was empty and a node had nothing to name. A graph over
+        # research-raven and code-raven is a graph, so that gate would now be
+        # withholding the tool from every default install.
+        from raven.agent.subagent.dag_tool import SubAgentDagTool
+
+        self.tools.register(
+            SubAgentDagTool(
+                workspace=self.subagents.workspace,
+                registry=self.subagents.registry,
+                guide_skill_id=self._dag_guide_skill_id(),
+                session_dir=self.sessions.session_dir,
+                is_paused=lambda: self.subagents.paused,
+                state_for=self.subagents.instance_state,
+                memory_for=self.subagents.memory_scope,
+                mode_for=self.subagents.resolve_mode,
+                model_for=self.subagents.session_model_for,
+                effort_for=self.subagents.session_effort_for,
+                gate=self.subagents.dispatch_gate,
+                announce=self.subagents.announce_dag_result,
+                announce_exception=self.subagents.announce_dag_exception,
+                adopt=self.subagents.adopt_background_run,
+                charge=self.subagents.charge_dag_run,
+                # The manager's own sandbox builder, so a graph node's exec
+                # runs in the VM its tools.sandbox configured rather than on
+                # the host -- the silent fallback the sandbox docs disown.
+                sandbox_for=self.subagents.sandbox_executor_for,
+                ask=self._confirm_graph,
+                control_reachable=self.dag_control_reachable,
+                control_advert=self.dag_control_advert,
+                provider_for=self._verdict_provider,
+                binding_for=self._turn_binding,
+                spawn_offered=lambda: self.tools.offers_by_name("spawn"),
+                verdict_config=self.subagent_dag_config,
+            )
+        )
+        # The host's own record of the conversation's matters. Host-only for the
+        # same reason as everything above: a subagent's turns are its caller's
+        # business, and a board kept there would record the caller's matters twice.
+        if self._task_board_config.enabled:
+            from raven.agent.task_board.service import TaskBoardService
+            from raven.agent.task_board.tool import TaskBoardTool
+
+            self.task_board = TaskBoardService(self.sessions)
+            self.tools.register(TaskBoardTool(self.task_board, loop=self))
+        # The two close the array, in this order, so the roster spawn's
+        # description ends with is the last thing the array says and the graph
+        # tool's pointer to it lands on the tool read right after.
+        self.tools.list_last("run_subagent_dag", "spawn")
+        # The graph tool's own acceptance text is the only advertisement these
+        # three get: hidden from the schema so the per-turn tool list carries
+        # nothing a conversation that never starts a DAG has any use for, they
+        # stay reachable through the registry (and tool_call where it exists).
+        from raven.agent.subagent.dag_control_tools import CancelDagTool, DagStatusTool, ResolveDagNodeTool
+
+        self.tools.register(CancelDagTool(loop=self))
+        self.tools.register(DagStatusTool(loop=self))
+        self.tools.register(ResolveDagNodeTool(loop=self))
+        self.tools.hide_from_schema("cancel_dag", "dag_status", "resolve_dag_node")
+
+    def _bind_plugin_runtime(self) -> None:
+        """Grant the late-bound handles to every plugin tool that declared.
+
+        Runs once from the constructor, after the loop has finished assembling
+        itself: the factories ran before this loop existed, and the handles
+        carry organs (the playbook funnel) built after even the tool registry
+        is populated, so this is the first moment every grant exists. A tool
+        that raises :class:`BindDeclinedError` is unregistered quietly -- the grant
+        it needs is off in this loop, which is configuration, not a bug. Any
+        other exception unregisters loudly rather than leaving a tool
+        half-bound. A tool that was withheld or shadowed after registering is
+        skipped: binding what the table no longer serves grants power to a
+        dead reference.
+
+        The registry's cast gates bind through the same minting path, with
+        the opposite failure rule: a gate whose bind raises fails the whole
+        assembly (the candidate generation is discarded, or first boot
+        refuses to serve). Quietly taking a gate off the table -- the tools'
+        unregister path, declines included -- would turn a binding bug into
+        a silent permission grant; a gate's sanctioned opt-out is its
+        factory returning None, before anything was cast.
+        """
+        from raven.plugins.context import BindDeclinedError
+
+        for tool in self.plugin_tools:
+            bind = getattr(tool, "bind_runtime", None)
+            if not callable(bind):
+                continue
+            if self.tools.get(tool.name) is not tool:
+                continue
+            namespace = getattr(tool, "contributed_by", None)
+            handles = self.mint_runtime_handles(str(namespace) if namespace else None)
+            try:
+                bind(handles)
+            except BindDeclinedError as decline:
+                logger.info("plugin tool {} declined its runtime binding ({}); unregistering it", tool.name, decline)
+                self.tools.unregister(tool.name)
+            except Exception:
+                logger.exception("plugin tool {} raised in bind_runtime; unregistering it", tool.name)
+                self.tools.unregister(tool.name)
+        for gate in self.tools.tool_gates:
+            bind = getattr(gate, "bind_runtime", None)
+            if not callable(bind):
+                continue
+            namespace = getattr(gate, "contributed_by", None)
+            bind(self.mint_runtime_handles(str(namespace) if namespace else None))
+
+    def mint_runtime_handles(self, namespace: "str | None"):
+        """The late-bound grants, minted per holder.
+
+        One minting path for tools, services and gates alike. The wake grant
+        is namespaced to the contributing plugin (paper: contracts/scheduling.py):
+        a holder's keys can neither see nor move another plugin's wakes, nor
+        any plain reminder. None where the host runs no scheduler, or the
+        holder carries no stamped identity to namespace by.
+        """
+        from raven.plugins.context import RuntimeHandles
+
+        wake = None
+        if self.cron_service is not None and namespace:
+            from raven.proactive_engine.schedulers.cron.grant import NamespacedWakeScheduler
+
+            wake = NamespacedWakeScheduler(self.cron_service, namespace)
+        return RuntimeHandles(
+            session_dir=self.sessions.session_dir,
+            subagent_registry=self.subagents.registry,
+            subagents_paused=lambda: self.subagents.paused,
+            playbook_runtime=self._playbooks,
+            wake_scheduler=wake,
+            direct_ask=self._direct_ask,
+            rebind_workdir=self._rebind_workdir,
+            usage_recorder=self._record_image_usage,
+        )
+
+    async def _direct_ask(
+        self,
+        prompt: str,
+        choices: "list[str] | None",
+        conversation_id: str,
+        timeout_s: "float | None" = None,
+    ) -> "str | None":
+        """The loop's own user-question face, lent as ``RuntimeHandles.direct_ask``.
+
+        Resolved per call, never at mint: the ask broker is injected by the
+        transport after this loop is built, so a mint-time snapshot would
+        forever answer None on those hosts. Answers None when no asking
+        transport is bound, exactly as the graph-confirm flow experiences it,
+        and also when the conversation is still busy with another question at
+        the deadline: a plugin gate asks from inside a tool call, and a
+        foreground graph runs several of those at once, so two gates (or a
+        gate and a relayed sub-agent) would otherwise evict each other from
+        the broker's single pending slot. None sends the gate down its
+        no-channel path, which is fail-closed. One deadline covers the wait
+        and the question, as ``execute`` and the confirm gate do.
+        """
+        tool = self.tools.get("ask_user")
+        if not isinstance(tool, AskUserTool):
+            return None
+        budget = timeout_s if timeout_s is not None else DEFAULT_TIMEOUT_S
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + budget
+        async with held_question(conversation_id, budget) as held:
+            if not held:
+                return None
+            return await tool.ask_direct(prompt, choices, conversation_id, max(0.0, deadline - loop.time()))
+
+    def _rebind_workdir(self, session_key: str, target: "str | Path") -> Path:
+        """Repoint one session's working directory, now and from now on
+        (``RuntimeHandles.rebind_workdir``).
+
+        Persists the override into the session's metadata -- the durable
+        truth ``WorkdirResolver`` reads back (explicit > persisted >
+        default) -- then repoints the live binding so the very next tool
+        call in the current task resolves the new root. The turn-end reset
+        of ``workdir.bind`` still runs; the next turn reads the persisted
+        value. Targets pass ``workdir.validate_override`` against this
+        loop's agent home.
+        """
+        resolved = workdir.validate_override(target, self.workspace)
+        session = self.sessions.get_or_create(session_key)
+        session.metadata["workdir"] = str(resolved)
+        self.sessions.save(session)
+        workdir.repoint(resolved)
+        return resolved
+
+    # Contributed background services and session observers, attached by the
+    # assembly root (inert) and run only by a resident host; a one-shot turn
+    # never starts the services, so it never attaches the observers either.
+    plugin_services: tuple = ()
+    session_observers: tuple = ()
+    _plugin_services_started = False
+    _started_services: tuple = ()
+
+    @property
+    def running_plugin_services(self) -> tuple:
+        """The contributed services started and not yet stopped: work this host runs with nobody asking."""
+        return self._started_services
+
+    async def start_plugin_services(self) -> None:
+        """Start every contributed background service, once.
+
+        Loud on error per the paper (contracts/services.py): a service that
+        fails to start is reported and left out of the started set -- never
+        retried silently, because a watcher that is secretly dead is the lie
+        a watching product exists to prevent.
+
+        The contributed session observers ride this same lifecycle: attached
+        to the session store here, detached in :meth:`stop_plugin_services`
+        (paper: contracts/session_events.py). The host's own task board joins
+        them, so a deleted conversation's board goes with it.
+        """
+        if self._plugin_services_started:
+            return
+        self._plugin_services_started = True
+        started = []
+        for service in self.plugin_services:
+            namespace = getattr(service, "contributed_by", None)
+            handles = self.mint_runtime_handles(str(namespace) if namespace else None)
+            try:
+                await service.start(handles)
+            except Exception:
+                logger.exception(
+                    "plugin service {} failed to start; it stays stopped",
+                    getattr(service, "contributed_by", service),
+                )
+                continue
+            started.append(service)
+        self._started_services = tuple(started)
+        board = (self.task_board,) if self.task_board is not None else ()
+        self.sessions.set_delete_observers((*self.session_observers, *board))
+
+    async def stop_plugin_services(self) -> None:
+        """Stop started services, newest first; idempotent, loud on error.
+
+        Detaches the session observers first, so a retiring generation stops
+        hearing deletions before its services wind down.
+        """
+        self.sessions.set_delete_observers(())
+        services, self._started_services = self._started_services, ()
+        self._plugin_services_started = False
+        for service in reversed(services):
+            try:
+                await service.stop()
+            except Exception:
+                logger.exception(
+                    "plugin service {} raised while stopping; continuing shutdown",
+                    getattr(service, "contributed_by", service),
+                )
+
+    def _build_playbooks(self) -> None:
+        """Build the playbook runtime for the bundled entry tools to bind.
+
+        Runs after ``_register_default_tools`` because the runtime's generator
+        needs a real inventory of what this install offers, and that is
+        ``self._mcp_servers`` plus a *populated* tool registry. Registering the
+        two playbook tools from inside ``_register_default_tools`` was what made
+        the two orderings look compatible: the runtime had to exist before
+        registration, yet could not be built until after it.
+
+        The two entry tools are plugin cargo now (``raven/plugins/bundled/playbook``):
+        they register with the other plugin tools and receive this runtime in
+        ``_bind_plugin_runtime``, so the loop assembles the funnel and the
+        plugin serves it.
+
+        It read ``self._mcp_servers`` several assignments before that field
+        existed, so ``enabled: true`` raised ``AttributeError``, the guard below
+        swallowed it, and the whole feature was off on every install that asked
+        for it -- with one warning line as the only trace. No test caught it
+        because none of them constructed an ``AgentLoop`` with a playbook
+        config; the loop-level playbook tests now do.
+
+        A failure to build still leaves the feature off rather than breaking the
+        loop: a library that cannot load is not a reason for the agent to refuse
+        every turn.
+        """
+        cfg = self._playbook_config
+        # A sub-agent is refused the funnel rather than the two tools directly:
+        # ``load_playbook`` on a ``dag`` playbook dispatches from inside the call,
+        # so it is a third route to a graph -- and leaving the funnel unbuilt is
+        # the path both tools already unregister themselves down.
+        if cfg is None or not cfg.enabled or is_subagent_process():
+            return
+        try:
+            self._playbooks = self._build_playbook_runtime(cfg)
+        except Exception:
+            logger.opt(exception=True).warning("Playbook runtime failed to build; feature disabled")
+            return
+
+    def _build_playbook_runtime(self, cfg: "PlaybookConfig"):
+        """Assemble the playbook funnel from pieces this loop already owns.
+
+        The executor gets a private SubAgentDagTool instance (never
+        registered, so no LLM-facing surface changes) wired to the same
+        manager hooks as the registered one: one dispatch gate, one quota,
+        one announce path.
+        """
+        from raven.agent.subagent.dag_tool import SubAgentDagTool
+        from raven.playbook import PlaybookExecutor, PlaybookRuntime, PlaybookStore
+
+        # The user layer of the two-layer library; the builtin layer is the
+        # store's own default. ``subagents.workspace`` is agent home here, so
+        # playbooks sit beside memory and skills rather than following the
+        # per-turn working directory.
+        user_layer = Path(cfg.dir) if cfg.dir else (self.subagents.workspace / "playbooks")
+        dag_tool = SubAgentDagTool(
+            workspace=self.subagents.workspace,
+            registry=self.subagents.registry,
+            guide_skill_id=None,
+            session_dir=self.sessions.session_dir,
+            is_paused=lambda: self.subagents.paused,
+            # A playbook step may now name an `instance`, so it needs the same
+            # message-list derivation a spawn and a registered DAG node get.
+            # Missing here before because a playbook step could not carry a handle
+            # at all -- the executor dropped the field on the way to dispatch.
+            state_for=self.subagents.instance_state,
+            mode_for=self.subagents.resolve_mode,
+            model_for=self.subagents.session_model_for,
+            effort_for=self.subagents.session_effort_for,
+            gate=self.subagents.dispatch_gate,
+            announce=self.subagents.announce_dag_result,
+            announce_exception=self.subagents.announce_dag_exception,
+            adopt=self.subagents.adopt_background_run,
+            charge=self.subagents.charge_dag_run,
+            # Same manager hooks as the registered tool: the sandbox builder
+            # above, for the same reason -- a stored graph's nodes exec too.
+            sandbox_for=self.subagents.sandbox_executor_for,
+            ask=self._confirm_graph,
+            # Same manager hooks as the registered tool (see the docstring above):
+            # a playbook step is an ordinary DAG node, so it is judged on the same
+            # terms once judgement is wired in.
+            provider_for=self._verdict_provider,
+            binding_for=self._turn_binding,
+            # PlaybookRuntime opens an explicit delegate scope for every stored
+            # graph: its durable Harness table for a v2 composite, or None for a
+            # legacy/workflow-only graph. Reading the scope here lets composites
+            # resolve aliases without exposing them to unrelated stored DAGs.
+            control_reachable=self.dag_control_reachable,
+            control_advert=self.dag_control_advert,
+            verdict_config=self.subagent_dag_config,
+        )
+        from raven.playbook import (
+            PlaybookGenerator,
+            RouterSizes,
+            agent_profiles_from_registry,
+            live_inventory,
+        )
+
+        executor = PlaybookExecutor(
+            dag_tool=dag_tool,
+            provider=self.provider,
+            compose_model=cfg.model,
+            # A multi-round stint works a project for hours and takes a checkout
+            # of it. The project is the conversation's own working directory,
+            # not this process's: a gateway is started from wherever it happens
+            # to be started from, and that is nobody's repository.
+            workspace_for=self._stint_workspace,
+        )
+        # Both Playbook model calls use the live, capability-aware agent view.
+        executor.set_agent_profiles(lambda: agent_profiles_from_registry(self.subagents.registry))
+        store = PlaybookStore(user_layer)
+        # Rides on the runtime below: creation shares the library and generator
+        # with the funnel, so both entry tools write the same place.
+        generator = PlaybookGenerator(
+            self.provider,
+            None,
+            lambda: agent_profiles_from_registry(self.subagents.registry),
+            # A real inventory: with the empty one this used to pass,
+            # ``check_assets`` judged every skill and mcp server a draft named to be
+            # unknown, so a good draft came back annotated as missing everything.
+            live_inventory(self._mcp_servers, self.tools.names()),
+            model=cfg.model,
+        )
+
+        return PlaybookRuntime(
+            store=store,
+            executor=executor,
+            generator=generator,
+            # The file as it stands, and deliberately not ``cfg.disabled``
+            # beside it: that is a snapshot of the same key, and a runtime
+            # holding both can only ever add to the deny list -- ``disable``
+            # would apply on the next call while ``enable`` waited for the next
+            # process. ``_withheld_tool_names`` above avoids this the same way.
+            disabled_source=self._disabled_playbook_names,
+            # The live table, asked rather than copied, and the view its own
+            # docstring reserves for validating: a row that is switched off is
+            # still a resolvable reference, and ``apply_agents`` rebuilds this
+            # registry in place, so a copy taken here would go stale against the
+            # very dispatch it is meant to agree with.
+            known_agents=self.subagents.registry.all_names,
+            router=RouterSizes(top_k=cfg.router.top_k, over_fetch_factor=cfg.router.over_fetch_factor),
+        )
+
+    def _disabled_playbook_names(self) -> frozenset[str]:
+        """The playbook deny list as it stands on disk, for the runtime to ask."""
+        from raven.config.live import disabled_playbook_names
+
+        return disabled_playbook_names(self._live_config)
+
+    def _turn_binding(self) -> tuple[Any, str]:
+        """The running turn's provider and model, resolved per dispatch.
+
+        Same reason as `_verdict_provider`: both are properties over the turn's
+        binding, and reading them while the loop was being built would freeze
+        the default onto the graph tool. A node dispatched to a pooled ACP
+        worker is what needs them -- the worker keeps the binding it was
+        launched with, so a session that switched model has to say so on every
+        dispatch, through the graph as much as through `spawn`.
+        """
+        return self.provider, self.model
+
+    def _permission_judge_provider(self) -> Any:
+        """The provider the permission reviewer should call, resolved per review.
+
+        Same resolution as ``_verdict_provider`` below, for the same two
+        reasons -- and the pin is read live, so pointing ``permissions.judgeModel``
+        at another model takes effect on the next review rather than the next
+        restart.
+        """
+        from raven.config.live import permissions_config
+
+        pinned = permissions_config(self._live_config).judge_model
+        if pinned and self._provider_pool is not None:
+            binding = self._provider_pool.bind_pin(pinned)
+            if binding is not None:
+                return binding.provider
+        return self.provider
+
+    def _verdict_provider(self) -> Any:
+        """The provider the node judge should call, resolved per dispatch.
+
+        `provider` is a property over the running turn's binding, so reading it
+        while this loop was still being built froze the default one onto the
+        graph tool: a session that switched model never reached the judge. And a
+        pinned `verdictModel` has to travel with the provider holding its
+        credential -- a bare model id sent through another vendor's provider
+        fails, and the judge fails open, so verdicts would go quietly off.
+        """
+        from raven.agent.subagent.dag_verdict import judge_provider
+
+        return judge_provider(self.provider, self._provider_pool, self.subagent_dag_config.verdict_model)
+
+    async def _confirm_graph(self, conversation_id: str, question: str) -> bool:
+        """The graph-level ``confirm`` gate's route to a human.
+
+        A method rather than a closure inside the playbook wiring, because both
+        DAG tool instances need it and that wiring only runs when
+        ``playbooks.enabled``. Built as a closure there first, it left the
+        *registered* ``run_subagent_dag`` -- the one the model calls -- with no
+        asker at all: a model-composed graph asking for approval got a log line,
+        and was then told a human had approved something no human saw.
+
+        Resolved per call rather than captured: this is handed to a tool built in
+        ``_register_default_tools``, and the transport injects the ask broker
+        later still.
+
+        No broker (a channel with no question path, a test) returns True and the
+        graph runs. Not every surface can put a question to a human, and letting
+        the absence of one disable the feature outright is the worse failure;
+        ``SubAgentDagTool._confirmed`` logs it when it happens.
+        """
+        tool = self.tools.get("ask_user")
+        if not isinstance(tool, AskUserTool):
+            return True
+        # Under the conversation's question lock, like every other route to the
+        # broker: ``ask_direct`` itself takes none (the relayed sub-agent routes
+        # call it already holding it), and an unserialized question here would
+        # evict a sub-agent's pending one from the slot. A conversation still
+        # busy at the deadline is a "Not now": the graph does not run unseen.
+        # One deadline for the wait and the question together, as ``execute``
+        # does: a lock had late must not buy the question a fresh full budget.
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + DEFAULT_TIMEOUT_S
+        async with held_question(conversation_id, DEFAULT_TIMEOUT_S) as held:
+            if not held:
+                return False
+            answer = await tool.ask_direct(
+                question, ["Run it", "Not now"], conversation_id, max(0.0, deadline - loop.time())
+            )
+        if answer is None:
+            return True
+        return answer.strip().lower() in {"run it", "run", "yes", "y", "ok", "go", "sure"}
+
+    def _dag_guide_skill_id(self) -> str | None:
+        """The orchestration guide's id for the DAG tool description, or None.
+
+        The tool tells the agent to load this skill before its first call, so
+        the pointer must be real: a deployment that removed the builtin skills
+        would otherwise burn a turn on a read_skill that cannot resolve. When
+        the registry itself is unreachable, keep the pointer — the shipped
+        skill is there by default, and losing the instruction is the worse
+        failure of the two.
+        """
+        from raven.agent.subagent.dag_tool import GUIDE_SKILL_ID
+
+        return self._shipped_guide(GUIDE_SKILL_ID)
+
+    def _shipped_guide(self, skill_id: str) -> str | None:
+        """``skill_id`` when the skill registry can resolve it, else None.
+
+        The same rule for every tool that points at a companion skill; see
+        :meth:`_dag_guide_skill_id` for why an unreachable registry keeps it.
+        """
+        registry = getattr(getattr(self.context, "skills", None), "registry", None)
+        if registry is None:
+            return skill_id
+        try:
+            found = registry.get(skill_id.split("/", 1)[1]) is not None
+        except Exception:  # noqa: BLE001 - a registry hiccup must not unregister the guide
+            return skill_id
+        return skill_id if found else None
+
+    @staticmethod
+    def _build_skill_hub_client(
+        workspace: Path,
+        skill_forge_router_config: "SkillForgeRouterConfig | None",
+    ) -> "SkillHubClient | None":
+        """Construct the shared Skill Hub client, or ``None`` when no Hub
+        endpoint is configured. Downloads land under ``<workspace>/skills/hub``
+        so a use_skill'd bundle is discoverable by the on-disk skill registry.
+
+        Built while the switch is off too: the tools ask the live config
+        before each Hub call, so turning the source back on does not need the
+        loop rebuilt. Only the endpoint is fixed at construction.
+        """
+        hub_cfg = getattr(skill_forge_router_config, "hub", None)
+        if hub_cfg is None or not getattr(hub_cfg, "endpoint", None):
+            return None
+        from raven.skill_hub import SkillHubClient
+
+        return SkillHubClient(
+            hub_cfg.endpoint,
+            api_key=hub_cfg.api_key,
+            timeout_s=hub_cfg.timeout_s,
+            source=hub_cfg.source,
+            cache_dir=workspace / "skills" / "hub",
+        )
+
+    def session_workdir(self, session_key: str) -> Path:
+        """The directory this session's turn works in, ready to be used.
+
+        The mount check runs before the directory is created, so a refusal
+        leaves nothing behind on disk.
+        """
+        resolved = self.peek_session_workdir(session_key)
+        self.check_workdir_mounted(resolved, session_key)
+        resolved.mkdir(parents=True, exist_ok=True)
+        return resolved
+
+    @property
+    def deliverables(self) -> "DeliverableStore | None":
+        """The registry `deliver_files` writes into, for callers that only read
+        it -- the RPC surface that answers what a conversation handed over."""
+        return self._deliverables
+
+    def _stint_workspace(self, session_key: str | None) -> Path:
+        """The project a stint started in this session works.
+
+        Through the same resolver a tool call goes through, and with no key it
+        still goes through it: an operator who launched with ``-w`` named one
+        directory for this process, and a stint is the last thing that should
+        work a different one.
+        """
+        return self.peek_session_workdir(session_key or "")
+
+    def peek_session_workdir(self, session_key: str) -> Path:
+        """Where this session would work, with no side effect and no refusal.
+
+        The read-only form, for a caller that only reports the path. Without a
+        resolver the loop keeps its pre-split behaviour: every session shares
+        ``self.workspace``.
+        """
+        if self._workdir_resolver is None:
+            return self.workspace
+        return self._workdir_resolver.resolve(session_key, create=False)
+
+    def check_workdir_mounted(self, path: Path, session_key: str | None = None) -> None:
+        """Refuse a working directory a sandboxed run could not see.
+
+        A VM's volumes are fixed when the box is created, so a directory
+        outside the mount cannot be served by adding one later.
+        """
+        if self._workdir_resolver is None or not self._executor.is_sandboxed:
+            return
+        root = self._workdir_resolver.mount_root()
+        if workdir.is_within(path, root):
+            return
+        subject = f"session {session_key} is pinned to {path}" if session_key else str(path)
+        raise ValueError(
+            f"{subject}, which is outside the sandbox mount {root}; "
+            "clear the override or restart with a wider workspace root"
+        )
+
+    def _set_tool_context(
+        self,
+        channel: str,
+        chat_id: str,
+        message_id: str | None = None,
+        session_key: str | None = None,
+        surface: str | None = None,
+    ) -> None:
+        """Update context for all tools that need routing info.
+
+        ``surface`` goes to the tools that start runs, whose results come back as
+        turns of their own: the front end the turn declared is where those are read.
+        """
+        # Before the per-tool contexts because the schema is assembled from this
+        # same turn: a channel-bound tool is withheld by the registry, not by
+        # its own refusal (see ToolRegistry.set_channel).
+        self.tools.set_channel(channel)
+        for name in (
+            "message",
+            "spawn",
+            "cron",
+            "run_subagent_dag",
+            "deliver_files",
+            "dag_status",
+            "cancel_dag",
+            "resolve_dag_node",
+            "context_retrieve",
+            "task_board",
+        ):
+            if tool := self.tools.get(name):
+                if not hasattr(tool, "set_context"):
+                    continue
+                if name == "message":
+                    tool.set_context(channel, chat_id, message_id)
+                elif name in ("spawn", "run_subagent_dag"):
+                    tool.set_context(channel, chat_id, session_key or f"{channel}:{chat_id}", surface=surface)
+                elif name in (
+                    "deliver_files",
+                    "dag_status",
+                    "cancel_dag",
+                    "resolve_dag_node",
+                    "context_retrieve",
+                    "task_board",
+                ):
+                    tool.set_context(channel, chat_id, session_key or f"{channel}:{chat_id}")
+                else:
+                    tool.set_context(channel, chat_id)
+        # Not in the name list above: the playbook executor's DAG tool is a
+        # private unregistered instance, reachable only through the runtime.
+        # Recorded here -- the one place every origin passes -- because a
+        # CRON/SENTINEL turn can call load_playbook too, and its announce must go
+        # to that turn's own address rather than the last human conversation's.
+        if self._playbooks is not None:
+            self._playbooks.set_context(
+                channel=channel, chat_id=chat_id, session_key=session_key or f"{channel}:{chat_id}", surface=surface
+            )
+
+    def dag_tools(self) -> list[Any]:
+        """Every live graph tool: the registered one, plus the playbook engine's.
+
+        Two instances exist by design -- one on the model's tool table, one
+        private to the playbook executor, because a ``mode: dag`` playbook is
+        dispatched by the engine rather than by the model. They share the agent
+        table, the dispatch gate, the quota and the announce path, and everything
+        a *consumer* asks about a run has to be shared the same way: whether it
+        is live, cancelling it, where its progress goes. Reaching only for the
+        registered instance answers "not happening" to all three for a run a
+        playbook started -- no progress events reach the page, so the graph never
+        appears in the conversation at all; the cancel button reports False; and
+        the instance rows read the handle as finished.
+
+        Which of the two dispatched a run is not a distinction any consumer
+        should be able to observe, so the list is what they are given.
+        """
+        tools = []
+        if (registered := self.tools.get("run_subagent_dag")) is not None:
+            tools.append(registered)
+        if self._playbooks is not None and (private := self._playbooks.dag_tool) is not None:
+            tools.append(private)
+        return tools
+
+    def active_dag_run_ids(self) -> set[str]:
+        """Run ids in flight across every graph tool instance."""
+        live: set[str] = set()
+        for tool in self.dag_tools():
+            try:
+                live.update(tool.active_run_ids())
+            except Exception:  # noqa: BLE001 - liveness is advisory, never fatal
+                continue
+        return live
+
+    def cancel_dag_run(self, run_id: str) -> bool:
+        """Stop one in-flight run, whichever instance owns it."""
+        return any(tool.request_cancel(run_id) for tool in self.dag_tools())
+
+    def resolve_dag_node(self, run_id: str, node_id: str, decision: str, message: str | None, plan: Any = None) -> bool:
+        """Answer one suspended node, whichever instance owns its run."""
+        return any(tool.resolve_node(run_id, node_id, decision, message, plan) for tool in self.dag_tools())
+
+    def dag_control_reachable(self) -> bool:
+        """Whether the schema-hidden dag control tools have a call path.
+
+        The graph tool advertises ``dag_status`` / ``cancel_dag`` /
+        ``resolve_dag_node`` in its acceptance text, and this is the gate that
+        keeps the advertisement
+        honest: it answers the same question ToolSearchStrategy answers when it
+        assembles the per-turn tool list, through the controller's single
+        predicate rather than a second copy of the fold condition.
+        """
+        if self.tool_search_controller is None:
+            return False
+        return self.tool_search_controller.tool_call_available()
+
+    def dag_control_advert(self, name: str) -> str | None:
+        """One schema-hidden dag control tool's definition, as advertisement text.
+
+        The graph tool's result text and the exception report are the only route
+        these three have to the model, so they carry the definition itself rather
+        than a retelling of it -- generated here, from the registry, so it cannot
+        drift from the tool the way three hand-written copies did.
+        """
+        from raven.agent.subagent.dag_control_advert import render
+
+        return render(self.tools.hidden_definition(name))
+
+    def set_dag_progress_sink(self, sink) -> None:
+        """Late-bind the graph tools' progress sink (host wires it to the web
+        channel's emitter so a run's events reach the web UI).
+
+        Every instance, not just the registered one -- see :meth:`dag_tools`.
+        """
+        self._dag_progress_sink = sink
+        for tool in self.dag_tools():
+            if hasattr(tool, "set_progress_sink"):
+                tool.set_progress_sink(sink)
+
+    def apply_agents(self, configs: list) -> None:
+        """Hot-apply new agent config to the live runtime (P4), with no restart.
+
+        One call, one table: ``spawn`` and the DAG tool read the same
+        ``AgentRegistry``, so applying to the manager is applying to both. This
+        used to refresh two independently-built maps through two setters that each
+        skipped a bad entry on its own, which made "the manager has hermes, the DAG
+        tool does not" a reachable state.
+
+        No registration branch either -- the DAG tool is registered at startup
+        whatever config holds, because the built-in rows are always on the table.
+        """
+        self._agent_configs = list(configs)
+        self.subagents.apply_agents(configs)

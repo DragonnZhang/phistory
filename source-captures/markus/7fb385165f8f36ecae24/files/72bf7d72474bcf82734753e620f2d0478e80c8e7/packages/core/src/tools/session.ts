@@ -1,0 +1,826 @@
+import type { AgentToolHandler } from '../agent.js';
+import { createLogger, getTextContent } from '@markus/shared';
+import type { IMemoryStore } from '../memory/types.js';
+import { resetAllFileReadCaches } from './file.js';
+import { DEFAULT_COMPACT_KEEP_LAST, COMPACT_KEEP_LAST_MIN, COMPACT_KEEP_LAST_MAX } from '../context-budget.js';
+
+const log = createLogger('session-tools');
+
+export interface SessionRow {
+  id: string;
+  agentId: string;
+  userId?: string | null;
+  title?: string | null;
+  isMain?: boolean;
+  createdAt?: string | Date;
+  lastMessageAt?: string | Date;
+  [k: string]: unknown;
+}
+
+export interface SessionMsgRow {
+  id: string;
+  sessionId: string;
+  agentId?: string;
+  role?: string;
+  content?: string;
+  createdAt?: string | Date;
+  [k: string]: unknown;
+}
+
+/** 存储层查询能力的最小契约（由 SqliteChatSessionRepo 满足）。 */
+export interface SessionRepo {
+  listSessionsPaginated(
+    agentId: string,
+    opts: { since?: string; until?: string; userId?: string; page?: number; pageSize?: number },
+  ): {
+    sessions: SessionRow[];
+    total: number;
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
+  };
+  getSession(sessionId: string): SessionRow | null | undefined;
+  listMessagesPaginated(
+    sessionId: string,
+    opts: { since?: string; until?: string; page?: number; pageSize?: number },
+  ): {
+    messages: SessionMsgRow[];
+    total: number;
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
+  };
+  /** 统计某 session 中某 agent 发出的消息数（用于"参与"权限判定）。 */
+  countMessagesByAgent(sessionId: string, agentId: string): number;
+  /** 重命名一个 session。可选 —— 不支持的适配器可忽略。 */
+  updateTitle?(sessionId: string, title: string): void | null | { id: string; title: string | null };
+}
+
+/** 可选注入：让 agent 通过 session 工具主动压缩自己的历史上下文（0.9.7 context-root-fix）。 */
+export interface SessionCompactor {
+  compactOnDemand(sessionId: string, keepLast: number): {
+    summary: string;
+    flushedCount: number;
+    /** Messages retained after compaction. Optional — mocks may omit. */
+    remaining?: number;
+    /** false when the session does not exist (memory + disk). Optional — mocks may omit. */
+    found?: boolean;
+  };
+  /** ContextOS: compact with an explicit structured anchor (goal/done/next). */
+  compactWithAnchor?(
+    sessionId: string,
+    keepLast: number,
+    anchor: { goal?: string; done?: string; next?: string },
+  ): {
+    summary: string;
+    flushedCount: number;
+    remaining?: number;
+    found?: boolean;
+    anchorKey: string;
+  };
+}
+
+/** ContextOS: agent-managed slot store — pin/unpin facts that survive compaction. */
+export interface SessionSlotStore {
+  getSlots(sessionId: string): Array<{ key: string; text: string; updatedAt?: number }>;
+  setSlot(sessionId: string, key: string, text: string): void;
+  removeSlot(sessionId: string, key: string): void;
+  /** Serialize this session's slots into the fixed [SLOTS] injection segment. */
+  serialize(sessionId: string): string;
+}
+
+/** ContextOS: archived-fragment store — retrieve/include/purge compacted history. */
+export interface SessionFragmentStore {
+  retrieveFragments(
+    query: string,
+    maxResults: number,
+  ): Array<{ id: string; content: string; metadata?: Record<string, unknown> }>;
+  includeFragment(sessionId: string, fragmentId: string): { ok: boolean; message: string };
+  purgeSessionFragments(sessionId: string): number;
+  sessionStats(sessionId: string): { messageCount: number; slotKeys: string[]; fragmentCount: number };
+}
+
+export interface SessionToolContext {
+  agentId: string;
+  chatSessionRepo: SessionRepo;
+  /** 可选。提供后，agent 可用 `operation: "compact"` 主动折叠旧历史，替换为锚点摘要。 */
+  compactor?: SessionCompactor;
+  /** ContextOS 可选。提供后，agent 可用 pin/unpin 钉住固定槽位、status 查看占用。 */
+  slotStore?: SessionSlotStore;
+  /** ContextOS 可选。提供后，agent 可用 retrieve/include/purge 管理已归档片段。 */
+  fragmentStore?: SessionFragmentStore;
+  /** 可选。提供后，rename 会把聊天（cs_*）会话标题同步写入 Sqlite 并广播到 UI（由 org-manager 注入）。 */
+  titleUpdater?: (sessionId: string, title: string) => void;
+  /** 可选。返回 agent 当前绑定的聊天会话 id（cs_*）——用于把当前 memory session 的改名映射到 UI 可见的聊天标题。 */
+  currentDbSessionId?: () => string | null;
+  /** 可选。返回 agent 当前内存会话 id（sess_ 或 task_ 前缀）——让 status 不传 session_id 时默认作用于「当前会话」。 */
+  currentMemorySessionId?: () => string | null;
+  /**
+   * 可选。把聊天会话 id（cs_*）解析为 agent 绑定过的内存会话 id（sess_ 或 task_ 前缀）。
+   * 有了它，session 工具才同时接受两种 id 空间 —— agent 才能自证「我在哪条会话」，
+   * 而不是拿 cs_* 去 MemoryStore 里查、拿到一个误导性的 not_found。
+   */
+  resolveMemorySessionByDbSessionId?: (dbSessionId: string) => string | null;
+  /** 可选。磁盘上的会话文件总数 —— 用于如实报告 total（内存只热加载最近 N 个）。 */
+  diskSessionCount?: () => number;
+}
+
+/**
+ * Memory-backed SessionRepo — adapts MemoryStore conversation sessions to the
+ * SessionRepo contract used by createSessionTool.
+ *
+ * WHY: the session tool must operate on the SAME session space the agent's
+ * context is actually built from (MemoryStore `sess_*` / `task_*` / `a2a_*`),
+ * NOT the Sqlite `cs_*` UI space. Mixing the two broke ContextOS:
+ *   - checkOwnership used Sqlite (cs_* always "exists" → permission passed)
+ *   - slot/compact/fragment operations used MemoryStore (no cs_* session →
+ *     silent no-op returning ok but persisting nothing)
+ * This adapter makes list/get/status/compact/pin/fragment ALL read/write the
+ * same MemoryStore session records the agent truly manages.
+ */
+export function createMemorySessionRepo(mem: IMemoryStore): SessionRepo {
+  return {
+    listSessionsPaginated(agentId: string, opts: {
+      since?: string; until?: string; userId?: string; page?: number; pageSize?: number;
+    }) {
+      const sessions = mem.listSessions(agentId)
+        .filter((s) => {
+          if (opts.since && s.lastActivityAt && s.lastActivityAt < opts.since) return false;
+          if (opts.until && s.lastActivityAt && s.lastActivityAt > opts.until) return false;
+          return true;
+        })
+        .sort((a, b) =>
+          (b.lastActivityAt ?? '').localeCompare(a.lastActivityAt ?? ''),
+        );
+      const page = Math.max(1, Math.trunc(Number(opts.page) || 1) || 1);
+      const pageSize = Math.min(Math.max(1, Math.trunc(Number(opts.pageSize) || 20) || 20), 50);
+      const total = sessions.length;
+      const slice = sessions.slice((page - 1) * pageSize, page * pageSize);
+      return {
+        sessions: slice.map((s) => ({
+          id: s.id,
+          agentId: s.agentId,
+          userId: null,
+          title: null,
+          isMain: false,
+          createdAt: s.startedAt,
+          lastMessageAt: s.lastActivityAt,
+        })),
+        total,
+        page,
+        pageSize,
+        hasMore: page * pageSize < total,
+      };
+    },
+    getSession(sessionId: string): SessionRow | null | undefined {
+      const s = mem.getSession(sessionId);
+      if (!s) return null;
+      return {
+        id: s.id,
+        agentId: s.agentId,
+        userId: null,
+        title: null,
+        isMain: false,
+        createdAt: s.startedAt,
+        lastMessageAt: s.lastActivityAt,
+      };
+    },
+    listMessagesPaginated(sessionId: string, opts: {
+      since?: string; until?: string; page?: number; pageSize?: number;
+    }) {
+      const s = mem.getSession(sessionId);
+      // LLMMessage has no createdAt — memory sessions store messages verbatim,
+      // so since/until time filtering is not applicable at message level.
+      const all = s?.messages ?? [];
+      const page = Math.max(1, Math.trunc(Number(opts.page) || 1) || 1);
+      const pageSize = Math.min(Math.max(1, Math.trunc(Number(opts.pageSize) || 50) || 50), 100);
+      const total = all.length;
+      const slice = all.slice((page - 1) * pageSize, page * pageSize);
+      return {
+        messages: slice.map((m) => ({
+          id: '',
+          sessionId,
+          agentId: s?.agentId,
+          role: m.role ?? null,
+          content: getTextContent(m.content),
+        })),
+        total,
+        page,
+        pageSize,
+        hasMore: page * pageSize < total,
+      };
+    },
+    countMessagesByAgent(sessionId: string, agentId: string): number {
+      const s = mem.getSession(sessionId);
+      if (!s) return 0;
+      // 会话归属该 agent 即视为"参与"（memory session 都是单主会话）
+      return s.agentId === agentId ? s.messages.length : 0;
+    },
+    updateTitle(sessionId: string, title: string) {
+      if (mem.renameSession) mem.renameSession(sessionId, title);
+      return { id: sessionId, title };
+    },
+  };
+}
+
+const OP_ALIASES = new Set([
+  'list', 'get', 'compact',
+  'pin', 'unpin', 'include', 'retrieve', 'purge', 'status',
+  'rename', 'title', 'update_title', 'rename_title', 'set_title',
+]);
+
+export function normalizeSessionArgs(args: Record<string, unknown>): {
+  operation: 'list' | 'get' | 'compact' | 'pin' | 'unpin' | 'include' | 'retrieve' | 'purge' | 'status' | 'rename';
+  sessionId: string | undefined;
+  since: string | undefined;
+  until: string | undefined;
+  userId: string | undefined;
+  page: number | undefined;
+  pageSize: number | undefined;
+  keepLast: number | undefined;
+  key: string | undefined;
+  content: string | undefined;
+  query: string | undefined;
+  maxResults: number | undefined;
+  fragmentId: string | undefined;
+  goal: string | undefined;
+  done: string | undefined;
+  next: string | undefined;
+  title: string | undefined;
+} {
+  const sessionId = (args.session_id ?? args.sessionId ?? args.id) as string | undefined;
+  let since = (args.since ?? args.after) as string | undefined;
+  const until = (args.until ?? args.before) as string | undefined;
+  const userId = (args.user_id ?? args.userId) as string | undefined;
+  const page = (args.page ?? args.page_no) as number | undefined;
+  const pageSize = (args.page_size ?? args.pageSize ?? args.limit) as number | undefined;
+  const keepLast = (args.keep_last ?? args.keepLast ?? args.keep) as number | undefined;
+  const key = (args.key ?? args.slot_key ?? args.slotKey) as string | undefined;
+  const content = (args.content ?? args.value ?? args.text) as string | undefined;
+  const query = (args.query ?? args.q ?? args.search) as string | undefined;
+  const maxResults = (args.max_results ?? args.maxResults ?? args.limit) as number | undefined;
+  const fragmentId = (args.fragment_id ?? args.fragmentId) as string | undefined;
+  const goal = (args.goal ?? args.anchor_goal) as string | undefined;
+  const done = (args.done ?? args.anchor_done) as string | undefined;
+  const next = (args.next ?? args.anchor_next) as string | undefined;
+  const title = (args.title ?? args.new_title ?? args.name) as string | undefined;
+
+  let explicit = (args.operation ?? args.op ?? args.action ?? args.mode) as string | undefined;
+  if (typeof explicit === 'string') explicit = explicit.trim().toLowerCase();
+  if (typeof args.type === 'string' && OP_ALIASES.has(args.type.trim().toLowerCase())) {
+    explicit = args.type.trim().toLowerCase();
+  }
+  if (explicit?.startsWith('list')) explicit = 'list';
+  else if (explicit?.startsWith('get')) explicit = 'get';
+  else if (explicit?.startsWith('compact')) explicit = 'compact';
+  else if (explicit?.startsWith('pin')) explicit = 'pin';
+  else if (explicit?.startsWith('unpin')) explicit = 'unpin';
+  else if (explicit?.startsWith('include')) explicit = 'include';
+  else if (explicit?.startsWith('retrieve')) explicit = 'retrieve';
+  else if (explicit?.startsWith('purge')) explicit = 'purge';
+  else if (explicit?.startsWith('status')) explicit = 'status';
+  else if (explicit?.startsWith('rename')) explicit = 'rename';
+  else if (explicit === 'title' || explicit?.startsWith('set_title') || explicit?.startsWith('update_title')) explicit = 'rename';
+  if (explicit && !OP_ALIASES.has(explicit)) explicit = undefined;
+
+  // Free-form query like "get cs-1"
+  if (typeof since === 'string') {
+    const lower = since.trim().toLowerCase();
+    if (!explicit && (lower === 'get' || lower.startsWith('get '))) {
+      explicit = 'get';
+      const id = since.trim().slice(3).trim();
+      if (id && !sessionId) since = undefined;
+    }
+  }
+
+  let operation: 'list' | 'get' | 'compact' | 'pin' | 'unpin' | 'include' | 'retrieve' | 'purge' | 'status' | 'rename';
+  if (explicit === 'get') operation = 'get';
+  else if (explicit === 'list') operation = 'list';
+  else if (explicit === 'compact') operation = 'compact';
+  else if (explicit === 'pin') operation = 'pin';
+  else if (explicit === 'unpin') operation = 'unpin';
+  else if (explicit === 'include') operation = 'include';
+  else if (explicit === 'retrieve') operation = 'retrieve';
+  else if (explicit === 'purge') operation = 'purge';
+  else if (explicit === 'status') operation = 'status';
+  else if (explicit === 'rename') operation = 'rename';
+  else if (sessionId) operation = 'get';
+  else operation = 'list';
+
+  return {
+    operation, sessionId, since, until, userId, page, pageSize, keepLast,
+    key, content, query, maxResults, fragmentId, goal, done, next, title,
+  };
+}
+
+function iso(v: string | Date | undefined): string | undefined {
+  if (!v) return undefined;
+  return v instanceof Date ? v.toISOString() : String(v);
+}
+
+/** Ownership: agent may write/manage a session only if it owns it (agentId matches). */
+function checkOwnership(
+  repo: SessionRepo,
+  sessionId: string,
+  agentId: string,
+): { session?: SessionRow; error?: string } {
+  const session = repo.getSession(sessionId);
+  if (!session) return { error: JSON.stringify({ status: 'not_found', message: `No session with id ${sessionId}.` }) };
+  if (session.agentId !== agentId) {
+    return { error: JSON.stringify({ status: 'forbidden', message: `Not authorized to manage session ${sessionId}.` }) };
+  }
+  return { session };
+}
+
+export function createSessionTool(ctx: SessionToolContext): AgentToolHandler {
+  const repo = ctx.chatSessionRepo;
+
+  async function doList(args: Record<string, unknown>): Promise<string> {
+    const n = normalizeSessionArgs(args);
+    const page = Math.max(1, Math.trunc(Number(n.page) || 1) || 1);
+    const pageSize = Math.min(Math.max(1, Math.trunc(Number(n.pageSize) || 20) || 20), 50);
+    const res = repo.listSessionsPaginated(ctx.agentId, {
+      since: n.since,
+      until: n.until,
+      userId: n.userId,
+      page,
+      pageSize,
+    });
+    const currentMemorySessionId = ctx.currentMemorySessionId?.() ?? null;
+    const currentChatSessionId = ctx.currentDbSessionId?.() ?? null;
+    const totalOnDisk = ctx.diskSessionCount?.();
+    return JSON.stringify({
+      status: 'ok',
+      sessions: res.sessions.map(s => ({
+        id: s.id,
+        agentId: s.agentId,
+        userId: s.userId ?? null,
+        title: s.title ?? null,
+        isMain: !!s.isMain,
+        createdAt: iso(s.createdAt as string | Date),
+        lastMessageAt: iso(s.lastMessageAt as string | Date),
+        isCurrent: !!currentMemorySessionId && s.id === currentMemorySessionId,
+      })),
+      current: {
+        memorySessionId: currentMemorySessionId,
+        chatSessionId: currentChatSessionId,
+      },
+      total: res.total,
+      ...(typeof totalOnDisk === 'number' ? { totalOnDisk } : {}),
+      page: res.page,
+      pageSize: res.pageSize,
+      hasMore: res.hasMore,
+      ...(typeof totalOnDisk === 'number' && totalOnDisk > res.total
+        ? {
+            note: `total counts only the ${res.total} session(s) warm in memory; ${totalOnDisk} exist on disk. ` +
+              `An older session is still readable via { "operation": "get", "session_id": "<id>" } when you know its id.`,
+          }
+        : {}),
+    });
+  }
+
+  async function doGet(args: Record<string, unknown>, chatSessionId?: string): Promise<string> {
+    const n = normalizeSessionArgs(args);
+    if (!n.sessionId) {
+      return JSON.stringify({
+        status: 'error',
+        message: 'Getting a session needs session_id. Example: { "operation": "get", "session_id": "sess_..." }. List first with { "operation": "list" }.',
+      });
+    }
+    const session = repo.getSession(n.sessionId);
+    if (!session) {
+      return JSON.stringify({ status: 'not_found', message: `No session with id ${n.sessionId}.` });
+    }
+    // 权限：归属 或 参与（本 agent 在该 session 发过消息）
+    const isOwner = session.agentId === ctx.agentId;
+    if (!isOwner) {
+      const participated = repo.countMessagesByAgent(n.sessionId, ctx.agentId) > 0;
+      if (!participated) {
+        return JSON.stringify({ status: 'forbidden', message: `Not authorized to read session ${n.sessionId}.` });
+      }
+    }
+    const page = Math.max(1, Math.trunc(Number(n.page) || 1) || 1);
+    const pageSize = Math.min(Math.max(1, Math.trunc(Number(n.pageSize) || 50) || 50), 100);
+    const msgs = repo.listMessagesPaginated(n.sessionId, {
+      since: n.since,
+      until: n.until,
+      page,
+      pageSize,
+    });
+    return JSON.stringify({
+      status: 'ok',
+      session: {
+        id: session.id,
+        chatSessionId: chatSessionId ?? null,
+        agentId: session.agentId,
+        userId: session.userId ?? null,
+        title: session.title ?? null,
+        isMain: !!session.isMain,
+        createdAt: iso(session.createdAt as string | Date),
+        lastMessageAt: iso(session.lastMessageAt as string | Date),
+      },
+      messages: msgs.messages.map(m => ({
+        id: m.id,
+        role: m.role ?? null,
+        content: m.content ?? '',
+        createdAt: iso(m.createdAt as string | Date),
+      })),
+      totalMessages: msgs.total,
+      page: msgs.page,
+      pageSize: msgs.pageSize,
+      hasMore: msgs.hasMore,
+    });
+  }
+
+  async function doCompact(args: Record<string, unknown>): Promise<string> {
+    if (!ctx.compactor) {
+      return JSON.stringify({
+        status: 'error',
+        message: 'Context compaction is not available in this runtime (no compactor injected).',
+      });
+    }
+    const n = normalizeSessionArgs(args);
+    if (!n.sessionId) {
+      return JSON.stringify({
+        status: 'error',
+        message: `Compacting needs session_id. Example: { "operation": "compact", "session_id": "sess_...", "keep_last": ${DEFAULT_COMPACT_KEEP_LAST} }.`,
+      });
+    }
+    // 权限：只允许压缩自己拥有的 session（避免 agent 篡改他人上下文）。
+    const own = checkOwnership(repo, n.sessionId, ctx.agentId);
+    if (own.error) return own.error;
+    const keepLast = Math.max(COMPACT_KEEP_LAST_MIN, Math.min(COMPACT_KEEP_LAST_MAX, Math.trunc(Number(n.keepLast) || DEFAULT_COMPACT_KEEP_LAST) || DEFAULT_COMPACT_KEEP_LAST));
+    try {
+      const hasAnchor = n.goal || n.done || n.next;
+      let res: { summary: string; flushedCount: number; remaining?: number; found?: boolean; anchorKey?: string };
+      if (hasAnchor && ctx.compactor.compactWithAnchor) {
+        res = ctx.compactor.compactWithAnchor(n.sessionId, keepLast, {
+          goal: n.goal, done: n.done, next: n.next,
+        });
+      } else {
+        res = ctx.compactor.compactOnDemand(n.sessionId, keepLast);
+      }
+      // Distinguish a genuine failure from a valid no-op. The 2026-09-30 刘利
+      // P0 report: a session evicted from the in-memory LRU made compact() a
+      // silent no-op that still returned status:'ok', so the agent could not
+      // tell "nothing to compact" from "compaction failed" and never recovered.
+      if (res.found === false) {
+        return JSON.stringify({
+          status: 'error',
+          message: `No session with id "${n.sessionId}" (not in memory nor on disk). Use session_list to find the correct id.`,
+        });
+      }
+      const noop = res.flushedCount === 0;
+
+      // A real compaction rewrote history, so the agent's earlier file reads may
+      // no longer be in its context. `file_read` dedupe answers "unchanged, you
+      // already have it" — which becomes a LIE the moment history is rewritten.
+      // Reset it here, at the one place that knows compaction actually happened.
+      if (!noop) resetAllFileReadCaches();
+
+      return JSON.stringify({
+        status: 'ok',
+        flushedCount: res.flushedCount,
+        remaining: res.remaining ?? 0,
+        summary: res.summary,
+        ...(res.anchorKey ? { anchored_as: res.anchorKey } : {}),
+        ...(noop
+          ? {
+              skipped: true,
+              reason: 'within_keep_last',
+              note: `Nothing to compact: the session holds <= keep_last (${keepLast}) messages, so no history was dropped and no token was freed. This is a valid no-op, not a failure.`,
+            }
+          : {
+              note: hasAnchor
+                ? 'As a pinch: pin a goal/done/next anchor keeps your position alive even after compaction. Use session_pin to persist them as durable slots.'
+                : 'Earlier messages were compacted into the anchor summary above. Continue the work from this point; you do NOT need to re-read the flushed messages.',
+            }),
+      });
+    } catch (err) {
+      log.error('session compact failed', { error: String(err) });
+      return JSON.stringify({ status: 'error', message: String(err) });
+    }
+  }
+
+  async function doPin(args: Record<string, unknown>): Promise<string> {
+    if (!ctx.slotStore) {
+      return JSON.stringify({ status: 'error', message: 'Slot pinning is not available in this runtime (no slotStore injected).' });
+    }
+    const n = normalizeSessionArgs(args);
+    if (!n.sessionId || !n.key || n.content === undefined) {
+      return JSON.stringify({
+        status: 'error',
+        message: 'Pinning needs session_id, key, content. Example: { "operation": "pin", "session_id": "sess_...", "key": "goal", "content": "..." }.',
+      });
+    }
+    const own = checkOwnership(repo, n.sessionId, ctx.agentId);
+    if (own.error) return own.error;
+    try {
+      ctx.slotStore.setSlot(n.sessionId, n.key, n.content);
+      return JSON.stringify({
+        status: 'ok',
+        pinned: { [n.key]: n.content.slice(0, 120) + (n.content.length > 120 ? '…' : '') },
+        note: `Pinned key "${n.key}" into session ${n.sessionId}. It stays in the fixed [SLOTS] segment and is NEVER compacted until you unpin it.`,
+      });
+    } catch (err) {
+      log.error('session pin failed', { error: String(err) });
+      return JSON.stringify({ status: 'error', message: String(err) });
+    }
+  }
+
+  async function doUnpin(args: Record<string, unknown>): Promise<string> {
+    if (!ctx.slotStore) {
+      return JSON.stringify({ status: 'error', message: 'Slot pinning is not available in this runtime (no slotStore injected).' });
+    }
+    const n = normalizeSessionArgs(args);
+    if (!n.sessionId || !n.key) {
+      return JSON.stringify({ status: 'error', message: 'Unpinning needs session_id and key.' });
+    }
+    const own = checkOwnership(repo, n.sessionId, ctx.agentId);
+    if (own.error) return own.error;
+    try {
+      ctx.slotStore.removeSlot(n.sessionId, n.key);
+      return JSON.stringify({ status: 'ok', unpinned: n.key, note: `Removed pinned key "${n.key}".` });
+    } catch (err) {
+      log.error('session unpin failed', { error: String(err) });
+      return JSON.stringify({ status: 'error', message: String(err) });
+    }
+  }
+
+  async function doRetrieve(args: Record<string, unknown>): Promise<string> {
+    if (!ctx.fragmentStore) {
+      return JSON.stringify({ status: 'error', message: 'Fragment retrieval is not available in this runtime (no fragmentStore injected).' });
+    }
+    const n = normalizeSessionArgs(args);
+    const query = String(n.query ?? '');
+    const maxResults = Math.max(1, Math.min(20, Math.trunc(Number(n.maxResults) || 5) || 5));
+    try {
+      const hits = ctx.fragmentStore.retrieveFragments(query, maxResults);
+      if (!hits.length) {
+        return JSON.stringify({
+          status: 'ok',
+          hits: [],
+          note: query
+            ? `No archived fragments matched "${query}". Compaction archives raw history recoverable via session_retrieve.`
+            : 'No archived fragments. Compaction archives raw history recoverable via session_retrieve.',
+        });
+      }
+      return JSON.stringify({
+        status: 'ok',
+        hits: hits.map((h) => ({ id: h.id, content: h.content.slice(0, 2000) })),
+        note: 'Return the fragment_id to session_include to reinject it into context.',
+      });
+    } catch (err) {
+      log.error('session retrieve failed', { error: String(err) });
+      return JSON.stringify({ status: 'error', message: String(err) });
+    }
+  }
+
+  async function doInclude(args: Record<string, unknown>): Promise<string> {
+    if (!ctx.fragmentStore) {
+      return JSON.stringify({ status: 'error', message: 'Fragment inclusion is not available in this runtime (no fragmentStore injected).' });
+    }
+    const n = normalizeSessionArgs(args);
+    if (!n.sessionId || !n.fragmentId) {
+      return JSON.stringify({ status: 'error', message: 'Including needs session_id and fragment_id (from session_retrieve).' });
+    }
+    const own = checkOwnership(repo, n.sessionId, ctx.agentId);
+    if (own.error) return own.error;
+    try {
+      const res = ctx.fragmentStore.includeFragment(n.sessionId, n.fragmentId);
+      return JSON.stringify(res.ok ? { status: 'ok', ...res } : { status: 'error', ...res });
+    } catch (err) {
+      log.error('session include failed', { error: String(err) });
+      return JSON.stringify({ status: 'error', message: String(err) });
+    }
+  }
+
+  async function doPurge(args: Record<string, unknown>): Promise<string> {
+    if (!ctx.fragmentStore) {
+      return JSON.stringify({ status: 'error', message: 'Fragment purge is not available in this runtime (no fragmentStore injected).' });
+    }
+    const n = normalizeSessionArgs(args);
+    if (!n.sessionId) {
+      return JSON.stringify({ status: 'error', message: 'Purging needs session_id.' });
+    }
+    const own = checkOwnership(repo, n.sessionId, ctx.agentId);
+    if (own.error) return own.error;
+    try {
+      const removed = ctx.fragmentStore.purgeSessionFragments(n.sessionId);
+      return JSON.stringify({
+        status: 'ok',
+        purgedFragments: removed,
+        note: `Removed ${removed} archived fragment(s) for session ${n.sessionId}. These are permanently deleted (compact no longer archived if purged).`,
+      });
+    } catch (err) {
+      log.error('session purge failed', { error: String(err) });
+      return JSON.stringify({ status: 'error', message: String(err) });
+    }
+  }
+
+  async function doStatus(args: Record<string, unknown>, chatSessionId?: string): Promise<string> {
+    const n = normalizeSessionArgs(args);
+    // No session_id → default to the CURRENT session, so "which session am I in?"
+    // is answerable without knowing the sess_*/cs_* id-space split.
+    let sessionId = n.sessionId;
+    if (!sessionId) {
+      sessionId = ctx.currentMemorySessionId?.() ?? undefined;
+      if (!sessionId) {
+        return JSON.stringify({ status: 'error', message: 'Status needs session_id (or an active session to default to).' });
+      }
+      chatSessionId = chatSessionId ?? ctx.currentDbSessionId?.() ?? undefined;
+    }
+    // status is read-only: ownership OR participation is enough (same as get).
+    const session = repo.getSession(sessionId);
+    if (!session) {
+      return JSON.stringify({ status: 'not_found', message: `No session with id ${sessionId}.` });
+    }
+    const isOwner = session.agentId === ctx.agentId;
+    if (!isOwner) {
+      const participated = repo.countMessagesByAgent(sessionId, ctx.agentId) > 0;
+      if (!participated) {
+        return JSON.stringify({ status: 'forbidden', message: `Not authorized to read session ${sessionId}.` });
+      }
+    }
+    try {
+      const fragmentStats = ctx.fragmentStore?.sessionStats ? ctx.fragmentStore.sessionStats(sessionId) : undefined;
+      const slots = ctx.slotStore?.getSlots ? ctx.slotStore.getSlots(sessionId) : [];
+      return JSON.stringify({
+        status: 'ok',
+        sessionId,
+        chatSessionId: chatSessionId ?? null,
+        isCurrent: (ctx.currentMemorySessionId?.() ?? null) === sessionId,
+        messageCount: fragmentStats?.messageCount ?? repo.listMessagesPaginated(sessionId, { page: 1, pageSize: 1 }).total,
+        fragmentCount: fragmentStats?.fragmentCount ?? 0,
+        slots: slots.map((s) => s.key),
+        note: 'Use session_status to observe your context water level; use session_compact / session_pin to actively manage it.',
+      });
+    } catch (err) {
+      log.error('session status failed', { error: String(err) });
+      return JSON.stringify({ status: 'error', message: String(err) });
+    }
+  }
+
+  async function doRename(args: Record<string, unknown>): Promise<string> {
+    const n = normalizeSessionArgs(args);
+    const title = String(n.title ?? '').trim();
+    if (!title) {
+      return JSON.stringify({ status: 'error', message: 'Rename needs a non-empty title (summarize the purpose in a few words).' });
+    }
+    if (title.length > 120) {
+      return JSON.stringify({ status: 'error', message: 'Title too long (max 120 chars).' });
+    }
+    let sessionId = n.sessionId;
+    if (!sessionId) {
+      // Documented behaviour: omitting session_id renames the CURRENT session.
+      // (Previously this errored out — the description promised something the
+      //  implementation never did.)
+      const curDb = ctx.currentDbSessionId?.() ?? null;
+      if (curDb && curDb.startsWith('cs_') && ctx.titleUpdater) {
+        ctx.titleUpdater(curDb, title);
+        return JSON.stringify({
+          status: 'ok',
+          sessionId: ctx.currentMemorySessionId?.() ?? curDb,
+          chatSessionId: curDb,
+          title,
+          note: `Current chat session (${curDb}) title updated — visible in Team chat History.`,
+        });
+      }
+      sessionId = ctx.currentMemorySessionId?.() ?? undefined;
+      if (!sessionId) {
+        return JSON.stringify({ status: 'error', message: 'Rename needs session_id (or an active session to default to).' });
+      }
+    }
+    // Chat sessions (cs_*) live in the UI/team-chat store — update via the
+    // server-side titleUpdater so the title is persisted in Sqlite and the
+    // web UI refreshes the History panel immediately.
+    if (ctx.titleUpdater && sessionId.startsWith('cs_')) {
+      ctx.titleUpdater(sessionId, title);
+      return JSON.stringify({
+        status: 'ok', sessionId, title,
+        note: 'Chat session title updated — visible in Team chat History.',
+      });
+    }
+    // Agent's own memory session: if it is currently bound to a chat (cs_*)
+    // session, rename that chat session so the title change reaches the UI.
+    if (ctx.titleUpdater && ctx.currentDbSessionId) {
+      const dbId = ctx.currentDbSessionId();
+      if (dbId && dbId.startsWith('cs_')) {
+        ctx.titleUpdater(dbId, title);
+        return JSON.stringify({
+          status: 'ok', sessionId, chatSessionId: dbId, title,
+          note: `Current chat session (${dbId}) title updated — visible in Team chat History.`,
+        });
+      }
+    }
+    const own = checkOwnership(repo, sessionId, ctx.agentId);
+    if (own.error) return own.error;
+    if (typeof repo.updateTitle !== 'function') {
+      return JSON.stringify({ status: 'error', message: 'Rename is not supported for this session type.' });
+    }
+    repo.updateTitle(sessionId, title);
+    return JSON.stringify({ status: 'ok', sessionId, title, note: 'Memory session title updated.' });
+  }
+
+  return {
+    name: 'session',
+    description: [
+      'Manage your own conversation sessions and context. Your context lives in MemoryStore sessions (ids like sess_* / task_* / a2a_* / hb_*); Team-chat (UI) sessions use cs_* ids.',
+      'Both id spaces are accepted: a cs_* id is resolved to the memory session bound to it.',
+      'Not sure which session you are in? Call { "operation": "status" } with NO session_id — it reports your CURRENT session (both ids).',
+      '',
+      'Commands (pick one):',
+      '• session_list — list your sessions. Returns { sessions: [{id, ..., isCurrent}], current: {memorySessionId, chatSessionId}, total, totalOnDisk, page, page_size, has_more }. total counts only sessions warm in memory; totalOnDisk is the true on-disk count.',
+      '  Example: { "operation": "list", "since": "2026-08-01", "page": 1, "page_size": 20 }',
+      '• session_get — get one session + its messages. Args: session_id, since/until, page, page_size. Returns { status, sessionId, messages: [{role, content}], total, page }.',
+      '  Example: { "operation": "get", "session_id": "sess_...", "page_size": 50 }',
+      '• session_compact — collapse stale history into an anchor summary so future turns stop re-reading it. Atomic: an assistant tool-call and its tool results are NEVER split. Optionally pass goal/done/next to anchor your position. Use when earlier tool results are obsolete or context feels bloated. Returns { status, flushedCount, remaining, summary } — flushedCount = messages paged out (0 means nothing was compacted), remaining = messages kept, summary = a [SYSTEM]-prefixed anchor injected into the session; the raw flushed messages are archived and recoverable via session_retrieve. If the session already fits within keep_last you get flushedCount:0, skipped:true, reason:"within_keep_last" (a valid no-op, NOT a failure); an unknown session_id returns status:"error".',
+      `  Args: session_id (required), keep_last (5-200, default ${DEFAULT_COMPACT_KEEP_LAST}), goal/done/next (optional anchors).`,
+      `  Example: { "operation": "compact", "session_id": "sess_...", "keep_last": ${DEFAULT_COMPACT_KEEP_LAST} }`,
+      '• session_pin — write a durable slot into the fixed [SLOTS] segment: persisted per session and injected every turn, NEVER compacted until you unpin it. Best for your current goal / what is done / what is next (use key=goal/done/next). Returns { status, pinned: {key: content} }.',
+      '  Args: session_id, key, content. Example: { "operation": "pin", "session_id": "sess_...", "key": "goal", "content": "..." }',
+      '• session_unpin — remove a pinned slot. Args: session_id, key. Returns { status, unpinned: key }.',
+      '• session_retrieve — search archived (compacted) history fragments by keyword. Returns { status, hits: [{id: fragment_id, content}] } — note the field is "hits", each element carries the fragment id needed for session_include. Args: session_id, query, max_results.',
+      '• session_include — reinject an archived fragment (by fragment_id) back into context. Args: session_id, fragment_id.',
+      '• session_purge — permanently delete archived fragments for a session. Args: session_id.',
+      '• session_status — read-only snapshot: message count, pinned slot keys, archived fragment count. Returns { status, sessionId, chatSessionId, isCurrent, messageCount, fragmentCount, slots: [key...] }. Args: session_id (optional — defaults to your CURRENT session).',
+      '• session_rename — set the title of the CURRENT chat session (or any session you own) to a short summary of its purpose, so it is easy to find again in Team chat History or session_list. Args: session_id (or omit to target your current session), title (≤120 chars).',
+      '  MUST call this once, in the same turn, when you handle the FIRST user message of a new Team-chat conversation — you are the one who can name it after understanding the goal (the server fallback only copies the first 60 raw characters). Write a "goal + object" phrase in the user\'s language; do not copy their wording. Call it again only if the topic material changes.',
+      '  Example: { "operation": "rename", "title": "修复 Team chat 历史列表不完整 + 新增 session_rename 工具" }',
+      '',
+      'Permissions: you may list sessions you own; get/status sessions you own OR participated in; compact/pin/unpin/include/purge/rename ONLY sessions you own.',
+    ].join('\n'),
+    inputSchema: {
+      type: 'object',
+      properties: {
+        operation: {
+          type: 'string',
+          enum: ['list', 'get', 'compact', 'pin', 'unpin', 'include', 'retrieve', 'purge', 'status', 'rename'],
+          description: 'Which session operation to run. Default: list when no session_id, get when session_id present.',
+        },
+        session_id: { type: 'string', description: 'The session id to operate on (sess_* / task_* / a2a_* / hb_* / cs_* — see session_list).' },
+        title: { type: 'string', description: 'For rename: the new session title (≤120 chars), summarizing the user\'s purpose.' },
+        since: { type: 'string', description: 'ISO timestamp — filter sessions/messages with timestamp >= since.' },
+        until: { type: 'string', description: 'ISO timestamp — filter sessions/messages with timestamp <= until.' },
+        page: { type: 'number', description: '1-based page number (default 1).' },
+        page_size: { type: 'number', description: 'Page size (list default 20 max 50; get default 50 max 100).' },
+        keep_last: { type: 'number', description: `For compact: how many most-recent messages to keep verbatim (default ${DEFAULT_COMPACT_KEEP_LAST}, range ${COMPACT_KEEP_LAST_MIN}-${COMPACT_KEEP_LAST_MAX}).` },
+        key: { type: 'string', description: 'For pin/unpin: the slot key (e.g. goal, done, next).' },
+        content: { type: 'string', description: 'For pin: the fact/anchor text to pin (> up to 1200 chars).' },
+        query: { type: 'string', description: 'For retrieve: keyword(s) to search archived fragments.' },
+        max_results: { type: 'number', description: 'For retrieve: max results (default 5, max 20).' },
+        fragment_id: { type: 'string', description: 'For include: the fragment id (from retrieve) to reinject.' },
+        goal: { type: 'string', description: 'For compact: anchor goal (optional).' },
+        done: { type: 'string', description: 'For compact: anchor done-so-far (optional).' },
+        next: { type: 'string', description: 'For compact: anchor next-step (optional).' },
+      },
+      required: [],
+    },
+    async execute(args: Record<string, unknown>, _onOutput?: unknown): Promise<string> {
+      try {
+        const n = normalizeSessionArgs(args);
+        // Accept BOTH id spaces: a cs_* Team-chat id resolves to the memory
+        // session bound to it, so the agent can run any operation by either id.
+        // Without this, `get cs_…` returned a misleading not_found and the agent
+        // could not answer "which conversation am I in?".
+        // (rename excluded — it already has a native cs_* path that edits the
+        //  UI-visible chat title.)
+        let effectiveArgs = args;
+        let chatSessionId: string | undefined;
+        if (n.operation !== 'rename' && typeof n.sessionId === 'string' && n.sessionId.startsWith('cs_')) {
+          const memoryId = ctx.resolveMemorySessionByDbSessionId?.(n.sessionId) ?? null;
+          if (memoryId) {
+            chatSessionId = n.sessionId;
+            effectiveArgs = { ...args, session_id: memoryId };
+            delete effectiveArgs['sessionId'];
+            delete effectiveArgs['id'];
+          } else if (n.operation === 'get' || n.operation === 'status') {
+            return JSON.stringify({
+              status: 'not_found',
+              chatSessionId: n.sessionId,
+              message:
+                `Chat session ${n.sessionId} is not bound to one of your memory sessions. ` +
+                'cs_* ids are Team-chat (UI) session ids; your own context lives in sess_*/task_* sessions. ' +
+                'Use { "operation": "list" } to see your sessions, or { "operation": "status" } with no session_id to inspect your CURRENT session.',
+            });
+          }
+        }
+        switch (n.operation) {
+          case 'get': return await doGet(effectiveArgs, chatSessionId);
+          case 'compact': return await doCompact(effectiveArgs);
+          case 'pin': return await doPin(effectiveArgs);
+          case 'unpin': return await doUnpin(effectiveArgs);
+          case 'retrieve': return await doRetrieve(effectiveArgs);
+          case 'include': return await doInclude(effectiveArgs);
+          case 'purge': return await doPurge(effectiveArgs);
+          case 'status': return await doStatus(effectiveArgs, chatSessionId);
+          case 'rename': return await doRename(effectiveArgs);
+          default: return await doList(effectiveArgs);
+        }
+      } catch (err) {
+        log.error('session tool failed', { error: String(err) });
+        return JSON.stringify({ status: 'error', message: String(err) });
+      }
+    },
+  };
+}

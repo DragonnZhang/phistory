@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "qm",
+  "agent": "qm",
+  "repository": "yc-software/qm",
+  "snapshot": "e2d353d0009eee0712fd",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:49.079122+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "024669481dbb63cb7e36694469657ec5683a9d80",
+      "path": "src/agent/agent-tools/mcp.ts",
+      "sha256": "9e375200304828674287e222716cc9bd63d06b830fb67ab269c11bfe82ec8639",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/024669481dbb63cb7e36694469657ec5683a9d80/src/agent/agent-tools/mcp.ts",
+      "url": "https://github.com/yc-software/qm/blob/024669481dbb63cb7e36694469657ec5683a9d80/src/agent/agent-tools/mcp.ts"
+    },
+    {
+      "commit": "024669481dbb63cb7e36694469657ec5683a9d80",
+      "path": "src/agent/agent-tools/workspace.ts",
+      "sha256": "5870c6771fcb6a1f0e3a2990653dab319b0c779fbcd7be5718867da79fc754b2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/024669481dbb63cb7e36694469657ec5683a9d80/src/agent/agent-tools/workspace.ts",
+      "url": "https://github.com/yc-software/qm/blob/024669481dbb63cb7e36694469657ec5683a9d80/src/agent/agent-tools/workspace.ts"
+    },
+    {
+      "commit": "024669481dbb63cb7e36694469657ec5683a9d80",
+      "path": "src/resolution/protocols/shared-core.md",
+      "sha256": "f3755415bf3fd7c13201babbc0e5accadc2473076ccfad49c013cd8a20f08ba2",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/024669481dbb63cb7e36694469657ec5683a9d80/src/resolution/protocols/shared-core.md",
+      "url": "https://github.com/yc-software/qm/blob/024669481dbb63cb7e36694469657ec5683a9d80/src/resolution/protocols/shared-core.md"
+    }
+  ]
+}

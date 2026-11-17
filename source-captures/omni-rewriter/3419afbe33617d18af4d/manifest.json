@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "omni-rewriter",
+  "agent": "Omni-Rewriter",
+  "repository": "WayneJin0918/Omni-Rewriter",
+  "snapshot": "3419afbe33617d18af4d",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:48.875159+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "846fee695fbfd9b816d481e294b5e385dabc4581",
+      "path": "src/omni_rewriter/agent.py",
+      "sha256": "de8f7eeccba321a3553516ea0dbbdf4be46926892fcfbd78340e6d81cedef775",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/846fee695fbfd9b816d481e294b5e385dabc4581/src/omni_rewriter/agent.py",
+      "url": "https://github.com/WayneJin0918/Omni-Rewriter/blob/846fee695fbfd9b816d481e294b5e385dabc4581/src/omni_rewriter/agent.py"
+    },
+    {
+      "commit": "846fee695fbfd9b816d481e294b5e385dabc4581",
+      "path": "src/omni_rewriter/prompts.py",
+      "sha256": "a9f1d1d5f3b6e451ba3b72f061ff05d4a029ca3f97afc86845e26477dd383a75",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/846fee695fbfd9b816d481e294b5e385dabc4581/src/omni_rewriter/prompts.py",
+      "url": "https://github.com/WayneJin0918/Omni-Rewriter/blob/846fee695fbfd9b816d481e294b5e385dabc4581/src/omni_rewriter/prompts.py"
+    }
+  ]
+}

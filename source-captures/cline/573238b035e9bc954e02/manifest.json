@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "cline",
+  "agent": "cline",
+  "repository": "cline/cline",
+  "snapshot": "573238b035e9bc954e02",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:44.505861+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+      "path": "sdk/packages/core/src/extensions/tools/command-guard-extension.ts",
+      "sha256": "f3c75bed0e8505e525f73f95e45d26c1d2cd001e84eb9d50bf99035904078ba5",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/command-guard-extension.ts",
+      "url": "https://github.com/cline/cline/blob/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/command-guard-extension.ts"
+    },
+    {
+      "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+      "path": "sdk/packages/core/src/extensions/tools/definitions.ts",
+      "sha256": "8214438eb85755ee40abf6e37652552728195288c770618ed10f6f3937ef519d",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/definitions.ts",
+      "url": "https://github.com/cline/cline/blob/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/definitions.ts"
+    },
+    {
+      "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+      "path": "sdk/packages/core/src/extensions/tools/executors/bash.ts",
+      "sha256": "0088b2c57e8ff68260c45fe261fa32cee2f5cef82d393bc9517e2f7312f4bc60",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/executors/bash.ts",
+      "url": "https://github.com/cline/cline/blob/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/executors/bash.ts"
+    },
+    {
+      "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+      "path": "sdk/packages/core/src/extensions/tools/executors/output-limits.ts",
+      "sha256": "09fa2788b6a610176e1f3a2da2a144822716bf29ed8202ec241c69e29bdbf775",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/executors/output-limits.ts",
+      "url": "https://github.com/cline/cline/blob/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/executors/output-limits.ts"
+    },
+    {
+      "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+      "path": "sdk/packages/core/src/extensions/tools/team/delegated-agent.ts",
+      "sha256": "e5913bafc45efc9328ac05b9da9dd83a0e1bf560bccbaf1cfa980a642378c371",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/team/delegated-agent.ts",
+      "url": "https://github.com/cline/cline/blob/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/core/src/extensions/tools/team/delegated-agent.ts"
+    },
+    {
+      "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+      "path": "sdk/packages/shared/src/prompt/cline.ts",
+      "sha256": "6e88522481bfcc87246b8c74694c14fc83205f76b49eaa0803463a635f6e7d29",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/shared/src/prompt/cline.ts",
+      "url": "https://github.com/cline/cline/blob/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/shared/src/prompt/cline.ts"
+    },
+    {
+      "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+      "path": "sdk/packages/shared/src/prompt/system/act.ts",
+      "sha256": "dd1560a5a9b2f9b6691b8f355d9e776e12a95e7bc262347fadc3b89617956be4",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/shared/src/prompt/system/act.ts",
+      "url": "https://github.com/cline/cline/blob/d3ecc4890e8f9bcb77182b96c77fa90575e8e145/sdk/packages/shared/src/prompt/system/act.ts"
+    }
+  ]
+}

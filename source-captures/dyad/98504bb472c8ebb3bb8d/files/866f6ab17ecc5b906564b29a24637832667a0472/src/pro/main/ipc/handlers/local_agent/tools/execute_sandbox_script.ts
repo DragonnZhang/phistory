@@ -1,0 +1,533 @@
+import { z } from "zod";
+import { isSandboxSupportedPlatform } from "@/ipc/utils/sandbox/execution";
+import {
+  runSandboxScript,
+  SandboxWorkerError,
+} from "@/ipc/utils/sandbox/runner";
+import type { RemoteCapabilityMap } from "@/ipc/utils/sandbox/remote_capabilities";
+import {
+  assertAllowedGuestPath,
+  assertSandboxWritePathAllowed,
+} from "@/ipc/utils/sandbox/capabilities";
+import { SANDBOX_SCRIPT_SOURCE_LIMIT_BYTES } from "@/ipc/utils/sandbox/limits";
+import { DyadError, DyadErrorKind, isDyadError } from "@/errors/dyad_error";
+import { sendTelemetryEvent } from "@/ipc/utils/telemetry";
+import { DYAD_MEDIA_DIR_NAME } from "@/ipc/utils/media_path_utils";
+import { readSettings } from "@/main/settings";
+import type { UserSettings } from "@/lib/schemas";
+import { withTrackedMutation } from "../subagents/mutation_activity_tracker";
+import { writeFileTool } from "./write_file";
+import {
+  AgentContext,
+  escapeXmlAttr,
+  escapeXmlContent,
+  ToolDefinition,
+} from "./types";
+import {
+  assertAppBlueprintApproved,
+  getToolConsent,
+  requireToolConsentOrThrow,
+  shouldTrackToolFileMutation,
+  trackAppMutation,
+  trackFileEditTool,
+  shouldTrackToolMutation,
+} from "./tool_invocation";
+import {
+  collectMcpToolDefs,
+  buildMcpTypeDefsBlock,
+  buildMcpToolNameInventory,
+  buildMcpCapabilityMap,
+  type McpToolDef,
+} from "./mcp_type_defs";
+
+const executeSandboxScriptSchema = z.object({
+  script: z
+    .string()
+    .max(SANDBOX_SCRIPT_SOURCE_LIMIT_BYTES)
+    .describe("Sandboxed JavaScript subset source code to execute."),
+  description: z
+    .string()
+    .max(160)
+    .optional()
+    .describe("One-line human-readable summary of what the script does."),
+});
+
+type ExecuteSandboxScriptArgs = z.infer<typeof executeSandboxScriptSchema>;
+
+export function isSandboxScriptExecutionEnabled(
+  settings: Pick<UserSettings, "enableSandboxScriptExecution"> | undefined,
+): boolean {
+  return !!settings?.enableSandboxScriptExecution;
+}
+
+function isAttachmentHostCallPath(path: string | undefined): boolean {
+  if (!path) {
+    return false;
+  }
+  if (
+    path === "attachments" ||
+    path === "attachments:" ||
+    path.startsWith("attachments:")
+  ) {
+    return true;
+  }
+  const normalized = path.replace(/\\/g, "/");
+  return (
+    normalized === DYAD_MEDIA_DIR_NAME ||
+    normalized.startsWith(`${DYAD_MEDIA_DIR_NAME}/`)
+  );
+}
+
+function buildSandboxFailureMessage(params: {
+  script: string;
+  errorMessage: string;
+}): string {
+  return [
+    "This script contains unsupported syntax.",
+    "",
+    "Script:",
+    params.script,
+    "",
+    "Original error:",
+    params.errorMessage,
+  ].join("\n");
+}
+
+function buildScriptXml(params: {
+  args: ExecuteSandboxScriptArgs;
+  output: string;
+  truncated: boolean;
+  fullOutputPath?: string;
+  executionMs: number;
+}): string {
+  const payload = JSON.stringify(
+    {
+      script: params.args.script,
+      output: params.output,
+    },
+    null,
+    2,
+  );
+  const attrs = [
+    `description="${escapeXmlAttr(params.args.description ?? "Ran a script")}"`,
+    `state="finished"`,
+    `truncated="${params.truncated ? "true" : "false"}"`,
+    `execution-ms="${escapeXmlAttr(String(params.executionMs))}"`,
+  ];
+  if (params.fullOutputPath) {
+    attrs.push(`full-output-path="${escapeXmlAttr(params.fullOutputPath)}"`);
+  }
+  return `<dyad-script ${attrs.join(" ")}>${escapeXmlContent(payload)}</dyad-script>`;
+}
+
+// Fresh per-call read of the write_file consent so a mid-turn flip to
+// "never" takes effect immediately; `ctx.sandboxWriteFileHostEnabled` is the
+// turn-scoped view of the same predicate (via shouldIncludeTool).
+function isWriteFileHostEnabled(): boolean {
+  return getToolConsent(writeFileTool) !== "never";
+}
+
+const WRITE_FILE_HOST_DECLARATIONS = `
+declare function write_file(
+  path: string,
+  content: string,
+  description?: string,
+): Promise<string>;
+
+declare function write_file(args: {
+  path: string;
+  content: string;
+  description?: string;
+}): Promise<string>;
+`.trimEnd();
+
+// Built-in sandbox host-function base. Used as-is when no MCP servers are
+// enabled, and as the lead-in to the MCP-augmented description otherwise.
+// Keep MCP-specific framing out of this block — if it lands in front
+// of the model when MCP is off, the model will write calls to host
+// functions that don't exist.
+function buildBuiltInHostFunctionsPreamble({
+  includeWriteFile,
+}: {
+  includeWriteFile: boolean;
+}): string {
+  return `Run a small program written in a strict, sandboxed subset of JavaScript (MustardScript) to inspect files.
+
+Use this when you need to slice, search, count, aggregate, summarize file contents${includeWriteFile ? ", or write generated content to files" : ""} before answering. Return only the concise value you need.
+
+Supported language surface:
+- let/const, functions, closures, arrow functions, async/await, promises, arrays, plain objects, Map, Set, if/switch, loops, break/continue, try/catch/finally, throw, template literals, destructuring, optional chaining, nullish coalescing, JSON, Math, and conservative Array/String/Object/Date/Intl/RegExp helpers.
+- Data helpers include Object.groupBy/Map.groupBy, toSorted/toReversed/toSpliced, Set union/intersection/difference, and delete for object properties or array elements. JSON.parse revivers and JSON.stringify replacers/indentation are supported; JSON callbacks must be synchronous and must not call host functions.
+- String.prototype.localeCompare and Intl formatting support en-US only (the default); other locale arguments are rejected, not silently ignored. Date local-time methods such as getHours/getDate return UTC values, not the user's local time; Intl date formatting rejects non-UTC time zones. URI encoding/decoding helpers are available, but URL/URLSearchParams and network access are not.
+- Top-level await is supported. Top-level return is not supported; return the final expression value instead, e.g. \`const text = await read_file("attachments:data.csv"); text.length;\`.
+- The script has no ambient authority. It can only act through the host functions below.
+
+Recommendations:
+- Avoid defining nested helper functions in the main function.
+
+Unsupported / unavailable:
+- No var, import/export, require, CommonJS, npm packages, Node APIs, browser/DOM APIs, process, module, exports, global, environment variables, subprocesses, network/fetch, fetch, timers, setTimeout, setInterval, eval, Function constructor, with, classes, generators, custom iterator authoring, Symbols, WeakMap, WeakSet, typed arrays, ArrayBuffer, shared memory, atomics, Proxy, accessors, full prototype/property-descriptor semantics, or arbitrary filesystem access.
+- \`console.*\` is not available.
+- Unsupported syntax or unsupported built-in behavior fails closed with an error. Rewrite using simpler JavaScript when that happens.
+
+Return only plain structured data (strings, numbers, booleans, null/undefined, arrays, and plain objects). Convert Map/Set to arrays or plain objects and BigInt to a string before returning or passing to host functions. Strings and object keys must not contain lone UTF-16 surrogates.
+
+Deleting an array element leaves a hole without changing its length. Host functions receive sparse arrays with those holes preserved, but final JSON output renders holes as null. Prefer dense arrays when returning data or passing it to host functions.
+
+Avoid returning shared references:
+
+\`\`\`
+const row = { key: "x", total: 1 };
+({ a: row, b: row }); // rejected
+\`\`\`
+
+Use cloned/plain rows instead:
+
+\`\`\`
+const row = { key: "x", total: 1 };
+({
+  a: { key: row.key, total: row.total },
+  b: { key: row.key, total: row.total }
+});
+\`\`\`
+
+Host functions:
+\`\`\`ts
+type ReadFileOptions = {
+  start?: number; // zero-indexed byte offset
+  length?: number; // max bytes to read
+  encoding?: "utf8" | "base64";
+};
+
+type FileStats = {
+  size: number;
+  isText: boolean;
+  mtime: string; // ISO timestamp
+};
+
+declare function read_file(
+  path: string,
+  options?: ReadFileOptions,
+): Promise<string>;
+
+declare function list_files(dir?: "." | "attachments:" | string): Promise<string[]>;
+
+declare function file_stats(path: string): Promise<FileStats>;
+${includeWriteFile ? WRITE_FILE_HOST_DECLARATIONS : ""}
+\`\`\`
+
+Paths are app-relative (including \`.dyad/media/<stored-name>\`), or attachment paths like attachments:filename.ext for read_file/list_files/file_stats.${includeWriteFile ? " write_file accepts app-relative paths only, not attachments: paths." : ""} Prefer range reads, filtering, aggregation, and small summaries over returning entire files.`;
+}
+
+function buildMcpAddendum(typeDefsBlock: string): string {
+  return `
+
+MCP tools can also be invoked from inside the script. Use this when you need to call one or more MCP tools (optionally chaining their results, or combining them with file reads) before answering.
+- Each MCP tool invocation may trigger a user consent prompt. A denied call throws.
+
+MCP host functions (TypeScript declarations):
+\`\`\`ts
+${typeDefsBlock}
+\`\`\``;
+}
+
+// Search-mode addendum: used when the `enableMcpToolSearch` setting is on.
+// Every tool is listed by NAME ONLY (no descriptions or schemas) so the model
+// sees what exists without paying for the full declarations. To call a tool it
+// pulls the full signature with `get_mcp_tool_schema` (when it recognizes the
+// tool) or finds one with `search_mcp_tools` (when it doesn't).
+//
+// `hasGetSchemaTool` reflects whether `get_mcp_tool_schema` is actually
+// registered this turn. A user can set it to `never` in tool permissions,
+// which filters it out while search mode stays on; in that case the wording
+// must not tell the model to call a tool that isn't available.
+function buildMcpSearchAddendum(
+  defs: McpToolDef[],
+  hasGetSchemaTool: boolean,
+): string {
+  const inventory = buildMcpToolNameInventory(defs);
+  const howToUse = hasGetSchemaTool
+    ? `1. If you recognize the tool you need, call \`get_mcp_tool_schema\` with its name(s) to get its description and full TypeScript declaration.
+2. If you are not sure which tool you need, call \`search_mcp_tools\` with keywords (optionally a \`server\`) to find candidates and get their declarations.
+3. Call the declared host functions inside this script, exactly as declared.`
+    : `1. Call \`search_mcp_tools\` with keywords (optionally a \`server\`) to get the TypeScript declarations of the tools you need.
+2. Call the declared host functions inside this script, exactly as declared.`;
+  const inventoryHeading = hasGetSchemaTool
+    ? "Available MCP tools (call get_mcp_tool_schema for a tool's signature):"
+    : "Available MCP tools (search for one with search_mcp_tools to get its signature):";
+  return `
+
+MCP tools can also be invoked from inside the script. The tools available on each connected server are listed below by name only. To use one:
+${howToUse}
+- Each MCP tool invocation may trigger a user consent prompt. A denied call throws.
+
+${inventoryHeading}
+\`\`\`
+${inventory}
+\`\`\``;
+}
+
+/**
+ * Build the full tool description, appending the MCP host-function
+ * declarations and usage notes when any MCP server is enabled. The
+ * caller passes in the per-turn defs collected by the local-agent
+ * handler; the standalone `collectMcpToolDefs()` fallback is only for
+ * callers that don't go through the handler. When no MCP defs are
+ * available the description carries no MCP framing at all, so the
+ * model does not try to call host functions that don't exist (e.g. in
+ * read-only / plan-only turns).
+ */
+export async function buildExecuteSandboxScriptDescription(
+  precomputedDefs: McpToolDef[] | undefined,
+  options: {
+    useSearch?: boolean;
+    hasGetSchemaTool?: boolean;
+    /**
+     * Whether to advertise the write_file host function. Required (no
+     * settings-derived default) because only the caller knows the turn
+     * context — a settings-only fallback could advertise write_file in a
+     * read-only turn where `buildRemoteCapabilities` never injects it.
+     */
+    includeWriteFile: boolean;
+  },
+): Promise<string> {
+  const defs = precomputedDefs ?? (await collectMcpToolDefs());
+  const builtInHostFunctionsPreamble = buildBuiltInHostFunctionsPreamble({
+    includeWriteFile: options.includeWriteFile,
+  });
+  if (defs.length === 0) {
+    return builtInHostFunctionsPreamble;
+  }
+  // Search mode: list tool names and point the model at the discovery tools
+  // instead of inlining every tool's declarations. `hasGetSchemaTool` defaults
+  // to true since get_mcp_tool_schema is normally registered alongside search;
+  // the handler passes false when tool permissions have filtered it out.
+  if (options.useSearch) {
+    return (
+      builtInHostFunctionsPreamble +
+      buildMcpSearchAddendum(defs, options.hasGetSchemaTool ?? true)
+    );
+  }
+  return (
+    builtInHostFunctionsPreamble + buildMcpAddendum(buildMcpTypeDefsBlock(defs))
+  );
+}
+
+export const executeSandboxScriptTool: ToolDefinition<ExecuteSandboxScriptArgs> =
+  {
+    name: "execute_sandbox_script",
+    description:
+      "Run a MustardScript program in a sandbox. Supports file inspection, file writes, and MCP tool calls.",
+    inputSchema: executeSandboxScriptSchema,
+    defaultConsent: "always",
+    modifiesState: (ctx) => ctx.sandboxWriteFileHostEnabled === true,
+    // The sandbox delegates mutations to capability functions. Each capability
+    // owns admission so a script can mix read-only work with writes and MCP
+    // calls without trying to re-enter the non-reentrant app mutation lock.
+    mutationTracking: "internal",
+
+    isEnabled: () =>
+      isSandboxSupportedPlatform() &&
+      isSandboxScriptExecutionEnabled(readSettings()),
+
+    getConsentPreview: (args) =>
+      args.description?.trim() || "Run a sandboxed script",
+
+    execute: async (args: ExecuteSandboxScriptArgs, ctx: AgentContext) => {
+      // Every script runs on the worker thread; a CPU-bound guest on the main
+      // thread would freeze the app (#4728). Main-thread-only host functions
+      // are served to the worker over its message port by the runner.
+      const executionThread = "worker";
+      const observeHostCall = ({ path }: { path?: string }) => {
+        if (isAttachmentHostCallPath(path)) {
+          ctx.onAttachmentAccess?.();
+        }
+      };
+      try {
+        const result = await runSandboxScript({
+          appPath: ctx.appPath,
+          script: args.script,
+          onHostCall: observeHostCall,
+          remoteCapabilities: buildRemoteCapabilities(ctx),
+          signal: ctx.abortSignal,
+        });
+
+        ctx.onXmlComplete(
+          buildScriptXml({
+            args,
+            output: result.value,
+            truncated: result.truncated,
+            fullOutputPath: result.fullOutputPath,
+            executionMs: result.executionMs,
+          }),
+        );
+
+        sendTelemetryEvent("sandbox.script.completed", {
+          chatId: ctx.chatId,
+          appId: ctx.appId,
+          executionMs: result.executionMs,
+          truncated: result.truncated,
+          executionThread,
+        });
+
+        if (result.truncated) {
+          sendTelemetryEvent("sandbox.script.truncated", {
+            chatId: ctx.chatId,
+            appId: ctx.appId,
+            fullOutputPath: result.fullOutputPath,
+            executionThread,
+          });
+        }
+
+        return JSON.stringify(result);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        sendTelemetryEvent(
+          errorMessage.includes("timed out")
+            ? "sandbox.script.timeout"
+            : "sandbox.script.failed",
+          {
+            chatId: ctx.chatId,
+            appId: ctx.appId,
+            error: errorMessage,
+            executionThread,
+          },
+        );
+        // The worker itself failed, so the script is not at fault.
+        if (error instanceof SandboxWorkerError) {
+          throw error;
+        }
+        throw new DyadError(
+          buildSandboxFailureMessage({
+            script: args.script,
+            errorMessage,
+          }),
+          isDyadError(error) ? error.kind : DyadErrorKind.Validation,
+        );
+      }
+    },
+  };
+
+function parseWriteFileHostArgs(
+  pathOrArgs: unknown,
+  content?: unknown,
+  description?: unknown,
+) {
+  const args =
+    pathOrArgs !== null &&
+    typeof pathOrArgs === "object" &&
+    !Array.isArray(pathOrArgs)
+      ? pathOrArgs
+      : { path: pathOrArgs, content, description };
+  let parsed: z.infer<typeof writeFileTool.inputSchema>;
+  try {
+    parsed = writeFileTool.inputSchema.parse(args);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new DyadError(
+        `Invalid write_file arguments: ${error.issues.map((issue) => issue.message).join("; ")}`,
+        DyadErrorKind.Validation,
+      );
+    }
+    throw error;
+  }
+  if (parsed.path.startsWith("attachments:")) {
+    throw new DyadError(
+      "write_file cannot write attachment paths from sandbox scripts.",
+      DyadErrorKind.Validation,
+    );
+  }
+  assertAllowedGuestPath(parsed.path);
+  return parsed;
+}
+
+function buildWriteFileCapability(ctx: AgentContext) {
+  return async (
+    pathOrArgs: unknown,
+    content?: unknown,
+    description?: unknown,
+  ) => {
+    const args = parseWriteFileHostArgs(pathOrArgs, content, description);
+    if (!isWriteFileHostEnabled()) {
+      throw new DyadError(
+        "write_file is disabled in agent tool permissions.",
+        DyadErrorKind.Precondition,
+      );
+    }
+    // Same precondition the tool-set wrapper enforces for state-modifying
+    // tools. Enforced here at the capability layer (execute_sandbox_script
+    // is exempted from the wrapper-level gate) so read-only scripts and MCP
+    // host calls keep working while the blueprint is being drafted.
+    assertAppBlueprintApproved({
+      toolName: writeFileTool.name,
+      chatId: ctx.chatId,
+      enabled: ctx.enableAppBlueprint !== false,
+    });
+    // Reads enforce realpath containment in their sandbox helpers; writes
+    // must too, or a symlinked directory inside the app could redirect the
+    // write outside it.
+    await assertSandboxWritePathAllowed({
+      appPath: ctx.appPath,
+      guestPath: args.path,
+    });
+    await requireToolConsentOrThrow(writeFileTool, args, ctx);
+
+    return withTrackedMutation(ctx, async () => {
+      trackFileEditTool(ctx, writeFileTool.name, args);
+      const result = await writeFileTool.execute(args, ctx);
+      // Honor the tool's mutation predicate exactly like the main
+      // tool_definitions.ts path, so mutation tracking stays consistent if
+      // write_file ever gains a shouldTrackMutation predicate.
+      const didMutate = shouldTrackToolMutation(
+        writeFileTool,
+        args,
+        result,
+        ctx,
+      );
+      trackAppMutation(
+        ctx,
+        writeFileTool.name,
+        didMutate,
+        didMutate &&
+          (await shouldTrackToolFileMutation(writeFileTool, args, result, ctx)),
+      );
+      const xml = writeFileTool.buildXml?.(args, true);
+      if (xml) {
+        ctx.onXmlComplete(xml);
+      }
+      return result;
+    });
+  };
+}
+
+/**
+ * Host functions that must execute on the main process: write_file (consent,
+ * blueprint gating, mutation tracking, UI cards) and MCP tools (client
+ * registry, consent prompts). The runner serves them to the worker over its
+ * message port; the file host functions are built inside the worker itself.
+ */
+function buildRemoteCapabilities(ctx: AgentContext): RemoteCapabilityMap {
+  // Only inject MCP host functions when the caller has opted in for
+  // this turn (set by `local_agent_handler`). Skipping here keeps
+  // read-only and plan-mode turns from exposing MCP tools through
+  // the sandbox even if the model invents a host-function name.
+  //
+  // The handler populates `ctx.mcpToolDefs` with the same defs used
+  // to build the dynamic tool description, so the prompt and the
+  // capability map can never disagree about which tools exist.
+  const defs: McpToolDef[] = ctx.mcpToolsEnabled ? (ctx.mcpToolDefs ?? []) : [];
+  const writeFileCaps: RemoteCapabilityMap =
+    ctx.sandboxWriteFileHostEnabled === true && isWriteFileHostEnabled()
+      ? { write_file: buildWriteFileCapability(ctx) }
+      : {};
+  const mcpCaps = buildMcpCapabilityMap({
+    event: ctx.event,
+    ctx,
+    defs,
+  });
+  return {
+    ...mcpCaps,
+    ...writeFileCaps,
+  };
+}

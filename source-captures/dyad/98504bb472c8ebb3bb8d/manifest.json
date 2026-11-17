@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "dyad",
+  "agent": "dyad",
+  "repository": "dyad-sh/dyad",
+  "snapshot": "98504bb472c8ebb3bb8d",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:45.043350+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/pro/main/ipc/handlers/local_agent/tool_definitions.ts",
+      "sha256": "413448ded85151d39d4305b7185a02c9b49ff922d423ae52055b6dca3ddb75fa",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tool_definitions.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tool_definitions.ts"
+    },
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/pro/main/ipc/handlers/local_agent/tools/execute_sandbox_script.ts",
+      "sha256": "8a968d0bd71145dce44f0f037db788e2112648142c605c246ecc9362a9008544",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/execute_sandbox_script.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/execute_sandbox_script.ts"
+    },
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/pro/main/ipc/handlers/local_agent/tools/exit_plan.ts",
+      "sha256": "e0009eefea960d119dfae0e6f4cc660c039e685e5f2ded564c55151e1f14c80e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/exit_plan.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/exit_plan.ts"
+    },
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/pro/main/ipc/handlers/local_agent/tools/get_mcp_tool_schema.ts",
+      "sha256": "5172086fa6345470d2ea370fcd9446513f4af8459d2b4f8d2fab1b17f215eb50",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/get_mcp_tool_schema.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/get_mcp_tool_schema.ts"
+    },
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/pro/main/ipc/handlers/local_agent/tools/run_shell.ts",
+      "sha256": "8234e10d59b152e608065f0e8bd786ec7c25a7ca4fac69fcc9b8f321db237a52",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/run_shell.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/run_shell.ts"
+    },
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/pro/main/ipc/handlers/local_agent/tools/shell_model_result.ts",
+      "sha256": "cd36aac50d18cb3208be08cb2630dfc1d87a291b12382555d055fd01a70c7996",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/shell_model_result.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/shell_model_result.ts"
+    },
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/pro/main/ipc/handlers/local_agent/tools/shell_process.ts",
+      "sha256": "cb73f5e2e36851eeeaae33aeaaee921084fcc2061b3229c993e87cf59a973984",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/shell_process.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/shell_process.ts"
+    },
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/pro/main/ipc/handlers/local_agent/tools/subagent_tools.ts",
+      "sha256": "2fe2ce1def9e33c9e8fb4779c27ad40daa4530936b03d11af05ed078a6699930",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/subagent_tools.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/pro/main/ipc/handlers/local_agent/tools/subagent_tools.ts"
+    },
+    {
+      "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+      "path": "src/prompts/local_agent_prompt.ts",
+      "sha256": "720e1bdca1397b9872d93e490dbfc20a69e383df4fc85a92b5bd0b3b1516ebdd",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/866f6ab17ecc5b906564b29a24637832667a0472/src/prompts/local_agent_prompt.ts",
+      "url": "https://github.com/dyad-sh/dyad/blob/866f6ab17ecc5b906564b29a24637832667a0472/src/prompts/local_agent_prompt.ts"
+    }
+  ]
+}

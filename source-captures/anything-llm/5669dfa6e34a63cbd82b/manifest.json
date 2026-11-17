@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "anything-llm",
+  "agent": "anything-llm",
+  "repository": "Mintplex-Labs/anything-llm",
+  "snapshot": "5669dfa6e34a63cbd82b",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:46.408909+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "cbaf3357c7d9810bfa1f91f075cae7f533554f80",
+      "path": "server/models/systemSettings.js",
+      "sha256": "3dfb28a920018ddf9160853552129d4a42e11681e856eb2aeec92164877ffa77",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/cbaf3357c7d9810bfa1f91f075cae7f533554f80/server/models/systemSettings.js",
+      "url": "https://github.com/Mintplex-Labs/anything-llm/blob/cbaf3357c7d9810bfa1f91f075cae7f533554f80/server/models/systemSettings.js"
+    },
+    {
+      "commit": "cbaf3357c7d9810bfa1f91f075cae7f533554f80",
+      "path": "server/utils/agents/aibitat/index.js",
+      "sha256": "4735169a84b7ae92ad5c184dc39fc19890a2e62ea0adaefd2c0d7ea09f3f2549",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cbaf3357c7d9810bfa1f91f075cae7f533554f80/server/utils/agents/aibitat/index.js",
+      "url": "https://github.com/Mintplex-Labs/anything-llm/blob/cbaf3357c7d9810bfa1f91f075cae7f533554f80/server/utils/agents/aibitat/index.js"
+    },
+    {
+      "commit": "cbaf3357c7d9810bfa1f91f075cae7f533554f80",
+      "path": "server/utils/agents/aibitat/plugins/filesystem/index.js",
+      "sha256": "45c957bdc9aa8200c3d4e8c05c2a3c3df24b6f18768ae528104e18ab7c8cd53a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cbaf3357c7d9810bfa1f91f075cae7f533554f80/server/utils/agents/aibitat/plugins/filesystem/index.js",
+      "url": "https://github.com/Mintplex-Labs/anything-llm/blob/cbaf3357c7d9810bfa1f91f075cae7f533554f80/server/utils/agents/aibitat/plugins/filesystem/index.js"
+    }
+  ]
+}

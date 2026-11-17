@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "hivekeep",
+  "agent": "Hivekeep",
+  "repository": "MarlBurroW/hivekeep",
+  "snapshot": "b42e6f25546a68904a08",
+  "selection": "survey-pinned",
+  "archived_at": "2026-11-17T11:26:46.303964+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44073994909",
+      "sha": "c252722c7ce1a6104d2525cbbc0cc138eac28752"
+    }
+  },
+  "files": [
+    {
+      "commit": "e6bf9aea4159312730a690b94697084616b44556",
+      "path": "src/server/services/prompt-builder.ts",
+      "sha256": "c7adbfbaef22d6267676014c3541f588da5feffa42a4c09d3e66530de9631411",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/e6bf9aea4159312730a690b94697084616b44556/src/server/services/prompt-builder.ts",
+      "url": "https://github.com/MarlBurroW/hivekeep/blob/e6bf9aea4159312730a690b94697084616b44556/src/server/services/prompt-builder.ts"
+    },
+    {
+      "commit": "e6bf9aea4159312730a690b94697084616b44556",
+      "path": "src/server/services/tool-output-spill.ts",
+      "sha256": "c4df337541e91c51ff4c66b378c0b413c6c9e9fb476a377d388528390e7c75bd",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/e6bf9aea4159312730a690b94697084616b44556/src/server/services/tool-output-spill.ts",
+      "url": "https://github.com/MarlBurroW/hivekeep/blob/e6bf9aea4159312730a690b94697084616b44556/src/server/services/tool-output-spill.ts"
+    },
+    {
+      "commit": "e6bf9aea4159312730a690b94697084616b44556",
+      "path": "src/server/tools/filesystem-tools.ts",
+      "sha256": "586b90a1e5fdb1488c9ab3948e2858128f326af2358bede119c355f3493810c3",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/filesystem-tools.ts",
+      "url": "https://github.com/MarlBurroW/hivekeep/blob/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/filesystem-tools.ts"
+    },
+    {
+      "commit": "e6bf9aea4159312730a690b94697084616b44556",
+      "path": "src/server/tools/history-tools.ts",
+      "sha256": "e21906bb7f8069e68a72598e122217e148f0e2f486fe9d8f216eb1a8acefd014",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/history-tools.ts",
+      "url": "https://github.com/MarlBurroW/hivekeep/blob/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/history-tools.ts"
+    },
+    {
+      "commit": "e6bf9aea4159312730a690b94697084616b44556",
+      "path": "src/server/tools/register.ts",
+      "sha256": "c2277ef5385863063b8ac7da9415d9fa967b23940221f6a58ccb5f51a828f469",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/register.ts",
+      "url": "https://github.com/MarlBurroW/hivekeep/blob/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/register.ts"
+    },
+    {
+      "commit": "e6bf9aea4159312730a690b94697084616b44556",
+      "path": "src/server/tools/subtask-tools.ts",
+      "sha256": "76f3021041318b58bfa317896aa493beff6d8a96958f53907b497c6b0b5dd943",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/subtask-tools.ts",
+      "url": "https://github.com/MarlBurroW/hivekeep/blob/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/subtask-tools.ts"
+    },
+    {
+      "commit": "e6bf9aea4159312730a690b94697084616b44556",
+      "path": "src/server/tools/task-tools.ts",
+      "sha256": "40ce4a41c9f3777df2ec9243ed1f2bec630ff10d42a865a0ee64d7b8f6388ac3",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/task-tools.ts",
+      "url": "https://github.com/MarlBurroW/hivekeep/blob/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/task-tools.ts"
+    },
+    {
+      "commit": "e6bf9aea4159312730a690b94697084616b44556",
+      "path": "src/server/tools/tool-access-tools.ts",
+      "sha256": "532a53a8965898ddd0eae72a957116243d9d632915c662d080972ffba1aeba53",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/tool-access-tools.ts",
+      "url": "https://github.com/MarlBurroW/hivekeep/blob/e6bf9aea4159312730a690b94697084616b44556/src/server/tools/tool-access-tools.ts"
+    }
+  ]
+}
