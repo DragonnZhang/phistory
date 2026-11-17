@@ -1,0 +1,56 @@
+{
+  "agent_id": "deepseek-reasonix",
+  "agent": "DeepSeek Reasonix · Studio",
+  "package": "esengine/DeepSeek-Reasonix",
+  "version": "studio-v2.61.0",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "deepseek-flash",
+    "tool_count": 19
+  },
+  "published_at": "2026-11-12T08:28:13Z",
+  "tarball_url": "https://github.com/esengine/DeepSeek-Reasonix/releases/download/studio-v2.61.0/reasonix-linux-amd64.tar.gz",
+  "binary_version": "studio-v2.61.0",
+  "captured_at": "2026-11-17T13:03:54.535618+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44088809994",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44088809994"
+  },
+  "tap_client": "reasonix",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 18.41,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "reasonix",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-p",
+    "Reply with one short sentence.",
+    "--output-format",
+    "json"
+  ]
+}
