@@ -143,7 +143,7 @@ def test_legacy_root_project_takes_precedence_over_nested_modern_packages(tmp_pa
     assert packages._find_source_root(tmp_path) == root
 
 
-def test_source_workspace_installs_both_native_projects_with_declared_extras(tmp_path, monkeypatch):
+def test_source_workspace_uses_upstream_lock_and_selected_application_package(tmp_path, monkeypatch):
     agent = get_agent("db-gpt")
     install = tmp_path / "install"
     commands = []
@@ -171,17 +171,10 @@ def test_source_workspace_installs_both_native_projects_with_declared_extras(tmp
     monkeypatch.setattr(packages, "run", run)
     result = packages.install_agent(agent, "f" * 40, install)
     source = packages.installed_source_root(result)
-    assert commands[1] == [
-        "uv",
-        "pip",
-        "install",
-        "--python",
-        str(install / "bin/python"),
-        "--editable",
-        str(source / agent.source_editable_projects[0]),
-        "--editable",
-        str(source / agent.source_editable_projects[1]),
-    ]
+    assert commands[1][:2] == ["uv", "sync"]
+    assert "--frozen" in commands[1] and "--no-dev" in commands[1]
+    assert commands[1][commands[1].index("--package") + 1] == "dbgpt-app"
+    assert commands[1][commands[1].index("--project") + 1] == str(source)
     assert all((source / name).read_bytes() == payload for name, payload in files.items())
 
 

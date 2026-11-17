@@ -1,0 +1,56 @@
+name: Diagnose native capture
+
+on:
+  workflow_dispatch:
+    inputs:
+      agents:
+        description: Comma-separated registered agent IDs
+        type: string
+        required: true
+      variants:
+        description: Comma-separated variant IDs, or auto
+        type: string
+        default: auto
+
+permissions:
+  contents: read
+
+concurrency:
+  group: diagnose-capture-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: ./.github/actions/setup-agent-runtimes
+        with:
+          agents: ${{ inputs.agents }}
+      - run: uv sync --all-groups
+      - name: Collect temporary native diagnostics
+        env:
+          SELECTED_AGENTS: ${{ inputs.agents }}
+          SELECTED_VARIANTS: ${{ inputs.variants }}
+        run: |
+          args=(--latest --agents "$SELECTED_AGENTS" --force --keep-tap)
+          if [ -n "$SELECTED_VARIANTS" ] && [ "$SELECTED_VARIANTS" != "auto" ]; then
+            args+=(--variants "$SELECTED_VARIANTS")
+          fi
+          uv run phistory --root /tmp/phistory-diagnostic --cache-dir /tmp/phistory-diagnostic-cache capture "${args[@]}"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: native-capture-diagnostics
+          path: /tmp/phistory-diagnostic
+          include-hidden-files: true
+          retention-days: 14

@@ -140,7 +140,7 @@ class AgentSpec:
     source_dependency_groups: tuple[str, ...] = ()
     source_requirement_files: tuple[str, ...] = ("requirements.txt",)
     source_python_dependencies: tuple[str, ...] = ()
-    source_editable_projects: tuple[str, ...] = ()
+    source_sync_package: str | None = None
     source_state: Literal["none", "readonly", "isolated"] = "none"
     source_build_commands: tuple[tuple[str, ...], ...] = ()
     capture_min_tools: int = 0

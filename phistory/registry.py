@@ -1772,10 +1772,7 @@ DB_GPT = AgentSpec(
     package="eosphoros-ai/DB-GPT",
     source="github-source",
     source_state="isolated",
-    source_editable_projects=(
-        "packages/dbgpt-core[agent,client,simple_framework,framework,proxy_openai]",
-        "packages/dbgpt-ext[storage_chromadb]",
-    ),
+    source_sync_package="dbgpt-app",
     python_runtime="3.11",
     tap_client="python",
     fake_env={"SILICONFLOW_API_KEY": "phistory-fake-api-key"},
