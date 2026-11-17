@@ -40,7 +40,10 @@ trace.write_text(json.dumps({"request":{"path":"/v1/embeddings","body":{"input":
 time.sleep(0.1)
 with trace.open("a") as output:
     output.write(json.dumps({"request":{"path":"/v1/chat/completions","body":{"model":"fake","messages":[{"role":"user","content":task.decode().strip()}],"tools":[{"type":"function","function":{"name":"shell","parameters":{"type":"object"}}}]}}}) + "\\n")
-time.sleep(60)
+assert os.read(sys.stdin.fileno(), 1) == b"\\x03"
+print("native cancellation acknowledged", flush=True)
+assert os.read(sys.stdin.fileno(), 1) == b"\\x03"
+shutdown(None, None)
 """)
     agent = replace(get_agent("agentlink"), capture_timeout_seconds=5)
     variant = replace(agent.variant("native-tui-openai"), pty_ready_text="Ready for task")

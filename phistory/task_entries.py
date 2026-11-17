@@ -552,7 +552,7 @@ config["sandbox"] = dict(config.get("sandbox") or {}, backend="local")
 config.setdefault("env", {}).setdefault("core", {}).update(OPENAI_BASE_URL=gateway + "/v1", PRIVATE_NETWORK_ALLOWED_ORIGINS=gateway)
 path.write_text(json.dumps(config, indent=2) + "\n")
 env_path = deployment / ".env"
-values = {"OPENAI_API_KEY": os.environ["OPENAI_API_KEY"], "AUTH_ALLOWED_EMAILS": "phistory@example.com", "ADMIN_GRANTS": "phistory@example.com:org_admin"}
+values = {"OPENAI_API_KEY": os.environ["OPENAI_API_KEY"], "AUTH_ALLOWED_EMAILS": "phistory@example.com", "ADMIN_GRANTS": "phistory@example.com:org_admin", "PUBLIC_API_URL": "http://qm-" + os.environ["PHISTORY_DOCKER_APP_NAME"] + "-core:8080"}
 lines = env_path.read_text().splitlines()
 env_path.write_text("\n".join(line for line in lines if line.split("=",1)[0] not in values) + "\n" + "\n".join(key + "=" + value for key,value in values.items()) + "\n")
 subprocess.run(["qm", "up"], cwd=deployment, check=True)

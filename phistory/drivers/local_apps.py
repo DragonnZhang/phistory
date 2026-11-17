@@ -57,7 +57,13 @@ class LocalApi:
 
     def request(self, path: str, body: dict | None = None, *, method: str | None = None):
         with self.open(path, body, method=method) as response:
-            return json.load(response)
+            payload = response.read()
+            try:
+                return json.loads(payload)
+            except json.JSONDecodeError as error:
+                raise RuntimeError(
+                    f"native API {path} returned non-JSON ({response.status}, {response.headers.get('Content-Type')}): {payload[:1000]!r}"
+                ) from error
 
     def request_bytes(self, path: str, body: dict | None = None):
         with self.open(path, body) as response:
@@ -201,6 +207,8 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         )
         try:
             api = LocalApi(port, deadline)
+            if context.target.agent.id == "vibesdk":
+                api.base = f"http://localhost:{port}"
             if context.target.agent.id in DOCKER_APPS:
                 api.base = f"http://localhost:{port}"
                 wait_docker_ready(env, process, deadline)
@@ -399,7 +407,7 @@ def _submit_task(context: CaptureRunContext, api: LocalApi, log, *, catalog_gate
                 "/api/agents",
                 {"name": "Phistory", "provider": "openAI", "model": "gpt-6.1-sol", "tools": ["calculator"]},
             )
-            api.request(
+            with api.open(
                 "/api/agents/chat",
                 {
                     "text": PROMPT,
@@ -409,7 +417,15 @@ def _submit_task(context: CaptureRunContext, api: LocalApi, log, *, catalog_gate
                     "parentMessageId": "00000000-0000-0000-0000-000000000000",
                     "messageId": str(uuid.uuid4()),
                 },
-            )
+            ) as stream:
+                while stream.readline():
+                    if has_prompt_request(
+                        context.tap_output_dir,
+                        PROMPT,
+                        minimum_tools=context.target.agent.capture_min_tools,
+                        required_tool_name_fragments=context.target.agent.required_tool_name_fragments,
+                    ):
+                        break
         case "vibesdk":
             asyncio.run(_vibesdk_task(context, api))
         case "hive":

@@ -89,6 +89,24 @@ def run_interactive_pty(context: CaptureRunContext) -> CaptureExecution:
         failure = exc
     finally:
         if process is not None:
+            if submitted and failure is None and process.poll() is None:
+                os.write(master, b"\x03")
+                native_exit_deadline = time.monotonic() + 5
+                second_interrupt_at = time.monotonic() + 1
+                while process.poll() is None and time.monotonic() < native_exit_deadline:
+                    if second_interrupt_at is not None and time.monotonic() >= second_interrupt_at:
+                        if not (termios.tcgetattr(master)[3] & termios.ICANON):
+                            os.write(master, b"\x03")
+                        second_interrupt_at = None
+                    readable, _, _ = select.select([master], [], [], 0.1)
+                    if readable:
+                        try:
+                            chunk = os.read(master, 65536)
+                        except OSError:
+                            break
+                        if not chunk:
+                            break
+                        output.extend(chunk)
             stopper = Thread(target=stop_process, args=(process,), daemon=True)
             stopper.start()
             while stopper.is_alive():

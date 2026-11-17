@@ -29,13 +29,13 @@ def test_native_python_bootstraps_and_task_entries_are_valid_python():
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
-        "agentlas-os",
-        "openagents",
-        "devopsgpt",
-        "self-operating-computer",
         "looptroop",
-        "anything-llm",
         "agentlink",
+        "librechat",
+        "vibesdk",
+        "qm",
+        "autogpt",
+        "dark-moon",
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
