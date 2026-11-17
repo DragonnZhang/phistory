@@ -1924,6 +1924,7 @@ LIBRECHAT = AgentSpec(
                 "entry": "real MongoDB, registration, agent and chat APIs",
                 "model": "configured OpenAI gpt-6.1-sol",
                 "tools": "native calculator",
+                "control_client": "native authenticated web-task API with recognized browser-compatible User-Agent",
                 "scope": "configured calculator agent; optional external integrations are not configured",
             },
         ),

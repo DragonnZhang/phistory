@@ -389,6 +389,7 @@ def _submit_task(context: CaptureRunContext, api: LocalApi, log, *, catalog_gate
         case "librechat":
             password = secrets.token_urlsafe(24) + "Aa9!"
             api.headers["Origin"] = api.base
+            api.headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/140.0.0.0 PhistoryCapture/0.1"
             api.request(
                 "/api/auth/register",
                 {
