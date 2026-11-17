@@ -327,6 +327,8 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
     roots = list(source.iterdir())
     if len(roots) != 1 or not roots[0].is_dir():
         raise RuntimeError("source archive must contain exactly one repository root")
+    for command in agent.source_build_commands:
+        run(list(command), cwd=roots[0], timeout=INSTALL_TIMEOUT_SECONDS)
     if agent.github_source_install == "requirements":
         run(
             [
@@ -465,6 +467,33 @@ def _install_github_release_asset(agent: AgentSpec, version: str, install_dir: P
     _download(asset["url"], archive_path)
     if asset.get("sha512"):
         _verify_sha512(archive_path, asset["sha512"])
+    if agent.release_asset_layout == "wheel":
+        run(
+            [
+                "uv",
+                "venv",
+                str(install_dir),
+                "--allow-existing",
+                *(["--python", agent.python_runtime] if agent.python_runtime else []),
+            ],
+            timeout=120,
+        )
+        arguments = ["uv", "pip", "install", "--python", str(bin_dir / "python")]
+        release = _github_release_by_tag(agent.package, version)
+        dependencies = [(name, "-r") for name in agent.release_requirement_assets]
+        if agent.release_constraint_asset:
+            dependencies.append((agent.release_constraint_asset, "-c"))
+        for name, flag in dependencies:
+            matches = [item for item in release.get("assets", []) if item.get("name") == name]
+            if len(matches) != 1 or not matches[0].get("browser_download_url"):
+                raise RuntimeError(f"missing required release dependency asset: {name}")
+            path = install_dir / name
+            _download(matches[0]["browser_download_url"], path)
+            arguments.extend([flag, str(path)])
+        run([*arguments, str(archive_path)], timeout=INSTALL_TIMEOUT_SECONDS)
+        if not executable.exists():
+            raise RuntimeError(f"release wheel did not provide executable: {executable}")
+        return bin_dir
     binary_name = agent.release_asset_binary or agent.tap_client
     if asset["name"] == binary_name:
         source = archive_path

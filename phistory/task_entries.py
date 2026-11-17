@@ -122,8 +122,8 @@ import os
 from pathlib import Path
 from bambooai.cli import init_home, load_env
 state = Path(os.environ["PHISTORY_HOME"]) / "bambooai"
-init_home(state, quiet=True)
-load_env(state)
+init_home(str(state), quiet=True)
+load_env(str(state))
 os.chdir(state)
 from web_app.llm_config_builder import build_user_config
 assert build_user_config("phistory")
@@ -137,5 +137,46 @@ os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
 from config import load_config
 load_config()
 from bridge.bridge import Bridge
-print(Bridge().fetch_agent_reply("Reply with one short sentence.", None))
+from bridge.context import Context, ContextType
+text = "Reply with one short sentence."
+context = Context(ContextType.TEXT, text, kwargs={"session_id": "phistory"})
+print(Bridge().fetch_agent_reply(text, context))
+"""
+
+AGENT_ZERO_PREFETCH = """
+import os
+import importlib
+os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
+module = importlib.import_module("plugins._model_config.extensions.python.startup_migration._20_bootstrap_model_presets")
+assert module.BootstrapModelPresets(None).execute() != "error"
+from sentence_transformers import SentenceTransformer
+SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2").encode(["public asset prefetch"])
+"""
+
+AGENT_ZERO_TASK = """
+import asyncio
+import os
+import hashlib
+from pathlib import Path
+os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
+from plugins._model_config.helpers import model_config
+path = Path(model_config._get_presets_path())
+print("Native presets SHA-256:", hashlib.sha256(path.read_bytes()).hexdigest(), flush=True)
+print("Native selected preset:", model_config.resolve_preset(model_config.get_configured_preset_name()), flush=True)
+from agent import AgentContext, UserMessage
+from initialize import initialize_agent
+async def main():
+    context = AgentContext(initialize_agent())
+    task = context.communicate(UserMessage(message="Reply with one short sentence."))
+    await task.result()
+asyncio.run(main())
+"""
+
+ZCODE_TASK = """
+import os
+from pathlib import Path
+os.environ["ZCODE_HTTP_PROXY"] = os.environ["HTTP_PROXY"]
+os.environ["ZCODE_AGENT_CA_CERT"] = os.environ["SSL_CERT_FILE"]
+path = Path(os.environ["PHISTORY_SOURCE_ROOT"]) / "apps/zcode-cli/packages/cli/dist/zcode.cjs"
+os.execvp("node", ["node", str(path), "--prompt", "Reply with one short sentence.", "--cwd", str(Path.cwd()), "--json"])
 """

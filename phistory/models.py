@@ -56,6 +56,8 @@ HomeProfile = Literal[
     "localgpt",
     "cowagent",
     "bambooai",
+    "raven",
+    "zcode",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -119,7 +121,9 @@ class AgentSpec:
     track_latest: bool = True
     pypi_extras: tuple[str, ...] = ()
     capture_timeout_seconds: int = 1800
-    release_asset_layout: Literal["binary", "bundle"] = "binary"
+    release_asset_layout: Literal["binary", "bundle", "wheel"] = "binary"
+    release_requirement_assets: tuple[str, ...] = ()
+    release_constraint_asset: str | None = None
     latest_variant_ids: tuple[str, ...] | None = None
     bootstrap_args: tuple[str, ...] = ()
     bootstrap_env: dict[str, str] = field(default_factory=dict)
@@ -129,6 +133,7 @@ class AgentSpec:
     source_project: str = "."
     source_extra_requirements: tuple[str, ...] = ()
     source_state: Literal["none", "readonly", "isolated"] = "none"
+    source_build_commands: tuple[tuple[str, ...], ...] = ()
 
     def __post_init__(self) -> None:
         if self.capture_timeout_seconds < 1:

@@ -44,6 +44,9 @@ jobs:
         with:
           node-version: "24"
       - uses: astral-sh/setup-uv@v8.1.0
+      - name: Install selected native audio library
+        if: contains(format(',{0},', inputs.agents), ',agenticseek,')
+        run: sudo apt-get update && sudo apt-get install -y libportaudio2
       - run: uv sync --all-groups
       - run: uv run ruff format --check phistory tests
       - run: uv run ruff check phistory tests

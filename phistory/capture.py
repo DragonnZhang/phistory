@@ -204,13 +204,18 @@ def capture_target(
                 "package": target.agent.package,
                 **({"python_runtime": target.agent.python_runtime} if target.agent.python_runtime else {}),
                 **({"package_extras": list(target.agent.pypi_extras)} if target.agent.pypi_extras else {}),
-                **({"package_layout": "bundle"} if target.agent.release_asset_layout == "bundle" else {}),
+                **(
+                    {"package_layout": target.agent.release_asset_layout}
+                    if target.agent.release_asset_layout != "binary"
+                    else {}
+                ),
                 **(
                     {
                         "source_runtime": {
                             "project": target.agent.source_project,
                             "state": target.agent.source_state,
                             "extra_requirements": list(target.agent.source_extra_requirements),
+                            "build_commands": [list(command) for command in target.agent.source_build_commands],
                         }
                     }
                     if target.agent.source == "github-source"
@@ -557,6 +562,53 @@ def _capture_env(
             env["PHISTORY_CUGA_EXAMPLE_SHA256"] = digest
     if profile == "deerflow":
         env["DEER_FLOW_HOME"] = str(home / "deerflow")
+    if profile == "raven":
+        state = home / "raven"
+        state.mkdir(parents=True, exist_ok=True)
+        env["RAVEN_HOME"] = str(state)
+        config = {
+            "agents": {"defaults": {"provider": "anthropic"}},
+            "providers": {"anthropic": {"apiKey": "phistory-fake-api-key"}},
+        }
+        path = state / "config.json"
+        path.write_text(json.dumps(config) + "\n", encoding="utf-8")
+        path.chmod(0o600)
+    if profile == "zcode":
+        state = home / "zcode"
+        state.mkdir(parents=True, exist_ok=True)
+        env.update(
+            {
+                "ZCODE_DATA_BASE_DIR": str(state),
+                "ZCODE_STORAGE_DIR": str(state / "storage"),
+                "ZCODE_SESSION_DB_PATH": str(state / "sessions.db"),
+                "ZCODE_LOG_DIR": str(state / "logs"),
+                "ZCODE_PERSONAL_PROVIDER_CONFIG_FILE": str(state / "providers.json"),
+            }
+        )
+        config = {
+            "schemaVersion": 1,
+            "config": {
+                "providerConfigRules": {
+                    "providerRules": [
+                        {
+                            "providerId": "phistory",
+                            "providerName": "Phistory API",
+                            "config": {
+                                "group": "standard-personal",
+                                "access": {"type": "api-key", "apiKey": "phistory-fake-api-key"},
+                                "api": {"type": "openai-chat-completions", "baseUrl": "https://api.openai.com/v1"},
+                                "personalModelIds": ["gpt-4.1"],
+                            },
+                        }
+                    ]
+                },
+                "modelConfigRules": {"providerModelRules": [], "manualProviderModelRules": []},
+                "defaultModelSelection": {"providerId": "phistory", "modelId": "gpt-4.1"},
+            },
+        }
+        path = Path(env["ZCODE_PERSONAL_PROVIDER_CONFIG_FILE"])
+        path.write_text(json.dumps(config) + "\n", encoding="utf-8")
+        path.chmod(0o600)
     if profile == "nanomuse":
         env["NANOMUSE_DATA_DIR"] = str(home / "nanomuse")
         env["NANOMUSE_WORKSPACE"] = str(home / "work")

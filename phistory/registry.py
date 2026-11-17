@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, HomeProfile, TapMode
 from phistory.task_entries import (
+    AGENT_ZERO_PREFETCH,
+    AGENT_ZERO_TASK,
     AGENTICSEEK_TASK,
     BAMBOOAI_TASK,
     BROWSER_USE_PREFETCH,
@@ -13,6 +15,7 @@ from phistory.task_entries import (
     GPT_RESEARCHER_TASK,
     MINIAGI_TASK,
     QUORUM_TASK,
+    ZCODE_TASK,
 )
 
 
@@ -1747,6 +1750,116 @@ INKOS = AgentSpec(
 )
 
 
+ZCODE = AgentSpec(
+    id="zcode",
+    display_name="ZCode",
+    package="zai-org/ZCode",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="readonly",
+    tap_client="python",
+    fake_env={},
+    source_build_commands=(
+        ("npx", "--yes", "pnpm@10.33.2", "install", "--frozen-lockfile"),
+        ("npx", "--yes", "pnpm@10.33.2", "--filter", "@zcode/cli...", "build"),
+    ),
+    home_profile="zcode",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("personal-openai",),
+    default_variant=_default(
+        capture_unavailable="No Linux desktop release asset; the source CLI needs a configured personal provider. Use the named official source-built CLI lane."
+    ),
+    variants=(
+        _variant(
+            "personal-openai",
+            "Source CLI · configured personal OpenAI",
+            ("--no-yolo", "--", "-c", ZCODE_TASK),
+            dimensions={
+                "entry": "official Linux source CLI --prompt",
+                "model": "gpt-4.1",
+                "features": "native defaults",
+                "permission_mode": "native prompt yolo",
+            },
+        ),
+    ),
+)
+
+AGENT_ZERO = AgentSpec(
+    id="agent-zero",
+    display_name="Agent Zero",
+    package="agent0ai/agent-zero",
+    source="github-source",
+    github_source_install="requirements",
+    source_state="isolated",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key"},
+    extra_env={"A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES": "1"},
+    recorded_env=("A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES",),
+    bootstrap_args=("-c", AGENT_ZERO_PREFETCH),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("context-api",),
+    default_variant=_default(
+        capture_unavailable="The application needs startup provisioning; the named context API follows the native HTTP task path after public preset/embedding bootstrap."
+    ),
+    variants=(
+        _variant(
+            "context-api",
+            "Native AgentContext task API",
+            ("--no-yolo", "--", "-c", AGENT_ZERO_TASK),
+            dimensions={
+                "entry": "AgentContext.communicate",
+                "models": "native resolved public preset",
+                "dummy_retry_bound": "1",
+                "memory": "preserved; public MiniLM weights prefetched",
+            },
+        ),
+    ),
+)
+
+RAVEN = AgentSpec(
+    id="raven",
+    display_name="Raven",
+    package="EverMind-AI/Raven",
+    source="github-release-asset",
+    release_asset="raven-{version_number}-py3-none-any.whl",
+    release_asset_layout="wheel",
+    release_requirement_assets=("raven-plugins.txt",),
+    release_constraint_asset="raven-constraints.txt",
+    python_runtime="3.12",
+    tap_client="raven",
+    fake_env={},
+    home_profile="raven",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    default_variant=_default(
+        (
+            "--no-yolo",
+            "--",
+            "agent",
+            "-m",
+            "Reply with one short sentence.",
+            "--config",
+            "$PHISTORY_HOME/raven/config.json",
+            "--home",
+            "$PHISTORY_HOME/raven",
+            "--workspace",
+            "$PHISTORY_HOME/work",
+            "--no-markdown",
+        ),
+        dimensions={
+            "provider": "Anthropic credential provider",
+            "model": "native schema default",
+            "plugins": "official release constraints and plugin requirements",
+        },
+    ),
+)
+
 GPT_RESEARCHER = AgentSpec(
     id="gpt-researcher",
     display_name="GPT Researcher",
@@ -2148,6 +2261,9 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        ZCODE,
+        AGENT_ZERO,
+        RAVEN,
         GPT_RESEARCHER,
         OPENEVOLVE,
         DEERFLOW,
