@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-17 11:59 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-17 12:42 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-17 11:59 UTC
+Last capture update: 2026-11-17 12:42 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -118,6 +118,11 @@ Last capture update: 2026-11-17 11:59 UTC
 | mini-swe-agent | [2.4.6 - 2026-07-23](captures/mini-swe-agent/2.4.6/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
 | nanobot | [0.4.1 - 2026-11-06](captures/nanobot/0.4.1/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
 | Bub | [0.6.1 - 2026-11-04](captures/bub/0.6.1/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
+| Jcode | [v1.0.0 - 2026-11-17](captures/jcode/v1.0.0/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:41 UTC |
+| Codewhale | [0.10.2 - 2026-10-24](captures/codewhale/0.10.2/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:41 UTC |
+| Kilo Code | [7.8.27 - 2026-11-05](captures/kilocode/7.8.27/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:42 UTC |
+| Cline | [3.0.74 - 2026-10-26](captures/cline/3.0.74/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:42 UTC |
+| Prime Agent | [v0.10.3 - 2026-11-12](captures/prime-agent/v0.10.3/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:42 UTC |
 
 ## Project Trend
 

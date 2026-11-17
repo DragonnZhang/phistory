@@ -1,0 +1,61 @@
+{
+  "agent_id": "codewhale",
+  "agent": "Codewhale",
+  "package": "codewhale",
+  "version": "0.10.2",
+  "variant": {
+    "id": "default",
+    "label": "Default · exec without tools",
+    "dimensions": {
+      "mode": "exec",
+      "tools": "none"
+    }
+  },
+  "requested": {
+    "mode": "exec",
+    "tools": "none"
+  },
+  "observed": {
+    "model": "deepseek-flash"
+  },
+  "published_at": "2026-10-24T17:34:12.722Z",
+  "tarball_url": "https://registry.npmjs.org/codewhale/-/codewhale-0.10.2.tgz",
+  "binary_version": "codewhale 0.10.2 (ff466b2ed0bf)",
+  "captured_at": "2026-11-17T12:41:46.909632+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44085421301",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44085421301"
+  },
+  "tap_client": "codewhale",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 2.779,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "codewhale",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "exec",
+    "--output-format",
+    "stream-json",
+    "Reply with one short sentence."
+  ]
+}

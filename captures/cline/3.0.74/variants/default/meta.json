@@ -1,0 +1,56 @@
+{
+  "agent_id": "cline",
+  "agent": "Cline",
+  "package": "cline",
+  "version": "3.0.74",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "anthropic/claude-sonnet-5.5",
+    "tool_count": 26
+  },
+  "published_at": "2026-10-26T04:04:22.234Z",
+  "tarball_url": "https://registry.npmjs.org/cline/-/cline-3.0.74.tgz",
+  "binary_version": "3.0.74",
+  "captured_at": "2026-11-17T12:42:22.899278+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44085421301",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44085421301"
+  },
+  "tap_client": "cline",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 17.518,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "cline",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--key",
+    "phistory-fake-api-key",
+    "--json",
+    "Reply with one short sentence."
+  ]
+}

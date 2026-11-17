@@ -1,0 +1,67 @@
+{
+  "agent_id": "prime-agent",
+  "agent": "Prime Agent",
+  "package": "PrimeIntellect-ai/prime-agent",
+  "package_layout": "bundle",
+  "bootstrap": {
+    "arguments": [
+      "--prime-agent-bootstrap"
+    ],
+    "environment": {
+      "PI_OFFLINE": "0"
+    }
+  },
+  "version": "v0.10.3",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "claude-opus-4-7",
+    "tool_count": 1
+  },
+  "published_at": "2026-11-12T17:59:11Z",
+  "tarball_url": "https://github.com/PrimeIntellect-ai/prime-agent/releases/download/v0.10.3/prime-agent-0.10.3-linux-x64.tar.gz",
+  "binary_version": "v0.10.3",
+  "captured_at": "2026-11-17T12:42:29.208878+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44085421301",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44085421301"
+  },
+  "tap_client": "prime-agent",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 4.382,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "prime-agent",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--print",
+    "--no-session",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "PI_OFFLINE": "1"
+  }
+}

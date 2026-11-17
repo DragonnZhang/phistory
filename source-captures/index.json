@@ -92,7 +92,7 @@
           "path": "source-captures/jcode/c3b4e3fee787fb2fccbf"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "jcode"
     },
     {
@@ -2603,7 +2603,7 @@
           "path": "source-captures/cline/573238b035e9bc954e02"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "cline"
     },
     {
@@ -2843,7 +2843,7 @@
           "path": "source-captures/codewhale/90b430084e4d6e06bfbf"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "codewhale"
     },
     {
@@ -5109,7 +5109,7 @@
           "path": "source-captures/kilocode/00f3f715a55ba06aaf2d"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "kilocode"
     },
     {
@@ -7837,7 +7837,7 @@
           "path": "source-captures/prime-agent/a2dd1edfd8fdbaa76345"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "prime-agent"
     },
     {
