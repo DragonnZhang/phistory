@@ -1,0 +1,103 @@
+stdout:
+[claude-tap] 'hive' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] hive target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:33703
+[claude-tap] CA cert: /tmp/phistory-home-pu_utvk3/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/hive/1.0.12/variants/queen-api/.tap/2026-11-17/trace_152901.jsonl
+
+[claude-tap] launching hive: hive serve --host 127.0.0.1 --port 41681
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:33703
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-pu_utvk3/.local/share/claude-tap/ca.pem
+[92m15:29:01 - LiteLLM:WARNING[0m: get_model_cost_map.py:86 - LiteLLM: Fetched model cost map has only 7 models (minimum=50). This may indicate a corrupted upstream file. Falling back to local backup.
+[92m15:29:01 - LiteLLM:WARNING[0m: get_model_cost_map.py:286 - LiteLLM: Fetched model cost map failed integrity check. Using local backup instead. url=https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
+2026-11-17 15:29:03 [32m[INFO    ][0m Generated and persisted HIVE_CREDENTIAL_KEY to ~/.hive/secrets/credential_key
+2026-11-17 15:29:03 [32m[INFO    ][0m ADEN_API_KEY not set, using local-only credential storage
+2026-11-17 15:29:03 [32m[INFO    ][0m Rebuilt credential index with 0 entries
+2026-11-17 15:29:03 [32m[INFO    ][0m migrate_v2: starting ~/.hive structure migration
+2026-11-17 15:29:03 [32m[INFO    ][0m migrate_v2: migration complete
+2026-11-17 15:29:03 [32m[INFO    ][0m Serving frontend from /home/runner/work/phistory/phistory/.phistory-cache/installs/hive/1.0.12/lib/python3.12/site-packages/framework/server/frontend
+2026-11-17 15:29:03 [32m[INFO    ][0m resource sampler started
+2026-11-17 15:29:03 [32m[INFO    ][0m streamtoken_refresh: disabled (no HIVE_CLOUD_BASE — runtime not in cloud mode)
+2026-11-17 15:29:03 [32m[INFO    ][0m [sentinel] manager starting (0 open escalations)
+
+Hive API server running on http://127.0.0.1:41681
+Dashboard:  http://127.0.0.1:41681
+Health:     http://127.0.0.1:41681/api/health
+Sessions:   0 colony, 0 queen-only
+
+Press Ctrl+C to stop
+2026-11-17 15:29:03 [32m[INFO    ][0m [access] GET / -> 200 (0ms)
+2026-11-17 15:29:03 [32m[INFO    ][0m [llm] → model=anthropic/claude-sonnet-5-5 msgs=2 max_tokens=8192 tools=0
+2026-11-17 15:29:03 [31m[ERROR   ][0m Queen selector failed to parse JSON; defaulting to queen_growth. error=Expecting value: line 1 column 1 (char 0) raw='captured'
+2026-11-17 15:29:03 [32m[INFO    ][0m Materialized default queen profile lazily: queen_growth
+2026-11-17 15:29:03 [32m[INFO    ][0m Session event log → /tmp/phistory-home-pu_utvk3/hive/queens/queen_growth/sessions/session_20261117_152903_77df19e0/events.jsonl (iteration_offset=0)
+2026-11-17 15:29:03 [32m[INFO    ][0m ToolRegistry snapshot (after server config): total=0, harness=0, mcp=0, other=0, per_group={}
+2026-11-17 15:29:04 [32m[INFO    ][0m Harness group 'files-tools' registered 4 tool(s): ['edit_file', 'read_file', 'search_files', 'write_file']
+2026-11-17 15:29:05 [33m[WARNING ][0m Harness tool 'read_file' from 'hive_tools' shadowed by 'files-tools' (loaded first)
+2026-11-17 15:29:05 [33m[WARNING ][0m Harness tool 'edit_file' from 'hive_tools' shadowed by 'files-tools' (loaded first)
+2026-11-17 15:29:05 [32m[INFO    ][0m Harness group 'hive_tools' registered 11 tool(s): ['attach_file', 'csv_append', 'csv_info', 'csv_read', 'csv_sql', 'csv_write', 'get_account_info', 'get_current_time', 'image_generate', 'pdf_read', 'web_scrape']
+2026-11-17 15:29:05 [32m[INFO    ][0m Harness group 'terminal-tools' registered 10 tool(s): ['terminal_exec', 'terminal_glob', 'terminal_job_logs', 'terminal_job_manage', 'terminal_job_start', 'terminal_output_get', 'terminal_pty_close', 'terminal_pty_open', 'terminal_pty_run', 'terminal_rg']
+2026-11-17 15:29:05 [32m[INFO    ][0m Harness group 'chart-tools' registered 1 tool(s): ['chart_render']
+2026-11-17 15:29:06 [32m[INFO    ][0m Harness group 'memory-tools' registered 1 tool(s): ['search_messages']
+2026-11-17 15:29:06 [32m[INFO    ][0m Queen: harness tool groups: {'files-tools': 4, 'hive_tools': 11, 'terminal-tools': 10, 'chart-tools': 1, 'memory-tools': 1}
+2026-11-17 15:29:06 [32m[INFO    ][0m Registered 17 queen lifecycle tools
+2026-11-17 15:29:06 [32m[INFO    ][0m Queen: registered tools: ['attach_file', 'browser_setup', 'chart_render', 'csv_append', 'csv_info', 'csv_read', 'csv_sql', 'csv_write', 'edit_file', 'get_account_info', 'get_current_time', 'get_playbook_status', 'get_worker_status', 'image_generate', 'inject_message', 'list_browser_profiles', 'list_playbook_runs', 'list_triggers', 'list_worker_questions', 'pdf_read', 'read_file', 'remove_trigger', 'reply_to_worker', 'run_playbook', 'run_worker', 'search_files', 'search_messages', 'search_tools', 'set_trigger', 'stop_playbook', 'stop_worker', 'task_create', 'task_get', 'task_list', 'task_update', 'terminal_exec', 'terminal_glob', 'terminal_job_logs', 'terminal_job_manage', 'terminal_job_start', 'terminal_output_get', 'terminal_pty_close', 'terminal_pty_open', 'terminal_pty_run', 'terminal_rg', 'tracker_query', 'tracker_register_writable', 'tracker_sql', 'tracker_upsert', 'update_worker_profile', 'web_scrape', 'write_file', 'write_skill']
+2026-11-17 15:29:06 [32m[INFO    ][0m Queen: independent tools: ['attach_file', 'browser_setup', 'chart_render', 'csv_append', 'csv_info', 'csv_read', 'csv_sql', 'csv_write', 'edit_file', 'get_account_info', 'get_current_time', 'image_generate', 'pdf_read', 'read_file', 'search_files', 'search_messages', 'search_tools', 'suggest_colony', 'task_create', 'task_get', 'task_list', 'task_update', 'terminal_exec', 'terminal_glob', 'terminal_job_logs', 'terminal_job_manage', 'terminal_job_start', 'terminal_output_get', 'terminal_pty_close', 'terminal_pty_open', 'terminal_pty_run', 'terminal_rg', 'web_scrape', 'write_file']
+2026-11-17 15:29:06 [32m[INFO    ][0m Queen: colony tools: ['attach_file', 'browser_setup', 'chart_render', 'csv_append', 'csv_info', 'csv_read', 'csv_sql', 'csv_write', 'edit_file', 'get_account_info', 'get_current_time', 'get_playbook_status', 'get_worker_status', 'image_generate', 'inject_message', 'list_playbook_runs', 'list_triggers', 'pdf_read', 'read_file', 'remove_trigger', 'run_playbook', 'run_worker', 'search_files', 'search_messages', 'search_tools', 'set_trigger', 'stop_playbook', 'stop_worker', 'task_create', 'task_get', 'task_list', 'task_update', 'terminal_exec', 'terminal_glob', 'terminal_job_logs', 'terminal_job_manage', 'terminal_job_start', 'terminal_output_get', 'terminal_pty_close', 'terminal_pty_open', 'terminal_pty_run', 'terminal_rg', 'tracker_query', 'tracker_register_writable', 'tracker_sql', 'tracker_upsert', 'web_scrape', 'write_file', 'write_skill']
+2026-11-17 15:29:06 [32m[INFO    ][0m rebuild_independent_filter: allowlist=25, always_enabled=13, loaded=1, gateable=28, independent=34 -> allowed=21, eager=19
+2026-11-17 15:29:06 [32m[INFO    ][0m Queen: per-queen tool allowlist active — 15 of 28 gateable tools enabled
+2026-11-17 15:29:06 [32m[INFO    ][0m Skill discovery: found 20 skills (20 after dedup) across all scopes
+2026-11-17 15:29:06 [32m[INFO    ][0m skill_startup name=hive.writing-hive-skills scope=framework status=loaded
+2026-11-17 15:29:06 [32m[INFO    ][0m skill_startup name=hive.browser-automation scope=framework status=loaded
+2026-11-17 15:29:06 [32m[INFO    ][0m skill_startup name=hive.pdf scope=framework status=loaded
+2026-11-17 15:29:06 [32m[INFO    ][0m Default skills active: hive.writing-hive-skills, hive.browser-automation, hive.pdf
+2026-11-17 15:29:06 [32m[INFO    ][0m Skills: 3 default (3 active, 0 disabled, 0 error)
+2026-11-17 15:29:06 [32m[INFO    ][0m Skill system ready: catalog=4346 chars
+2026-11-17 15:29:06 [32m[INFO    ][0m Skill discovery: found 20 skills (20 after dedup) across all scopes
+2026-11-17 15:29:06 [32m[INFO    ][0m skill_startup name=hive.writing-hive-skills scope=framework status=loaded
+2026-11-17 15:29:06 [32m[INFO    ][0m skill_startup name=hive.browser-automation scope=framework status=loaded
+2026-11-17 15:29:06 [32m[INFO    ][0m skill_startup name=hive.pdf scope=framework status=loaded
+2026-11-17 15:29:06 [32m[INFO    ][0m Default skills active: hive.writing-hive-skills, hive.browser-automation, hive.pdf
+2026-11-17 15:29:06 [32m[INFO    ][0m Skills: 3 default (3 active, 0 disabled, 0 error)
+2026-11-17 15:29:06 [32m[INFO    ][0m Skill system ready: catalog=4346 chars
+2026-11-17 15:29:06 [32m[INFO    ][0m ConcurrentStorage started: /tmp/phistory-home-pu_utvk3/hive/queens/queen_growth/sessions/session_20261117_152903_77df19e0
+2026-11-17 15:29:06 [32m[INFO    ][0m ColonyRuntime started: colony_id=session_20261117_152903_77df19e0, triggers=0
+2026-11-17 15:29:06 [32m[INFO    ][0m _start_queen: unified ColonyRuntime ready for session session_20261117_152903_77df19e0 (53 tools, storage=/tmp/phistory-home-pu_utvk3/hive/queens/queen_growth/sessions/session_20261117_152903_77df19e0)
+2026-11-17 15:29:06 [32m[INFO    ][0m Session 'session_20261117_152903_77df19e0' created (queen-only, resume_from=None, colony=None)
+2026-11-17 15:29:06 [33m[WARNING ][0m [access] POST /api/sessions -> 201 (2539ms) SLOW
+2026-11-17 15:29:06 [32m[INFO    ][0m Queen starting in independent phase with 19 tools: ['search_tools', 'task_create', 'task_update', 'task_list', 'task_get', 'suggest_colony', 'pdf_read', 'attach_file', 'get_current_time', 'image_generate', 'get_account_info', 'terminal_exec', 'terminal_job_logs', 'terminal_job_manage', 'terminal_rg', 'terminal_glob', 'terminal_output_get', 'search_messages', 'browser_setup']
+2026-11-17 15:29:06 [32m[INFO    ][0m [access] POST /api/sessions/session_20261117_152903_77df19e0/chat -> 200 (0ms)
+2026-11-17 15:29:06 [32m[INFO    ][0m [restore] No conversation found for agent_id=queen phase_filter=None run_id=None
+2026-11-17 15:29:06 [32m[INFO    ][0m [reminder] injected session_start block (4488 chars)
+2026-11-17 15:29:06 [32m[INFO    ][0m [queen] Tools available (57): ['read_file', 'write_file', 'edit_file', 'search_files', 'web_scrape', 'pdf_read', 'attach_file', 'get_current_time', 'image_generate', 'get_account_info', 'csv_read', 'csv_write', 'csv_append', 'csv_info', 'csv_sql', 'terminal_exec', 'terminal_job_start', 'terminal_job_logs', 'terminal_job_manage', 'terminal_pty_open', 'terminal_pty_run', 'terminal_pty_close', 'terminal_rg', 'terminal_glob', 'terminal_output_get', 'chart_render', 'search_messages', 'search_tools', 'stop_worker', 'run_worker', 'write_skill', 'update_worker_profile', 'list_browser_profiles', 'get_worker_status', 'inject_message', 'list_worker_questions', 'reply_to_worker', 'set_trigger', 'remove_trigger', 'list_triggers', 'run_playbook', 'get_playbook_status', 'stop_playbook', 'list_playbook_runs', 'task_create', 'task_update', 'task_list', 'task_get', 'tracker_sql', 'tracker_register_writable', 'tracker_upsert', 'tracker_query', 'browser_setup', 'collect_result', 'ask_user', 'credentials', 'sentinel_setup'] | direct_user_io=True | judge=None | hidden_image_tools=[]
+2026-11-17 15:29:06 [32m[INFO    ][0m [drain] injected message (client_input=True, images=0): Reply with one short sentence.
+2026-11-17 15:29:06 [32m[INFO    ][0m [queen] Dynamic prompt updated (split)
+2026-11-17 15:29:06 [32m[INFO    ][0m [queen] iter=0: running LLM turn (msgs=3)
+2026-11-17 15:29:06 [32m[INFO    ][0m [llm] → model=anthropic/claude-sonnet-5-5 msgs=2 max_tokens=8192 tools=23 stream
+2026-11-17 15:29:06 [32m[INFO    ][0m [credits] agent_loop FinishEvent: credits=None model=anthropic/claude-sonnet-5-5
+2026-11-17 15:29:06 [32m[INFO    ][0m [queen] LLM response (35ms): text='captured' tool_calls=[] stop=stop model=anthropic/claude-sonnet-5-5
+2026-11-17 15:29:06 [32m[INFO    ][0m [queen] iter=0: LLM done (38ms) — text=8 chars, real_tools=0, outputs_set=[], tokens={'input': 0, 'output': 0, 'cached': 0, 'cache_creation': 0, 'cost': 0.0, 'credits': None, 'stop_reason': 'stop', 'model': 'anthropic/claude-sonnet-5-5'}, accumulator={}
+2026-11-17 15:29:06 [32m[INFO    ][0m [credits] emit_llm_turn_complete: credits=None model=anthropic/claude-sonnet-5-5 data_has_credits_key=False
+2026-11-17 15:29:06 [32m[INFO    ][0m [llm] → model=anthropic/claude-sonnet-5-5 msgs=2 max_tokens=8192 tools=0
+2026-11-17 15:29:06 [32m[INFO    ][0m [queen] iter=0: blocking for user input (auto=True)...
+
+[claude-tap] shutting down hive... (Ctrl+C again to force)
+
+Received SIGINT, shutting down gracefully… (press Ctrl+C again to force quit)
+
+Received SIGTERM again — force quitting.
+2026-11-17 15:29:06 [32m[INFO    ][0m Cleaning up 0 pooled MCP connections
+
+[claude-tap] hive exited with code 130
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/hive/1.0.12/variants/queen-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    4
+  trace:        /home/runner/work/phistory/phistory/captures/hive/1.0.12/variants/queen-api/.tap/2026-11-17/trace_152901.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/hive/1.0.12/variants/queen-api/.tap/2026-11-17/trace_152901.log
+  view:         /home/runner/work/phistory/phistory/captures/hive/1.0.12/variants/queen-api/.tap/2026-11-17/trace_152901.html
+  prompt:       /home/runner/work/phistory/phistory/captures/hive/1.0.12/variants/queen-api/prompt.md
+
+stderr:

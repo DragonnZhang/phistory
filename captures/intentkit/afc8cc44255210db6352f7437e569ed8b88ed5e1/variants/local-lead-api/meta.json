@@ -1,0 +1,95 @@
+{
+  "agent_id": "intentkit",
+  "agent": "IntentKit",
+  "package": "crestalnetwork/intentkit",
+  "python_runtime": "3.13",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [
+      "app"
+    ],
+    "build_commands": []
+  },
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport os\nimport psycopg\nfrom psycopg import sql\nimport redis\nwith psycopg.connect(host=os.environ[\"DB_HOST\"], port=int(os.environ[\"DB_PORT\"]),\n    user=os.environ[\"DB_USERNAME\"], password=os.environ[\"DB_PASSWORD\"], dbname=\"postgres\",\n    autocommit=True) as connection:\n    connection.execute(sql.SQL(\"CREATE DATABASE {}\").format(sql.Identifier(os.environ[\"DB_NAME\"])))\nredis.Redis(host=os.environ[\"REDIS_HOST\"], port=int(os.environ[\"REDIS_PORT\"])).flushdb()\n"
+    ],
+    "environment": {}
+  },
+  "version": "afc8cc44255210db6352f7437e569ed8b88ed5e1",
+  "variant": {
+    "id": "local-lead-api",
+    "label": "Native single-user Lead API",
+    "dimensions": {
+      "entry": "official app.api / native Lead",
+      "provider": "native first available DeepSeek",
+      "database": "real isolated PostgreSQL and Redis"
+    }
+  },
+  "requested": {
+    "entry": "official app.api / native Lead",
+    "provider": "native first available DeepSeek",
+    "database": "real isolated PostgreSQL and Redis"
+  },
+  "observed": {
+    "model": "deepseek-flash",
+    "tool_count": 13
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/crestalnetwork/intentkit/archive/afc8cc44255210db6352f7437e569ed8b88ed5e1.tar.gz",
+  "binary_version": "afc8cc44255210db6352f7437e569ed8b88ed5e1",
+  "captured_at": "2026-11-17T15:29:26.595986+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44114629752",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44114629752"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 19.799,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-m",
+    "uvicorn",
+    "app.api:app",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "53655"
+  ],
+  "capture_environment": {
+    "ENV": "local",
+    "DB_HOST": "127.0.0.1",
+    "DB_PORT": "5432",
+    "DB_USERNAME": "postgres",
+    "DB_NAME": "phistory_phistory_home_77yf23ld",
+    "DB_AUTO_MIGRATE": "true",
+    "REDIS_HOST": "127.0.0.1",
+    "REDIS_PORT": "6379"
+  }
+}
