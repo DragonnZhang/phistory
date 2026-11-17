@@ -1,0 +1,79 @@
+{
+  "agent_id": "qm",
+  "agent": "QM",
+  "package": "@yc-software/qm",
+  "version": "0.1.18",
+  "variant": {
+    "id": "native-local-web-turn",
+    "label": "Native local deployment / web turn",
+    "dimensions": {
+      "entry": "published native CLI; Docker/PostgreSQL/local sandbox and web task",
+      "provider": "configured native OpenAI default",
+      "authentication": "native admin-login one-use token and actual cookie",
+      "tools": "native complete sandbox toolbox; no browser execution"
+    }
+  },
+  "requested": {
+    "entry": "published native CLI; Docker/PostgreSQL/local sandbox and web task",
+    "provider": "configured native OpenAI default",
+    "authentication": "native admin-login one-use token and actual cookie",
+    "tools": "native complete sandbox toolbox; no browser execution"
+  },
+  "observed": {
+    "model": "gpt-6.1-sol",
+    "tool_count": 20
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [
+      "a helpful org-wide assistant for"
+    ],
+    "required_user_text": [],
+    "required_tool_name_fragments": []
+  },
+  "published_at": "2026-11-11T23:51:13.001Z",
+  "tarball_url": "https://registry.npmjs.org/@yc-software/qm/-/qm-0.1.18.tgz",
+  "binary_version": null,
+  "captured_at": "2026-11-17T18:39:07.154697+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44149825515",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44149825515"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 69.05,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--target",
+    "https://api.openai.com",
+    "--port",
+    "33587",
+    "--host",
+    "172.17.0.1",
+    "--",
+    "-c",
+    "\nimport json\nimport os\nimport shutil\nimport subprocess\nimport time\nfrom pathlib import Path\ndeployment = Path(os.environ[\"PHISTORY_QM_DIR\"])\nsubprocess.run([\"qm\", \"init\", str(deployment), \"--target\", \"docker\", \"--org\", os.environ[\"PHISTORY_DOCKER_APP_NAME\"], \"--model-provider\", \"openai\"], check=True)\nparser = Path(shutil.which(\"qm\")).resolve().parents[1] / \"src/config.js\"\npath = deployment / \"qm.config.jsonc\"\nscript = \"import {readFileSync} from 'node:fs'; import {parseConfigJson} from \" + json.dumps(parser.as_uri()) + \"; console.log(JSON.stringify(parseConfigJson(readFileSync(process.argv[1],'utf8'))));\"\nconfig = json.loads(subprocess.check_output([\"node\", \"--input-type=module\", \"-e\", script, str(path)], text=True))\ngateway = \"http://\" + os.environ[\"PHISTORY_DOCKER_HOST\"] + \":\" + os.environ[\"PHISTORY_TAP_PORT\"]\nconfig.update(publicUrl=\"http://localhost:\" + os.environ[\"PHISTORY_SERVER_PORT\"], basePort=int(os.environ[\"PHISTORY_SERVER_PORT\"]) - 2, services=[\"core\", \"auth\"])\nconfig[\"sandbox\"] = dict(config.get(\"sandbox\") or {}, backend=\"local\")\nconfig.setdefault(\"env\", {}).setdefault(\"core\", {}).update(OPENAI_BASE_URL=gateway + \"/v1\", PRIVATE_NETWORK_ALLOWED_ORIGINS=gateway)\npath.write_text(json.dumps(config, indent=2) + \"\\n\")\nenv_path = deployment / \".env\"\nvalues = {\"OPENAI_API_KEY\": os.environ[\"OPENAI_API_KEY\"], \"AUTH_ALLOWED_EMAILS\": \"phistory@example.com\", \"ADMIN_GRANTS\": \"phistory@example.com:org_admin\", \"PUBLIC_API_URL\": \"http://qm-\" + os.environ[\"PHISTORY_DOCKER_APP_NAME\"] + \"-core:8080\"}\nlines = env_path.read_text().splitlines()\nenv_path.write_text(\"\\n\".join(line for line in lines if line.split(\"=\",1)[0] not in values) + \"\\n\" + \"\\n\".join(key + \"=\" + value for key,value in values.items()) + \"\\n\")\nsubprocess.run([\"qm\", \"up\"], cwd=deployment, check=True)\nPath(os.environ[\"PHISTORY_NATIVE_READY\"]).touch()\nwhile True:\n    time.sleep(1)\n"
+  ]
+}
