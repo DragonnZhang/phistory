@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-17T18:57:30.665086Z",
+  "updated_at": "2026-11-17T18:58:59.878992Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -459,6 +459,15 @@
       "latest_version": "160afa00ac0eca6315aabe662b2e7673c8c96172",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-17T18:15:29.934265+00:00",
+      "versions": 1,
+      "snapshots": 1
+    },
+    {
+      "agent_id": "librechat",
+      "agent": "LibreChat",
+      "latest_version": "d4e85d2205c78413ee27d631d7e3b7313556f21d",
+      "latest_published_at": "",
+      "latest_captured_at": "2026-11-17T18:58:59.878992+00:00",
       "versions": 1,
       "snapshots": 1
     },
@@ -117035,6 +117044,30 @@
       "prompt": "captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/prompt.md",
       "trace": "captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/trace.jsonl",
       "meta": "captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/meta.json"
+    },
+    {
+      "agent_id": "librechat",
+      "agent": "LibreChat",
+      "version": "d4e85d2205c78413ee27d631d7e3b7313556f21d",
+      "variant_id": "native-calculator-agent",
+      "variant_label": "Native authenticated agent / calculator",
+      "variant_dimensions": {
+        "entry": "real MongoDB, registration, agent and chat APIs",
+        "model": "configured OpenAI gpt-6.1-sol",
+        "tools": "native calculator",
+        "control_client": "native authenticated web-task API with recognized browser-compatible User-Agent",
+        "scope": "configured calculator agent; optional external integrations are not configured"
+      },
+      "observed": {
+        "model": "gpt-6.1-sol",
+        "tool_count": 1
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-17T18:58:59.878992+00:00",
+      "prompt": "captures/librechat/d4e85d2205c78413ee27d631d7e3b7313556f21d/variants/native-calculator-agent/prompt.md",
+      "trace": "captures/librechat/d4e85d2205c78413ee27d631d7e3b7313556f21d/variants/native-calculator-agent/trace.jsonl",
+      "meta": "captures/librechat/d4e85d2205c78413ee27d631d7e3b7313556f21d/variants/native-calculator-agent/meta.json"
     },
     {
       "agent_id": "vibesdk",

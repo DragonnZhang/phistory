@@ -1,0 +1,101 @@
+{
+  "agent_id": "librechat",
+  "agent": "LibreChat",
+  "package": "LibreChat-AI/LibreChat",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": [
+      [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund"
+      ],
+      [
+        "npm",
+        "run",
+        "frontend"
+      ]
+    ]
+  },
+  "version": "d4e85d2205c78413ee27d631d7e3b7313556f21d",
+  "variant": {
+    "id": "native-calculator-agent",
+    "label": "Native authenticated agent / calculator",
+    "dimensions": {
+      "entry": "real MongoDB, registration, agent and chat APIs",
+      "model": "configured OpenAI gpt-6.1-sol",
+      "tools": "native calculator",
+      "control_client": "native authenticated web-task API with recognized browser-compatible User-Agent",
+      "scope": "configured calculator agent; optional external integrations are not configured"
+    }
+  },
+  "requested": {
+    "entry": "real MongoDB, registration, agent and chat APIs",
+    "model": "configured OpenAI gpt-6.1-sol",
+    "tools": "native calculator",
+    "control_client": "native authenticated web-task API with recognized browser-compatible User-Agent",
+    "scope": "configured calculator agent; optional external integrations are not configured"
+  },
+  "observed": {
+    "model": "gpt-6.1-sol",
+    "tool_count": 1
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [],
+    "required_user_text": [],
+    "required_tool_name_fragments": [
+      "calculator"
+    ]
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/LibreChat-AI/LibreChat/archive/d4e85d2205c78413ee27d631d7e3b7313556f21d.tar.gz",
+  "binary_version": "d4e85d2205c78413ee27d631d7e3b7313556f21d",
+  "captured_at": "2026-11-17T18:58:59.878992+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44153052159",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44153052159"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 152.334,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--target",
+    "https://api.openai.com",
+    "--port",
+    "60185",
+    "--",
+    "-c",
+    "\nimport os\nimport secrets\nfrom pathlib import Path\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nos.chdir(source)\nbase = \"http://127.0.0.1:\" + os.environ[\"PHISTORY_SERVER_PORT\"]\nos.environ.update(MONGO_URI=\"mongodb://127.0.0.1:27017/phistory_\" + secrets.token_hex(12), HOST=\"127.0.0.1\", PORT=os.environ[\"PHISTORY_SERVER_PORT\"], DOMAIN_CLIENT=base, DOMAIN_SERVER=base, ENDPOINTS=\"openAI,agents\", OPENAI_MODELS=\"gpt-6.1-sol\", OPENAI_REVERSE_PROXY=\"http://127.0.0.1:\" + os.environ[\"PHISTORY_TAP_PORT\"] + \"/v1\", SEARCH=\"false\", USE_REDIS=\"false\", OPENAI_MODERATION=\"false\", ALLOW_EMAIL_LOGIN=\"true\", ALLOW_REGISTRATION=\"true\", ALLOW_UNVERIFIED_EMAIL_LOGIN=\"true\", CREDS_KEY=secrets.token_hex(32), CREDS_IV=secrets.token_hex(16), JWT_SECRET=secrets.token_hex(32), JWT_REFRESH_SECRET=secrets.token_hex(32))\nos.execvp(\"npm\", [\"npm\", \"run\", \"backend\"])\n"
+  ]
+}

@@ -10,7 +10,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 [Harness 源码归档](sources.html)保存 95 项调研中新增项目的提示词模板、装配代码与工具声明，保留完整原文件和来源，单独展示，不与真实请求捕获混用。
 
-> 每天自动检查新版本，归档最近更新于 **2026-11-17 18:57 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-11-17 18:58 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-11-17 18:57 UTC
+最近抓取更新：2026-11-17 18:58 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -147,6 +147,7 @@ uv run phistory render-site
 | LoopTroop | [0.6.4 - 2026-11-06](captures/looptroop/0.6.4/variants/native-relevant-files-scan/prompt.md) | 1 | 1 | 2026-11-17 18:30 UTC |
 | Hivekeep | [e6bf9aea4159312730a690b94697084616b44556](captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/prompt.md) | 1 | 1 | 2026-11-17 17:25 UTC |
 | AnythingLLM | [160afa00ac0eca6315aabe662b2e7673c8c96172](captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/prompt.md) | 1 | 1 | 2026-11-17 18:15 UTC |
+| LibreChat | [d4e85d2205c78413ee27d631d7e3b7313556f21d](captures/librechat/d4e85d2205c78413ee27d631d7e3b7313556f21d/variants/native-calculator-agent/prompt.md) | 1 | 1 | 2026-11-17 18:58 UTC |
 | VibeSDK | [32c9e429cd2712ea5959a89f65ae434162b89229](captures/vibesdk/32c9e429cd2712ea5959a89f65ae434162b89229/variants/native-general-agentic/prompt.md) | 1 | 1 | 2026-11-17 18:46 UTC |
 | DarkMoon | [edfe9cb12a263036a0c3dc1af604713e8197cce9](captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/prompt.md) | 1 | 1 | 2026-11-17 18:32 UTC |
 | AutoGPT | [autogpt-platform-beta-v0.11.3 - 2026-11-15](captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/prompt.md) | 1 | 1 | 2026-11-17 18:32 UTC |
