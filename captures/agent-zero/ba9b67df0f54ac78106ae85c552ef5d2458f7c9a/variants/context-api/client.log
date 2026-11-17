@@ -1,0 +1,320 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:37311
+[claude-tap] CA cert: /tmp/phistory-home-4o7g22r_/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/.tap/2026-11-17/trace_153126.jsonl
+
+[claude-tap] launching python: python -c 
+import asyncio
+import os
+import hashlib
+import socket
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
+with socket.socket() as probe:
+    probe.bind(("127.0.0.1", 0))
+    port = probe.getsockname()[1]
+os.environ["A0_SET_RFC_URL"] = "127.0.0.1"
+os.environ["A0_SET_RFC_PORT_HTTP"] = str(port)
+server = subprocess.Popen([sys.executable, "run_ui.py", "--host", "127.0.0.1", "--port", str(port)])
+try:
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline:
+        if server.poll() is not None:
+            raise RuntimeError("native Agent Zero UI/RFC worker exited during startup")
+        try:
+            with opener.open(f"http://127.0.0.1:{port}/", timeout=2):
+                break
+        except urllib.error.HTTPError as error:
+            if error.code < 500:
+                break
+        except (OSError, urllib.error.URLError):
+            pass
+        time.sleep(0.25)
+    else:
+        raise RuntimeError("native Agent Zero UI/RFC worker did not become ready")
+    from helpers import runtime, dotenv
+    runtime.initialize()
+    dotenv.load_dotenv()
+    from plugins._model_config.helpers import model_config
+    path = Path(model_config._get_presets_path())
+    print("Native presets SHA-256:", hashlib.sha256(path.read_bytes()).hexdigest(), flush=True)
+    print("Native selected preset:", model_config.resolve_preset(model_config.get_configured_preset_name()), flush=True)
+    from agent import AgentContext, UserMessage
+    from initialize import initialize_agent
+    async def main():
+        context = AgentContext(initialize_agent())
+        task = context.communicate(UserMessage(message="Reply with one short sentence."))
+        await task.result()
+    asyncio.run(main())
+finally:
+    if server.poll() is None:
+        server.terminate()
+        try:
+            server.wait(timeout=20)
+        except subprocess.TimeoutExpired:
+            server.kill()
+            server.wait(timeout=5)
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:37311
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-4o7g22r_/.local/share/claude-tap/ca.pem
+Initializing Python framework...[0m
+Checking for data migration...[0m
+
+[38;2;0;0;255mInfo: Local TTS: preparing dependencies: en-core-web-sm@ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl[0m
+
+[38;2;255;0;0mError: Local TTS dependency setup failed: Command '['/opt/hostedtoolcache/uv/0.13.9/x86_64/uv', 'pip', 'install', '--python', '/home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/bin/python', 'en-core-web-sm@ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl']' returned non-zero exit status 1.[0m
+Preparing web server runtime...[0m
+Initializing Agent Zero components...[0m
+Downloading Chrome for Testing 149.0.7827.55 (playwright chromium v1228) from https://cdn.playwright.dev/builds/cft/149.0.7827.55/linux64/chrome-linux64.zip
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 0 MiB
+Downloading Chrome for Testing 149.0.7827.55 (playwright chromium v1228) from https://cdn.playwright.dev/builds/cft/149.0.7827.55/linux64/chrome-linux64.zip
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 0 MiB
+Downloading Chrome for Testing 149.0.7827.55 (playwright chromium v1228) from https://cdn.playwright.dev/builds/cft/149.0.7827.55/linux64/chrome-linux64.zip
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 0 MiB
+Downloading Chrome for Testing 149.0.7827.55 (playwright chromium v1228) from https://cdn.playwright.dev/builds/cft/149.0.7827.55/linux64/chrome-linux64.zip
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 0 MiB
+Downloading Chrome for Testing 149.0.7827.55 (playwright chromium v1228) from https://cdn.playwright.dev/builds/cft/149.0.7827.55/linux64/chrome-linux64.zip
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 0 MiB
+Failed to install browsers
+Error: Failed to download Chrome for Testing 149.0.7827.55 (playwright chromium v1228), caused by
+Error: Download failure, code=1
+    at ChildProcess.<anonymous> (/home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/coreBundle.js:29185:32)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+[38;2;255;165;0mWarning: Browser Playwright cache migration failed: Command '['/home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/bin/python', '-m', 'patchright', 'install', 'chromium', '--no-shell']' returned non-zero exit status 1.[0m
+Preload completed.[0m
+Starting UI/API server...[0m
+
+[38;2;128;128;128mDebug: [startup] bind=127.0.0.1:44725 probe=http://127.0.0.1:44725/api/health timeout=90s attempts=2[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] wsgi.middleware.create.start at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] wsgi.middleware.create.done at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] mcp.proxy.init.start at +0.0s[0m
+
+[38;2;255;0;0mError: Failed to pause job loop by development instance: Cannot connect to host 127.0.0.1:44725 ssl:default [Connect call failed ('127.0.0.1', 44725)][0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] mcp.proxy.init.done at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] a2a.proxy.init.start at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] a2a.proxy.init.done at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] starlette.app.create.start at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] starlette.app.create.done at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] socketio.asgi.create.start at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] socketio.asgi.create.done at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] uvicorn.config.create.start at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] uvicorn.config.create.done at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] uvicorn.server.create.start at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] uvicorn.server.create.done at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] health.thread.start at +0.0s[0m
+
+[38;2;128;128;128mDebug: Starting server at http://127.0.0.1:44725 ...[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] uvicorn.run.enter at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] starlette.lifespan.startup at +0.0s[0m
+
+[38;2;128;128;128mDebug: [startup attempt 1/2] ready (health_probe) at +1.0s[0m
+Agent Zero is running.[0m
+Native presets SHA-256: c83f374f915f00bca55a54ae759cd3cce351d006ddae50ba3412fd9fb549afcf
+Native selected preset: {'name': 'Default', 'chat': {'provider': 'openrouter', 'name': 'openai/gpt-6.1-sol', 'api_base': '', 'ctx_length': 200000, 'ctx_history': 0.7, 'vision': True, 'max_embeds': 10, 'rl_requests': 0, 'rl_input': 0, 'rl_output': 0, 'kwargs': {}}, 'utility': {'provider': 'openrouter', 'name': 'openai/gpt-6-luna', 'api_base': '', 'ctx_length': 128000, 'ctx_input': 0.7, 'rl_requests': 0, 'rl_input': 0, 'rl_output': 0, 'kwargs': {}}, 'embedding': {'provider': 'huggingface', 'name': 'sentence-transformers/all-MiniLM-L6-v2', 'api_base': '', 'rl_requests': 0, 'rl_input': 0, 'kwargs': {}}}
+Initializing VectorDB...[0m
+[38;2;0;128;0mCreated knowledge directory: /tmp/phistory-home-4o7g22r_/source/usr/knowledge/fragments[0m
+Found 1 knowledge files in /tmp/phistory-home-4o7g22r_/source/knowledge, processing...[0m
+Processed 1 documents from 1 files.[0m
+Found 5 knowledge files in /tmp/phistory-home-4o7g22r_/source/knowledge/main, processing...[0m
+Processed 5 documents from 5 files.[0m
+[38;2;0;128;0mCreated knowledge directory: /tmp/phistory-home-4o7g22r_/source/knowledge/fragments[0m
+[3m[38;2;179;255;217mResponse: [0m
+[3m[38;2;179;255;217mcaptured[0m
+[38;2;128;128;128mDebug: [startup attempt 1/2] starlette.lifespan.shutdown at +8.3s[0m
+
+[claude-tap] python exited with code 1
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    14
+  trace:        /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/.tap/2026-11-17/trace_153126.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/.tap/2026-11-17/trace_153126.log
+  view:         /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/.tap/2026-11-17/trace_153126.html
+  prompt:       /home/runner/work/phistory/phistory/captures/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/variants/context-api/prompt.md
+
+stderr:
+[claude-tap] warning: 
+15:31:27 - LiteLLM:WARNING: get_model_cost_map.py:144 - LiteLLM: Fetched model cost map has only 7 models (minimum=50). This may indicate a corrupted upstream file. Falling back to local backup.
+15:31:27 - LiteLLM:WARNING: get_model_cost_map.py:687 - LiteLLM: Fetched model cost map failed integrity check. Using local backup instead. url=https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
+Using Python 3.12.16 environment at: /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a
+error: Failed to download `en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl`
+  cause: Failed to read metadata: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+  cause: Failed to read from zip file
+  cause: Encountered an unexpected header (actual: 0x6469227b, expected: 0x4034b50).
+Error: End of central directory record signature not found. Either not a zip file, or file is truncated.
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42975:18
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:43422:9
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42434:11
+    at FSReqCallback.wrapper [as oncomplete] (node:fs:670:5)
+Error: End of central directory record signature not found. Either not a zip file, or file is truncated.
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42975:18
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:43422:9
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42434:11
+    at FSReqCallback.wrapper [as oncomplete] (node:fs:670:5)
+Error: End of central directory record signature not found. Either not a zip file, or file is truncated.
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42975:18
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:43422:9
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42434:11
+    at FSReqCallback.wrapper [as oncomplete] (node:fs:670:5)
+Error: End of central directory record signature not found. Either not a zip file, or file is truncated.
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42975:18
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:43422:9
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42434:11
+    at FSReqCallback.wrapper [as oncomplete] (node:fs:670:5)
+Error: End of central directory record signature not found. Either not a zip file, or file is truncated.
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42975:18
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:43422:9
+    at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/patchright/driver/package/lib/utilsBundle.js:42434:11
+    at FSReqCallback.wrapper [as oncomplete] (node:fs:670:5)
+INFO:     Started server process [3723]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:44725 (Press CTRL+C to quit)
+15:31:36 - LiteLLM:WARNING: get_model_cost_map.py:144 - LiteLLM: Fetched model cost map has only 7 models (minimum=50). This may indicate a corrupted upstream file. Falling back to local backup.
+15:31:36 - LiteLLM:WARNING: get_model_cost_map.py:687 - LiteLLM: Fetched model cost map failed integrity check. Using local backup instead. url=https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3723]
+Traceback (most recent call last):
+  File "<string>", line 49, in <module>
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/nest_asyncio.py", line 30, in run
+    return loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/nest_asyncio.py", line 98, in run_until_complete
+    return f.result()
+           ^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/futures.py", line 202, in result
+    raise self._exception.with_traceback(self._exception_tb)
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py", line 316, in __step_run_and_handle_result
+    result = coro.throw(exc)
+             ^^^^^^^^^^^^^^^
+  File "<string>", line 48, in main
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/defer.py", line 167, in result
+    return await loop.run_in_executor(None, _get_result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/futures.py", line 289, in __await__
+    yield self  # This tells Task to wait for completion.
+    ^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py", line 385, in __wakeup
+    future.result()
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/futures.py", line 202, in result
+    raise self._exception.with_traceback(self._exception_tb)
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/defer.py", line 159, in _get_result
+    result = self._future.result(timeout)  # type: ignore
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.12.16-linux-x86_64-gnu/lib/python3.12/asyncio/tasks.py", line 314, in __step_run_and_handle_result
+    result = coro.send(None)
+             ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/defer.py", line 136, in _run
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/agent.py", line 320, in _process_chain
+    await self.handle_exception("process_chain", e)
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/agent.py", line 325, in handle_exception
+    raise exception # exception handling is done by extensions
+    ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/agent.py", line 310, in _process_chain
+    response = await agent.monologue()  # type: ignore
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/agent.py", line 557, in monologue
+    await self.handle_exception("monologue", e)
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/agent.py", line 651, in handle_exception
+    raise exception # exception handling is done by extensions
+    ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/agent.py", line 544, in monologue
+    await self.handle_exception("message_loop", e)
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 188, in _run_async
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 181, in _run_async
+    data["result"] = await data["result"]
+                     ^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/agent.py", line 651, in handle_exception
+    raise exception # exception handling is done by extensions
+    ^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/agent.py", line 522, in monologue
+    await extension.call_extensions_async(
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 238, in call_extensions_async
+    result = cls(agent=agent).execute(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/plugins/_context_doctor/extensions/python/message_loop_result/_10_context_doctor.py", line 62, in execute
+    self.agent.hist_add_warning(message=warning)
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 208, in _run_sync
+    result = _process_result(data)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/phistory-home-4o7g22r_/source/helpers/extension.py", line 148, in _process_result
+    raise exc
+helpers.errors.HandledException: Agent stopped after 1 consecutive unusable model responses to prevent further API charges. Send a new message to try again.
+Task was destroyed but it is pending!
+task: <Task pending name='Task-11' coro=<LoggingWorker._worker_loop() running at /home/runner/work/phistory/phistory/.phistory-cache/installs/agent-zero/ba9b67df0f54ac78106ae85c552ef5d2458f7c9a/lib/python3.12/site-packages/litellm/litellm_core_utils/logging_worker.py:233> wait_for=<Future pending cb=[Task.__wakeup()]>>
