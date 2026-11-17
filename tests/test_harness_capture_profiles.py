@@ -14,6 +14,8 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
+        "atomic-agent",
+        "self-operating-computer",
         "hive",
         "intentkit",
         "mirix",

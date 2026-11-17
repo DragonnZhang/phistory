@@ -17,6 +17,7 @@ from phistory.task_entries import (
     MINIAGI_TASK,
     OUROBOROS_SERVER,
     QUORUM_TASK,
+    SELF_OPERATING_TASK,
     ZCODE_TASK,
 )
 
@@ -1752,6 +1753,67 @@ INKOS = AgentSpec(
 )
 
 
+ATOMIC_AGENT = AgentSpec(
+    id="atomic-agent",
+    display_name="Atomic Agent",
+    package="AtomicBot-ai/atomic-agent",
+    source="github-release-asset",
+    release_asset="atomic-agent-linux-x64.tar.gz",
+    release_asset_binary="atomic-agent",
+    release_asset_layout="bundle",
+    tap_client="atomic-agent",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    home_profile="atomic-cloud",
+    capture_min_tools=1,
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("cloud-openai",),
+    default_variant=_default(
+        capture_unavailable="Fresh native defaults bootstrap local llama models; use the explicitly configured native cloud text/embedding lane."
+    ),
+    variants=(
+        _variant(
+            "cloud-openai",
+            "Native stdin task · configured cloud OpenAI",
+            ("--no-yolo", "--", "run", "--cwd", "$PHISTORY_HOME/work", "--max-steps", "1"),
+            driver="first-request",
+            stdin_text="Reply with one short sentence.\n",
+            dimensions={
+                "entry": "native piped stdin run",
+                "chat_model": "gpt-4.1",
+                "embedding_model": "text-embedding-3-small",
+                "max_steps": "1",
+                "resources": "complete official SEA bundle",
+            },
+        ),
+    ),
+)
+
+SELF_OPERATING_COMPUTER = AgentSpec(
+    id="self-operating-computer",
+    display_name="Self-Operating Computer",
+    package="self-operating-computer",
+    source="pypi",
+    python_runtime="3.11",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    default_variant=_default(
+        ("--no-yolo", "--", "-c", SELF_OPERATING_TASK),
+        driver="first-request",
+        dimensions={
+            "entry": "native operate --prompt",
+            "mode": "native gpt-4-with-ocr",
+            "model": "native gpt-4o",
+            "display": "owned Xvfb 1280x800; real screenshot",
+            "scope": "first vision request before actions",
+        },
+    ),
+)
+
 HIVE = AgentSpec(
     id="hive",
     display_name="Hive",
@@ -1762,6 +1824,7 @@ HIVE = AgentSpec(
     tap_client="hive",
     fake_env={},
     home_profile="hive",
+    capture_min_tools=1,
     tap_mode="forward",
     track_latest=False,
     capture_timeout_seconds=300,
@@ -1790,6 +1853,7 @@ INTENTKIT = AgentSpec(
     package="crestalnetwork/intentkit",
     source="github-source",
     source_state="isolated",
+    source_dependency_groups=("app",),
     python_runtime="3.13",
     tap_client="python",
     fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
@@ -1955,12 +2019,13 @@ AGENT_ZERO = AgentSpec(
     id="agent-zero",
     display_name="Agent Zero",
     package="agent0ai/agent-zero",
+    required_system_text=("Agent Zero System Manual",),
     source="github-source",
     github_source_install="requirements",
     source_state="isolated",
     python_runtime="3.12",
     tap_client="python",
-    fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key"},
+    fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key", "RFC_PASSWORD": "phistory-local-rfc-password"},
     extra_env={"A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES": "1", "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1"},
     recorded_env=("A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES", "HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE"),
     bootstrap_args=("-c", AGENT_ZERO_PREFETCH),
@@ -1975,10 +2040,11 @@ AGENT_ZERO = AgentSpec(
     variants=(
         _variant(
             "context-api",
-            "Native AgentContext task API",
+            "Native AgentContext task API · owned UI/RFC worker",
             ("--no-yolo", "--", "-c", AGENT_ZERO_TASK),
             dimensions={
                 "entry": "AgentContext.communicate",
+                "runtime": "native development topology with real owned UI/RFC service; no Docker-mode override",
                 "models": "native resolved public preset",
                 "dummy_retry_bound": "1",
                 "memory": "preserved; public MiniLM weights prefetched",
@@ -2418,6 +2484,8 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        ATOMIC_AGENT,
+        SELF_OPERATING_COMPUTER,
         HIVE,
         INTENTKIT,
         MIRIX,

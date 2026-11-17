@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import tarfile
+import tomllib
 import urllib.request
 import zipfile
 from http.client import IncompleteRead, RemoteDisconnected
@@ -406,14 +407,22 @@ def _install_github_release(
             venv_args.extend(["--python", python_version.read_text(encoding="utf-8").strip()])
         run(venv_args, timeout=120)
         if (source_root / "uv.lock").is_file():
+            manifest = tomllib.loads((source_root / "pyproject.toml").read_text(encoding="utf-8"))
+            required_uv = manifest.get("tool", {}).get("uv", {}).get("required-version", "")
+            uv_command = (
+                ["uvx", "--from", f"uv{required_uv}", "uv"]
+                if re.fullmatch(r"==[0-9]+\.[0-9]+\.[0-9]+", required_uv)
+                else ["uv"]
+            )
             run(
                 [
-                    "uv",
+                    *uv_command,
                     "sync",
                     "--project",
                     str(source_root),
                     "--frozen",
                     "--no-default-groups",
+                    *[argument for group in agent.source_dependency_groups for argument in ("--group", group)],
                     "--python",
                     str(bin_dir / "python"),
                 ],

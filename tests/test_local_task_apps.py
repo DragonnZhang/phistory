@@ -55,7 +55,9 @@ def test_mirix_registers_native_principal_and_preserves_complete_config(tmp_path
             if path == "/admin/auth/register":
                 return {"access_token": "native-jwt"}
             assert self.headers["Authorization"] == "Bearer native-jwt"
-            if path == "/agents":
+            if path == "/agents/meta/initialize":
+                return {"id": "native-meta"}
+            if path == "/agents?parent_id=native-meta":
                 return [
                     {"id": "meta", "name": "meta_memory_agent"},
                     {"id": "native-episode", "name": "episodic_memory_agent"},

@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory, mkdtemp
 
-from claude_tap.prompt_snapshot import snapshot_from_records
+from claude_tap.prompt_snapshot import PromptSnapshot, render_prompt_markdown, snapshot_from_records
 
 from phistory import packages
 from phistory.drivers import CaptureRunContext, run_capture
@@ -189,6 +189,19 @@ def capture_target(
             copy_trace(trace, working_target)
         if inherited_env:
             _sanitize_trace(working_target.trace_path, inherited_env.values())
+        selected_snapshot = None
+        if target.agent.capture_min_tools or target.agent.required_system_text:
+            try:
+                selected_snapshot = _primary_snapshot(
+                    working_target.trace_path,
+                    minimum_tools=target.agent.capture_min_tools,
+                    required_system_text=target.agent.required_system_text,
+                )
+            except ValueError as exc:
+                raise RuntimeError(
+                    f"no request matched the required primary prompt/tool surface\n{client_log[-6000:]}"
+                ) from exc
+            prompt_path.write_text(render_prompt_markdown(selected_snapshot), encoding="utf-8")
         replacements = {
             str(install_dir): "$PHISTORY_INSTALL",
             str(home_dir): "$PHISTORY_HOME",
@@ -215,6 +228,7 @@ def capture_target(
                             "project": target.agent.source_project,
                             "state": target.agent.source_state,
                             "extra_requirements": list(target.agent.source_extra_requirements),
+                            "dependency_groups": list(target.agent.source_dependency_groups),
                             "build_commands": [list(command) for command in target.agent.source_build_commands],
                         }
                     }
@@ -238,7 +252,17 @@ def capture_target(
                     "dimensions": target.variant.dimensions,
                 },
                 "requested": target.variant.dimensions,
-                "observed": _trace_observation(working_target.trace_path),
+                "observed": _trace_observation(working_target.trace_path, snapshot=selected_snapshot),
+                **(
+                    {
+                        "capture_selection": {
+                            "minimum_tools": target.agent.capture_min_tools,
+                            "required_system_text": list(target.agent.required_system_text),
+                        }
+                    }
+                    if selected_snapshot is not None
+                    else {}
+                ),
                 "published_at": target.version.published_at,
                 "tarball_url": target.version.tarball_url,
                 "binary_version": _replace_many(binary_version, replacements) if binary_version else None,
@@ -569,8 +593,33 @@ def _capture_env(
         path = state / "configuration.json"
         path.write_text(json.dumps({"llm": {"api_key": "phistory-fake-api-key"}}) + "\n", encoding="utf-8")
         path.chmod(0o600)
+    if profile == "atomic-cloud":
+        state = home / "atomic-agent"
+        state.mkdir(parents=True, exist_ok=True)
+        (home / "work").mkdir(parents=True, exist_ok=True)
+        env["ATOMIC_AGENT_STATE_DIR"] = str(state)
+        config = {
+            "llm": {
+                "activeTextProvider": "phistory",
+                "activeEmbeddingProvider": "phistory",
+                "providers": [
+                    {
+                        "id": "phistory",
+                        "kind": "openai-compatible",
+                        "baseUrl": "https://api.openai.com/v1",
+                        "apiKeyEnvVar": "OPENAI_API_KEY",
+                        "defaultChatModel": "gpt-4.1",
+                        "defaultEmbeddingModel": "text-embedding-3-small",
+                    }
+                ],
+            }
+        }
+        path = state / "config.json"
+        path.write_text(json.dumps(config) + "\n", encoding="utf-8")
+        path.chmod(0o600)
     if profile == "mirix":
         env["MIRIX_DIR"] = str(home / "mirix")
+        env["TIKTOKEN_CACHE_DIR"] = str(home / "mirix" / "tiktoken")
     if profile == "intentkit":
         env["DB_NAME"] = "phistory_" + re.sub(r"[^a-zA-Z0-9]", "_", home.name)[-48:]
     if profile == "ouroboros":
@@ -661,12 +710,12 @@ def _extract_static_best_effort(target: CaptureTarget, install_dir: Path) -> Non
         return
 
 
-def _trace_observation(trace_path: Path) -> dict[str, object]:
+def _trace_records(trace_path: Path) -> list[dict]:
     records: list[dict] = []
     try:
         lines = trace_path.read_text(encoding="utf-8").splitlines()
     except OSError:
-        return {}
+        return []
     for line in lines:
         try:
             record = json.loads(line)
@@ -686,8 +735,27 @@ def _trace_observation(trace_path: Path) -> dict[str, object]:
         if not isinstance(body, dict):
             continue
         records.append({**record, "request": {**request, "body": body}})
+    return records
+
+
+def _primary_snapshot(
+    trace_path: Path, *, minimum_tools: int = 0, required_system_text: tuple[str, ...] = ()
+) -> PromptSnapshot:
+    candidates = []
+    for record in _trace_records(trace_path):
+        try:
+            snapshot = snapshot_from_records([record])
+        except ValueError:
+            continue
+        system = snapshot.system_prompt + "\n" + snapshot.developer_prompt
+        if len(snapshot.tools) >= minimum_tools and all(text in system for text in required_system_text):
+            candidates.append(record)
+    return snapshot_from_records(candidates)
+
+
+def _trace_observation(trace_path: Path, *, snapshot: PromptSnapshot | None = None) -> dict[str, object]:
     try:
-        snapshot = snapshot_from_records(records)
+        snapshot = snapshot or snapshot_from_records(_trace_records(trace_path))
     except ValueError:
         return {}
     observed: dict[str, object] = {}

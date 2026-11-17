@@ -152,6 +152,8 @@ tiktoken.get_encoding("o200k_base")
 os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
 module = importlib.import_module("plugins._model_config.extensions.python.startup_migration._20_bootstrap_model_presets")
 assert module.BootstrapModelPresets(None).execute() != "error"
+from helpers import dotenv
+dotenv.save_dotenv_value("RFC_PASSWORD", os.environ["RFC_PASSWORD"])
 from sentence_transformers import SentenceTransformer
 SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2").encode(["public asset prefetch"])
 """
@@ -160,19 +162,59 @@ AGENT_ZERO_TASK = """
 import asyncio
 import os
 import hashlib
+import socket
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
-from plugins._model_config.helpers import model_config
-path = Path(model_config._get_presets_path())
-print("Native presets SHA-256:", hashlib.sha256(path.read_bytes()).hexdigest(), flush=True)
-print("Native selected preset:", model_config.resolve_preset(model_config.get_configured_preset_name()), flush=True)
-from agent import AgentContext, UserMessage
-from initialize import initialize_agent
-async def main():
-    context = AgentContext(initialize_agent())
-    task = context.communicate(UserMessage(message="Reply with one short sentence."))
-    await task.result()
-asyncio.run(main())
+with socket.socket() as probe:
+    probe.bind(("127.0.0.1", 0))
+    port = probe.getsockname()[1]
+os.environ["A0_SET_RFC_URL"] = "127.0.0.1"
+os.environ["A0_SET_RFC_PORT_HTTP"] = str(port)
+server = subprocess.Popen([sys.executable, "run_ui.py", "--host", "127.0.0.1", "--port", str(port)])
+try:
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline:
+        if server.poll() is not None:
+            raise RuntimeError("native Agent Zero UI/RFC worker exited during startup")
+        try:
+            with opener.open(f"http://127.0.0.1:{port}/", timeout=2):
+                break
+        except urllib.error.HTTPError as error:
+            if error.code < 500:
+                break
+        except (OSError, urllib.error.URLError):
+            pass
+        time.sleep(0.25)
+    else:
+        raise RuntimeError("native Agent Zero UI/RFC worker did not become ready")
+    from helpers import runtime, dotenv
+    runtime.initialize()
+    dotenv.load_dotenv()
+    from plugins._model_config.helpers import model_config
+    path = Path(model_config._get_presets_path())
+    print("Native presets SHA-256:", hashlib.sha256(path.read_bytes()).hexdigest(), flush=True)
+    print("Native selected preset:", model_config.resolve_preset(model_config.get_configured_preset_name()), flush=True)
+    from agent import AgentContext, UserMessage
+    from initialize import initialize_agent
+    async def main():
+        context = AgentContext(initialize_agent())
+        task = context.communicate(UserMessage(message="Reply with one short sentence."))
+        await task.result()
+    asyncio.run(main())
+finally:
+    if server.poll() is None:
+        server.terminate()
+        try:
+            server.wait(timeout=20)
+        except subprocess.TimeoutExpired:
+            server.kill()
+            server.wait(timeout=5)
 """
 
 ZCODE_TASK = """
@@ -200,4 +242,9 @@ with psycopg.connect(host=os.environ["DB_HOST"], port=int(os.environ["DB_PORT"])
     autocommit=True) as connection:
     connection.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(os.environ["DB_NAME"])))
 redis.Redis(host=os.environ["REDIS_HOST"], port=int(os.environ["REDIS_PORT"])).flushdb()
+"""
+
+SELF_OPERATING_TASK = """
+import os
+os.execvp("xvfb-run", ["xvfb-run", "-a", "-s", "-screen 0 1280x800x24", "operate", "--prompt", "Reply with one short sentence."])
 """

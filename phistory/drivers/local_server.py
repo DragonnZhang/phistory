@@ -10,7 +10,9 @@ from pathlib import Path
 from claude_tap.prompt_snapshot import snapshot_from_records
 
 
-def has_prompt_request(tap_output_dir: Path, prompt: str) -> bool:
+def has_prompt_request(
+    tap_output_dir: Path, prompt: str, *, minimum_tools: int = 0, required_system_text: tuple[str, ...] = ()
+) -> bool:
     for trace in tap_output_dir.glob("*/trace_*.jsonl"):
         try:
             lines = trace.read_text(encoding="utf-8").splitlines()
@@ -29,15 +31,28 @@ def has_prompt_request(tap_output_dir: Path, prompt: str) -> bool:
                     snapshot = snapshot_from_records([record])
                 except ValueError:
                     continue
+                system = snapshot.system_prompt + "\n" + snapshot.developer_prompt
+                if len(snapshot.tools) < minimum_tools or not all(text in system for text in required_system_text):
+                    continue
                 if snapshot.system_prompt or snapshot.developer_prompt or snapshot.user_message:
                     return True
     return False
 
 
-def wait_for_prompt(tap_output_dir: Path, process: subprocess.Popen, prompt: str, timeout: int = 90) -> None:
+def wait_for_prompt(
+    tap_output_dir: Path,
+    process: subprocess.Popen,
+    prompt: str,
+    timeout: int = 90,
+    *,
+    minimum_tools: int = 0,
+    required_system_text: tuple[str, ...] = (),
+) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        if has_prompt_request(tap_output_dir, prompt):
+        if has_prompt_request(
+            tap_output_dir, prompt, minimum_tools=minimum_tools, required_system_text=required_system_text
+        ):
             return
         if process.poll() is not None:
             raise RuntimeError(f"local server exited before sending a model request ({process.returncode})")

@@ -7,7 +7,7 @@ from typing import Literal
 
 PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "github-source", "minimax-code"]
 GitHubReleaseInstall = Literal["wheel", "editable"]
-CaptureDriver = Literal["oneshot", "dsh-web", "openagent-store", "local-task-api"]
+CaptureDriver = Literal["oneshot", "dsh-web", "openagent-store", "local-task-api", "first-request"]
 HomeProfile = Literal[
     "none",
     "antigravity",
@@ -62,6 +62,7 @@ HomeProfile = Literal[
     "intentkit",
     "mirix",
     "ouroboros",
+    "atomic-cloud",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -136,10 +137,15 @@ class AgentSpec:
     python_runtime: str | None = None
     source_project: str = "."
     source_extra_requirements: tuple[str, ...] = ()
+    source_dependency_groups: tuple[str, ...] = ()
     source_state: Literal["none", "readonly", "isolated"] = "none"
     source_build_commands: tuple[tuple[str, ...], ...] = ()
+    capture_min_tools: int = 0
+    required_system_text: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if self.capture_min_tools < 0 or any(not text.strip() for text in self.required_system_text):
+            raise ValueError(f"{self.id}: primary request criteria must be meaningful")
         if self.capture_timeout_seconds < 1:
             raise ValueError(f"{self.id}: capture timeout must be positive")
         all_variants = self.capture_variants

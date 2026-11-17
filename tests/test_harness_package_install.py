@@ -301,3 +301,35 @@ def test_source_build_runs_in_retained_repository_before_caching(tmp_path, monke
     assert (packages.installed_source_root(result) / "package.json").read_text() == "native source and resources"
     assert packages.install_agent(agent, "a" * 40, install) == result
     assert len(commands) == 2
+
+
+def test_locked_release_honors_declared_uv_version_and_production_dependency_group(tmp_path, monkeypatch):
+    agent = replace(get_agent("ouroboros"), source_dependency_groups=("app",))
+    install = tmp_path / "install"
+    commands = []
+    manifest = (
+        b"[project]\nname='native'\nversion='1'\n[tool.uv]\nrequired-version='==0.12.1'\n[dependency-groups]\napp=[]\n"
+    )
+
+    def download(url, output):
+        with tarfile.open(output, "w:gz") as archive:
+            for name, content in {"pyproject.toml": manifest, "uv.lock": b"native frozen resolution"}.items():
+                member = tarfile.TarInfo("repo/" + name)
+                member.size = len(content)
+                archive.addfile(member, io.BytesIO(content))
+
+    def run(command, **kwargs):
+        commands.append((command, kwargs))
+        if command[:2] == ["uv", "venv"]:
+            (install / "bin").mkdir()
+            (install / "bin/python").touch()
+
+    monkeypatch.setattr(packages, "_download", download)
+    monkeypatch.setattr(packages, "run", run)
+    packages.install_agent(agent, "v1", install)
+    command, kwargs = commands[-1]
+    assert command[:5] == ["uvx", "--from", "uv==0.12.1", "uv", "sync"]
+    assert "--frozen" in command and "--no-default-groups" in command
+    assert command[command.index("--group") + 1] == "app"
+    assert kwargs["env"] == {"UV_PROJECT_ENVIRONMENT": str(install.resolve())}
+    assert (install / "source/repo/uv.lock").read_bytes() == b"native frozen resolution"

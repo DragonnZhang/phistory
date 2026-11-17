@@ -1,6 +1,6 @@
 import json
 
-from phistory.capture import _trace_observation
+from phistory.capture import _primary_snapshot, _trace_observation
 
 
 def test_gemini_counts_declarations_and_reads_model_from_native_path(tmp_path):
@@ -31,6 +31,43 @@ def test_observation_preserves_openai_deferred_tools_and_string_body(tmp_path):
     }
     path.write_text(json.dumps({"request": {"path": "/v1/responses", "body": json.dumps(body)}}) + "\n")
     assert _trace_observation(path) == {"model": "test-model", "tool_count": 2}
+
+
+def test_primary_selection_rejects_auxiliary_only_and_uses_main_instruction_surface(tmp_path):
+    import pytest
+
+    path = tmp_path / "trace.jsonl"
+    helper = {
+        "request": {
+            "path": "/v1/chat/completions",
+            "body": {
+                "model": "utility",
+                "messages": [
+                    {"role": "system", "content": "Name the chat"},
+                    {"role": "user", "content": "Agent Zero System Manual " * 2000},
+                ],
+            },
+        }
+    }
+    path.write_text(json.dumps(helper) + "\n")
+    with pytest.raises(ValueError):
+        _primary_snapshot(path, required_system_text=("Agent Zero System Manual",))
+    with pytest.raises(ValueError):
+        _primary_snapshot(path, minimum_tools=1)
+    main = {
+        "request": {
+            "path": "/v1/chat/completions",
+            "body": {
+                "model": "main",
+                "messages": [{"role": "developer", "content": "Agent Zero System Manual"}],
+                "tools": [{"type": "function", "function": {"name": "bash", "parameters": {"type": "object"}}}],
+            },
+        }
+    }
+    path.write_text(json.dumps(helper) + "\n" + json.dumps(main) + "\n")
+    selected = _primary_snapshot(path, minimum_tools=1, required_system_text=("Agent Zero System Manual",))
+    assert selected.model == "main"
+    assert _trace_observation(path, snapshot=selected) == {"model": "main", "tool_count": 1}
 
 
 def test_observation_selects_prompt_over_bootstrap_and_handles_broken_lines(tmp_path):

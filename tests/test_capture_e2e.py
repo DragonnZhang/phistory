@@ -177,6 +177,58 @@ def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
     assert str(tmp_path) not in prompt
 
 
+def test_capture_rejects_helper_only_and_archives_selected_primary_request(tmp_path, monkeypatch):
+    from phistory.drivers import CaptureExecution
+    from phistory.models import CommandResult
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    monkeypatch.setattr("phistory.packages.install_agent", lambda *_: bin_dir)
+    monkeypatch.setattr("phistory.capture._binary_version", lambda *args, **kwargs: "test")
+    agent = AgentSpec(
+        "fake", "Fake", "fake", "fake", {}, required_system_text=("Native actor manual",), capture_min_tools=1
+    )
+    helper = {
+        "request": {
+            "path": "/v1/chat/completions",
+            "body": {
+                "model": "helper",
+                "messages": [{"role": "user", "content": "Native actor manual " * 100}],
+            },
+        }
+    }
+    actor = {
+        "request": {
+            "path": "/v1/chat/completions",
+            "body": {
+                "model": "actor",
+                "messages": [{"role": "developer", "content": "Native actor manual"}],
+                "tools": [{"type": "function", "function": {"name": "native_tool", "parameters": {}}}],
+            },
+        }
+    }
+    records = [helper]
+
+    def intercepted(context):
+        context.prompt_path.write_text("helper export", encoding="utf-8")
+        context.target.trace_path.write_text("\n".join(json.dumps(record) for record in records), encoding="utf-8")
+        return CaptureExecution(("fake",), CommandResult(("fake",), 0, "native output", ""))
+
+    monkeypatch.setattr("phistory.capture.run_capture", intercepted)
+    target = _target(agent, VersionInfo("test"), tmp_path / "captures")
+    result = capture_target(target, cache_dir=tmp_path / "cache", extract_static=False)
+    assert result.status == "failed" and "required primary" in result.error
+    assert not target.variant_dir.exists()
+    records.append(actor)
+    result = capture_target(target, cache_dir=tmp_path / "cache", extract_static=False)
+    assert result.status == "captured", result.error
+    meta = json.loads(target.meta_path.read_text())
+    assert meta["observed"] == {"model": "actor", "tool_count": 1}
+    assert meta["capture_selection"]["minimum_tools"] == 1
+    assert "native_tool" in target.prompt_path.read_text()
+    assert [json.loads(line) for line in target.trace_path.read_text().splitlines()] == records
+
+
 def test_capture_host_records_actual_github_runner(monkeypatch):
     monkeypatch.setattr("phistory.capture.platform.system", lambda: "Linux")
     monkeypatch.setattr("phistory.capture.platform.machine", lambda: "x86_64")

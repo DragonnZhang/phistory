@@ -37,7 +37,7 @@ jobs:
     timeout-minutes: 45
     services:
       postgres:
-        image: ${{ contains(format(',{0},', inputs.agents), ',intentkit,') && 'postgres:17' || '' }}
+        image: ${{ contains(format(',{0},', inputs.agents), ',intentkit,') && 'postgres:18.1-trixie' || '' }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: phistory-local-db
@@ -46,7 +46,7 @@ jobs:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
       redis:
-        image: ${{ contains(format(',{0},', inputs.agents), ',intentkit,') && 'redis:7' || '' }}
+        image: ${{ contains(format(',{0},', inputs.agents), ',intentkit,') && 'redis:8.4-bookworm' || '' }}
         ports:
           - 6379:6379
         options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10

@@ -1,0 +1,48 @@
+from __future__ import annotations
+
+import subprocess
+
+from phistory.drivers import CaptureExecution, CaptureRunContext
+from phistory.drivers.common import tap_command
+from phistory.drivers.local_server import stop_process, wait_for_prompt
+from phistory.models import CommandResult
+
+PROMPT = "Reply with one short sentence."
+
+
+def run_first_request(context: CaptureRunContext) -> CaptureExecution:
+    argv = tap_command(context.target, context.prompt_path, context.tap_output_dir, context.env)
+    context.tap_output_dir.mkdir(parents=True, exist_ok=True)
+    log_path = context.tap_output_dir / "client.log"
+    failure = None
+    with log_path.open("w", encoding="utf-8") as log:
+        process = subprocess.Popen(
+            argv,
+            cwd=context.work_dir,
+            env=context.env,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.PIPE if context.target.variant.stdin_text is not None else subprocess.DEVNULL,
+            text=True,
+            start_new_session=True,
+        )
+        try:
+            if process.stdin is not None:
+                process.stdin.write(context.target.variant.stdin_text)
+                process.stdin.close()
+            wait_for_prompt(
+                context.tap_output_dir,
+                process,
+                PROMPT,
+                timeout=context.target.agent.capture_timeout_seconds,
+                minimum_tools=context.target.agent.capture_min_tools,
+                required_system_text=context.target.agent.required_system_text,
+            )
+        except Exception as exc:
+            failure = exc
+        finally:
+            stop_process(process)
+    output = log_path.read_text(encoding="utf-8", errors="replace")
+    if failure is not None:
+        raise RuntimeError(f"{failure}\nNative task log:\n{output[-6000:]}") from failure
+    return CaptureExecution(tuple(argv), CommandResult(tuple(argv), process.returncode or 0, output, ""))

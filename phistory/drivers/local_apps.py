@@ -63,6 +63,10 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         check.bind(("127.0.0.1", 0))
         port = check.getsockname()[1]
     env = {**context.env, "PHISTORY_SERVER_PORT": str(port)}
+    requirements = {
+        "minimum_tools": context.target.agent.capture_min_tools,
+        "required_system_text": context.target.agent.required_system_text,
+    }
     argv = tap_command(context.target, context.prompt_path, context.tap_output_dir, env)
     context.tap_output_dir.mkdir(parents=True, exist_ok=True)
     log_path = context.tap_output_dir / "client.log"
@@ -83,11 +87,13 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
             try:
                 _submit_task(context, api, log)
             except Exception as exc:
-                if not has_prompt_request(context.tap_output_dir, PROMPT):
+                if not has_prompt_request(context.tap_output_dir, PROMPT, **requirements):
                     raise
                 print(f"Native task returned after its captured request: {exc}", file=log, flush=True)
-            if not has_prompt_request(context.tap_output_dir, PROMPT):
-                wait_for_prompt(context.tap_output_dir, process, PROMPT, timeout=max(1, int(api.remaining(90))))
+            if not has_prompt_request(context.tap_output_dir, PROMPT, **requirements):
+                wait_for_prompt(
+                    context.tap_output_dir, process, PROMPT, timeout=max(1, int(api.remaining(90))), **requirements
+                )
         except Exception as exc:
             failure = exc
         finally:
@@ -101,7 +107,8 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
 def _submit_task(context: CaptureRunContext, api: LocalApi, log) -> None:
     match context.target.agent.id:
         case "hive":
-            api.request("/api/sessions", {"initial_phase": "independent", "initial_prompt": PROMPT})
+            session = api.request("/api/sessions", {"initial_phase": "independent", "initial_prompt": PROMPT})
+            api.request(f"/api/sessions/{session['session_id']}/chat", {"message": PROMPT})
         case "intentkit":
             chat = api.request("/lead/chats", {})
             api.request(f"/lead/chats/{chat['id']}/messages", {"message": PROMPT, "stream": False})
@@ -165,8 +172,10 @@ def _mirix_task(context: CaptureRunContext, api: LocalApi) -> None:
             timeout=api.remaining(30),
         )
     )
-    api.request("/agents/meta/initialize", {"config": config})
-    agents = api.request("/agents")
+    meta = api.request("/agents/meta/initialize", {"config": config})
+    if not isinstance(meta, dict) or not meta.get("id"):
+        raise RuntimeError("native MIRIX initialization did not return its meta agent")
+    agents = api.request(f"/agents?parent_id={meta['id']}")
     agent = next(
         (
             item
