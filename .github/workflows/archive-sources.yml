@@ -1,0 +1,90 @@
+name: Archive harness sources
+
+on:
+  workflow_dispatch:
+    inputs:
+      agents:
+        description: Comma-separated source catalog ids (empty means all; existing integrations are skipped)
+        default: ""
+      latest:
+        description: Also archive the latest default-branch source files
+        type: boolean
+        default: false
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: capture-prompts-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --all-groups
+      - run: uv run ruff format --check phistory tests
+      - run: uv run ruff check phistory tests
+      - run: uv run pytest
+      - run: uv build
+      - name: Archive pinned survey source files
+        id: pinned
+        env:
+          SOURCE_AGENTS: ${{ inputs.agents }}
+        run: |
+          args=()
+          if [ -n "$SOURCE_AGENTS" ]; then
+            args+=(--agents "$SOURCE_AGENTS")
+          fi
+          set +e
+          uv run phistory archive-sources "${args[@]}"
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+      - name: Archive current default branches
+        id: latest
+        if: inputs.latest || github.event_name == 'schedule'
+        env:
+          SOURCE_AGENTS: ${{ inputs.agents }}
+        run: |
+          args=(--latest)
+          if [ -n "$SOURCE_AGENTS" ]; then
+            args+=(--agents "$SOURCE_AGENTS")
+          fi
+          set +e
+          uv run phistory archive-sources "${args[@]}"
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+      - run: uv run phistory render-sources
+      - run: uv run phistory render-index
+      - run: uv run phistory render-site
+      - name: Commit source archives
+        run: |
+          git add source-captures sources.html README.md README_zh.md docs/captures.md captures/index.json index.html
+          if git diff --cached --quiet; then
+            echo "No source archive changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Archive harness prompt and tool source files"
+          git push
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: harness-source-archives
+          path: |
+            source-captures
+            sources.html
+          retention-days: 14
+      - name: Report source failures
+        if: always() && (steps.pinned.outputs.status != '0' || (steps.latest.outputs.status != '' && steps.latest.outputs.status != '0'))
+        run: |
+          echo "::error::Some sources could not be archived; inspect per-project errors. Successful archives were preserved."
+          exit 1

@@ -1,0 +1,2562 @@
+{
+  "schema_version": 1,
+  "name": "Qwen 95-agent harness survey",
+  "survey_date": "2026-11-06",
+  "survey_repository": "DragonnZhang/qwen",
+  "survey_paths": [
+    "research/harness_scaling_coordinates.json",
+    "research/harness_scaling_mechanisms.json"
+  ],
+  "records": [
+    {
+      "id": "jcode",
+      "name": "Jcode",
+      "repository": "1jehuang/jcode",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "f8a950c3c649a8ea920d98343e94ac028ec7d1d6",
+          "path": "crates/jcode-app-core/src/tool/codemode.rs",
+          "sha256": "68b4907957be3a29222cdb69970c29de902bd8f0d854d49896d2febe65bddbd0",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "f8a950c3c649a8ea920d98343e94ac028ec7d1d6",
+          "path": "crates/jcode-app-core/src/tool/mod.rs",
+          "sha256": "073aeecc1da427d25f11ea312c6e018639184bed6ce72603437cbab8b40982ed",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "f8a950c3c649a8ea920d98343e94ac028ec7d1d6",
+          "path": "crates/jcode-base/src/prompt/system_prompt.md",
+          "sha256": "534a4e3724c68f9fe51cae81454ed04f2bd59e27ebc86c5709b390a968b59023",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "goose",
+      "name": "goose",
+      "repository": "aaif-goose/goose",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba",
+          "path": "crates/goose/src/agents/platform_extensions/developer/mod.rs",
+          "sha256": "d08a26e29ef052f1a07474008446dc1ec1b8fd7a83596a6e2d934d1ff019c542",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "hive",
+      "name": "Hive",
+      "repository": "aden-hive/hive",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "4ede54992e1ef4cfeb6a78bda45ba864dc2643a9",
+          "path": "core/framework/agents/queen/nodes/__init__.py",
+          "sha256": "4419ef2231d97838244184c91fbbd5bf4efe587b0c5af40be61819fb9a2f0fe0",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "4ede54992e1ef4cfeb6a78bda45ba864dc2643a9",
+          "path": "core/framework/agents/queen/queen_tools_defaults.py",
+          "sha256": "aa3655a02521f80c88ebb5e081f886d9440b2e370946746e82b101b4bb95339b",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "agent-zero",
+      "name": "agent-zero",
+      "repository": "agent0ai/agent-zero",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+          "path": "agent.py",
+          "sha256": "fd7fa584f2cdf7bf483a10542735853ffe65cacf9e2a701009f853d488b40b2e",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+          "path": "plugins/_text_editor/prompts/agent.system.tool.text_editor.md",
+          "sha256": "351a428d1f686fa86f4f133c1c3b52f4d02b81decc5a5667ebab3e3ecc4c7ed3",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a",
+          "path": "prompts/agent.system.main.solving.md",
+          "sha256": "48c00ccb0057524ce5d2a72c8babdeb7991c0086357183b1a8bc347e71006b13",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "agentlas-os",
+      "name": "Agentlas-OS",
+      "repository": "agentlas-ai/Agentlas-OS",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "33e256b950210d07de716714fedb38ba1aa76b20",
+          "path": "agentlas_cloud/host_session.py",
+          "sha256": "2b981751ff937df80605bd4dbf85b7cc1853512198237e81d9fed3cb601b12c2",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "33e256b950210d07de716714fedb38ba1aa76b20",
+          "path": "agentlas_cloud/prompt_composition.py",
+          "sha256": "237390737b9c5cb59ce048978e4c62b3f5406ba5976364187dc691f1f8cf80be",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "autoresearchclaw",
+      "name": "AutoResearchClaw",
+      "repository": "aiming-lab/AutoResearchClaw",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "be4ba4755bf1b52220f25e13b2293b5956590070",
+          "path": "prompts.default.yaml",
+          "sha256": "93fd9370c01dd3ee9bdeaf6d0767556805cdb5e283231febc701913f783267a5",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "openevolve",
+      "name": "openevolve",
+      "repository": "algorithmicsuperintelligence/openevolve",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "73448d715968b3578d8458b16295e827edd2b6bf",
+          "path": "openevolve/prompts/defaults/diff_user.txt",
+          "sha256": "3fcfc9592b4f019eb07085b0c02855a0218007df15e3e6adeb301deff4124be7",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "73448d715968b3578d8458b16295e827edd2b6bf",
+          "path": "openevolve/prompts/defaults/system_message.txt",
+          "sha256": "d66ec30775d611aca71538742ff9201e8d1ce4cb3e5b076847aa2d8a32610e65",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "longhorizon-harness",
+      "name": "LongHorizon",
+      "repository": "AMAP-ML/LongHorizon-Harness",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "d53df0aa11e8506dfc9518ef63620c62baee04d3",
+          "path": "src/lh_harness/adapters/cli_agent.py",
+          "sha256": "cb5445a6f6c51016458ec3dd805d5c606eab01b80306ef4c772c42b3538eafd1",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "d53df0aa11e8506dfc9518ef63620c62baee04d3",
+          "path": "src/lh_harness/prompt_texts.py",
+          "sha256": "6cb14527f487be707a881666185101361909d3752ab3b1db9524f14cf3fc344a",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "repository": "anomalyco/opencode",
+      "existing_agent": "opencode"
+    },
+    {
+      "id": "dark-moon",
+      "name": "Dark-Moon",
+      "repository": "ASCIT31/Dark-Moon",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "edfe9cb12a263036a0c3dc1af604713e8197cce9",
+          "path": "conf/agents/golang.md",
+          "sha256": "f78f4bedf99b5d4e8dbfa83d001636040dc183a720ca69fb9fdf4865497ac6bc",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "edfe9cb12a263036a0c3dc1af604713e8197cce9",
+          "path": "conf/entrypoint-opencode.sh",
+          "sha256": "21c7d95256f986e05865b47158720c468104a182fe212efd46e510f4b159ecab",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "gpt-researcher",
+      "name": "gpt-researcher",
+      "repository": "assafelovic/gpt-researcher",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "3582a6841fe7dc801e2a34e34ee408641aea9bce",
+          "path": "deep_agents/agent.py",
+          "sha256": "323c88c80d609a910bdd3599a6922558fe73a27c976a364fb50f12afe3a3302b",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "atomic-agent",
+      "name": "atomic-agent",
+      "repository": "AtomicBot-ai/atomic-agent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "fdc7813cb1b2d7a72781c957b211e03af5e02130",
+          "path": "src/prompt/default-tool-descriptors-a.ts",
+          "sha256": "527c0701066d852c561edb807e3eb83991cae4d2afc831cd4f3b70e8d16a03fd",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "fdc7813cb1b2d7a72781c957b211e03af5e02130",
+          "path": "src/prompt/stable-prefix.ts",
+          "sha256": "c2191efcb1d84d62ed970dd8e36e74a5c6d5d91a7736caae95f3b5200221598b",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "pi-rust",
+      "name": "pi-rust",
+      "repository": "bigfish1913/pi-rust",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "5bb31ae4c41382a03cb8e793e0907f9824dfb320",
+          "path": "crates/rpi-cli/src/session.rs",
+          "sha256": "f51affc08c8f398863732a35a3514df72d1c0f31115a851530c6691216bdc7f5",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "bub",
+      "name": "Bub",
+      "repository": "bubbuild/bub",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "d14de719da57640cf2f80658217d94d94a5b7c42",
+          "path": "src/bub/builtin/hook_impl.py",
+          "sha256": "3d0d130e0aa7bfdcfad8e1222a78d14c94d461eddcf56669bde7689a8fb97857",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "d14de719da57640cf2f80658217d94d94a5b7c42",
+          "path": "src/bub/builtin/tools.py",
+          "sha256": "86b72caed8c643ca9f225b401f1d9e45a90c86ecb6567dc54cfe86f3eb61643f",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "d14de719da57640cf2f80658217d94d94a5b7c42",
+          "path": "src/bub/core/codemode/__init__.py",
+          "sha256": "8276090e0d6a8fa119d8ee0c03332744a5e888380d535b283da9700d2a90b693",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "deer-flow",
+      "name": "DeerFlow",
+      "repository": "bytedance/deer-flow",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "459fc8ca4397bf75637cdbe6ffbb91e871f5107a",
+          "path": "backend/packages/harness/deerflow/agents/lead_agent/prompt.py",
+          "sha256": "b8301c96a44defa558605f0f7871a21070d7da4071e5f23e0deb29cd4fb843ea",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "459fc8ca4397bf75637cdbe6ffbb91e871f5107a",
+          "path": "backend/packages/harness/deerflow/tools/builtins/tool_search.py",
+          "sha256": "a105d752f9f84aaf58856081295a09604fce01027da4a5c79ef70c13f9b5264d",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "omp",
+      "name": "oh-my-pi",
+      "repository": "can1357/oh-my-pi",
+      "existing_agent": "omp"
+    },
+    {
+      "id": "crush",
+      "name": "Crush",
+      "repository": "charmbracelet/crush",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0",
+          "path": "internal/agent/coordinator.go",
+          "sha256": "11693f9b1cbcea4ea865d3457e105587ec638e78f7960b69900f7b29d41f2248",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0",
+          "path": "internal/agent/templates/coder.md.tpl",
+          "sha256": "5e27c03aaefefd805b3724cfc9d62e28ed84ff9f35774228c596160f50989370",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "cline",
+      "name": "cline",
+      "repository": "cline/cline",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+          "path": "sdk/packages/core/src/extensions/tools/definitions.ts",
+          "sha256": "8214438eb85755ee40abf6e37652552728195288c770618ed10f6f3937ef519d",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "d3ecc4890e8f9bcb77182b96c77fa90575e8e145",
+          "path": "sdk/packages/shared/src/prompt/system/act.ts",
+          "sha256": "dd1560a5a9b2f9b6691b8f355d9e776e12a95e7bc262347fadc3b89617956be4",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "vibesdk",
+      "name": "vibesdk",
+      "repository": "cloudflare/vibesdk",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "32c9e429cd2712ea5959a89f65ae434162b89229",
+          "path": "worker/agents/operations/prompts/agenticBuilderPrompts.ts",
+          "sha256": "6bf26cfb605683232026f1e6abfe9aa2d1c3d363907aeefcb6397bb0e0c339c8",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "32c9e429cd2712ea5959a89f65ae434162b89229",
+          "path": "worker/agents/tools/customTools.ts",
+          "sha256": "1859a7327ad2546cd487d0ed556d51b7d7bbd6f6d149417277c1568f894e2886",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "codewhale",
+      "name": "Codewhale",
+      "repository": "codewhale-hq/Codewhale",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+          "path": "crates/engine/src/prompts/text.rs",
+          "sha256": "65427f5e544119c6c31b4c904d93da2920c579dc09325e59588ef3ec163bf12c",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+          "path": "crates/engine/src/tools/codemode.rs",
+          "sha256": "0a47795666e948c22985e46c9c99d0acb6e474064704512c8c21cea955ba9e8d",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "cc6207a5b49742bd324fd893e5db168e6fe783bd",
+          "path": "crates/engine/src/tools/registry.rs",
+          "sha256": "81baa3ca891a8d3bff614071df3a362c950883d1ae31926cd69a3d2edf47cc7e",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "intentkit",
+      "name": "intentkit",
+      "repository": "crestalnetwork/intentkit",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "afc8cc44255210db6352f7437e569ed8b88ed5e1",
+          "path": "intentkit/core/executor.py",
+          "sha256": "ee537e449115fc047bda7092a51f8ab0882d9abf5f3cc9857262e22e63dd3393",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "afc8cc44255210db6352f7437e569ed8b88ed5e1",
+          "path": "intentkit/core/lead/prompts.py",
+          "sha256": "e1edd2f850494188fbd9097316c49d32ea6cfaefa97d959a3d133909dbd7517b",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "cuga-agent",
+      "name": "cuga-agent",
+      "repository": "cuga-project/cuga-agent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "68894670cad4bd92229bf8cb9a9933dccb2df5bd",
+          "path": "src/cuga/backend/cuga_graph/nodes/cuga_lite/executors/execd/tool_callback.py",
+          "sha256": "2e230460a031690de6e3cc8b317dd31ac98b0b924aebd34896fcbc82b8ccebb6",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "68894670cad4bd92229bf8cb9a9933dccb2df5bd",
+          "path": "src/cuga/backend/cuga_graph/nodes/cuga_lite/prompts/fc_prompt.jinja2",
+          "sha256": "9d4565440e4ac5b2e23bea2758e88cb53882baa3dfafa1350a4ff72a6be508eb",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        },
+        {
+          "commit": "68894670cad4bd92229bf8cb9a9933dccb2df5bd",
+          "path": "src/cuga/backend/cuga_graph/nodes/cuga_lite/prompts/mcp_prompt.jinja2",
+          "sha256": "fad891f1091f6c8d0646ec567733bc5650ca1fdfc58e2e56d5c3f16d54748bfa",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "dsh",
+      "name": "DSH",
+      "repository": "deepseek-ai/deepseek-harness",
+      "existing_agent": "dsh"
+    },
+    {
+      "id": "quorum-cli",
+      "name": "quorum-cli",
+      "repository": "Detrol/quorum-cli",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "25dede3177c8374f17798638a625e46eae0f9c3a",
+          "path": "src/quorum/agents.py",
+          "sha256": "5c02146b141f73537041d6995a25a5213339b8e98c73fb81dfb3f885fcd8bd76",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "25dede3177c8374f17798638a625e46eae0f9c3a",
+          "path": "src/quorum/clients/agent_cli.py",
+          "sha256": "4604ab5089cfd60017ce77952b7d38e6b133ee0ba47c65b63a24ca00dbf7574c",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "dyad",
+      "name": "dyad",
+      "repository": "dyad-sh/dyad",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+          "path": "src/pro/main/ipc/handlers/local_agent/tool_definitions.ts",
+          "sha256": "413448ded85151d39d4305b7185a02c9b49ff922d423ae52055b6dca3ddb75fa",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+          "path": "src/pro/main/ipc/handlers/local_agent/tools/execute_sandbox_script.ts",
+          "sha256": "8a968d0bd71145dce44f0f037db788e2112648142c605c246ecc9362a9008544",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+          "path": "src/pro/main/ipc/handlers/local_agent/tools/get_mcp_tool_schema.ts",
+          "sha256": "5172086fa6345470d2ea370fcd9446513f4af8459d2b4f8d2fab1b17f215eb50",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "866f6ab17ecc5b906564b29a24637832667a0472",
+          "path": "src/prompts/local_agent_prompt.ts",
+          "sha256": "720e1bdca1397b9872d93e490dbfc20a69e383df4fc85a92b5bd0b3b1516ebdd",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "pi",
+      "name": "Pi",
+      "repository": "earendil-works/pi",
+      "existing_agent": "pi"
+    },
+    {
+      "id": "eigent",
+      "name": "eigent",
+      "repository": "eigent-ai/eigent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "4958c94bd91faf4e0bfff270a971d4d1810fb6db",
+          "path": "backend/app/agent/factory/toolkit_assembler.py",
+          "sha256": "41f96eb8bccc26cdfd8d94ad11080e2ef6a1a12801d18ffa43c552b211821bcd",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "4958c94bd91faf4e0bfff270a971d4d1810fb6db",
+          "path": "backend/app/agent/prompt.py",
+          "sha256": "62e8857f4feb6293bfdd4ab2f601f826d3b348046b5c41ce60ac1e7a82797b97",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "4958c94bd91faf4e0bfff270a971d4d1810fb6db",
+          "path": "backend/app/agent/toolkit/file_write_toolkit.py",
+          "sha256": "883376e0353fa1dc6e3cae5a1054d42bdf28ea6893a3fe03a057e0b34764ad4c",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "eliza",
+      "name": "eliza",
+      "repository": "elizaOS/eliza",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "4e0153cb7ca5b10a0258569b2d6d449848496220",
+          "path": "plugins/plugin-assistant/src/prompts/planner.ts",
+          "sha256": "a2796748e1c8aa10ea45ebd7abb2700db7d882313576586e625172830ac05a57",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "4e0153cb7ca5b10a0258569b2d6d449848496220",
+          "path": "plugins/plugin-assistant/src/services/message/tool-discovery.ts",
+          "sha256": "c00f6b9648ff173c24844c6d94f48e04f0c7f5cfb2e773ac81c305aafe69c1c3",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "4e0153cb7ca5b10a0258569b2d6d449848496220",
+          "path": "plugins/plugin-coding-tools/src/index.ts",
+          "sha256": "bcc87ec1ff5002e4aa453fac78a2bbcb34cd20b31d1517603b5b94a9a8dc2e77",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "db-gpt",
+      "name": "DB-GPT",
+      "repository": "eosphoros-ai/DB-GPT",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "9d50d0a55071a040a8cb7684b3b6acfa13cc7c47",
+          "path": "packages/dbgpt-app/src/dbgpt_app/openapi/api_v1/subagent/react_tools.py",
+          "sha256": "69fcaca76e09dc73d8ca4ec02431857e14fd3e55713c3fc30007968691b03874",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "9d50d0a55071a040a8cb7684b3b6acfa13cc7c47",
+          "path": "packages/dbgpt-core/src/dbgpt/agent/expand/react_agent.py",
+          "sha256": "3c246365517090d119697ec994cabd5267f2071f16115c779338623db7dc1bee",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "deepseek-reasonix",
+      "name": "DeepSeek-Reasonix",
+      "repository": "esengine/DeepSeek-Reasonix",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/assembly/boot/agent_preset.go",
+          "sha256": "ce8ad31ed24503231694ada157dd8c49780b112ac44cc6697c33dd850fb6393b",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/assembly/boot/build.go",
+          "sha256": "439fc32b27e1fe2eb1e528dc9031663b3fdb6802eb7d3dccb2dbaa0bd266c137",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/assembly/boot/prompt.go",
+          "sha256": "4e89062490c8e2df45fd69342ba295d4a9d52eb59fe3343aceaae31beb7a2a62",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/assembly/boot/prompt_policy.go",
+          "sha256": "773a3cd9e30e9f47133c0d4d5d6da7fe1d83accb9f828d2ca7736b31f9578c72",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/assembly/boot/roles.go",
+          "sha256": "4678cdb13d40e1e8cb5ced0f911df22d26a39aea578a05c3446b9b156caf002f",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/contract/config/config.go",
+          "sha256": "765e497a4455f52c4a70a9ad4619e99e2b7c35a435ff56eef3005aec67e61810",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/contract/config/policies.go",
+          "sha256": "fe30cc496543f851cb13789e19a6b26173b8e9a6c311ea990bb813f9f8b3dfde",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/runtime/coordinator/coordinator.go",
+          "sha256": "574301ffd656d500faf570769a0c9a7d4a5fe1e550e900113a60e09805b68278",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/runtime/usecap/usecapability.go",
+          "sha256": "2b55a18b236f997796e269a83c990d93d79f2efde71144c23b7a8df6c90a0315",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/tools/builtin/workspace.go",
+          "sha256": "57d44aa9d21b686872caf1dfa22438f56712a708ae99a60a43ba8c1039ce6659",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "f4f32cc7d3078f7031c7852fbf0b7de410958199",
+          "path": "internal/tools/script/script.go",
+          "sha256": "94c597c9b8a977d82376586a7ec93680f24b08d92b9fafc3a669c6b5e6cf758d",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "raven",
+      "name": "Raven",
+      "repository": "EverMind-AI/Raven",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "62bc88803384522ec35be4771836c69b39b3a8d2",
+          "path": "agents/raven-code/plugins/code-flow/prompts/CODE_CONDUCT_default.md",
+          "sha256": "a62a5015a90ff849d879752c5eace92454b522756373f30c45e2777af1d545af",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "62bc88803384522ec35be4771836c69b39b3a8d2",
+          "path": "agents/raven-code/plugins/code-flow/prompts/CODE_DISCIPLINE.md",
+          "sha256": "fe7c1f8dcbcf7e205a9755474021c2ffa317568f6847eb83a4967ba684f3e316",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "62bc88803384522ec35be4771836c69b39b3a8d2",
+          "path": "raven/agent/loop/turn_path.py",
+          "sha256": "007933814f9a75631724e4c42779a0ba4c466aaed7ab1be11a374f227787f8fb",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "62bc88803384522ec35be4771836c69b39b3a8d2",
+          "path": "raven/agent/loop/wiring.py",
+          "sha256": "fac798f54facc5f93053d35eb9976e1288d8604a1a62bbcb6b8040cfdf553dc7",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "62bc88803384522ec35be4771836c69b39b3a8d2",
+          "path": "raven/agent/subagent/backends/raven_loop.py",
+          "sha256": "4f95b0909c0598e302ed433cf7d1f5e11b3ddb1e57cd3f5532d9d3f3e6b6f0db",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "62bc88803384522ec35be4771836c69b39b3a8d2",
+          "path": "raven/agent/tools/tool_search.py",
+          "sha256": "7833ef9753992ef116c4e3d5d60e72eec09900f3a10c16e18c39f5b257660c81",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "jobs-applier-ai-agent-aihawk",
+      "name": "Jobs_Applier_AI_Agent_AIHawk",
+      "repository": "feder-cr/Jobs_Applier_AI_Agent_AIHawk",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "eb54b9b4f75704ef0106dec17ff0560d97732f9c",
+          "path": "src/aihawk/apply.py",
+          "sha256": "dfb11b4450cca9486bcfe1cab9743fb40b6c5dcbbc4ad3d3b0428579cd53635d",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "fibona-agent",
+      "name": "Fibona",
+      "repository": "FibonaAI/fibona-agent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce",
+          "path": "core/agent.py",
+          "sha256": "22d5471ceca649be335c1e905ff624f6ba9926e05e15644e1efae95b893baaf1",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "agenticseek",
+      "name": "agenticSeek",
+      "repository": "Fosowl/agenticSeek",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "4f5f924c1eb326b4163d3bf942954dcc7dd7875b",
+          "path": "prompts/base/coder_agent.txt",
+          "sha256": "34a7cd61d9b73b21aa2837e59cf0bf8a39c8e9151c3ef654ee8f8b0ef6d3c135",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "4f5f924c1eb326b4163d3bf942954dcc7dd7875b",
+          "path": "sources/agents/code_agent.py",
+          "sha256": "ae5d322ca9e6687e2ee651f2b781f1224b568b4deba9ddd4b4170e76163ff63f",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "openmanus",
+      "name": "OpenManus",
+      "repository": "FoundationAgents/OpenManus",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "3309bf4e416fb1c74b008f3e86494439a31bad53",
+          "path": "app/agent/swe.py",
+          "sha256": "be1a1dd1cc7b5825d43c7be60b4ce73065c4f84dfa921d54bddff2d088229575",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "3309bf4e416fb1c74b008f3e86494439a31bad53",
+          "path": "app/agent/toolcall.py",
+          "sha256": "01d514133932e8d525eacc7d2bad043f21f109474ff5f69a00aeb3e6a4513adf",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "3309bf4e416fb1c74b008f3e86494439a31bad53",
+          "path": "app/prompt/manus.py",
+          "sha256": "3e1ed4e27d999b6e0f3455ecd491310cc4085bcd94d694d0907727ba3507eb09",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "gemini-cli",
+      "name": "gemini-cli",
+      "repository": "google-gemini/gemini-cli",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "1fe22af5f800d8c3024e9968d35bb75bd09e6b79",
+          "path": "packages/core/src/config/config.ts",
+          "sha256": "d0b6ec376917a7e67dfefe931413cdc881bafe1f3a3a82e8fd017e3dc4c5f66f",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "1fe22af5f800d8c3024e9968d35bb75bd09e6b79",
+          "path": "packages/core/src/prompts/snippets.ts",
+          "sha256": "b2cccbd0cf68e33d057f33938e457fe3c781cc7e65c593f7a3974d70c5c68fe7",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "nanobot",
+      "name": "nanobot",
+      "repository": "HKUDS/nanobot",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "382f1b12e8d9b2d4dbe2d2803e5f5b9a6e262972",
+          "path": "nanobot/agent/runner.py",
+          "sha256": "a4c1ceb0d4444138bdba08023cb865a86dde2de6289bc04b8323556873b1ffe7",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "382f1b12e8d9b2d4dbe2d2803e5f5b9a6e262972",
+          "path": "nanobot/agent/tools/filesystem.py",
+          "sha256": "61670d0b3b66b238be00a8a609d3d742b6b888445155e48241d3ca11b61cdee0",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "382f1b12e8d9b2d4dbe2d2803e5f5b9a6e262972",
+          "path": "nanobot/templates/AGENTS.md",
+          "sha256": "fde77eda8d85d4c8cdcc39b1acaa9b18f30db0a86d7c30a18c1a30a95a671989",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "tianshu-harness",
+      "name": "Tianshu-harness",
+      "repository": "huiliyi37/Tianshu-harness",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "2d0b22e0b3554686e1e4131f8bdc568ef768e060",
+          "path": "src/prompt/static.ts",
+          "sha256": "3396340b866405feb7bcb9b1363dcf0612dd277a957a9eed33e04870790476c6",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "nausicaa-harness",
+      "name": "nausicaa-harness",
+      "repository": "jackispm/nausicaa-harness",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "b61edf67c46e1faf512695c3c12d0f7a4dd80eb3",
+          "path": "src/runtime/l0-agent-loop.ts",
+          "sha256": "2b04114fd06fdcdd086689f2018e542fd7674a91a4dde0c9acaa74769df637c1",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "b61edf67c46e1faf512695c3c12d0f7a4dd80eb3",
+          "path": "src/runtime/main-loop.ts",
+          "sha256": "ae87852eeabb605cb18269ecc3bad0045e9f231c9f8356fae778813d6871385f",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "b61edf67c46e1faf512695c3c12d0f7a4dd80eb3",
+          "path": "src/tools/index.ts",
+          "sha256": "dbf09c2345a5b25debfcf4177f1764e6f4ce89323eb0d80db1dfaede13256b1e",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "kilocode",
+      "name": "kilocode",
+      "repository": "Kilo-Org/kilocode",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "bd0ab67e8b00c8d27d03cbc9d163bdaf20c37213",
+          "path": "packages/opencode/src/session/prompt/default.txt",
+          "sha256": "432fa50e0f0c5fe4403c94e14bad8dc1627278962678933bf98d7195bc493d22",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "bd0ab67e8b00c8d27d03cbc9d163bdaf20c37213",
+          "path": "packages/opencode/src/tool/registry.ts",
+          "sha256": "a3f2838d4e172249cc9b8a991e89aca18acd631a93d2bc05f04d2eae5175ad6d",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "devopsgpt",
+      "name": "DevOpsGPT",
+      "repository": "kuafuai/DevOpsGPT",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "dba1cb5ec9145ac871168e7f2e2d2b35c43d109b",
+          "path": "backend/app/pkgs/prompt/code_basic.py",
+          "sha256": "4eb1bab4e4edb7d71a95e20a03529f30e5af4e8e73282e6a95b491597616d5eb",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "dba1cb5ec9145ac871168e7f2e2d2b35c43d109b",
+          "path": "backend/app/pkgs/tools/llm_basic.py",
+          "sha256": "a894d413d7cf8b303516529139d35755b275c9735040ab58deba9b33d2ba6a93",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "autoref",
+      "name": "AutoRef",
+      "repository": "KuOnoda/AutoRef",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "2cd47b74226f76c785f0679e6ccc61e33e55b7e6",
+          "path": "autoref/search/loop.py",
+          "sha256": "12a2e5e823d28ee79bbb031a64ce7b087acbb94b5ca30ea0c99ff9036d1be817",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "2cd47b74226f76c785f0679e6ccc61e33e55b7e6",
+          "path": "harnesses/autoref_harness.py",
+          "sha256": "d235e7edb87bf532f34a556a173c81bff6885eabe43597d8e6b67e90bf453e25",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "open-swe",
+      "name": "open-swe",
+      "repository": "langchain-ai/open-swe",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "94012656e06e8ee8d16c4aa249b8dae2009a33d4",
+          "path": "mda/rt/remote_files.py",
+          "sha256": "4b9b95721339a0b841fd5728ac0ec893ddc45e37bae9f54373db07407c9c2fcc",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "94012656e06e8ee8d16c4aa249b8dae2009a33d4",
+          "path": "mda/rt/run_tools.py",
+          "sha256": "28d8314cc0f65c92d836d80c47e2a09efecc579829f526a8017fe8c830178f1f",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "94012656e06e8ee8d16c4aa249b8dae2009a33d4",
+          "path": "mda/rt/search_tools.py",
+          "sha256": "f3963583c883f0c6ed60db6e24b5c190640e6631b8eed951f0f23a7ed2ac1ae3",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "94012656e06e8ee8d16c4aa249b8dae2009a33d4",
+          "path": "openswe/resources/prompts/system/task-execution.md",
+          "sha256": "10a337d6be78a19dd7c6deae8cc137da2e89a8ec25b7ffa098cb9f696bee315d",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "headlong",
+      "name": "Headlong",
+      "repository": "laude-institute/headlong",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "2e39a3f94fb9acbd0d73f6b0aecc9f83dc14547e",
+          "path": "bin/shellm",
+          "sha256": "d3e494b41732f90b8670f6716c92fce8dd8b8cf8d4c96361e93e7f3ff46dce92",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "2e39a3f94fb9acbd0d73f6b0aecc9f83dc14547e",
+          "path": "thinkers/monolith/prompt.md",
+          "sha256": "9b1e442b9465aacbf2a34a5a82ad8bd04bf38db25bf241002ebe01fee947d070",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "letta-code",
+      "name": "letta-code",
+      "repository": "letta-ai/letta-code",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "353365bce618b7a7cbf620d0ca66f221664d8d86",
+          "path": "src/agent/prompts/letta_local_memfs.md",
+          "sha256": "0c0fbe64550b0a71c1d646f83998676f121a3b46594520dc1478f610fe8009f1",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "353365bce618b7a7cbf620d0ca66f221664d8d86",
+          "path": "src/tools/toolset-catalog.ts",
+          "sha256": "70d90deb49132f4ccb29bfbba4d0fa113b8c58537df5063583707ffde7c6ba5a",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "353365bce618b7a7cbf620d0ca66f221664d8d86",
+          "path": "src/tools/workflow/workflow-engine.ts",
+          "sha256": "513fefad80491c1940737ee34d9dc9f7ad0c47cffd65094b989ec42f0dc043c8",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "librechat",
+      "name": "LibreChat",
+      "repository": "LibreChat-AI/LibreChat",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "f4154b649efa37e1345ccc517a4d8d1ed2178c82",
+          "path": "packages/api/src/agents/initialize.ts",
+          "sha256": "307c57ad0c93c1ad9db484fea342a1440e7662b818a6af18c47a8817568c0ef9",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f4154b649efa37e1345ccc517a4d8d1ed2178c82",
+          "path": "packages/api/src/agents/ptc.ts",
+          "sha256": "29f78a9a7bf7c3e8b10b526b32b86cfd98cd35430815225588f48a91d5ab122c",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "f4154b649efa37e1345ccc517a4d8d1ed2178c82",
+          "path": "packages/api/src/agents/run.ts",
+          "sha256": "37ce0fdd9f3d9f739f7fe5102f2e5eaede683978266084c3de30394620302c29",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "f4154b649efa37e1345ccc517a4d8d1ed2178c82",
+          "path": "packages/api/src/agents/tools.ts",
+          "sha256": "62e4943b06336cd3f22df7c76eb3e3ed1853dc48a150868ceda4ed697304641f",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "looptroop",
+      "name": "LoopTroop",
+      "repository": "looptroop-ai/LoopTroop",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "d0fa9b14d26f1a54349631cdea85c81e83a70529",
+          "path": "server/opencode/toolPolicy.ts",
+          "sha256": "8d703ad44a3f7c3f1f5a191fc0521a787e6b2d2fb1cdfc495a70b457a8d7f6b9",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "d0fa9b14d26f1a54349631cdea85c81e83a70529",
+          "path": "server/prompts/index.ts",
+          "sha256": "457c81ce01a451dc7d5a2191fd26193241a926a3518e61aa6bcf0bfbd356c1cf",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "web3gpt",
+      "name": "web3gpt",
+      "repository": "markeljan/web3gpt",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "ada2d90b6cab6a844e86777b11f73a5d448bb2c2",
+          "path": "lib/constants.ts",
+          "sha256": "0b4b592caed93925ccad998a684d64e662ec0b7cf5d3bf43c6c135f9d1c4303e",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "markus",
+      "name": "markus",
+      "repository": "markus-global/markus",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "72bf7d72474bcf82734753e620f2d0478e80c8e7",
+          "path": "packages/core/src/agent-manager.ts",
+          "sha256": "3f1abf040f69842f282cc9b659aed24b5c7bd18b5c645cecbddec05fb7877aa3",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "72bf7d72474bcf82734753e620f2d0478e80c8e7",
+          "path": "packages/core/src/context-engine.ts",
+          "sha256": "708f088192ec9a8f0e787d3b6f7abc376ec1fc819b7703e54f04411f06139822",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "72bf7d72474bcf82734753e620f2d0478e80c8e7",
+          "path": "packages/core/src/tools/builtin.ts",
+          "sha256": "e938433f6064a3215adabff5bc526900d04d7050292627ee37f974ffe6e44df9",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "hivekeep",
+      "name": "Hivekeep",
+      "repository": "MarlBurroW/hivekeep",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "e6bf9aea4159312730a690b94697084616b44556",
+          "path": "src/server/services/prompt-builder.ts",
+          "sha256": "c7adbfbaef22d6267676014c3541f588da5feffa42a4c09d3e66530de9631411",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "e6bf9aea4159312730a690b94697084616b44556",
+          "path": "src/server/tools/register.ts",
+          "sha256": "c2277ef5385863063b8ac7da9415d9fa967b23940221f6a58ccb5f51a828f469",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "e6bf9aea4159312730a690b94697084616b44556",
+          "path": "src/server/tools/tool-access-tools.ts",
+          "sha256": "532a53a8965898ddd0eae72a957116243d9d632915c662d080972ffba1aeba53",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "ctxagent",
+      "name": "CTXAgent",
+      "repository": "MatthiasHBusch/CTXAgent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "77ec7a9e9127e3258b035af32dc7f13730979902",
+          "path": "ctxagent/agent.py",
+          "sha256": "4f6edbb1b4c5392a4191694c9014333f693ccfb166f7b265620172a2a78bbd4d",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "77ec7a9e9127e3258b035af32dc7f13730979902",
+          "path": "ctxagent/tools.py",
+          "sha256": "4fee778a883d5e3fe0d8bbc04c885be4c4b130f7a24f4104bef3e1d99358b85e",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "ufo",
+      "name": "UFO",
+      "repository": "microsoft/UFO",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "eae3c0a8d168c47cb10df0652e293e092eda1078",
+          "path": "ufo/agents/processors/strategies/app_agent_processing_strategy.py",
+          "sha256": "39d11fb5e2869fad2cd4d38a81fb4c9ab62e575225e1e388f7547829b0634703",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "eae3c0a8d168c47cb10df0652e293e092eda1078",
+          "path": "ufo/prompts/share/base/app_agent.yaml",
+          "sha256": "67a8341eb73ce9f3c503ecfa723ccc6d98b0eac8fdc20b2f3e85cdaea3eec024",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "anything-llm",
+      "name": "anything-llm",
+      "repository": "Mintplex-Labs/anything-llm",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "cbaf3357c7d9810bfa1f91f075cae7f533554f80",
+          "path": "server/models/systemSettings.js",
+          "sha256": "3dfb28a920018ddf9160853552129d4a42e11681e856eb2aeec92164877ffa77",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "cbaf3357c7d9810bfa1f91f075cae7f533554f80",
+          "path": "server/utils/agents/aibitat/index.js",
+          "sha256": "4735169a84b7ae92ad5c184dc39fc19890a2e62ea0adaefd2c0d7ea09f3f2549",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "cbaf3357c7d9810bfa1f91f075cae7f533554f80",
+          "path": "server/utils/agents/aibitat/plugins/filesystem/index.js",
+          "sha256": "45c957bdc9aa8200c3d4e8c05c2a3c3df24b6f18768ae528104e18ab7c8cd53a",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "mirix",
+      "name": "MIRIX",
+      "repository": "Mirix-AI/MIRIX",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "39e24116f1ed5904f1eb94561257513455dfe6b7",
+          "path": "mirix/agent/agent.py",
+          "sha256": "20169a394c308bb97958e7badffed6fe5b123e3359f4e260fa81b3eb612417d4",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "39e24116f1ed5904f1eb94561257513455dfe6b7",
+          "path": "mirix/prompts/system/base/episodic_memory_agent.txt",
+          "sha256": "e10b752621421df62a639089df74ba5411ae24dcd373fcaa933d97ad864130de",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "kimi",
+      "name": "Kimi CLI（旧仓库）",
+      "repository": "MoonshotAI/kimi-cli",
+      "existing_agent": "kimi"
+    },
+    {
+      "id": "kimi-code",
+      "name": "Kimi Code",
+      "repository": "MoonshotAI/kimi-code",
+      "existing_agent": "kimi-code"
+    },
+    {
+      "id": "mini-agi",
+      "name": "mini-agi",
+      "repository": "muellerberndt/mini-agi",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "f012aa41e46a7b7dea99d1358305f2fb605a6599",
+          "path": "miniagi.py",
+          "sha256": "8952db7aab9fbccb08673a9bfdc0ec64fa613cad84d95ff91abe1d0fb5d9e25e",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "octomind",
+      "name": "octomind",
+      "repository": "Muvon/octomind",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "4cc5600403885e1d9bc2cba6750f5c3c42dbed2f",
+          "path": "config-templates/default.toml",
+          "sha256": "e3b056b4d976fd122e3dd5a7ecf25f24b203970a3241e1381a1adadb4229218e",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "4cc5600403885e1d9bc2cba6750f5c3c42dbed2f",
+          "path": "src/mcp/runtime/capability.rs",
+          "sha256": "0ee5355eeb7ee87a43d775c544e72f56c88ef1b9f21ff2bfd6cbdea9d6230e28",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "4cc5600403885e1d9bc2cba6750f5c3c42dbed2f",
+          "path": "src/providers.rs",
+          "sha256": "2298880766fc4f75f7ee0ef38f6cc73a70f59cdcfb6d81b865af38681978c7bf",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "4cc5600403885e1d9bc2cba6750f5c3c42dbed2f",
+          "path": "src/session/prompt.rs",
+          "sha256": "1f38fe96a835b1ebd091a25060540369f13618e1b8f8290c7ebe93965fec6ae8",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "nanomuse",
+      "name": "nanoMuse",
+      "repository": "nano-muse/nanoMuse",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9",
+          "path": "nanomuse/agent/core.py",
+          "sha256": "2174e0e07071800209b896869f255e7b89ae8b5b81781b47907faaa189216a36",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9",
+          "path": "nanomuse/prompts.py",
+          "sha256": "d26facabe8b8b79f06fb0efbc309343bcedc105bd75bebf81349daf39d8d0a16",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9",
+          "path": "nanomuse/tools/files.py",
+          "sha256": "0c814af1f0338370e16de7411284d7afa43edebc5fc6c0fbe9b7db027eaa29c8",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "inkos",
+      "name": "inkos",
+      "repository": "Narcooo/inkos",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "53adac4e974b54dafda975edc4edd07cad364c18",
+          "path": "packages/core/src/harness/pi-tools.ts",
+          "sha256": "3752288ba4748b5d0c21bc5dde1b4df3d07765f7710ae35e8eeed366cfe75a10",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "53adac4e974b54dafda975edc4edd07cad364c18",
+          "path": "packages/core/src/harness/system-prompt.ts",
+          "sha256": "9c46d72535b7a63951c727024f8dd13436b0a598ae25e127c7a0dbc5e8ba40c9",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "hermes",
+      "name": "Hermes Agent",
+      "repository": "NousResearch/hermes-agent",
+      "existing_agent": "hermes"
+    },
+    {
+      "id": "openagents",
+      "name": "openagents",
+      "repository": "OpenAgentsInc/openagents",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c",
+          "path": "coax/lib/microcoder/action.coax",
+          "sha256": "9ecebad36b881b11bda2ef6e0ab3f6afbe2eb5f895fb3f25da4e6cffd015300e",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c",
+          "path": "coax/lib/microcoder/loop.coax",
+          "sha256": "9bea3bc5be047e3657f93ff23ec2c36c08986f4119696fa7a486fee7d59cc71e",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "codex",
+      "name": "Codex",
+      "repository": "openai/codex",
+      "existing_agent": "codex"
+    },
+    {
+      "id": "openclaw",
+      "name": "OpenClaw",
+      "repository": "openclaw/openclaw",
+      "existing_agent": "openclaw"
+    },
+    {
+      "id": "opendev",
+      "name": "opendev",
+      "repository": "opendev-to/opendev",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+          "path": "crates/opendev-agents/templates/system/main/main-code-quality.md",
+          "sha256": "d847bd85b592132d69ac7966285127e312d8660c3ab65dd4b0192227b700bd0e",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+          "path": "crates/opendev-agents/templates/system/main/main-error-recovery.md",
+          "sha256": "73dc98e9c0b49a7f76a8b735798bf8d53d39308c0d525beb8b2ec2ccba74fb83",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+          "path": "crates/opendev-tools-impl/src/agents/tool_search.rs",
+          "sha256": "9b26b8291fa3f53ef3f989181860e3f10a4f041526f7d983de05362b0e8e8506",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "d32c660e4eed1a8e988d1fd58da88e41ba641d08",
+          "path": "crates/opendev-tools-impl/src/lib.rs",
+          "sha256": "3e0e41fe2566d0efa1b2df4d079f765f2627f32415f4c90c4e0266ef1ddeaacb",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "openinterpreter",
+      "name": "openinterpreter",
+      "repository": "openinterpreter/openinterpreter",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "f12ce327eeee679d2f2f22ce23018b0db9ae092f",
+          "path": "codex-rs/core/gpt-5.2-codex_prompt.md",
+          "sha256": "1b3dd697043a7f613c691a3721a450251626685b3e97ac3ad3d35ea62758a31e",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f12ce327eeee679d2f2f22ce23018b0db9ae092f",
+          "path": "codex-rs/core/src/harness/minimal.rs",
+          "sha256": "4e2564f16580817186e4a1915fabfb45693597bfe5c04a8f734f0f1e63cfbf40",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "f12ce327eeee679d2f2f22ce23018b0db9ae092f",
+          "path": "codex-rs/core/src/tools/spec_plan.rs",
+          "sha256": "ed4f11cb9bcc002df5f61422c9ade4eec49dec706129cbe754d55996fb2d0bfc",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "orkas",
+      "name": "Orkas",
+      "repository": "Orkas-AI/Orkas",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "c7c0e21fad7ff55f5a72a575b7a464f3cf9bc3a1",
+          "path": "src/main/model/core-agent/local-tools.ts",
+          "sha256": "57c49fcd3f6ac48be68b3a80fc23ae48e79732764a0709b18f43b7b3ce097720",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "c7c0e21fad7ff55f5a72a575b7a464f3cf9bc3a1",
+          "path": "src/main/model/core-agent/tool-surface.ts",
+          "sha256": "ef6fa5c40709d94a4fe519ca2cd174900bea2999bfc8d218845c16d148965404",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "c7c0e21fad7ff55f5a72a575b7a464f3cf9bc3a1",
+          "path": "src/main/prompts/chat_commander.md",
+          "sha256": "36e5a38e30e2f4171cf5dd30bfb9acafe110b1fb88ecef467e13dcc96c5e5cc8",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "c7c0e21fad7ff55f5a72a575b7a464f3cf9bc3a1",
+          "path": "src/main/prompts/chat_shared_rules.md",
+          "sha256": "adb46250d699adbb22af0b6030c36a567dff89d5900609a0d9873ee6597c238b",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "self-operating-computer",
+      "name": "self-operating-computer",
+      "repository": "OthersideAI/self-operating-computer",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "eb8165a2efb1b34d66a28ecebf8ca97ae67cbb79",
+          "path": "operate/models/prompts.py",
+          "sha256": "92039e58ccf580503df57bff3a0d8ea131fb1d64445f61005e3e4ef89aa8aadf",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "bambooai",
+      "name": "BambooAI",
+      "repository": "pgalko/BambooAI",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "4ae0ced88679e1bd48dce7e59ec3e22f0a38549e",
+          "path": "analyst/contract.md",
+          "sha256": "637b5b15621b6af5e9f0a0fe7f5016b9298147efed3409dfd0d221ce993a25ed",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "prime-agent",
+      "name": "Prime Agent",
+      "repository": "PrimeIntellect-ai/prime-agent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "74591cddef28d11249c3171112114fc4755375d7",
+          "path": "crates/pa-core/src/prompts/layers/core.md",
+          "sha256": "da49a8d20592ade2c199368a286e583e125248ee205ca2bdcbf4c7b388185f60",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "74591cddef28d11249c3171112114fc4755375d7",
+          "path": "crates/pa-core/src/prompts/layers/usage.md",
+          "sha256": "8a59bb377eea2da21273c74aff42cf8a3ed1faab0d314fdbedd5bf91285a2791",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "localgpt",
+      "name": "localGPT",
+      "repository": "PromtEngineer/localGPT",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "34f3107f56a88203859092312231b945a711c619",
+          "path": "rag_system/agent/loop.py",
+          "sha256": "5bed434c45e6ed9ad91cd251815a361683534d6eba65fc74889be91a44a1c104",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "34f3107f56a88203859092312231b945a711c619",
+          "path": "rag_system/pipelines/retrieval_pipeline.py",
+          "sha256": "3014a8ac2b6578436e0ed772f074b91ea9b263a9ba719dd975d9a88e6c20efdb",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "empryo",
+      "name": "Empryo",
+      "repository": "proxysoul/Empryo",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "c27dac116d2ee1637abfc6634bebf08b5c379454",
+          "path": "src/core/prompts/families/shared-rules.ts",
+          "sha256": "3ee2bab805d338c4586fb6923e752732bac2d7aab9237e7d76d817e053591813",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "c27dac116d2ee1637abfc6634bebf08b5c379454",
+          "path": "src/core/tools/index.ts",
+          "sha256": "f4ae9ca7a95eacf38bded9deeafb519d9bc1507777b5e36b863cbc44f2bc3ece",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "qwen-code",
+      "name": "Qwen Code",
+      "repository": "QwenLM/qwen-code",
+      "existing_agent": "qwen-code"
+    },
+    {
+      "id": "ouroboros",
+      "name": "ouroboros",
+      "repository": "razzant/ouroboros",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+          "path": "ouroboros/tools/core.py",
+          "sha256": "180b2360522214b15c6a14a9a6c3e1e50b07748965061b908c9142be63b78b43",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+          "path": "ouroboros/tools/tool_discovery.py",
+          "sha256": "377979b9b995543697dcf53eb4cf6f377e1131f063301468c16f7cabe80f1079",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "add0ce3296c722ef99a536c52f8dcddf36494b36",
+          "path": "prompts/SYSTEM.md",
+          "sha256": "e9263554b99e1fe0222f479867f6afebc8689d29dfe6cfd4bba45124a0f96b46",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "agentlink",
+      "name": "agentlink",
+      "repository": "reefbarman/agentlink",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "fe7e3360d4b37e2c71269ad1b0cf4a03b422d350",
+          "path": "packages/core/src/systemPromptSections.ts",
+          "sha256": "e25c066bc27a66467d97b63d292b94bb7d5f943d00185684ea80ba590f73a439",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "fe7e3360d4b37e2c71269ad1b0cf4a03b422d350",
+          "path": "src/shared/toolRegistry.ts",
+          "sha256": "1b54d397e5f71bd6b39e6380ccbdd029d02100446087152c27cf82956a4911cf",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "robotuse",
+      "name": "RobotUse",
+      "repository": "robotuse-team/RobotUse",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "60bdf7b31b9a9a45dbc4809d678c008c724f465b",
+          "path": "src/agent/prime_agent.py",
+          "sha256": "b9d7c0078e4f640ed0e3c98c3a24282a6612f9498d8359decec645682ecbd314",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "60bdf7b31b9a9a45dbc4809d678c008c724f465b",
+          "path": "src/agent/prompts.py",
+          "sha256": "f201156080a33c4554f4ff600ae4df9c2a4cbadf0350152e1c48cbecc8253a77",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "deepanalyze",
+      "name": "DeepAnalyze",
+      "repository": "ruc-datalab/DeepAnalyze",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "afc697a11675c59683b9f6596c3ab3b3d661182a",
+          "path": "deepanalyze.py",
+          "sha256": "af6a0ef59e2ea4fbea7e44d22c7ee3f39d0a65a46338b2329944d8691041f56d",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "cheetahclaws",
+      "name": "cheetahclaws",
+      "repository": "SAIL-Research-Lab/cheetahclaws",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "eacde3aaedcc84c0cb10ab433d4f3ea8c5bf74e6",
+          "path": "cheetahclaws/agent_templates/auto_coder.md",
+          "sha256": "d7ff87f55a342d094a0eb8ae8e8c5d65e48f95ee9b5379593e1fe5dd7923ecae",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "eacde3aaedcc84c0cb10ab433d4f3ea8c5bf74e6",
+          "path": "cheetahclaws/tools/__init__.py",
+          "sha256": "9bff2d1fc63d2dc53a350a4d8db56e32d8aea82b5442817d501ca15b23bb7b63",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "trashclaw",
+      "name": "TrashClaw",
+      "repository": "Scottcjn/trashclaw",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "6dce9edbd7c6633da75971156911636a7b073792",
+          "path": "trashclaw.py",
+          "sha256": "052d26233916019031a4923e4c24837403ebf219d3bc27e2746230ff91666675",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "critic-training",
+      "name": "critic-training",
+      "repository": "shubhamrgandhi/critic-training",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c",
+          "path": "mini-swe-agent/src/minisweagent/config/default.yaml",
+          "sha256": "3872bdfbb3e409af59ce0632905d731980bf01692201d3ab1290eebab17ed519",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "autogpt",
+      "name": "AutoGPT",
+      "repository": "Significant-Gravitas/AutoGPT",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "13ac38c5b6583bd01b0a6142b0060fc03e102b6e",
+          "path": "autogpt_platform/backend/backend/copilot/baseline/service.py",
+          "sha256": "50a62dc8fe9391e5a12b4b8291f71ec105f1d12a359cb2ab47d76236d8deeb1c",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "13ac38c5b6583bd01b0a6142b0060fc03e102b6e",
+          "path": "autogpt_platform/backend/backend/copilot/prompting.py",
+          "sha256": "fcde6e516aef862d12a3fd332f357603600dedb5a4e9b7936ddbad49f22d1326",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "13ac38c5b6583bd01b0a6142b0060fc03e102b6e",
+          "path": "autogpt_platform/backend/backend/copilot/sdk/e2b_file_tools.py",
+          "sha256": "834546989b50c73e9b60ea92f1f6543c987626cdfc84e2b614551653de6a068a",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "13ac38c5b6583bd01b0a6142b0060fc03e102b6e",
+          "path": "autogpt_platform/backend/backend/copilot/tools/find_capability.py",
+          "sha256": "6dbafb7705c5b3148536b2c5b6ff2b6b3f48efb25f887da27a606e920c18fecc",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "agent-s",
+      "name": "Agent-S",
+      "repository": "simular-ai/Agent-S",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "0fff0e634869dab72027435b4586e62300185d41",
+          "path": "agent_s4/README.md",
+          "sha256": "ef8ef5c83b7b30d8e0cf9d8e734d1916faf977a1cb998ebcdf9af63c1c253a01",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "0fff0e634869dab72027435b4586e62300185d41",
+          "path": "gui_agents/s3/README.md",
+          "sha256": "600865b1da2a49ee032cc987bfccd182ea6a2a0f73f156872c5a487c04974bf3",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "0fff0e634869dab72027435b4586e62300185d41",
+          "path": "gui_agents/s3/memory/procedural_memory.py",
+          "sha256": "d4cc3aca3ffb390636706e22ff651e02e5db178e06d3e6f21327bd43f6f58575",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "skyvern",
+      "name": "skyvern",
+      "repository": "Skyvern-AI/skyvern",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+          "path": "skyvern/forge/prompts/skyvern/extract-action-dynamic.j2",
+          "sha256": "a0f44fa59bf0e9e21ccfb5013c6dd4fc669b0c9c764d5cc152339efbedb173a3",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+          "path": "skyvern/forge/prompts/skyvern/extract-action-static.j2",
+          "sha256": "db7cec95a582832af0bcb798e848e39561327e069457d8cf5d1654a0fca25dd0",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "jev-social",
+      "name": "jev-social",
+      "repository": "socai-io/jev-social",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "2f02e6f4c60943e679993634ad1017b0c97efff5",
+          "path": "src/actions.js",
+          "sha256": "c4757a67dab04ce4f1cbd9b0cb5089e4410cbb7f88ffa0bbd3f3d510a1ad598e",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "mini-swe-agent",
+      "name": "mini-swe-agent",
+      "repository": "SWE-agent/mini-swe-agent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "a83fcae82d2a08f0ee0c688f9d137b3566c097f8",
+          "path": "src/minisweagent/config/default.yaml",
+          "sha256": "112aa58328f478a41cc2630702a4b89ef459e912870e05065157ed221f56701f",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "a83fcae82d2a08f0ee0c688f9d137b3566c097f8",
+          "path": "src/minisweagent/models/litellm_model.py",
+          "sha256": "6df4483bcdc9620b2f9d7f8bb1027a7fb9729b739976cbcf1a9d18fb58c48227",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "a83fcae82d2a08f0ee0c688f9d137b3566c097f8",
+          "path": "src/minisweagent/models/utils/actions_toolcall.py",
+          "sha256": "47b666412e4f838508b50009cf34c7f63fe15e9e40affc257a17c0829896526f",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "openagent",
+      "name": "openagent",
+      "repository": "the-open-agent/openagent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "ea553047aa49c567d99da0e2e69c7b456577ed7f",
+          "path": "model/util.go",
+          "sha256": "8067b46dc215d64717edefd870704be01ba1975f1baa6afa3ef9ba21ad14b1ba",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "ea553047aa49c567d99da0e2e69c7b456577ed7f",
+          "path": "tool/local_file.go",
+          "sha256": "d52186d045b949685b8719fc86203ae6ee09dd76754f97351cc3ff609260aac2",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "pr-agent",
+      "name": "pr-agent",
+      "repository": "The-PR-Agent/pr-agent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "a8c604794ddb5766dc3fa674cbb64aac6f9f509f",
+          "path": "pr_agent/settings/pr_reviewer_prompts.toml",
+          "sha256": "0a80a86d195bafcd49533f23931ee32c341f1ca7d1e08751a3286f818a6270e2",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "a8c604794ddb5766dc3fa674cbb64aac6f9f509f",
+          "path": "pr_agent/tools/pr_reviewer.py",
+          "sha256": "5cc04b80acbb931882a57a7a439584edd6320311720bbc7c12a577dd1531453f",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "agent-qa",
+      "name": "agent-qa",
+      "repository": "vostride/agent-qa",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "6757be8500f5847be035c0a2084fd60e183c9cc0",
+          "path": "packages/runner/src/loop/prompts.ts",
+          "sha256": "fde19069577e725a5e655f12dcca5b97714d8dcc4acb0efd6bb36e4b93fd0eba",
+          "roles": [
+            "prompt",
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "omni-rewriter",
+      "name": "Omni-Rewriter",
+      "repository": "WayneJin0918/Omni-Rewriter",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "846fee695fbfd9b816d481e294b5e385dabc4581",
+          "path": "src/omni_rewriter/agent.py",
+          "sha256": "de8f7eeccba321a3553516ea0dbbdf4be46926892fcfbd78340e6d81cedef775",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "846fee695fbfd9b816d481e294b5e385dabc4581",
+          "path": "src/omni_rewriter/prompts.py",
+          "sha256": "a9f1d1d5f3b6e451ba3b72f061ff05d4a029ca3f97afc86845e26477dd383a75",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "wechat-mac-rpa",
+      "name": "wechat-mac-rpa",
+      "repository": "wq19901103wq/wechat-mac-rpa",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "23c4bb5156ad87466131b435e8cfddbf65c18451",
+          "path": "src/reply/generator.py",
+          "sha256": "bbe2c4a0aba2d238bd1215ccd20a89b1dc9b47250cd9b85183dfcd83f27db0a6",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "23c4bb5156ad87466131b435e8cfddbf65c18451",
+          "path": "src/tools/builtin_tools.py",
+          "sha256": "cd5c1eca8fea92b65658710576032a3275f6590b192af441106b553f1f0f7e1e",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "grok",
+      "name": "grok-build",
+      "repository": "xai-org/grok-build",
+      "existing_agent": "grok"
+    },
+    {
+      "id": "mimo",
+      "name": "MiMo-Code",
+      "repository": "XiaomiMiMo/MiMo-Code",
+      "existing_agent": "mimo"
+    },
+    {
+      "id": "qm",
+      "name": "qm",
+      "repository": "yc-software/qm",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "024669481dbb63cb7e36694469657ec5683a9d80",
+          "path": "src/agent/agent-tools/mcp.ts",
+          "sha256": "9e375200304828674287e222716cc9bd63d06b830fb67ab269c11bfe82ec8639",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "024669481dbb63cb7e36694469657ec5683a9d80",
+          "path": "src/agent/agent-tools/workspace.ts",
+          "sha256": "5870c6771fcb6a1f0e3a2990653dab319b0c779fbcd7be5718867da79fc754b2",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "024669481dbb63cb7e36694469657ec5683a9d80",
+          "path": "src/resolution/protocols/shared-core.md",
+          "sha256": "f3755415bf3fd7c13201babbc0e5accadc2473076ccfad49c013cd8a20f08ba2",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "zcode",
+      "name": "ZCode",
+      "repository": "zai-org/ZCode",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "a9fe401eede6e6e5e01be9048679c206fe6f02d9",
+          "path": "apps/zcode-cli/docs/usage/04-tools.md",
+          "sha256": "05210254b000e2c602577fa178e317aad63243cdbf860fe64ac4d929433254d1",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "a9fe401eede6e6e5e01be9048679c206fe6f02d9",
+          "path": "apps/zcode-cli/docs/usage/08-skills.md",
+          "sha256": "76981b43fc213051dfa434fae47d7c79a4de21fa5bb31d9e4527bcb5390cc7e6",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "a9fe401eede6e6e5e01be9048679c206fe6f02d9",
+          "path": "apps/zcode-cli/docs/usage/11-memory.md",
+          "sha256": "40674086d6ad31366523f74904f46ebbd265e694484da4c1c2fd57f843e662cc",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "a9fe401eede6e6e5e01be9048679c206fe6f02d9",
+          "path": "apps/zcode-cli/packages/core/src/context/sections/identity.ts",
+          "sha256": "c313c23c92c32651370dce27cd63e3e59afe357bf9200e9ff05811792fe80a25",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "a9fe401eede6e6e5e01be9048679c206fe6f02d9",
+          "path": "apps/zcode-cli/packages/core/src/subagent/general-purpose.ts",
+          "sha256": "205edea37fc74c9ef23989da130de4bc7c91abfdc055f0e3dda6d3a1f3cc85ef",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "a9fe401eede6e6e5e01be9048679c206fe6f02d9",
+          "path": "apps/zcode-cli/packages/core/src/tool/handlers/index.ts",
+          "sha256": "670ca0af1f2a7531edb22e333ef09e27f00a867e105b098a548a9fa5cc26062f",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "a9fe401eede6e6e5e01be9048679c206fe6f02d9",
+          "path": "apps/zcode-cli/packages/core/src/tool/handlers/node-repl.ts",
+          "sha256": "5b1332de426ee2176dcf1c1d8798e023b5706583c167135bbf0f59764243b42c",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "a9fe401eede6e6e5e01be9048679c206fe6f02d9",
+          "path": "apps/zcode-cli/packages/core/src/tool/handlers/tool-search.ts",
+          "sha256": "e5d4c94f96a3cbecc7a7f2f3d664cf26241912050c06c31ab7a102e1bc054539",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    },
+    {
+      "id": "cowagent",
+      "name": "CowAgent",
+      "repository": "zhayujie/CowAgent",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "354bc709bab71cf6e400addfc92a00a0dd2838ff",
+          "path": "agent/prompt/builder.py",
+          "sha256": "a3d67dbf4cc98ea1d01b99355afbba2ec8f1a6ff835cbd2e73cc75dc4dfe2ef7",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "354bc709bab71cf6e400addfc92a00a0dd2838ff",
+          "path": "agent/tools/mcp/tool_retrieval.py",
+          "sha256": "d4e3da07f7466c6c2d073fc679ab5abaa8cb2fcce92135766538ba0ccab4c7e4",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "354bc709bab71cf6e400addfc92a00a0dd2838ff",
+          "path": "agent/tools/write/write.py",
+          "sha256": "3f85734d0270afc01401a9220fcbe6e5c495a7e4f44c65fb23d6d1141208c311",
+          "roles": [
+            "tools"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+    }
+  ]
+}

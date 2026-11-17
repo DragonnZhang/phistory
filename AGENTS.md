@@ -16,11 +16,13 @@ This file is for future coding agents. Read it before changing the project.
 - `phistory/site.py`: regenerates the single-file static web UI in `index.html`.
 - `phistory/static_prompts/`: static prompt extraction for package-embedded prompt strings. It currently targets Claude Code and is structured so other agents can be added later.
 - `phistory/cli.py`: CLI entrypoint for `capture`, `backfill`, `extract-static`, `render-index`, and `render-site`.
+- `phistory/source_archive.py` and `phistory/source_catalog.json`: separate prompt/tool source-file archives for the 95-agent survey. Existing request integrations are skipped; source archives never fabricate runtime traces. See `docs/harness-sources.md`.
 - `tests/`: focused unit and local integration tests for package sources, registry contracts, capture behavior, and rendering.
 - `.github/workflows/capture.yml`: daily capture workflow. It runs lint, tests, build, latest captures for actively tracked agents, Claude Code static prompt extraction, rendering, and commits updates. Manual dispatch also runs a fresh smoke capture after committing archives.
 - `.github/workflows/backfill.yml`: manually triggered stable-history backfill for all eight downstream atlas agents and MiniMax Code, with explicit version ranges and variants.
 - `.github/workflows/recapture-claude-history.yml`: manually triggered, sharded Linux recapture for the complete Claude Code history with remote experiment fetching disabled.
 - `.github/workflows/pages.yml`: GitHub Pages deployment for the static site.
+- `.github/workflows/archive-sources.yml`: Linux source archival and hash verification, with separate `source-captures/` artifacts and `sources.html` viewer.
 
 Generated capture artifacts live in:
 
@@ -106,6 +108,7 @@ Claude Code also tracks `official-fable-5-2` and `official-mythos-5-2` from `2.1
 - `opencode`: npm package `opencode-ai`, tap client `opencode`, reverse tap mode so opencode can fetch its model registry while the model request is redirected locally.
 - `pi`: npm package `@earendil-works/pi-coding-agent`, tap client `pi`, isolated Pi provider config.
 - `omp`: npm package `@oh-my-pi/pi-coding-agent` for version discovery, official `can1357/oh-my-pi` release binary for installation, tap client `omp`, isolated Oh My Pi provider config.
+- `gemini-cli`: official npm package `@google/gemini-cli`, tap client `gemini`, fake `GEMINI_API_KEY`, transparent forward capture. The default model is not overridden; keeping `GOOGLE_GEMINI_BASE_URL` unset preserves the native API-key prompt surface rather than selecting gateway auth.
 
 When adding another CLI, prefer extending the existing abstractions:
 

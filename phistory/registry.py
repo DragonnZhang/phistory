@@ -935,6 +935,20 @@ OMP = AgentSpec(
     ),
 )
 
+GEMINI_CLI = AgentSpec(
+    id="gemini-cli",
+    display_name="Gemini CLI",
+    package="@google/gemini-cli",
+    tap_client="gemini",
+    executable="gemini",
+    fake_env={"GEMINI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    extra_env={"CI": "1", "GEMINI_TELEMETRY_ENABLED": "false"},
+    recorded_env=("GEMINI_TELEMETRY_ENABLED",),
+    default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.")),
+)
+
+
 AGENTS: dict[str, AgentSpec] = {
     agent.id: agent
     for agent in (
@@ -954,6 +968,7 @@ AGENTS: dict[str, AgentSpec] = {
         OPENCODE,
         PI,
         OMP,
+        GEMINI_CLI,
     )
 }
 AGENT_ORDER = tuple(AGENTS)

@@ -98,6 +98,8 @@ def _readme_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         "",
         "**Start here:** [phistory.cc](https://phistory.cc/)",
         "",
+        "[Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.",
+        "",
     ]
     if latest_capture:
         lines.extend(
@@ -268,6 +270,8 @@ def _readme_zh_markdown(rows: list[dict[str, Any]], base: Path) -> str:
         ),
         "",
         "**从这里开始：** [phistory.cc](https://phistory.cc/)",
+        "",
+        "[Harness 源码归档](sources.html)保存 95 项调研中新增项目的提示词模板、装配代码与工具声明，保留完整原文件和来源，单独展示，不与真实请求捕获混用。",
         "",
     ]
     if latest_capture:

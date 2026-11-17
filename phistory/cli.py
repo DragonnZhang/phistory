@@ -93,6 +93,24 @@ def build_parser() -> argparse.ArgumentParser:
     archive.add_argument("--include-prerelease", action="store_true", help="include prerelease package versions")
     archive.add_argument("--force", action="store_true", help="replace an existing static-only archive")
 
+    sources = sub.add_parser(
+        "archive-sources", help="archive pinned prompt and tool source files from the harness survey"
+    )
+    sources.add_argument("--source-root", default="source-captures", help="source archive directory")
+    sources.add_argument(
+        "--agents", default=None, help="comma-separated source catalog ids; existing integrations are skipped"
+    )
+    sources.add_argument(
+        "--latest",
+        action="store_true",
+        help="resolve the default branch once and archive configured files at that commit",
+    )
+    sources.add_argument("--workers", type=int, default=4, choices=range(1, 9), help="concurrent repositories")
+
+    source_index = sub.add_parser("render-sources", help="render the separate source archive index")
+    source_index.add_argument("--source-root", default="source-captures", help="source archive directory")
+    source_index.add_argument("-o", "--output", default="sources.html", help="source archive HTML path")
+
     return parser
 
 
@@ -174,6 +192,19 @@ def main(argv: list[str] | None = None) -> int:
             include_prerelease=args.include_prerelease,
             force=args.force,
         )
+
+    if args.command == "archive-sources":
+        from phistory.source_archive import archive_sources
+
+        results = archive_sources(Path(args.source_root), agents=args.agents, latest=args.latest, workers=args.workers)
+        return 1 if any(item["status"] == "failed" for item in results) else 0
+
+    if args.command == "render-sources":
+        from phistory.source_archive import render_source_index
+
+        render_source_index(Path(args.source_root), Path(args.output))
+        print(f"wrote {args.output}")
+        return 0
 
     return 2
 

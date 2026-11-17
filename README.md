@@ -9,6 +9,8 @@ The default diff includes the main request's prompts, all message roles, and too
 
 **Start here:** [phistory.cc](https://phistory.cc/)
 
+[Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
+
 > Checks for new releases daily. Archive last updated: **2026-11-17 11:04 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)

@@ -27,9 +27,24 @@ def test_parse_default_agents():
         "opencode",
         "pi",
         "omp",
+        "gemini-cli",
     ]
     assert "kimi" in AGENT_ORDER
     assert parse_agent_ids("kimi,kimi-code") == ["kimi", "kimi-code"]
+
+
+def test_gemini_uses_official_package_and_preserves_default_native_auth_surface():
+    agent = get_agent("gemini-cli")
+    assert agent.package == "@google/gemini-cli"
+    assert agent.tap_client == "gemini"
+    assert agent.tap_mode == "forward"
+    assert agent.fake_env == {"GEMINI_API_KEY": "phistory-fake-api-key"}
+    assert "--model" not in agent.default_variant.run_args
+    assert "GOOGLE_GEMINI_BASE_URL" not in agent.extra_env
+    target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.default_variant, Path("captures"))
+    argv = tap_command(target, Path("prompt.md"), Path("tap"))
+    assert argv[argv.index("--mode") + 1] == "forward"
+    assert argv[argv.index("--") + 1 :] == ["-p", "Reply with one short sentence."]
 
 
 def test_get_agent_has_capture_contract():

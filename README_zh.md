@@ -8,6 +8,8 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 **从这里开始：** [phistory.cc](https://phistory.cc/)
 
+[Harness 源码归档](sources.html)保存 95 项调研中新增项目的提示词模板、装配代码与工具声明，保留完整原文件和来源，单独展示，不与真实请求捕获混用。
+
 > 每天自动检查新版本，归档最近更新于 **2026-11-17 11:04 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
