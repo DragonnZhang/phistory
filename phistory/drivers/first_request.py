@@ -15,12 +15,13 @@ PROMPT = "Reply with one short sentence."
 def run_first_request(context: CaptureRunContext) -> CaptureExecution:
     env = {**context.env, "PHISTORY_CAPTURE_ARTIFACT_DIR": str(context.prompt_path.parent)}
     proxy_port = 0
-    if context.target.agent.id == "orkas":
+    if context.target.agent.id in {"orkas", "dyad"}:
         with socket.socket() as check:
             check.bind(("127.0.0.1", 0))
             proxy_port = check.getsockname()[1]
         env["PHISTORY_TAP_PORT"] = str(proxy_port)
-        env["PHISTORY_ELECTRON_DRIVER"] = str(Path(__file__).with_name("orkas_task.cjs"))
+        env["PHISTORY_ELECTRON_PROFILE"] = str(Path(env["PHISTORY_HOME"]) / context.target.agent.id)
+        env["PHISTORY_ELECTRON_DRIVER"] = str(Path(__file__).with_name(context.target.agent.id + "_task.cjs"))
     argv = tap_command(
         context.target,
         context.prompt_path,

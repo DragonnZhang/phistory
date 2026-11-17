@@ -24,6 +24,7 @@ from phistory.task_entries import (
     DEEPANALYZE_TASK,
     DEERFLOW_TASK,
     DEVOPSGPT_TASK,
+    ELECTRON_TASK,
     GPT_RESEARCHER_TASK,
     HIVEKEEP_TASK,
     INTENTKIT_DATABASE_SETUP,
@@ -33,7 +34,6 @@ from phistory.task_entries import (
     MINIAGI_TASK,
     OPENAGENTS_SETUP,
     OPENAGENTS_TASK,
-    ORKAS_TASK,
     OUROBOROS_SERVER,
     QM_TASK,
     QUORUM_TASK,
@@ -1969,6 +1969,43 @@ VIBESDK = AgentSpec(
     ),
 )
 
+DYAD = AgentSpec(
+    id="dyad",
+    display_name="Dyad",
+    package="dyad-sh/dyad",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="isolated",
+    source_build_commands=(("npm", "ci", "--no-audit", "--no-fund"), ("npm", "run", "package")),
+    tap_client="python",
+    fake_env={},
+    required_system_text=("You are Dyad, an AI assistant that creates and modifies web applications.",),
+    capture_min_tools=1,
+    tap_mode="reverse",
+    tap_target="https://api.openai.com",
+    track_latest=False,
+    capture_timeout_seconds=360,
+    latest_variant_ids=("native-electron-basic-agent",),
+    default_variant=_default(
+        capture_unavailable="Use the real production Electron application with its native BasicAgent and an owned imported application."
+    ),
+    variants=(
+        _variant(
+            "native-electron-basic-agent",
+            "Production Electron / native BasicAgent",
+            ("--no-yolo", "--", "-c", ELECTRON_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "production package; actual renderer/preload/native IPC and imported Git/SQLite app",
+                "model": "native custom OpenAI-compatible gpt-4.1",
+                "mode": "native non-Pro local-agent / BasicAgent",
+                "instrumentation": "renderer CDP attached to the owned production Electron; original fuses retained",
+                "runtime": "D-Bus/Xvfb; owned Electron --no-sandbox --disable-gpu",
+            },
+        ),
+    ),
+)
+
 ORKAS = AgentSpec(
     id="orkas",
     display_name="Orkas",
@@ -1993,7 +2030,7 @@ ORKAS = AgentSpec(
         _variant(
             "native-electron-commander",
             "Native Electron / configured Commander",
-            ("--no-yolo", "--", "-c", ORKAS_TASK),
+            ("--no-yolo", "--", "-c", ELECTRON_TASK),
             driver="first-request",
             dimensions={
                 "entry": "real Electron bootstrap, renderer, preload and native local-user initialization",
@@ -3445,6 +3482,7 @@ AGENTS: dict[str, AgentSpec] = {
         AUTOGPT,
         QM,
         ORKAS,
+        DYAD,
         AGENTLINK,
         UFO,
         AGENTLAS_OS,
