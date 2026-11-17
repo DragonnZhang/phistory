@@ -43,6 +43,8 @@ def latest_version(agent: AgentSpec) -> VersionInfo:
         return _github_release_latest(agent)
     if agent.source == "github-release-asset":
         return _github_release_asset_latest(agent)
+    if agent.source == "github-source":
+        return _github_source_latest(agent)
     raise ValueError(f"unsupported package source: {agent.source}")
 
 
@@ -59,6 +61,8 @@ def all_versions(agent: AgentSpec, *, include_prerelease: bool = False) -> list[
         return _github_release_versions(agent, include_prerelease=include_prerelease)
     if agent.source == "github-release-asset":
         return _github_release_asset_versions(agent, include_prerelease=include_prerelease)
+    if agent.source == "github-source":
+        return [_github_source_latest(agent)]
     raise ValueError(f"unsupported package source: {agent.source}")
 
 
@@ -95,6 +99,8 @@ def install_agent(agent: AgentSpec, version: str, install_dir: Path) -> Path:
         return _install_github_release(agent, version, install_dir)
     if agent.source == "github-release-asset":
         return _install_github_release_asset(agent, version, install_dir)
+    if agent.source == "github-source":
+        return _install_github_source(agent, version, install_dir)
     raise ValueError(f"unsupported package source: {agent.source}")
 
 
@@ -228,7 +234,8 @@ def _pypi_versions(agent: AgentSpec, *, include_prerelease: bool) -> list[Versio
 def _install_pypi(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     bin_dir = install_dir / "bin"
     executable = bin_dir / agent_executable(agent)
-    if executable.exists():
+    complete = install_dir / ".phistory-python-package-installed"
+    if executable.exists() and (executable.name != "python" or complete.exists()):
         return bin_dir
     if install_dir.exists():
         shutil.rmtree(install_dir)
@@ -241,11 +248,12 @@ def _install_pypi(agent: AgentSpec, version: str, install_dir: Path) -> Path:
     )
     if not executable.exists():
         raise RuntimeError(f"PyPI install did not create executable: {executable}")
+    complete.touch()
     return bin_dir
 
 
 def _github_release_latest(agent: AgentSpec) -> VersionInfo:
-    releases = _github_releases(agent.package)
+    releases = _agent_releases(agent)
     for release in releases:
         if not release.get("draft") and not release.get("prerelease"):
             return _github_release_version(release)
@@ -255,14 +263,14 @@ def _github_release_latest(agent: AgentSpec) -> VersionInfo:
 def _github_release_versions(agent: AgentSpec, *, include_prerelease: bool) -> list[VersionInfo]:
     releases = [
         _github_release_version(release)
-        for release in _github_releases(agent.package)
+        for release in _agent_releases(agent)
         if not release.get("draft") and (include_prerelease or not release.get("prerelease"))
     ]
     return sorted(releases, key=lambda item: (item.published_at or "", item.version))
 
 
 def _github_release_asset_latest(agent: AgentSpec) -> VersionInfo:
-    releases = _github_releases(agent.package)
+    releases = _agent_releases(agent)
     for release in releases:
         if not release.get("draft") and not release.get("prerelease"):
             return _github_release_asset_version(agent, release)
@@ -272,21 +280,79 @@ def _github_release_asset_latest(agent: AgentSpec) -> VersionInfo:
 def _github_release_asset_versions(agent: AgentSpec, *, include_prerelease: bool) -> list[VersionInfo]:
     releases = [
         _github_release_asset_version(agent, release)
-        for release in _github_releases(agent.package)
+        for release in _agent_releases(agent)
         if not release.get("draft") and (include_prerelease or not release.get("prerelease"))
     ]
     return sorted(releases, key=lambda item: (item.published_at or "", item.version))
 
 
-def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -> Path:
+def _agent_releases(agent: AgentSpec) -> list[dict]:
+    releases = _github_releases(agent.package)
+    if agent.release_tag_prefix:
+        return [
+            release for release in releases if str(release.get("tag_name", "")).startswith(agent.release_tag_prefix)
+        ]
+    return releases
+
+
+def _github_source_latest(agent: AgentSpec) -> VersionInfo:
+    result = run(["git", "ls-remote", f"https://github.com/{agent.package}.git", "HEAD"], timeout=120)
+    revision = result.stdout.split()[0] if result.stdout.strip() else ""
+    if not re.fullmatch(r"[a-f0-9]{40}", revision):
+        raise RuntimeError(f"cannot resolve GitHub source HEAD for {agent.package}")
+    return VersionInfo(revision, tarball_url=f"https://github.com/{agent.package}/archive/{revision}.tar.gz")
+
+
+def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -> Path:
+    if not re.fullmatch(r"[a-f0-9]{40}", revision):
+        raise ValueError("GitHub source installations require a full immutable commit SHA")
+    url = f"https://github.com/{agent.package}/archive/{revision}.tar.gz"
+    if agent.github_source_install == "editable":
+        return _install_github_release(agent, revision, install_dir, archive_url=url)
+    bin_dir = install_dir / "bin"
+    complete = install_dir / ".phistory-scripts-installed"
+    if complete.exists() and (bin_dir / agent_executable(agent)).exists():
+        return bin_dir
+    if install_dir.exists():
+        shutil.rmtree(install_dir)
+    bin_dir.mkdir(parents=True)
+    archive = install_dir / "source.tar.gz"
+    _download(url, archive)
+    source = install_dir / "source"
+    source.mkdir()
+    _extract_archive(archive, source)
+    roots = list(source.iterdir())
+    if len(roots) != 1 or not roots[0].is_dir():
+        raise RuntimeError("source archive must contain exactly one repository root")
+    for directory in (roots[0] / "bin", roots[0] / "tools"):
+        if directory.is_dir():
+            for command in directory.iterdir():
+                if command.is_file() and os.access(command, os.X_OK):
+                    link = bin_dir / command.name
+                    if not link.exists():
+                        link.symlink_to(command.resolve())
+    executable = bin_dir / agent_executable(agent)
+    if not executable.exists():
+        system = shutil.which(agent_executable(agent))
+        if system is None:
+            raise RuntimeError(f"source runtime executable is unavailable: {agent_executable(agent)}")
+        executable.symlink_to(system)
+    complete.touch()
+    return bin_dir
+
+
+def _install_github_release(
+    agent: AgentSpec, version: str, install_dir: Path, *, archive_url: str | None = None
+) -> Path:
     bin_dir = install_dir / "bin"
     executable = bin_dir / agent_executable(agent)
-    if executable.exists():
+    complete = install_dir / ".phistory-python-package-installed"
+    if executable.exists() and (executable.name != "python" or complete.exists()):
         return bin_dir
     if install_dir.exists():
         shutil.rmtree(install_dir)
     install_dir.mkdir(parents=True, exist_ok=True)
-    package_ref = f"https://github.com/{agent.package}/archive/refs/tags/{version}.tar.gz"
+    package_ref = archive_url or f"https://github.com/{agent.package}/archive/refs/tags/{version}.tar.gz"
     if agent.github_release_install == "editable":
         archive_path = install_dir / "source.tar.gz"
         source_dir = install_dir / "source"
@@ -327,6 +393,7 @@ def _install_github_release(agent: AgentSpec, version: str, install_dir: Path) -
         )
     if not executable.exists():
         raise RuntimeError(f"GitHub release install did not create executable: {executable}")
+    complete.touch()
     return bin_dir
 
 

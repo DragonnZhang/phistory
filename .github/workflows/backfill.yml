@@ -32,6 +32,13 @@ on:
           - letta-code
           - prime-agent
           - openinterpreter
+          - fibona-agent
+          - ctxagent
+          - deepseek-reasonix
+          - quorum-cli
+          - tianshu-harness
+          - octomind
+          - headlong
       variants:
         description: Optional comma-separated capture variant ids
         required: false

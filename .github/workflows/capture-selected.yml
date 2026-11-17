@@ -8,9 +8,9 @@ on:
         type: string
         required: true
       variants:
-        description: Capture variant ids
+        description: Comma-separated variant ids, or auto for each agent's supported latest policy
         type: string
-        default: default
+        default: auto
       force:
         description: Recapture the selected latest versions
         type: boolean
@@ -55,7 +55,10 @@ jobs:
           FORCE_CAPTURE: ${{ inputs.force }}
         run: |
           test -n "$SELECTED_AGENTS"
-          args=(--latest --agents "$SELECTED_AGENTS" --variants "$SELECTED_VARIANTS")
+          args=(--latest --agents "$SELECTED_AGENTS")
+          if [ -n "$SELECTED_VARIANTS" ] && [ "$SELECTED_VARIANTS" != "auto" ]; then
+            args+=(--variants "$SELECTED_VARIANTS")
+          fi
           if [ "$FORCE_CAPTURE" = "true" ]; then
             args+=(--force)
           fi
@@ -78,7 +81,12 @@ jobs:
           git push
       - name: Smoke selected agents
         if: inputs.smoke && steps.capture.outputs.status == '0'
-        run: uv run phistory --root /tmp/phistory-selected-smoke --cache-dir /tmp/phistory-selected-smoke-cache capture --latest --agents "$SELECTED_AGENTS" --variants "$SELECTED_VARIANTS" --force --summary-title "Selected agent fresh smoke"
+        run: |
+          args=(--latest --agents "$SELECTED_AGENTS" --force)
+          if [ -n "$SELECTED_VARIANTS" ] && [ "$SELECTED_VARIANTS" != "auto" ]; then
+            args+=(--variants "$SELECTED_VARIANTS")
+          fi
+          uv run phistory --root /tmp/phistory-selected-smoke --cache-dir /tmp/phistory-selected-smoke-cache capture "${args[@]}" --summary-title "Selected agent fresh smoke"
       - uses: actions/upload-artifact@v7
         if: inputs.smoke && always()
         with:

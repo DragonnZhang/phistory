@@ -33,6 +33,9 @@ def test_parse_default_agents():
         "mini-swe-agent",
         "nanobot",
         "bub",
+        "jcode",
+        "kilocode",
+        "prime-agent",
     ]
     assert "kimi" in AGENT_ORDER
     assert parse_agent_ids("kimi,kimi-code") == ["kimi", "kimi-code"]

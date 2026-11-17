@@ -226,6 +226,7 @@ def capture_target(
                 "client_exit_code": result.returncode,
                 "duration_seconds": round(time.time() - started, 3),
                 "command": [_replace_many(part, replacements) for part in _portable_command(argv, variant_dir)],
+                **({"stdin": target.variant.stdin_text} if target.variant.stdin_text is not None else {}),
                 **(
                     {"capture_environment": {key: env[key] for key in target.agent.recorded_env}}
                     if target.agent.recorded_env
@@ -308,6 +309,7 @@ def _capture_env(
     home_dir: Path | None = None,
     *,
     inherited_env: Mapping[str, str] | None = None,
+    prepare_runtime: bool = True,
 ) -> dict[str, str]:
     home = home_dir or target.version_dir / ".home"
     profile = target.variant.home_profile or target.agent.home_profile
@@ -345,6 +347,10 @@ def _capture_env(
         config_dir = home / ".codewhale"
         config_dir.mkdir(parents=True, exist_ok=True)
         (config_dir / "config.toml").write_text("[update]\ncheck_for_updates = false\n", encoding="utf-8")
+    if profile == "opendev":
+        config_dir = home / ".opendev"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        (config_dir / "settings.json").write_text("{}\n", encoding="utf-8")
     if profile == "cline-anthropic":
         _write_cline_anthropic_config(home)
     inherited = (
@@ -420,6 +426,8 @@ def _capture_env(
         env["RPI_CODING_AGENT_DIR"] = str(home / ".rpi" / "agent")
     if profile == "codewhale":
         env["CODEWHALE_HOME"] = str(home / ".codewhale")
+    if profile == "opendev":
+        env["OPENDEV_DIR"] = str(home / ".opendev")
     if profile == "kilocode":
         env["KILO_CONFIG_CONTENT"] = json.dumps(
             {
@@ -460,7 +468,7 @@ def _capture_env(
         state = home / ".openinterpreter"
         state.mkdir(parents=True, exist_ok=True)
         env["INTERPRETER_HOME"] = str(state)
-        if profile == "interpreter-http":
+        if profile == "interpreter-http" and prepare_runtime:
             from phistory.interpreter import compatibility_metadata
 
             metadata = compatibility_metadata(bin_dir.parent, target.version.version)
@@ -472,6 +480,30 @@ def _capture_env(
                     "PHISTORY_INTERPRETER_COMPATIBILITY_SHA256": metadata["sha256"],
                 }
             )
+    if profile == "fibona":
+        env["FIBONA_LOG_DIR"] = str(home / ".fibona" / "logs")
+    if profile == "ctxagent":
+        env["CTXAGENT_DATA"] = str(home / ".ctxagent")
+    if profile == "reasonix":
+        env["REASONIX_HOME"] = str(home / ".reasonix")
+    if profile == "tianshu":
+        env["RIVET_HOME"] = str(home / ".tianshu")
+    if profile == "octomind" and prepare_runtime:
+        from phistory.runtime_setup import prepare_octomind_tap
+
+        state = home / ".octomind"
+        env["OCTOMIND_DATA_DIR"] = str(state)
+        env["PHISTORY_OCTOMIND_TAP_COMMIT"] = prepare_octomind_tap(state, env["PHISTORY_OCTOMIND_TAP_REPOSITORY"])
+    if profile == "headlong" and prepare_runtime:
+        state = home / ".headlong"
+        state.mkdir(parents=True, exist_ok=True)
+        env["HEADLONG_HOME"] = str(state)
+        run(
+            [str(bin_dir / "identity"), "--dir", str(state / "identities"), "new", "phistory"],
+            env=env,
+            inherit_env=False,
+            timeout=120,
+        )
     if target.agent.node_runtime:
         env["NPM_CONFIG_CACHE"] = str(bin_dir.parents[2] / ".npm-runtime-cache")
     if target.agent.fake_chatgpt_auth:
@@ -847,7 +879,7 @@ def _binary_version(
         return None
     with TemporaryDirectory(prefix="phistory-version-home-") as home_dir:
         try:
-            env = _capture_env(target, bin_dir, Path(home_dir), inherited_env=inherited_env)
+            env = _capture_env(target, bin_dir, Path(home_dir), inherited_env=inherited_env, prepare_runtime=False)
             result = run(
                 [str(executable), "--version"],
                 cwd=Path(home_dir),

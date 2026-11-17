@@ -16,6 +16,7 @@ def run(
     timeout: int = 120,
     check: bool = True,
     inherit_env: bool = True,
+    input_text: str | None = None,
 ) -> CommandResult:
     merged_env = os.environ.copy() if inherit_env else {}
     if env:
@@ -27,6 +28,7 @@ def run(
         env=merged_env,
         capture_output=True,
         text=True,
+        input=input_text,
         timeout=timeout,
     )
     result = CommandResult(tuple(argv), proc.returncode, proc.stdout, proc.stderr)

@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
-PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "minimax-code"]
+PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "github-source", "minimax-code"]
 GitHubReleaseInstall = Literal["wheel", "editable"]
 CaptureDriver = Literal["oneshot", "dsh-web"]
 HomeProfile = Literal[
@@ -37,6 +37,12 @@ HomeProfile = Literal[
     "prime-agent",
     "interpreter",
     "interpreter-http",
+    "fibona",
+    "ctxagent",
+    "reasonix",
+    "tianshu",
+    "octomind",
+    "headlong",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")
@@ -64,6 +70,7 @@ class CaptureVariant:
     min_version: str | None = None
     home_profile: HomeProfile | None = None
     capture_unavailable: str | None = None
+    stdin_text: str | None = None
 
     def supports_version(self, version: str) -> bool:
         return self.min_version is None or _version_key(version) >= _version_key(self.min_version)
@@ -103,6 +110,8 @@ class AgentSpec:
     latest_variant_ids: tuple[str, ...] | None = None
     bootstrap_args: tuple[str, ...] = ()
     bootstrap_env: dict[str, str] = field(default_factory=dict)
+    release_tag_prefix: str | None = None
+    github_source_install: Literal["editable", "scripts"] = "editable"
 
     def __post_init__(self) -> None:
         if self.capture_timeout_seconds < 1:

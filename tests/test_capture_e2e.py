@@ -74,6 +74,28 @@ def test_bootstrap_runs_in_same_isolated_home_before_interception(tmp_path, monk
     assert events[0][0] == [str(bin_dir / "prime-agent"), "--setup-only"]
 
 
+def test_stdin_task_is_passed_to_capture_process_and_subprocess(tmp_path, monkeypatch):
+    from phistory.drivers.oneshot import _run
+    from phistory.models import CommandResult
+
+    text = "Read this task from stdin.\n"
+    variant = CaptureVariant("default", "Default", stdin_text=text)
+    agent = AgentSpec("fake", "Fake", "fake", "fake", {}, default_variant=variant)
+    target = _target(agent, VersionInfo("1"), tmp_path)
+    context = CaptureRunContext(target, tmp_path / "prompt", tmp_path / "tap", tmp_path, {})
+    captured = []
+
+    def run(argv, **kwargs):
+        captured.append(kwargs["input_text"])
+        return CommandResult(tuple(argv), 0, "", "")
+
+    monkeypatch.setattr("phistory.drivers.oneshot.run", run)
+    _run(["fake"], context, {})
+    assert captured == [text]
+    result = run_subprocess([sys.executable, "-c", "import sys; print(sys.stdin.read(), end='')"], input_text=text)
+    assert result.stdout == text
+
+
 def test_capture_target_runs_local_cli_through_tap(tmp_path: Path, monkeypatch):
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     bin_dir = tmp_path / "bin"

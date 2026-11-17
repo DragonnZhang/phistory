@@ -128,6 +128,7 @@ def _run(argv: list[str], context: CaptureRunContext, env: dict[str, str]) -> Co
         timeout=_capture_timeout(context),
         check=False,
         inherit_env=False,
+        **({"input_text": context.target.variant.stdin_text} if context.target.variant.stdin_text is not None else {}),
     )
     if not context.prompt_path.exists() and (failure := qoder_model_failure(context, log_offsets)):
         raise RuntimeError(failure)

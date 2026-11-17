@@ -14,15 +14,19 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
-        "jcode",
         "pi-rust",
         "codewhale",
         "opendev",
-        "kilocode",
         "cline",
         "letta-code",
-        "prime-agent",
         "openinterpreter",
+        "fibona-agent",
+        "ctxagent",
+        "deepseek-reasonix",
+        "quorum-cli",
+        "tianshu-harness",
+        "octomind",
+        "headlong",
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
@@ -147,3 +151,25 @@ def test_prime_preserves_bundle_and_bootstraps_kernel_before_offline_capture(tmp
     assert env["PI_OFFLINE"] == "1"
     assert env["PI_PACKAGE_DIR"] == str((tmp_path / "bin").resolve())
     assert Path(env["PRIME_AGENT_KERNEL_VENV"]).is_relative_to(tmp_path / "home")
+
+
+def test_octomind_preserves_native_role_and_records_independent_tap_revision(tmp_path, monkeypatch):
+    revision = "b" * 40
+    monkeypatch.setattr("phistory.runtime_setup.prepare_octomind_tap", lambda *_: revision)
+    agent = get_agent("octomind")
+    variant = agent.variant("http")
+    item = CaptureTarget(agent, VersionInfo("0.72.0"), variant, tmp_path)
+    env = _capture_env(item, tmp_path / "bin", tmp_path / "home")
+    assert variant.stdin_text == "Reply with one short sentence.\n"
+    assert "model.request_transport=http" in variant.run_args
+    assert "--model" not in variant.run_args
+    assert "assistant:chief" not in variant.run_args
+    assert env["PHISTORY_OCTOMIND_TAP_COMMIT"] == revision
+    assert env["OCTOMIND_DATA_DIR"] == str(tmp_path / "home/.octomind")
+
+
+def test_opendev_setup_marker_preserves_all_native_defaults(tmp_path):
+    env = _capture_env(target("opendev", tmp_path), tmp_path / "bin", tmp_path / "home")
+    assert json.loads((Path(env["OPENDEV_DIR"]) / "settings.json").read_text()) == {}
+    assert env["FIREWORKS_API_KEY"] == "phistory-fake-api-key"
+    assert "OPENDEV_MODEL" not in env and "OPENDEV_PROVIDER" not in env

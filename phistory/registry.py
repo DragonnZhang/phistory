@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, HomeProfile, TapMode
+from phistory.task_entries import CTXAGENT_PREFETCH, CTXAGENT_TASK, QUORUM_TASK
 
 
 def _default(
@@ -34,6 +35,7 @@ def _variant(
     min_version: str | None = None,
     home_profile: HomeProfile | None = None,
     extra_env: dict[str, str] | None = None,
+    stdin_text: str | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id=variant_id,
@@ -45,6 +47,7 @@ def _variant(
         min_version=min_version,
         home_profile=home_profile,
         extra_env=extra_env or {},
+        stdin_text=stdin_text,
     )
 
 
@@ -1072,7 +1075,6 @@ JCODE = AgentSpec(
     recorded_env=("JCODE_NON_INTERACTIVE", "JCODE_RUN_AUTO_POKE"),
     home_profile="jcode",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(("--no-yolo", "--", "--no-update", "run", "--json", "Reply with one short sentence.")),
 )
@@ -1084,13 +1086,16 @@ PI_RUST = AgentSpec(
     package="@bigfishnpm/rpi",
     tap_client="rpi",
     fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
-    extra_env={"RPI_OFFLINE": "1"},
-    recorded_env=("RPI_OFFLINE",),
+    extra_env={"RPI_OFFLINE": "1", "ANTHROPIC_BASE_URL": "http://api.anthropic.com"},
+    recorded_env=("RPI_OFFLINE", "ANTHROPIC_BASE_URL"),
     home_profile="pi-rust",
     tap_mode="forward",
     track_latest=False,
     capture_timeout_seconds=240,
-    default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.", "--no-session")),
+    default_variant=_default(
+        ("--no-yolo", "--", "-p", "Reply with one short sentence.", "--no-session"),
+        dimensions={"transport": "HTTP capture-only proxy; native Anthropic provider/model"},
+    ),
 )
 
 CODEWHALE = AgentSpec(
@@ -1129,6 +1134,7 @@ OPENDEV = AgentSpec(
     fake_env={"FIREWORKS_API_KEY": "phistory-fake-api-key"},
     extra_env={"OPENDEV_DISABLE_REMOTE_MODELS": "1"},
     recorded_env=("OPENDEV_DISABLE_REMOTE_MODELS",),
+    home_profile="opendev",
     tap_mode="forward",
     track_latest=False,
     capture_timeout_seconds=240,
@@ -1145,7 +1151,6 @@ KILOCODE = AgentSpec(
     recorded_env=("KILO_DISABLE_MODELS_FETCH", "KILO_DISABLE_AUTOUPDATE"),
     home_profile="kilocode",
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=240,
     default_variant=_default(
         ("--no-yolo", "--", "run", "--format", "json", "Reply with one short sentence."),
@@ -1220,7 +1225,6 @@ PRIME_AGENT = AgentSpec(
     bootstrap_args=("--prime-agent-bootstrap",),
     bootstrap_env={"PI_OFFLINE": "0"},
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     default_variant=_default(("--no-yolo", "--", "--print", "--no-session", "Reply with one short sentence.")),
 )
@@ -1233,6 +1237,7 @@ OPENINTERPRETER = AgentSpec(
     release_asset="open-interpreter-package-x86_64-unknown-linux-musl.tar.gz",
     release_asset_binary="interpreter",
     release_asset_layout="bundle",
+    release_tag_prefix="rust-v",
     tap_client="interpreter",
     fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
     extra_env={
@@ -1276,6 +1281,203 @@ OPENINTERPRETER = AgentSpec(
 )
 
 
+FIBONA = AgentSpec(
+    id="fibona-agent",
+    display_name="Fibona · Python",
+    package="FibonaAI/fibona-agent",
+    source="github-release",
+    github_release_install="editable",
+    tap_client="fibona",
+    fake_env={"FIBONA_API_KEY": "phistory-fake-api-key"},
+    home_profile="fibona",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("minimal", "terminal"),
+    default_variant=_default(
+        ("--no-yolo", "--", "Reply with one short sentence."),
+        capture_unavailable="The native Python CLI requires an explicit boot-mode; capture the named minimal or terminal bootstrap surface.",
+    ),
+    variants=tuple(
+        _variant(
+            mode,
+            f"Python · {mode} bootstrap",
+            ("--no-yolo", "--", "--boot-mode", mode, "Reply with one short sentence."),
+            dimensions={"runtime": "Python source package", "bootstrap": mode},
+        )
+        for mode in ("minimal", "terminal")
+    ),
+)
+
+CTXAGENT = AgentSpec(
+    id="ctxagent",
+    display_name="CTXAgent · paper runtime",
+    package="MatthiasHBusch/CTXAgent",
+    source="github-release",
+    github_release_install="editable",
+    tap_client="python",
+    fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key"},
+    home_profile="ctxagent",
+    bootstrap_args=("-c", CTXAGENT_PREFETCH),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("paper-api",),
+    default_variant=_default(
+        capture_unavailable="The native GUI/server needs an interactive driver; use the named paper-api task entry for the root Python runtime.",
+    ),
+    variants=(
+        _variant(
+            "paper-api",
+            "Paper runtime · AgentSession API",
+            ("--no-yolo", "--", "-c", CTXAGENT_TASK),
+            dimensions={
+                "runtime": "root Python paper package",
+                "entry": "AgentSession.run_turn",
+                "provider_policy": "eu_us",
+                "optional_readers": "not installed",
+            },
+        ),
+    ),
+)
+
+REASONIX = AgentSpec(
+    id="deepseek-reasonix",
+    display_name="DeepSeek Reasonix · Studio",
+    package="esengine/DeepSeek-Reasonix",
+    source="github-release-asset",
+    release_tag_prefix="studio-v",
+    release_asset="reasonix-linux-amd64.tar.gz",
+    release_asset_binary="reasonix",
+    tap_client="reasonix",
+    fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
+    home_profile="reasonix",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.", "--output-format", "json")),
+)
+
+QUORUM = AgentSpec(
+    id="quorum-cli",
+    display_name="Quorum CLI",
+    package="quorum-cli",
+    source="pypi",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={"OPENAI_MODELS": "gpt-4.1,gpt-4.1-mini", "QUORUM_ROUNDS_PER_AGENT": "1"},
+    recorded_env=("OPENAI_MODELS", "QUORUM_ROUNDS_PER_AGENT"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("standard-api",),
+    default_variant=_default(
+        capture_unavailable="The native terminal UI requires configured participants and an interactive driver; use the named standard-api discussion surface."
+    ),
+    variants=(
+        _variant(
+            "standard-api",
+            "Standard discussion · configured OpenAI API participants",
+            ("--no-yolo", "--", "-c", QUORUM_TASK),
+            dimensions={
+                "entry": "FourPhaseConsensusTeam.run_stream",
+                "method": "standard",
+                "participants": "openai:gpt-4.1,openai:gpt-4.1-mini",
+                "rounds_per_agent": "1",
+                "tools": "none for API participants",
+            },
+        ),
+    ),
+)
+
+TIANSHU = AgentSpec(
+    id="tianshu-harness",
+    display_name="Tianshu Harness",
+    package="tianshu-harness",
+    tap_client="tianshu",
+    fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
+    extra_env={"RIVET_NO_UPDATE_CHECK": "1"},
+    recorded_env=("RIVET_NO_UPDATE_CHECK",),
+    home_profile="tianshu",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.", "--json")),
+    variants=(
+        _variant(
+            "full-tools",
+            "Full tool preset",
+            ("--no-yolo", "--", "-p", "Reply with one short sentence.", "--json"),
+            extra_env={"RIVET_TOOL_PRESET": "full"},
+            dimensions={"tool_preset": "full"},
+        ),
+    ),
+)
+
+
+OCTOMIND = AgentSpec(
+    id="octomind",
+    display_name="Octomind",
+    package="Muvon/octomind",
+    source="github-release-asset",
+    release_asset="octomind-{version_number}-x86_64-unknown-linux-musl.tar.gz",
+    release_asset_binary="octomind",
+    tap_client="octomind",
+    fake_env={"OCTOHUB_API_KEY": "phistory-fake-api-key"},
+    extra_env={
+        "OCTOMIND_TELEMETRY": "0",
+        "PHISTORY_OCTOMIND_TAP_COMMIT": "",
+        "PHISTORY_OCTOMIND_TAP_REPOSITORY": "https://github.com/muvon/octomind-tap",
+    },
+    recorded_env=("OCTOMIND_TELEMETRY", "PHISTORY_OCTOMIND_TAP_COMMIT", "PHISTORY_OCTOMIND_TAP_REPOSITORY"),
+    home_profile="octomind",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("http",),
+    default_variant=_default(
+        ("--no-yolo", "--", "run", "--format", "jsonl"),
+        capture_unavailable="Native OctoHub uses WebSocket transport; capture-only tap requires the named HTTP transport variant.",
+    ),
+    variants=(
+        _variant(
+            "http",
+            "Native assistant role · HTTP transport",
+            ("--no-yolo", "--", "run", "--format", "jsonl", "-c", "model.request_transport=http"),
+            stdin_text="Reply with one short sentence.\n",
+            dimensions={"transport": "HTTP", "role": "native assistant:chief", "model": "native octohub:auto"},
+        ),
+    ),
+)
+
+
+HEADLONG = AgentSpec(
+    id="headlong",
+    display_name="Headlong",
+    package="laude-institute/headlong",
+    source="github-source",
+    github_source_install="scripts",
+    tap_client="bash",
+    fake_env={"ANTHROPIC_API_KEY": "phistory-fake-api-key"},
+    extra_env={"SHELLM_THINKER_ENV": "local", "SHELLM_MAX_ITERATIONS": "1"},
+    recorded_env=("SHELLM_THINKER_ENV", "SHELLM_MAX_ITERATIONS"),
+    home_profile="headlong",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    default_variant=_default(
+        ("--no-yolo", "--", "-c", '. "$HEADLONG_HOME/identities/phistory/activate"; thinkers step monolith'),
+        label="Native monolith · synchronous manual wake",
+        dimensions={
+            "entry": "thinkers step monolith",
+            "environment": "local",
+            "max_iterations": "1",
+            "action_protocol": "fenced Bash embedded in prompt",
+        },
+    ),
+)
+
+
 AGENTS: dict[str, AgentSpec] = {
     agent.id: agent
     for agent in (
@@ -1310,6 +1512,13 @@ AGENTS: dict[str, AgentSpec] = {
         LETTA_CODE,
         PRIME_AGENT,
         OPENINTERPRETER,
+        FIBONA,
+        CTXAGENT,
+        REASONIX,
+        QUORUM,
+        TIANSHU,
+        OCTOMIND,
+        HEADLONG,
     )
 }
 AGENT_ORDER = tuple(AGENTS)

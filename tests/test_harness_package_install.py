@@ -72,3 +72,81 @@ def test_release_asset_can_use_numeric_version_without_changing_tag():
     agent = get_agent("prime-agent")
     asset = {"name": "prime-agent-0.10.3-linux-x64.tar.gz", "browser_download_url": "https://example.invalid/prime"}
     assert packages._select_release_asset(agent, "v0.10.3", {"assets": [asset]}) == asset
+
+
+def test_release_channels_do_not_substitute_legacy_or_other_product_tags(monkeypatch):
+    monkeypatch.setattr(
+        packages,
+        "_github_releases",
+        lambda _: [
+            {
+                "tag_name": "v1.9.0",
+                "published_at": "2026-11-18",
+                "tarball_url": "https://example.invalid/legacy",
+                "assets": [],
+            },
+            {
+                "tag_name": "studio-v2.61.0",
+                "published_at": "2026-11-17",
+                "tarball_url": "https://example.invalid/studio",
+                "assets": [
+                    {"name": "reasonix-linux-amd64.tar.gz", "browser_download_url": "https://example.invalid/reasonix"}
+                ],
+            },
+        ],
+    )
+    agent = get_agent("deepseek-reasonix")
+    assert packages.latest_version(agent).version == "studio-v2.61.0"
+    assert [version.version for version in packages.all_versions(agent)] == ["studio-v2.61.0"]
+
+
+def test_python_api_install_does_not_treat_bare_venv_as_installed_package(tmp_path, monkeypatch):
+    agent = get_agent("quorum-cli")
+    install = tmp_path / "install"
+    (install / "bin").mkdir(parents=True)
+    (install / "bin/python").touch()
+    commands = []
+
+    def run(command, **kwargs):
+        commands.append(command)
+        if command[:2] == ["uv", "venv"]:
+            (install / "bin").mkdir(parents=True)
+            (install / "bin/python").touch()
+
+    monkeypatch.setattr(packages, "run", run)
+    result = packages.install_agent(agent, "1.5.1", install)
+    assert commands[-1][-1] == "quorum-cli==1.5.1"
+    assert (install / ".phistory-python-package-installed").exists()
+    assert packages.install_agent(agent, "1.5.1", install) == result
+    assert len(commands) == 2
+
+
+def test_source_script_install_keeps_sibling_templates_and_resolves_immutable_revision(tmp_path, monkeypatch):
+    from phistory.models import CommandResult
+
+    agent = get_agent("headlong")
+    revision = "d" * 40
+    monkeypatch.setattr(packages, "run", lambda argv, **_: CommandResult(tuple(argv), 0, revision + "\tHEAD\n", ""))
+    assert packages.latest_version(agent).version == revision
+    urls = []
+
+    def download(url, output):
+        urls.append(url)
+        with tarfile.open(output, "w:gz") as archive:
+            for name in ("bin/thinkers", "tools/identity", "skills/mem/SKILL.md"):
+                payload = name.encode()
+                member = tarfile.TarInfo(f"headlong-{revision}/{name}")
+                member.mode = 0o755 if name.startswith(("bin/", "tools/")) else 0o644
+                member.size = len(payload)
+                archive.addfile(member, io.BytesIO(payload))
+
+    monkeypatch.setattr(packages, "_download", download)
+    result = packages.install_agent(agent, revision, tmp_path / "install")
+    assert (result / "thinkers").is_symlink()
+    identity = (result / "identity").resolve()
+    assert (identity.parent.parent / "skills/mem/SKILL.md").read_text() == "skills/mem/SKILL.md"
+    assert (result / "bash").is_file()
+    assert packages.install_agent(agent, revision, tmp_path / "install") == result
+    assert urls == [f"https://github.com/laude-institute/headlong/archive/{revision}.tar.gz"]
+    with pytest.raises(ValueError, match="immutable"):
+        packages.install_agent(agent, "main", tmp_path / "bad")

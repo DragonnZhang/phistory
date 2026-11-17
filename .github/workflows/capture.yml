@@ -16,7 +16,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   GH_TOKEN: ${{ github.token }}
   # Legacy kimi ended at 1.51.0; 1.52.0 only prints a migration notice (kimi-cli#2666).
-  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,opencode,pi,omp,gemini-cli,goose,crush,mini-swe-agent,nanobot,bub
+  CAPTURE_AGENTS: claude-code,codex,dsh,antigravity,grok,minimax-code,kimi-code,qwen-code,mimo,openclaw,hermes,opencode,pi,omp,gemini-cli,goose,crush,mini-swe-agent,nanobot,bub,jcode,kilocode,prime-agent
 
 jobs:
   capture:
