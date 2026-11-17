@@ -1,0 +1,71 @@
+{
+  "agent_id": "self-operating-computer",
+  "agent": "Self-Operating Computer",
+  "package": "self-operating-computer",
+  "python_runtime": "3.11",
+  "package_runtime_requirements": [
+    "httpx==0.25.2",
+    "setuptools==80.9.0"
+  ],
+  "version": "1.5.8",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {
+      "entry": "native operate --prompt",
+      "mode": "native gpt-4-with-ocr",
+      "model": "native gpt-4o",
+      "display": "owned Xvfb 1280x800; real screenshot",
+      "scope": "first vision request before actions"
+    }
+  },
+  "requested": {
+    "entry": "native operate --prompt",
+    "mode": "native gpt-4-with-ocr",
+    "model": "native gpt-4o",
+    "display": "owned Xvfb 1280x800; real screenshot",
+    "scope": "first vision request before actions"
+  },
+  "observed": {
+    "model": "gpt-4o"
+  },
+  "published_at": "2025-02-28T22:54:45.023080Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/b3/61/b687fb931ea4c5eea47c4a846301f1b97a3e5ce077382095219602639cf4/self_operating_computer-1.5.8-py3-none-any.whl",
+  "binary_version": "1.5.8",
+  "captured_at": "2026-11-17T18:21:14.235570+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44146631061",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44146631061"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 38.802,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nos.execvp(\"xvfb-run\", [\"xvfb-run\", \"-a\", \"-s\", \"-screen 0 1280x800x24\", \"operate\", \"--prompt\", \"Reply with one short sentence.\"])\n"
+  ]
+}
