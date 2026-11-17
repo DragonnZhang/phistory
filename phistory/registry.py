@@ -8,6 +8,10 @@ from phistory.task_entries import (
     AGENTICSEEK_TASK,
     AGENTLAS_SETUP,
     AGENTLAS_TASK,
+    AGENTLINK_SETUP,
+    AGENTLINK_TASK,
+    ANYTHINGLLM_SETUP,
+    ANYTHINGLLM_TASK,
     AUTOREF_TASK,
     BAMBOOAI_TASK,
     BROWSER_USE_PREFETCH,
@@ -67,6 +71,7 @@ def _variant(
     home_profile: HomeProfile | None = None,
     extra_env: dict[str, str] | None = None,
     stdin_text: str | None = None,
+    pty_ready_text: str | None = None,
 ) -> CaptureVariant:
     return CaptureVariant(
         id=variant_id,
@@ -79,6 +84,7 @@ def _variant(
         home_profile=home_profile,
         extra_env=extra_env or {},
         stdin_text=stdin_text,
+        pty_ready_text=pty_ready_text,
     )
 
 
@@ -1766,6 +1772,117 @@ INKOS = AgentSpec(
 )
 
 
+LOOPTROOP = AgentSpec(
+    id="looptroop",
+    display_name="LoopTroop",
+    package="looptroop",
+    tap_client="looptroop",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    native_host=("opencode-ai", "opencode"),
+    required_user_text=(
+        "You are an expert product manager and technical interviewer.",
+        "Reply with one short sentence.",
+    ),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("native-ticket-interview",),
+    default_variant=_default(
+        capture_unavailable="Requires a real daemon, project and OpenCode workflow; use the named native ticket interview surface."
+    ),
+    variants=(
+        _variant(
+            "native-ticket-interview",
+            "Native ticket interview / managed OpenCode",
+            ("--no-yolo", "--", "start", "--foreground", "--port", "$PHISTORY_SERVER_PORT"),
+            driver="local-task-api",
+            dimensions={
+                "entry": "real daemon, GitHub project and ticket start",
+                "host": "native managed OpenCode",
+                "model": "configured OpenAI gpt-4.1 single-model council",
+                "scope": "first PROM1 interview, native read-only tool policy",
+            },
+        ),
+    ),
+)
+
+ANYTHINGLLM = AgentSpec(
+    id="anything-llm",
+    display_name="AnythingLLM",
+    package="Mintplex-Labs/anything-llm",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="isolated",
+    source_build_commands=(
+        ("npx", "--yes", "yarn@1.22.19", "--cwd", "server", "install", "--frozen-lockfile", "--production"),
+        ("npx", "--yes", "yarn@1.22.19", "--cwd", "collector", "install", "--frozen-lockfile", "--production"),
+    ),
+    tap_client="python",
+    fake_env={"OPEN_AI_KEY": "phistory-fake-api-key"},
+    extra_env={"LLM_PROVIDER": "openai"},
+    recorded_env=("LLM_PROVIDER",),
+    bootstrap_args=("-c", ANYTHINGLLM_SETUP),
+    required_system_text=("Given the following conversation, relevant context, and a follow up question,",),
+    capture_min_tools=1,
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("native-workspace-agent",),
+    default_variant=_default(
+        capture_unavailable="Use a real workspace @agent API turn with the native collector, SQLite and default agent tools."
+    ),
+    variants=(
+        _variant(
+            "native-workspace-agent",
+            "Native workspace @agent API",
+            ("--no-yolo", "--", "-c", ANYTHINGLLM_TASK),
+            driver="local-task-api",
+            dimensions={
+                "entry": "native API key, workspace and @agent turn",
+                "model": "native OpenAI default / Responses",
+                "storage": "native SQLite, LanceDB and local Xenova embedder",
+                "tools": "native AIbitat defaults; no tool suppression",
+            },
+        ),
+    ),
+)
+
+AGENTLINK = AgentSpec(
+    id="agentlink",
+    display_name="AgentLink",
+    package="reefbarman/agentlink",
+    source="github-source",
+    github_source_install="scripts",
+    source_state="readonly",
+    source_build_commands=(("npm", "ci", "--no-audit", "--no-fund"), ("npm", "run", "build:workspaces")),
+    tap_client="python",
+    fake_env={"AGENTLINK_OPENAI_API_KEY": "phistory-fake-api-key"},
+    bootstrap_args=("-c", AGENTLINK_SETUP),
+    capture_min_tools=1,
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("native-tui-openai",),
+    default_variant=_default(
+        capture_unavailable="The native CLI requires a real terminal and model configuration; use its complete TUI task session."
+    ),
+    variants=(
+        _variant(
+            "native-tui-openai",
+            "Native TUI / configured OpenAI",
+            ("--no-yolo", "--", "-c", AGENTLINK_TASK),
+            driver="interactive-pty",
+            pty_ready_text="What would you like AgentLink to work on?",
+            dimensions={
+                "entry": "source-built CLI TUI / native WorkspaceHost",
+                "model": "configured direct OpenAI gpt-5.6-sol",
+                "terminal": "owned POSIX PTY 100x30; actual Enter after native ready prompt",
+                "scope": "initial CLI task; default Codex OAuth not claimed",
+            },
+        ),
+    ),
+)
+
 DB_GPT = AgentSpec(
     id="db-gpt",
     display_name="DB-GPT",
@@ -1779,7 +1896,6 @@ DB_GPT = AgentSpec(
     bootstrap_args=("-c", "import tiktoken; tiktoken.get_encoding('cl100k_base'); tiktoken.get_encoding('o200k_base')"),
     required_system_text=("You are a ReActToolMaster", "# ACTION SPACE Simple Description #"),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("official-react-example",),
     default_variant=_default(
@@ -1820,7 +1936,6 @@ UFO = AgentSpec(
     bootstrap_args=("-c", UFO_SETUP),
     required_system_text=("You are **LinuxAgent**",),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("linux-device-agent",),
     default_variant=_default(
@@ -1899,7 +2014,6 @@ LONG_HORIZON = AgentSpec(
     bootstrap_args=("-c", LONG_HORIZON_SETUP),
     required_user_text=("You are the LongHorizon-Harness manager agent.", "Current management round: 1"),
     tap_mode="forward",
-    track_latest=False,
     capture_timeout_seconds=300,
     latest_variant_ids=("codex-manager-initial",),
     default_variant=_default(
@@ -1929,7 +2043,9 @@ OPENAGENTS = AgentSpec(
     source="github-source",
     github_source_install="scripts",
     source_state="readonly",
-    source_build_commands=(("bash", "coax/build.sh"),),
+    source_build_commands=(
+        ("bash", "-c", 'COAX_MUTATION=0 COAX_RELEASE_CACHE="$HOME/.cache/coax-release-fast" exec bash coax/build.sh'),
+    ),
     tap_client="python",
     fake_env={"OPENROUTER_API_KEY": "phistory-fake-api-key"},
     bootstrap_args=("-c", OPENAGENTS_SETUP),
@@ -3011,6 +3127,9 @@ AGENTS: dict[str, AgentSpec] = {
         AUTORESEARCHCLAW,
         INKOS,
         DB_GPT,
+        LOOPTROOP,
+        ANYTHINGLLM,
+        AGENTLINK,
         UFO,
         AGENTLAS_OS,
         LONG_HORIZON,

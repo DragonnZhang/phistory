@@ -328,13 +328,23 @@ subprocess.run(["lh-harness", "init"], check=True)
 """
 
 AGENTLAS_SETUP = """
+import json
 import os
 import subprocess
 from pathlib import Path
 source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
-subprocess.run(["bash", str(source / "scripts/install-all-runtimes.sh")], cwd=source, check=True)
+installed = subprocess.run(["bash", str(source / "scripts/install-all-runtimes.sh")], cwd=source)
+if installed.returncode not in (0, 1):
+    raise RuntimeError("native Agentlas installer failed")
 launcher = Path(os.environ["PHISTORY_HOME"]) / ".agentlas/os-bin/agentlas-os"
 subprocess.run([str(launcher), "features", "status"], check=True)
+status = json.loads(subprocess.check_output([str(launcher), "host", "status", "claude"], text=True))
+session = status.get("session", {})
+runtime = Path(status.get("runtime", "/nonexistent"))
+release = (source / "RELEASE").read_text().strip()
+if not (status.get("status") == "partial" and status.get("reason") == "session_activation_not_observed" and status.get("version", "").startswith(release + "+os.") and runtime.is_dir() and runtime.resolve().is_relative_to(Path(os.environ["PHISTORY_HOME"]).resolve()) and (runtime / "RELEASE").read_text().strip() == release and session.get("reason") == "session_activation_not_observed" and session.get("hostCommand", [])[:1] == ["claude"] and any(item.get("kind") == "core" and Path(item.get("pluginDir", ""), ".mcp.json").is_file() for item in session.get("components", []))):
+    raise RuntimeError("native Agentlas runtime/session integrity was not verified: " + json.dumps(status))
+print("Native Agentlas prepared runtime:", json.dumps(status), flush=True)
 """
 
 AGENTLAS_TASK = """
@@ -393,6 +403,58 @@ import os
 from pathlib import Path
 os.environ["CURL_CA_BUNDLE"] = os.environ["SSL_CERT_FILE"]
 os.execv(str(Path(os.environ["PHISTORY_HOME"]) / "openagents/task"), ["openagents-native-microcoder-task"])
+"""
+
+AGENTLINK_SETUP = """
+import os
+import subprocess
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+env = dict(os.environ, AGENTLINK_HOME=str(Path(os.environ["PHISTORY_HOME"]) / ".agentlink"))
+subprocess.run(["node", str(source / "apps/cli/dist/agentlink.js"), "--project", os.getcwd(), "config", "model", "openai/gpt-5.6-sol"], env=env, check=True)
+"""
+
+AGENTLINK_TASK = """
+import os
+from pathlib import Path
+os.environ.pop("CI", None)
+os.environ["AGENTLINK_HOME"] = str(Path(os.environ["PHISTORY_HOME"]) / ".agentlink")
+os.execvp("node", ["node", str(Path(os.environ["PHISTORY_SOURCE_ROOT"]) / "apps/cli/dist/agentlink.js"), "--project", os.getcwd()])
+"""
+
+ANYTHINGLLM_SETUP = """
+import os
+import subprocess
+from pathlib import Path
+server = Path(os.environ["PHISTORY_SOURCE_ROOT"]) / "server"
+storage = server / "storage"
+storage.mkdir(parents=True, exist_ok=True)
+env = dict(os.environ, STORAGE_DIR=str(storage), NODE_ENV="production")
+for command in ["generate", "migrate"]:
+    args = [str(server / "node_modules/.bin/prisma"), command]
+    if command == "migrate":
+        args.append("deploy")
+    subprocess.run([*args, "--schema=./prisma/schema.prisma"], cwd=server, env=env, check=True)
+subprocess.run(["node", "-e", "new (require('./utils/EmbeddingEngines/native').NativeEmbedder)().embedderClient().then(() => process.exit(0)).catch(e => {console.error(e);process.exit(1)})"], cwd=server, env=env, check=True)
+"""
+
+ANYTHINGLLM_TASK = """
+import os
+import subprocess
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+env = dict(os.environ, STORAGE_DIR=str(source / "server/storage"), NODE_ENV="production", SERVER_PORT=os.environ["PHISTORY_SERVER_PORT"], COLLECTOR_PORT=os.environ["PHISTORY_COLLECTOR_PORT"])
+processes = []
+try:
+    for name in ["collector", "server"]:
+        processes.append(subprocess.Popen(["node", "index.js"], cwd=source / name, env=env))
+    processes[-1].wait()
+finally:
+    for process in processes:
+        if process.poll() is None:
+            process.terminate()
+    for process in processes:
+        process.wait(timeout=10)
 """
 
 UFO_SETUP = """

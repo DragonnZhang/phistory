@@ -7,7 +7,7 @@ from typing import Literal
 
 PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "github-source", "minimax-code"]
 GitHubReleaseInstall = Literal["wheel", "editable"]
-CaptureDriver = Literal["oneshot", "dsh-web", "openagent-store", "local-task-api", "first-request"]
+CaptureDriver = Literal["oneshot", "dsh-web", "openagent-store", "local-task-api", "first-request", "interactive-pty"]
 HomeProfile = Literal[
     "none",
     "antigravity",
@@ -91,6 +91,7 @@ class CaptureVariant:
     home_profile: HomeProfile | None = None
     capture_unavailable: str | None = None
     stdin_text: str | None = None
+    pty_ready_text: str | None = None
 
     def supports_version(self, version: str) -> bool:
         return self.min_version is None or _version_key(version) >= _version_key(self.min_version)

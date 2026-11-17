@@ -29,6 +29,7 @@ CaptureRunner = Callable[[CaptureRunContext], CaptureExecution]
 def run_capture(context: CaptureRunContext) -> CaptureExecution:
     from phistory.drivers.dsh_web import run_dsh_web
     from phistory.drivers.first_request import run_first_request
+    from phistory.drivers.interactive import run_interactive_pty
     from phistory.drivers.local_apps import run_local_task_api
     from phistory.drivers.oneshot import run_oneshot
     from phistory.drivers.openagent import run_openagent_store
@@ -39,5 +40,6 @@ def run_capture(context: CaptureRunContext) -> CaptureExecution:
         "openagent-store": run_openagent_store,
         "local-task-api": run_local_task_api,
         "first-request": run_first_request,
+        "interactive-pty": run_interactive_pty,
     }
     return runners[context.target.variant.driver](context)

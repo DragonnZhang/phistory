@@ -7,6 +7,12 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Prepare native document runtime libraries
+      if: contains(format(',{0},', inputs.agents), ',anything-llm,')
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
     - uses: oven-sh/setup-bun@v2
       if: contains(format(',{0},', inputs.agents), ',empryo,') || contains(format(',{0},', inputs.agents), ',web3gpt,')
       with:

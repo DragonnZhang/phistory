@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 from http.cookiejar import CookieJar
 from pathlib import Path
+from urllib.parse import quote
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
 from phistory.drivers.common import tap_command
@@ -33,12 +34,12 @@ class LocalApi:
             raise TimeoutError("native application capture exceeded its time budget")
         return min(limit, remaining)
 
-    def request(self, path: str, body: dict | None = None):
+    def request(self, path: str, body: dict | None = None, *, method: str | None = None):
         request = urllib.request.Request(
             self.base + path,
             data=json.dumps(body).encode() if body is not None else None,
             headers=self.headers,
-            method="POST" if body is not None else "GET",
+            method=method or ("POST" if body is not None else "GET"),
         )
         with self.opener.open(request, timeout=self.remaining(90)) as response:
             return json.load(response)
@@ -85,6 +86,27 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         check.bind(("127.0.0.1", 0))
         port = check.getsockname()[1]
     env = {**context.env, "PHISTORY_SERVER_PORT": str(port)}
+    if context.target.agent.id == "anything-llm":
+        with socket.socket() as check:
+            check.bind(("127.0.0.1", 0))
+            env["PHISTORY_COLLECTOR_PORT"] = str(check.getsockname()[1])
+    if context.target.agent.id == "looptroop":
+        home = Path(env["PHISTORY_HOME"])
+        checkout = home / "task-repository"
+        subprocess.run(
+            ["git", "clone", "--depth", "1", "https://github.com/DragonnZhang/claude-tap.git", str(checkout)],
+            check=True,
+            timeout=90,
+            stdout=subprocess.DEVNULL,
+        )
+        with socket.socket() as check:
+            check.bind(("127.0.0.1", 0))
+            opencode_port = check.getsockname()[1]
+        env.update(
+            LOOPTROOP_CONFIG_DIR=str(home / ".config/looptroop"),
+            LOOPTROOP_OPENCODE_MODE="live",
+            LOOPTROOP_OPENCODE_BASE_URL=f"http://127.0.0.1:{opencode_port}",
+        )
     if context.target.agent.id == "markus":
         path = Path(env["PHISTORY_HOME"]) / ".markus/markus.json"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -128,6 +150,19 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         )
         try:
             api = LocalApi(port, deadline)
+            if context.target.agent.id == "looptroop":
+                state_path = Path(env["LOOPTROOP_CONFIG_DIR"]) / "daemon.json"
+                while time.monotonic() < deadline:
+                    if process.poll() is not None:
+                        raise RuntimeError("native LoopTroop daemon exited before registration")
+                    if state_path.exists():
+                        state = json.loads(state_path.read_text())
+                        if state.get("opencode", {}).get("status") in ("managed", "adopted"):
+                            api.headers["Authorization"] = "Bearer " + state["apiToken"]
+                            break
+                    time.sleep(0.25)
+                else:
+                    raise TimeoutError("native LoopTroop OpenCode supervision did not become ready")
             api.wait_ready(process, path="/api/chat" if context.target.agent.id == "web3gpt" else "/")
             if context.target.agent.id == "ouroboros":
                 api.wait_managed_tasks(process)
@@ -168,6 +203,31 @@ def _submit_task(context: CaptureRunContext, api: LocalApi, log) -> None:
                     "messages": [{"id": "phistory-user", "role": "user", "parts": [{"type": "text", "text": PROMPT}]}],
                 },
             )
+        case "looptroop":
+            profile = api.request("/api/profile")
+            settings = {
+                "mainImplementer": "openai/gpt-4.1",
+                "councilMembers": json.dumps(["openai/gpt-4.1"]),
+                "minCouncilQuorum": 1,
+            }
+            profile = api.request("/api/profile", settings, method="PATCH" if profile else "POST")
+            project = api.request(
+                "/api/projects",
+                {
+                    "name": "Phistory",
+                    "shortname": "PHY",
+                    "folderPath": str(Path(context.env["PHISTORY_HOME"]) / "task-repository"),
+                    "profileId": profile["id"],
+                },
+            )
+            ticket = api.request("/api/tickets", {"projectId": project["id"], "title": PROMPT})
+            api.request(f"/api/tickets/{quote(str(ticket['id']), safe='')}/start", method="POST")
+        case "anything-llm":
+            key = api.request("/api/system/generate-api-key", {"name": "Phistory"})
+            api.headers["Authorization"] = "Bearer " + key["apiKey"]["secret"]
+            workspace = api.request("/api/v1/workspace/new", {"name": "Phistory", "chatMode": "chat"})
+            slug = quote(workspace["workspace"]["slug"], safe="")
+            api.request(f"/api/v1/workspace/{slug}/chat", {"message": "@agent " + PROMPT, "mode": "chat"})
         case "hive":
             session = api.request("/api/sessions", {"initial_phase": "independent", "initial_prompt": PROMPT})
             api.request(f"/api/sessions/{session['session_id']}/chat", {"message": PROMPT})
