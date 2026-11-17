@@ -7,6 +7,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from http.cookiejar import CookieJar
 from pathlib import Path
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
@@ -21,7 +22,9 @@ class LocalApi:
     def __init__(self, port: int, deadline: float):
         self.base = f"http://127.0.0.1:{port}"
         self.deadline = deadline
-        self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        self.opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({}), urllib.request.HTTPCookieProcessor(CookieJar())
+        )
         self.headers = {"Content-Type": "application/json"}
 
     def remaining(self, limit: float) -> float:
@@ -56,7 +59,7 @@ class LocalApi:
             time.sleep(0.25)
         raise RuntimeError("native application did not become ready")
 
-    def wait_dialogue(self, process: subprocess.Popen) -> None:
+    def wait_managed_tasks(self, process: subprocess.Popen) -> None:
         deadline = time.monotonic() + self.remaining(180)
         last_health = None
         while time.monotonic() < deadline:
@@ -70,10 +73,10 @@ class LocalApi:
             boot = last_health.get("boot") or {}
             if boot.get("phase") == "failed":
                 raise RuntimeError(f"native supervisor boot failed: {json.dumps(last_health)}")
-            if boot.get("dialogue_ready") is True:
+            if boot.get("tasks_ready") is True:
                 return
             time.sleep(0.5)
-        raise RuntimeError(f"native supervisor dialogue did not become ready: {json.dumps(last_health)}")
+        raise RuntimeError(f"native supervisor managed tasks did not become ready: {json.dumps(last_health)}")
 
 
 def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
@@ -82,6 +85,28 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
         check.bind(("127.0.0.1", 0))
         port = check.getsockname()[1]
     env = {**context.env, "PHISTORY_SERVER_PORT": str(port)}
+    if context.target.agent.id == "markus":
+        path = Path(env["PHISTORY_HOME"]) / ".markus/markus.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with socket.socket() as check:
+            check.bind(("127.0.0.1", 0))
+            web_port = check.getsockname()[1]
+        config = {
+            "server": {"apiPort": port, "webPort": web_port},
+            "llm": {
+                "defaultProvider": "openai",
+                "defaultModel": "gpt-4.1",
+                "providers": {
+                    "openai": {
+                        "apiKeyEnv": "OPENAI_API_KEY",
+                        "model": "gpt-4.1",
+                        "baseUrl": "https://api.openai.com/v1",
+                    }
+                },
+            },
+        }
+        path.write_text(json.dumps(config) + "\n", encoding="utf-8")
+        path.chmod(0o600)
     requirements = {
         "minimum_tools": context.target.agent.capture_min_tools,
         "required_system_text": context.target.agent.required_system_text,
@@ -105,7 +130,7 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
             api = LocalApi(port, deadline)
             api.wait_ready(process)
             if context.target.agent.id == "ouroboros":
-                api.wait_dialogue(process)
+                api.wait_managed_tasks(process)
             try:
                 _submit_task(context, api, log)
             except Exception as exc:
@@ -128,6 +153,13 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
 
 def _submit_task(context: CaptureRunContext, api: LocalApi, log) -> None:
     match context.target.agent.id:
+        case "markus":
+            api.request("/api/auth/login", {"email": "admin@markus.local", "password": context.env["ADMIN_PASSWORD"]})
+            agents = api.request("/api/agents?lean=1")["agents"]
+            secretary = next((agent for agent in agents if agent.get("isOrgSecretary") is True), None)
+            if secretary is None:
+                raise RuntimeError("native Markus server did not seed its organization Secretary")
+            api.request(f"/api/agents/{secretary['id']}/message", {"text": PROMPT})
         case "web3gpt":
             api.request(
                 "/api/chat",

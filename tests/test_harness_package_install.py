@@ -139,7 +139,8 @@ def test_source_script_install_keeps_sibling_templates_and_resolves_immutable_re
 
     agent = get_agent("headlong")
     revision = "d" * 40
-    monkeypatch.setattr(packages, "run", lambda argv, **_: CommandResult(tuple(argv), 0, revision + "\tHEAD\n", ""))
+    refs = "a" * 40 + "\trefs/remotes/origin/HEAD\n" + revision + "\tHEAD\n" + "e" * 40 + "\trefs/heads/HEAD\n"
+    monkeypatch.setattr(packages, "run", lambda argv, **_: CommandResult(tuple(argv), 0, refs, ""))
     assert packages.latest_version(agent).version == revision
     urls = []
 
@@ -163,6 +164,11 @@ def test_source_script_install_keeps_sibling_templates_and_resolves_immutable_re
     assert urls == [f"https://github.com/laude-institute/headlong/archive/{revision}.tar.gz"]
     with pytest.raises(ValueError, match="immutable"):
         packages.install_agent(agent, "main", tmp_path / "bad")
+    monkeypatch.setattr(
+        packages, "run", lambda argv, **_: CommandResult(tuple(argv), 0, "a" * 40 + "\trefs/remotes/origin/HEAD\n", "")
+    )
+    with pytest.raises(RuntimeError, match="cannot resolve"):
+        packages.latest_version(agent)
 
 
 @pytest.mark.parametrize("portable", [False, True])

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 
 import pytest
 
@@ -89,13 +91,15 @@ def test_prompt_wait_ignores_embeddings_and_accepts_native_chat_google_and_flat_
         assert has_prompt_request(tmp_path, PROMPT)
 
 
-def test_supervisor_wait_requires_native_dialogue_ready_and_reports_boot_failure(monkeypatch):
+def test_supervisor_wait_requires_native_task_admission_and_reports_boot_failure(monkeypatch):
     class Process:
         def poll(self):
             return None
 
     api = LocalApi(1, time.monotonic() + 10)
-    health = iter([{"boot": {"phase": "ready", "dialogue_ready": False}}, {"boot": {"dialogue_ready": True}}])
+    health = iter(
+        [{"boot": {"phase": "ready", "dialogue_ready": True, "tasks_ready": False}}, {"boot": {"tasks_ready": True}}]
+    )
     paths = []
 
     def request(path):
@@ -104,8 +108,41 @@ def test_supervisor_wait_requires_native_dialogue_ready_and_reports_boot_failure
 
     monkeypatch.setattr(api, "request", request)
     monkeypatch.setattr("phistory.drivers.local_apps.time.sleep", lambda _: None)
-    api.wait_dialogue(Process())
+    api.wait_managed_tasks(Process())
     assert paths == ["/api/health", "/api/health"]
     monkeypatch.setattr(api, "request", lambda _: {"boot": {"phase": "failed", "error": "native failure"}})
     with pytest.raises(RuntimeError, match="native failure"):
-        api.wait_dialogue(Process())
+        api.wait_managed_tasks(Process())
+
+
+def test_local_api_preserves_native_login_cookie_for_owned_application_requests():
+    seen = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.rfile.read(int(self.headers["Content-Length"]))
+            self.send_response(200)
+            self.send_header("Set-Cookie", "markus_token=native-session; HttpOnly; Path=/; SameSite=Strict")
+            self.end_headers()
+            self.wfile.write(b'{"user":{"id":"native-user"}}')
+
+        def do_GET(self):
+            seen.append(self.headers.get("Cookie"))
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'{"agents":[]}')
+
+        def log_message(self, *args):
+            pass
+
+    with ThreadingHTTPServer(("127.0.0.1", 0), Handler) as server:
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            api = LocalApi(server.server_port, time.monotonic() + 10)
+            api.request("/api/auth/login", {"email": "owned@example.test", "password": "local-test"})
+            assert api.request("/api/agents") == {"agents": []}
+            assert seen == ["markus_token=native-session"]
+        finally:
+            server.shutdown()
+            thread.join(timeout=5)

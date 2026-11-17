@@ -14,6 +14,7 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
+        "markus",
         "wechat-mac-rpa",
         "autoref",
         "agent-s",

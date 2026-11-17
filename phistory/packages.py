@@ -301,7 +301,10 @@ def _agent_releases(agent: AgentSpec) -> list[dict]:
 
 def _github_source_latest(agent: AgentSpec) -> VersionInfo:
     result = run(["git", "ls-remote", f"https://github.com/{agent.package}.git", "HEAD"], timeout=120)
-    revision = result.stdout.split()[0] if result.stdout.strip() else ""
+    heads = [
+        fields[0] for line in result.stdout.splitlines() if len(fields := line.split()) == 2 and fields[1] == "HEAD"
+    ]
+    revision = heads[0] if len(heads) == 1 else ""
     if not re.fullmatch(r"[a-f0-9]{40}", revision):
         raise RuntimeError(f"cannot resolve GitHub source HEAD for {agent.package}")
     return VersionInfo(revision, tarball_url=f"https://github.com/{agent.package}/archive/{revision}.tar.gz")

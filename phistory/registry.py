@@ -1758,6 +1758,39 @@ INKOS = AgentSpec(
 )
 
 
+MARKUS = AgentSpec(
+    id="markus",
+    display_name="Markus",
+    package="@markus-global/cli",
+    tap_client="markus",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key", "ADMIN_PASSWORD": "phistory-local-admin-password-123"},
+    extra_env={"NO_BROWSER": "1"},
+    recorded_env=("NO_BROWSER",),
+    capture_min_tools=1,
+    required_user_text=("Reply with one short sentence.",),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("secretary-openai-api",),
+    default_variant=_default(
+        capture_unavailable="The native Markus Cloud default requires an account; use the explicitly configured direct OpenAI Secretary API."
+    ),
+    variants=(
+        _variant(
+            "secretary-openai-api",
+            "Native seeded Secretary / direct OpenAI API",
+            ("--no-yolo", "--", "--config", "$PHISTORY_HOME/.markus/markus.json", "start"),
+            driver="local-task-api",
+            dimensions={
+                "entry": "native server / seeded Secretary message API",
+                "model": "configured direct OpenAI gpt-4.1",
+                "auth": "native local admin login and session cookie",
+                "browser": "NO_BROWSER suppresses dashboard opener",
+            },
+        ),
+    ),
+)
+
 WECHAT_MAC_RPA = AgentSpec(
     id="wechat-mac-rpa",
     display_name="WeChat Mac RPA",
@@ -2772,6 +2805,7 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        MARKUS,
         WECHAT_MAC_RPA,
         AUTOREF,
         AGENT_S,
