@@ -108,7 +108,7 @@ Claude Code also tracks `official-fable-5-2` and `official-mythos-5-2` from `2.1
 - `opencode`: npm package `opencode-ai`, tap client `opencode`, reverse tap mode so opencode can fetch its model registry while the model request is redirected locally.
 - `pi`: npm package `@earendil-works/pi-coding-agent`, tap client `pi`, isolated Pi provider config.
 - `omp`: npm package `@oh-my-pi/pi-coding-agent` for version discovery, official `can1357/oh-my-pi` release binary for installation, tap client `omp`, isolated Oh My Pi provider config.
-- `gemini-cli`: official npm package `@google/gemini-cli`, tap client `gemini`, fake `GEMINI_API_KEY`, transparent forward capture. The default model is not overridden; keeping `GOOGLE_GEMINI_BASE_URL` unset preserves the native API-key prompt surface rather than selecting gateway auth.
+- `gemini-cli`: official npm package `@google/gemini-cli`, tap client `gemini`, fake `GEMINI_API_KEY`, transparent forward capture. The default model is not overridden; keeping `GOOGLE_GEMINI_BASE_URL` unset preserves the native API-key prompt surface rather than selecting gateway auth. `GEMINI_CLI_TRUST_WORKSPACE=true` trusts only Phistory's isolated empty work directory and is recorded in capture metadata.
 
 When adding another CLI, prefer extending the existing abstractions:
 

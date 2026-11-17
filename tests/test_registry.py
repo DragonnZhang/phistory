@@ -41,6 +41,8 @@ def test_gemini_uses_official_package_and_preserves_default_native_auth_surface(
     assert agent.fake_env == {"GEMINI_API_KEY": "phistory-fake-api-key"}
     assert "--model" not in agent.default_variant.run_args
     assert "GOOGLE_GEMINI_BASE_URL" not in agent.extra_env
+    assert agent.extra_env["GEMINI_CLI_TRUST_WORKSPACE"] == "true"
+    assert "GEMINI_CLI_TRUST_WORKSPACE" in agent.recorded_env
     target = CaptureTarget(agent, VersionInfo("1.0.0"), agent.default_variant, Path("captures"))
     argv = tap_command(target, Path("prompt.md"), Path("tap"))
     assert argv[argv.index("--mode") + 1] == "forward"

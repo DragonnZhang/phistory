@@ -943,8 +943,8 @@ GEMINI_CLI = AgentSpec(
     executable="gemini",
     fake_env={"GEMINI_API_KEY": "phistory-fake-api-key"},
     tap_mode="forward",
-    extra_env={"CI": "1", "GEMINI_TELEMETRY_ENABLED": "false"},
-    recorded_env=("GEMINI_TELEMETRY_ENABLED",),
+    extra_env={"CI": "1", "GEMINI_TELEMETRY_ENABLED": "false", "GEMINI_CLI_TRUST_WORKSPACE": "true"},
+    recorded_env=("GEMINI_TELEMETRY_ENABLED", "GEMINI_CLI_TRUST_WORKSPACE"),
     default_variant=_default(("--no-yolo", "--", "-p", "Reply with one short sentence.")),
 )
 
