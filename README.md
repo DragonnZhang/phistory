@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-17 18:39 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-17 19:03 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-17 18:39 UTC
+Last capture update: 2026-11-17 19:03 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -150,6 +150,7 @@ Last capture update: 2026-11-17 18:39 UTC
 | DarkMoon | [edfe9cb12a263036a0c3dc1af604713e8197cce9](captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/prompt.md) | 1 | 1 | 2026-11-17 18:32 UTC |
 | AutoGPT | [autogpt-platform-beta-v0.11.3 - 2026-11-15](captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/prompt.md) | 1 | 1 | 2026-11-17 18:32 UTC |
 | QM | [0.1.18 - 2026-11-11](captures/qm/0.1.18/variants/native-local-web-turn/prompt.md) | 1 | 1 | 2026-11-17 18:39 UTC |
+| Dyad | [63d28b887c1b62b8509373ba58d4b03573bb714a](captures/dyad/63d28b887c1b62b8509373ba58d4b03573bb714a/variants/native-electron-basic-agent/prompt.md) | 1 | 1 | 2026-11-17 19:03 UTC |
 | AgentLink | [5e6450f0a8f420991ddff5c4c17f921c5f40790c](captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/prompt.md) | 1 | 1 | 2026-11-17 18:39 UTC |
 | UFO LinuxAgent | [eae3c0a8d168c47cb10df0652e293e092eda1078](captures/ufo/eae3c0a8d168c47cb10df0652e293e092eda1078/variants/linux-device-agent/prompt.md) | 1 | 1 | 2026-11-17 16:51 UTC |
 | Agentlas OS | [6108604d8487519b820cac916c5061cd6e619688](captures/agentlas-os/6108604d8487519b820cac916c5061cd6e619688/variants/claude-core-ready-inline/prompt.md) | 1 | 2 | 2026-11-17 18:04 UTC |

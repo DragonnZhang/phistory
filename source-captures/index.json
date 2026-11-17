@@ -3316,7 +3316,7 @@
           "path": "source-captures/dyad/98504bb472c8ebb3bb8d"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "dyad"
     },
     {
