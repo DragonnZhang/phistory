@@ -1,0 +1,75 @@
+{
+  "agent_id": "mini-swe-agent",
+  "agent": "mini-swe-agent",
+  "package": "mini-swe-agent",
+  "version": "2.4.6",
+  "variant": {
+    "id": "default",
+    "label": "Default · configured OpenAI",
+    "dimensions": {
+      "provider": "openai",
+      "model": "gpt-4.1",
+      "config": "mini.yaml",
+      "step_limit": "1"
+    }
+  },
+  "requested": {
+    "provider": "openai",
+    "model": "gpt-4.1",
+    "config": "mini.yaml",
+    "step_limit": "1"
+  },
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 1
+  },
+  "published_at": "2026-07-23T03:12:59.856164Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/a2/00/a2f454775f69f540ab529c5f5e35d672f6491f0e6edab7cb196a0d2a0e2e/mini_swe_agent-2.4.6-py3-none-any.whl",
+  "binary_version": "2.4.6",
+  "captured_at": "2026-11-17T11:59:13.818169+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44078434491",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44078434491"
+  },
+  "tap_client": "mini",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 10.27,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "mini",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "--task",
+    "Reply with one short sentence.",
+    "--yolo",
+    "--exit-immediately",
+    "-c",
+    "mini.yaml",
+    "-c",
+    "agent.step_limit=1"
+  ],
+  "capture_environment": {
+    "MSWEA_CONFIGURED": "true",
+    "MSWEA_MODEL_NAME": "openai/gpt-4.1",
+    "MSWEA_COST_TRACKING": "ignore_errors"
+  }
+}

@@ -10,7 +10,7 @@ Phistory 追踪 Claude Code、Codex、Qwen Code、Qoder CLI、DeepSeek Harness�
 
 [Harness 源码归档](sources.html)保存 95 项调研中新增项目的提示词模板、装配代码与工具声明，保留完整原文件和来源，单独展示，不与真实请求捕获混用。
 
-> 每天自动检查新版本，归档最近更新于 **2026-11-17 11:33 UTC**。
+> 每天自动检查新版本，归档最近更新于 **2026-11-17 11:59 UTC**。
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## 抓取状态
 
-最近抓取更新：2026-11-17 11:33 UTC
+最近抓取更新：2026-11-17 11:59 UTC
 
 | Agent | 最新版本 | 版本数 | 快照数 | 最近抓取 |
 | --- | --- | ---: | ---: | --- |
@@ -112,7 +112,12 @@ uv run phistory render-site
 | opencode | [1.19.6 - 2026-11-17](captures/opencode/1.19.6/variants/default/prompt.md) | 125 | 125 | 2026-11-17 11:03 UTC |
 | Pi | [1.5.2 - 2026-11-10](captures/pi/1.5.2/variants/default/prompt.md) | 62 | 62 | 2026-11-11 09:49 UTC |
 | Oh My Pi | [18.22.0 - 2026-11-16](captures/omp/18.22.0/variants/default/prompt.md) | 144 | 144 | 2026-11-17 11:04 UTC |
-| Gemini CLI | [0.68.0 - 2026-11-10](captures/gemini-cli/0.68.0/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:33 UTC |
+| Gemini CLI | [0.68.0 - 2026-11-10](captures/gemini-cli/0.68.0/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:58 UTC |
+| Goose | [v1.59.2 - 2026-11-16](captures/goose/v1.59.2/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:58 UTC |
+| Crush | [0.101.0 - 2026-11-12](captures/crush/0.101.0/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
+| mini-swe-agent | [2.4.6 - 2026-07-23](captures/mini-swe-agent/2.4.6/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
+| nanobot | [0.4.1 - 2026-11-06](captures/nanobot/0.4.1/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
+| Bub | [0.6.1 - 2026-11-04](captures/bub/0.6.1/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
 
 ## 项目趋势
 

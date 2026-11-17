@@ -223,7 +223,7 @@
           "path": "source-captures/goose/02d3be6aae21bcfd8f29"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "goose"
     },
     {
@@ -2225,7 +2225,7 @@
           "path": "source-captures/bub/d12172b0a95941cd898e"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "bub"
     },
     {
@@ -2438,7 +2438,7 @@
           "path": "source-captures/crush/70e6cf1dea4e74097f1e"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "crush"
     },
     {
@@ -4774,7 +4774,7 @@
           "path": "source-captures/nanobot/10494c2e43ea646e7ab4"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "nanobot"
     },
     {
@@ -9234,7 +9234,7 @@
           "path": "source-captures/mini-swe-agent/817bcc9388429557ef6a"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "mini-swe-agent"
     },
     {

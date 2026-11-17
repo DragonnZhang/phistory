@@ -10,26 +10,27 @@
   },
   "requested": {},
   "observed": {
-    "tool_count": 1
+    "model": "gemini-3.1-pro-preview-customtools",
+    "tool_count": 8
   },
   "published_at": "2026-11-10T21:22:49.277Z",
-  "tarball_url": null,
+  "tarball_url": "https://registry.npmjs.org/@google/gemini-cli/-/gemini-cli-0.68.0.tgz",
   "binary_version": "0.68.0",
-  "captured_at": "2026-11-17T11:33:32.163440+00:00",
+  "captured_at": "2026-11-17T11:58:23.534646+00:00",
   "capture_host": {
     "platform": "Linux",
     "architecture": "x86_64",
     "runner": "github-actions",
-    "workflow": "Backfill prompt history",
-    "run_id": "44074718469",
+    "workflow": "Capture selected prompts",
+    "run_id": "44078434491",
     "run_attempt": "1",
-    "job": "backfill",
-    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44074718469"
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44078434491"
   },
   "tap_client": "gemini",
   "target": "claude-tap capture-only",
   "client_exit_code": 0,
-  "duration_seconds": 108.873,
+  "duration_seconds": 106.385,
   "command": [
     "python",
     "-m",
