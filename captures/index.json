@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-17T12:42:29.208878Z",
+  "updated_at": "2026-11-17T12:51:53.790431Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -211,11 +211,29 @@
       "snapshots": 1
     },
     {
+      "agent_id": "pi-rust",
+      "agent": "pi-rust",
+      "latest_version": "0.22.1",
+      "latest_published_at": "2026-11-13T16:00:49.731Z",
+      "latest_captured_at": "2026-11-17T12:51:06.761452+00:00",
+      "versions": 1,
+      "snapshots": 1
+    },
+    {
       "agent_id": "codewhale",
       "agent": "Codewhale",
       "latest_version": "0.10.2",
       "latest_published_at": "2026-10-24T17:34:12.722Z",
       "latest_captured_at": "2026-11-17T12:41:46.909632+00:00",
+      "versions": 1,
+      "snapshots": 2
+    },
+    {
+      "agent_id": "opendev",
+      "agent": "OpenDev",
+      "latest_version": "v0.1.9",
+      "latest_published_at": "2026-07-10T12:09:43Z",
+      "latest_captured_at": "2026-11-17T12:51:08.901616+00:00",
       "versions": 1,
       "snapshots": 1
     },
@@ -234,6 +252,15 @@
       "latest_version": "3.0.74",
       "latest_published_at": "2026-10-26T04:04:22.234Z",
       "latest_captured_at": "2026-11-17T12:42:22.899278+00:00",
+      "versions": 1,
+      "snapshots": 2
+    },
+    {
+      "agent_id": "letta-code",
+      "agent": "Letta Code",
+      "latest_version": "0.34.63",
+      "latest_published_at": "2026-11-15T21:17:20.497Z",
+      "latest_captured_at": "2026-11-17T12:51:53.790431+00:00",
       "versions": 1,
       "snapshots": 1
     },
@@ -115760,6 +115787,26 @@
       "meta": "captures/jcode/v1.0.0/variants/default/meta.json"
     },
     {
+      "agent_id": "pi-rust",
+      "agent": "pi-rust",
+      "version": "0.22.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {
+        "transport": "HTTP capture-only proxy; native Anthropic provider/model"
+      },
+      "observed": {
+        "model": "claude-opus-4-8",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-13T16:00:49.731Z",
+      "captured_at": "2026-11-17T12:51:06.761452+00:00",
+      "prompt": "captures/pi-rust/0.22.1/variants/default/prompt.md",
+      "trace": "captures/pi-rust/0.22.1/variants/default/trace.jsonl",
+      "meta": "captures/pi-rust/0.22.1/variants/default/meta.json"
+    },
+    {
       "agent_id": "codewhale",
       "agent": "Codewhale",
       "version": "0.10.2",
@@ -115778,6 +115825,44 @@
       "prompt": "captures/codewhale/0.10.2/variants/default/prompt.md",
       "trace": "captures/codewhale/0.10.2/variants/default/trace.jsonl",
       "meta": "captures/codewhale/0.10.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codewhale",
+      "agent": "Codewhale",
+      "version": "0.10.2",
+      "variant_id": "auto",
+      "variant_label": "Auto · agent tools",
+      "variant_dimensions": {
+        "mode": "auto"
+      },
+      "observed": {
+        "model": "deepseek-flash",
+        "tool_count": 15
+      },
+      "capture_status": "captured",
+      "published_at": "2026-10-24T17:34:12.722Z",
+      "captured_at": "2026-11-17T12:51:11.949401+00:00",
+      "prompt": "captures/codewhale/0.10.2/variants/auto/prompt.md",
+      "trace": "captures/codewhale/0.10.2/variants/auto/trace.jsonl",
+      "meta": "captures/codewhale/0.10.2/variants/auto/meta.json"
+    },
+    {
+      "agent_id": "opendev",
+      "agent": "OpenDev",
+      "version": "v0.1.9",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "accounts/fireworks/models/kimi-k2-instruct-0905",
+        "tool_count": 7
+      },
+      "capture_status": "captured",
+      "published_at": "2026-07-10T12:09:43Z",
+      "captured_at": "2026-11-17T12:51:08.901616+00:00",
+      "prompt": "captures/opendev/v0.1.9/variants/default/prompt.md",
+      "trace": "captures/opendev/v0.1.9/variants/default/trace.jsonl",
+      "meta": "captures/opendev/v0.1.9/variants/default/meta.json"
     },
     {
       "agent_id": "kilocode",
@@ -115817,6 +115902,48 @@
       "prompt": "captures/cline/3.0.74/variants/default/prompt.md",
       "trace": "captures/cline/3.0.74/variants/default/trace.jsonl",
       "meta": "captures/cline/3.0.74/variants/default/meta.json"
+    },
+    {
+      "agent_id": "cline",
+      "agent": "Cline",
+      "version": "3.0.74",
+      "variant_id": "anthropic",
+      "variant_label": "Configured Anthropic",
+      "variant_dimensions": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-5-5"
+      },
+      "observed": {
+        "model": "anthropic/claude-sonnet-5.5",
+        "tool_count": 26
+      },
+      "capture_status": "captured",
+      "published_at": "2026-10-26T04:04:22.234Z",
+      "captured_at": "2026-11-17T12:51:30.104946+00:00",
+      "prompt": "captures/cline/3.0.74/variants/anthropic/prompt.md",
+      "trace": "captures/cline/3.0.74/variants/anthropic/trace.jsonl",
+      "meta": "captures/cline/3.0.74/variants/anthropic/meta.json"
+    },
+    {
+      "agent_id": "letta-code",
+      "agent": "Letta Code",
+      "version": "0.34.63",
+      "variant_id": "local",
+      "variant_label": "Local backend",
+      "variant_dimensions": {
+        "backend": "local",
+        "provider": "anthropic"
+      },
+      "observed": {
+        "model": "claude-opus-5-5",
+        "tool_count": 22
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-15T21:17:20.497Z",
+      "captured_at": "2026-11-17T12:51:53.790431+00:00",
+      "prompt": "captures/letta-code/0.34.63/variants/local/prompt.md",
+      "trace": "captures/letta-code/0.34.63/variants/local/trace.jsonl",
+      "meta": "captures/letta-code/0.34.63/variants/local/meta.json"
     },
     {
       "agent_id": "prime-agent",

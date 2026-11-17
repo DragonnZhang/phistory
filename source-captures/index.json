@@ -2132,7 +2132,7 @@
           "path": "source-captures/pi-rust/128ee911697aea8b61b0"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "pi-rust"
     },
     {
@@ -5592,7 +5592,7 @@
           "path": "source-captures/letta-code/91c809e56ed8cdf799c5"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "letta-code"
     },
     {
@@ -7276,7 +7276,7 @@
           "path": "source-captures/opendev/723fae218312059de001"
         }
       ],
-      "runtime_available": false,
+      "runtime_available": true,
       "runtime_agent": "opendev"
     },
     {

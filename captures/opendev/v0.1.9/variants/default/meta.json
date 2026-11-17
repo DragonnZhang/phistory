@@ -1,0 +1,57 @@
+{
+  "agent_id": "opendev",
+  "agent": "OpenDev",
+  "package": "opendev-to/opendev",
+  "version": "v0.1.9",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "accounts/fireworks/models/kimi-k2-instruct-0905",
+    "tool_count": 7
+  },
+  "published_at": "2026-07-10T12:09:43Z",
+  "tarball_url": "https://github.com/opendev-to/opendev/releases/download/v0.1.9/opendev-cli-x86_64-unknown-linux-gnu.tar.xz",
+  "binary_version": "v0.1.9",
+  "captured_at": "2026-11-17T12:51:08.901616+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture selected prompts",
+    "run_id": "44086915151",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44086915151"
+  },
+  "tap_client": "opendev",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "duration_seconds": 1.438,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "opendev",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-p",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "OPENDEV_DISABLE_REMOTE_MODELS": "1"
+  }
+}
