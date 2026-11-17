@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-17T16:09:35.448190Z",
+  "updated_at": "2026-11-17T16:09:58.950172Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -423,6 +423,15 @@
       "latest_version": "1.8.0",
       "latest_published_at": "2026-08-17T04:14:23.356Z",
       "latest_captured_at": "2026-11-17T13:12:49.976393+00:00",
+      "versions": 1,
+      "snapshots": 1
+    },
+    {
+      "agent_id": "longhorizon-harness",
+      "agent": "LongHorizon-Harness",
+      "latest_version": "0.1.8",
+      "latest_published_at": "2026-10-21T03:30:32.053126Z",
+      "latest_captured_at": "2026-11-17T16:09:58.950172+00:00",
       "versions": 1,
       "snapshots": 1
     },
@@ -116796,6 +116805,30 @@
       "prompt": "captures/inkos/1.8.0/variants/chat-openai/prompt.md",
       "trace": "captures/inkos/1.8.0/variants/chat-openai/trace.jsonl",
       "meta": "captures/inkos/1.8.0/variants/chat-openai/meta.json"
+    },
+    {
+      "agent_id": "longhorizon-harness",
+      "agent": "LongHorizon-Harness",
+      "version": "0.1.8",
+      "variant_id": "codex-manager-initial",
+      "variant_label": "Native initial manager / real Codex host",
+      "variant_dimensions": {
+        "entry": "native lh-harness run",
+        "host": "actual separately installed Codex / host_runtime provenance",
+        "model": "native harness Codex gpt-5.6-sol",
+        "max_rounds": "1",
+        "scope": "first native outer-manager request; later executor/auditor not claimed"
+      },
+      "observed": {
+        "model": "gpt-5.6-sol",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-10-21T03:30:32.053126Z",
+      "captured_at": "2026-11-17T16:09:58.950172+00:00",
+      "prompt": "captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/prompt.md",
+      "trace": "captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/trace.jsonl",
+      "meta": "captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/meta.json"
     },
     {
       "agent_id": "markus",

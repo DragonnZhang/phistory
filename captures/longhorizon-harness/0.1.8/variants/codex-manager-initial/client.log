@@ -1,0 +1,45 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:39637
+[claude-tap] CA cert: /tmp/phistory-home-kl1itxfu/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/.tap/2026-11-17/trace_160955.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+print("Native host provenance:", os.environ["PHISTORY_NATIVE_HOST"], flush=True)
+os.execvp("lh-harness", ["lh-harness", "run", "--task", "Reply with one short sentence.", "--agent", "codex", "--max-rounds", "1", "--api-key", os.environ["OPENAI_API_KEY"], "--base-url", "https://api.openai.com/v1"])
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:39637
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-kl1itxfu/.local/share/claude-tap/ca.pem
+Native host provenance: {"package": "@openai/codex", "version": "0.169.0", "executable": "codex", "version_output": "codex-cli 0.169.0"}
+Using config: /tmp/phistory-work-ssuezkni/.lh-harness/config.toml
+Run id:    20261117T160955Z_43b51b0b
+Run dir:   /tmp/phistory-work-ssuezkni/.lh-harness/runs/20261117T160955Z_43b51b0b
+Workspace: /tmp/phistory-work-ssuezkni
+Log dir:   /tmp/phistory-work-ssuezkni/.lh-harness/runs/20261117T160955Z_43b51b0b/lh_harness
+Dashboard live at http://127.0.0.1:35775/ (log dir: /tmp/phistory-work-ssuezkni/.lh-harness/runs/20261117T160955Z_43b51b0b/lh_harness)
+Open this URL in a browser: http://127.0.0.1:35775/
+
+── Round 1/1 ──
+  [manager] running...
+  [manager] done · 0.8s · next=invalid
+
+── Writing reply ──
+  [final_response] running...
+
+[claude-tap] shutting down python... (Ctrl+C again to force)
+
+[claude-tap] python stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/prompt.md
+
+[claude-tap] summary:
+  api_calls:    4
+  trace:        /home/runner/work/phistory/phistory/captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/.tap/2026-11-17/trace_160955.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/.tap/2026-11-17/trace_160955.log
+  view:         /home/runner/work/phistory/phistory/captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/.tap/2026-11-17/trace_160955.html
+  prompt:       /home/runner/work/phistory/phistory/captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/prompt.md
+
+stderr:
