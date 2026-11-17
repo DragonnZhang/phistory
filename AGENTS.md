@@ -131,6 +131,10 @@ When adding another CLI, prefer extending the existing abstractions:
 
 ## Design Rules
 
+Native application captures retain actual startup, storage, authentication and task admission. GitHub release installations may use `github_release_install="docker"` with an official `docker_image` template: archive the inspected immutable identity and OCI provenance in `container-image.json`, and send model requests only to the owned capture-only endpoint reachable from the container. Use the application's complete readiness predicate, not a frontend or liveness response.
+
+The Electron controllers in `phistory/drivers/*_task.cjs` launch the real application with a private profile and its native renderer/preload/task flow. Orkas retains its full upstream dependency bootstrap; Dyad uses its production package and existing renderer CDP, preserving its original fuses. Run `node --check` on modified controllers and retain their native Electron version sidecar. Validate their primary prompt and actually emitted tool schemas rather than UI completion or a catalogue count.
+
 - Do not patch around broken historical releases with bespoke compatibility hacks. If a package cannot install or start far enough to emit a request, let that version fail and move on.
 - Do not add one-off version maps unless there is a stable upstream rule behind them.
 - Prefer official release metadata: npm registry for npm packages, PyPI JSON for Python packages, GitHub Releases for release-tagged projects.

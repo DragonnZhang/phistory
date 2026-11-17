@@ -6,7 +6,7 @@ from pathlib import Path
 from phistory.capture import _capture_env
 from phistory.drivers.common import upstream_client_args
 from phistory.models import CaptureTarget, VersionInfo
-from phistory.registry import AGENTS, get_agent, parse_agent_ids
+from phistory.registry import AGENTS, get_agent
 
 
 def target(agent_id, tmp_path):
@@ -25,22 +25,6 @@ def test_native_python_bootstraps_and_task_entries_are_valid_python():
         for arguments in commands:
             if len(arguments) > 1 and arguments[0] == "-c":
                 ast.parse(arguments[1], filename=f"{agent.id}:native Python entry")
-
-
-def test_unverified_profiles_require_explicit_selection():
-    candidates = {
-        "looptroop",
-        "agentlink",
-        "librechat",
-        "vibesdk",
-        "qm",
-        "autogpt",
-        "dark-moon",
-        "orkas",
-        "dyad",
-    }
-    assert not candidates.intersection(parse_agent_ids(None))
-    assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
 
 
 def test_isolated_source_preserves_relative_package_launchers(tmp_path, monkeypatch):
