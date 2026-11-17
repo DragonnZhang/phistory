@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import http.cookiejar
 import json
-import os
 import re
-import signal
 import socket
 import subprocess
 import time
@@ -14,6 +12,7 @@ from pathlib import Path
 
 from phistory.drivers import CaptureExecution, CaptureRunContext
 from phistory.drivers.common import tap_command
+from phistory.drivers.local_server import has_prompt_request, stop_process
 from phistory.models import CommandResult
 
 SERVER_TIMEOUT_SECONDS = 60
@@ -42,7 +41,7 @@ def run_dsh_web(context: CaptureRunContext) -> CaptureExecution:
             _create_and_prompt_session(context, port, process)
             _wait_for_prompt_trace(context.tap_output_dir, process)
         finally:
-            _stop_process(process)
+            stop_process(process)
     stdout = log_path.read_text(encoding="utf-8", errors="replace")
     if time.monotonic() - started > CAPTURE_TIMEOUT_SECONDS:
         stdout += "\nDSH Web capture exceeded its timeout."
@@ -160,43 +159,7 @@ def _wait_for_prompt_trace(tap_output_dir: Path, process: subprocess.Popen) -> N
 
 
 def _has_prompt_request(tap_output_dir: Path) -> bool:
-    for trace_path in tap_output_dir.glob("*/trace_*.jsonl"):
-        try:
-            lines = trace_path.read_text(encoding="utf-8").splitlines()
-        except OSError:
-            continue
-        for line in lines:
-            try:
-                record = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            body = (record.get("request") or {}).get("body")
-            if isinstance(body, str):
-                try:
-                    body = json.loads(body)
-                except json.JSONDecodeError:
-                    continue
-            if (
-                isinstance(body, dict)
-                and any(key in body for key in ("messages", "input", "system", "instructions"))
-                and PROMPT in json.dumps(body, ensure_ascii=False)
-            ):
-                return True
-    return False
-
-
-def _stop_process(process: subprocess.Popen) -> None:
-    if process.poll() is not None:
-        return
-    try:
-        os.killpg(process.pid, signal.SIGINT)
-        process.wait(timeout=20)
-    except (ProcessLookupError, subprocess.TimeoutExpired):
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        process.wait(timeout=5)
+    return has_prompt_request(tap_output_dir, PROMPT)
 
 
 def _free_port() -> int:

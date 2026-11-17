@@ -7,7 +7,7 @@ from typing import Literal
 
 PackageSource = Literal["npm", "pypi", "github-release", "github-release-asset", "github-source", "minimax-code"]
 GitHubReleaseInstall = Literal["wheel", "editable"]
-CaptureDriver = Literal["oneshot", "dsh-web"]
+CaptureDriver = Literal["oneshot", "dsh-web", "openagent-store"]
 HomeProfile = Literal[
     "none",
     "antigravity",
@@ -43,6 +43,7 @@ HomeProfile = Literal[
     "tianshu",
     "octomind",
     "headlong",
+    "openagent",
 ]
 TapMode = Literal["auto", "reverse", "forward"]
 _VARIANT_ID_RE = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\Z")

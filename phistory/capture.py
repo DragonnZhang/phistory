@@ -504,6 +504,9 @@ def _capture_env(
             inherit_env=False,
             timeout=120,
         )
+    if profile == "openagent":
+        env["driverName"] = "sqlite3"
+        env["dataSourceName"] = str(home / "openagent.db")
     if target.agent.node_runtime:
         env["NPM_CONFIG_CACHE"] = str(bin_dir.parents[2] / ".npm-runtime-cache")
     if target.agent.fake_chatgpt_auth:

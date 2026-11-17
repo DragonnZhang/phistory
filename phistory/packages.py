@@ -419,11 +419,14 @@ def _install_github_release_asset(agent: AgentSpec, version: str, install_dir: P
     _download(asset["url"], archive_path)
     if asset.get("sha512"):
         _verify_sha512(archive_path, asset["sha512"])
-    extract_dir = install_dir / "extract"
-    extract_dir.mkdir(parents=True, exist_ok=True)
-    _extract_archive(archive_path, extract_dir)
     binary_name = agent.release_asset_binary or agent.tap_client
-    source = _find_extracted_binary(extract_dir, binary_name)
+    if asset["name"] == binary_name:
+        source = archive_path
+    else:
+        extract_dir = install_dir / "extract"
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        _extract_archive(archive_path, extract_dir)
+        source = _find_extracted_binary(extract_dir, binary_name)
     if agent.release_asset_layout == "bundle":
         source.chmod(source.stat().st_mode | 0o755)
         command = source.parent / agent_executable(agent)

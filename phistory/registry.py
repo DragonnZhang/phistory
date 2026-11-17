@@ -1478,6 +1478,36 @@ HEADLONG = AgentSpec(
 )
 
 
+OPENAGENT = AgentSpec(
+    id="openagent",
+    display_name="OpenAgent",
+    package="the-open-agent/openagent",
+    source="github-release-asset",
+    release_asset="openagent_linux_x86_64",
+    release_asset_binary="openagent_linux_x86_64",
+    tap_client="openagent",
+    fake_env={},
+    home_profile="openagent",
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=240,
+    latest_variant_ids=("store-api",),
+    default_variant=_default(
+        ("--no-yolo", "--", "serve"),
+        capture_unavailable="The native server has no configured model provider; use the named configured local Store API surface.",
+    ),
+    variants=(
+        _variant(
+            "store-api",
+            "Local Store API · configured OpenAI",
+            ("--no-yolo", "--", "serve"),
+            driver="openagent-store",
+            dimensions={"entry": "native built-in Store completion API", "provider": "OpenAI", "model": "gpt-4.1"},
+        ),
+    ),
+)
+
+
 AGENTS: dict[str, AgentSpec] = {
     agent.id: agent
     for agent in (
@@ -1519,6 +1549,7 @@ AGENTS: dict[str, AgentSpec] = {
         TIANSHU,
         OCTOMIND,
         HEADLONG,
+        OPENAGENT,
     )
 }
 AGENT_ORDER = tuple(AGENTS)

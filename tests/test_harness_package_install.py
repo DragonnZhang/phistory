@@ -74,6 +74,19 @@ def test_release_asset_can_use_numeric_version_without_changing_tag():
     assert packages._select_release_asset(agent, "v0.10.3", {"assets": [asset]}) == asset
 
 
+def test_raw_release_binary_is_installed_without_archive_extraction(tmp_path, monkeypatch):
+    agent = get_agent("openagent")
+    monkeypatch.setattr(
+        packages,
+        "_github_release_asset_info",
+        lambda *_: {"name": "openagent_linux_x86_64", "url": "https://example.invalid/openagent"},
+    )
+    monkeypatch.setattr(packages, "_download", lambda url, output: output.write_bytes(b"fake ELF"))
+    result = packages.install_agent(agent, "v2.89.2", tmp_path / "install")
+    assert (result / "openagent").read_bytes() == b"fake ELF"
+    assert (result / "openagent").stat().st_mode & 0o111
+
+
 def test_release_channels_do_not_substitute_legacy_or_other_product_tags(monkeypatch):
     monkeypatch.setattr(
         packages,
