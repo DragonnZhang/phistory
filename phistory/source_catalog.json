@@ -40,7 +40,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "f8a950c3c649a8ea920d98343e94ac028ec7d1d6"
+      ]
     },
     {
       "id": "goose",
@@ -91,7 +94,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+      ]
     },
     {
       "id": "hive",
@@ -117,7 +123,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "4ede54992e1ef4cfeb6a78bda45ba864dc2643a9"
+      ]
     },
     {
       "id": "agent-zero",
@@ -589,7 +598,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "ba9b67df0f54ac78106ae85c552ef5d2458f7c9a"
+      ]
     },
     {
       "id": "agentlas-os",
@@ -609,6 +621,27 @@
           "commit": "33e256b950210d07de716714fedb38ba1aa76b20",
           "path": "agentlas_cloud/prompt_composition.py",
           "sha256": "237390737b9c5cb59ce048978e4c62b3f5406ba5976364187dc691f1f8cf80be",
+          "roles": [
+            "prompt"
+          ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "33e256b950210d07de716714fedb38ba1aa76b20"
+      ]
+    },
+    {
+      "id": "autoresearchclaw",
+      "name": "AutoResearchClaw",
+      "repository": "aiming-lab/AutoResearchClaw",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "be4ba4755bf1b52220f25e13b2293b5956590070",
+          "path": "prompts.default.yaml",
+          "sha256": "93fd9370c01dd3ee9bdeaf6d0767556805cdb5e283231febc701913f783267a5",
           "roles": [
             "prompt"
           ]
@@ -632,25 +665,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
-    },
-    {
-      "id": "autoresearchclaw",
-      "name": "AutoResearchClaw",
-      "repository": "aiming-lab/AutoResearchClaw",
-      "existing_agent": null,
-      "files": [
-        {
-          "commit": "be4ba4755bf1b52220f25e13b2293b5956590070",
-          "path": "prompts.default.yaml",
-          "sha256": "93fd9370c01dd3ee9bdeaf6d0767556805cdb5e283231febc701913f783267a5",
-          "roles": [
-            "prompt"
-          ]
-        }
-      ],
-      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "be4ba4755bf1b52220f25e13b2293b5956590070"
+      ]
     },
     {
       "id": "openevolve",
@@ -685,7 +703,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "73448d715968b3578d8458b16295e827edd2b6bf"
+      ]
     },
     {
       "id": "longhorizon-harness",
@@ -719,7 +740,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "d53df0aa11e8506dfc9518ef63620c62baee04d3"
+      ]
     },
     {
       "id": "opencode",
@@ -759,7 +783,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "edfe9cb12a263036a0c3dc1af604713e8197cce9"
+      ]
     },
     {
       "id": "gpt-researcher",
@@ -786,7 +813,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "3582a6841fe7dc801e2a34e34ee408641aea9bce"
+      ]
     },
     {
       "id": "atomic-agent",
@@ -831,7 +861,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "fdc7813cb1b2d7a72781c957b211e03af5e02130"
+      ]
     },
     {
       "id": "pi-rust",
@@ -858,7 +891,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "5bb31ae4c41382a03cb8e793e0907f9824dfb320"
+      ]
     },
     {
       "id": "bub",
@@ -892,7 +928,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "d14de719da57640cf2f80658217d94d94a5b7c42"
+      ]
     },
     {
       "id": "deer-flow",
@@ -934,7 +973,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "459fc8ca4397bf75637cdbe6ffbb91e871f5107a"
+      ]
     },
     {
       "id": "omp",
@@ -974,7 +1016,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "5e944c0cd5e27cdb3f71e5f85e5c40f8d420b9b0"
+      ]
     },
     {
       "id": "cline",
@@ -1040,7 +1085,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "d3ecc4890e8f9bcb77182b96c77fa90575e8e145"
+      ]
     },
     {
       "id": "vibesdk",
@@ -1074,7 +1122,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "32c9e429cd2712ea5959a89f65ae434162b89229"
+      ]
     },
     {
       "id": "codewhale",
@@ -1132,7 +1183,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "cc6207a5b49742bd324fd893e5db168e6fe783bd"
+      ]
     },
     {
       "id": "intentkit",
@@ -1158,7 +1212,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "afc8cc44255210db6352f7437e569ed8b88ed5e1"
+      ]
     },
     {
       "id": "cuga-agent",
@@ -1201,7 +1258,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "68894670cad4bd92229bf8cb9a9933dccb2df5bd"
+      ]
     },
     {
       "id": "dsh",
@@ -1233,7 +1293,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "25dede3177c8374f17798638a625e46eae0f9c3a"
+      ]
     },
     {
       "id": "dyad",
@@ -1315,7 +1378,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "866f6ab17ecc5b906564b29a24637832667a0472"
+      ]
     },
     {
       "id": "pi",
@@ -1371,7 +1437,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "4958c94bd91faf4e0bfff270a971d4d1810fb6db"
+      ]
     },
     {
       "id": "eliza",
@@ -1413,7 +1482,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "4e0153cb7ca5b10a0258569b2d6d449848496220"
+      ]
     },
     {
       "id": "db-gpt",
@@ -1448,7 +1520,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "9d50d0a55071a040a8cb7684b3b6acfa13cc7c47"
+      ]
     },
     {
       "id": "deepseek-reasonix",
@@ -1562,7 +1637,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "f4f32cc7d3078f7031c7852fbf0b7de410958199"
+      ]
     },
     {
       "id": "raven",
@@ -1668,7 +1746,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "62bc88803384522ec35be4771836c69b39b3a8d2"
+      ]
     },
     {
       "id": "jobs-applier-ai-agent-aihawk",
@@ -1687,7 +1768,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "eb54b9b4f75704ef0106dec17ff0560d97732f9c"
+      ]
     },
     {
       "id": "fibona-agent",
@@ -1730,7 +1814,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "53a2b1e3f7ba8c60b616e32583ec2ab7b3ecafce"
+      ]
     },
     {
       "id": "agenticseek",
@@ -1756,7 +1843,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "4f5f924c1eb326b4163d3bf942954dcc7dd7875b"
+      ]
     },
     {
       "id": "openmanus",
@@ -1787,26 +1877,13 @@
           "roles": [
             "prompt"
           ]
-        },
-        {
-          "commit": "1fe22af5f800d8c3024e9968d35bb75bd09e6b79",
-          "path": "packages/core/src/scheduler/tool-executor.ts",
-          "sha256": "5879f47abe2b64fc6ea1ca361b4502f39a7e597bdcfa0e20450b4226d6031f58",
-          "roles": [
-            "tools"
-          ]
-        },
-        {
-          "commit": "1fe22af5f800d8c3024e9968d35bb75bd09e6b79",
-          "path": "packages/core/src/tools/exit-plan-mode.ts",
-          "sha256": "1e1589584223a824c817a24be784cf84922fc67785c544ec99e10dfe1e889435",
-          "roles": [
-            "tools"
-          ]
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "3309bf4e416fb1c74b008f3e86494439a31bad53"
+      ]
     },
     {
       "id": "gemini-cli",
@@ -1829,10 +1906,29 @@
           "roles": [
             "prompt"
           ]
+        },
+        {
+          "commit": "1fe22af5f800d8c3024e9968d35bb75bd09e6b79",
+          "path": "packages/core/src/scheduler/tool-executor.ts",
+          "sha256": "5879f47abe2b64fc6ea1ca361b4502f39a7e597bdcfa0e20450b4226d6031f58",
+          "roles": [
+            "tools"
+          ]
+        },
+        {
+          "commit": "1fe22af5f800d8c3024e9968d35bb75bd09e6b79",
+          "path": "packages/core/src/tools/exit-plan-mode.ts",
+          "sha256": "1e1589584223a824c817a24be784cf84922fc67785c544ec99e10dfe1e889435",
+          "roles": [
+            "tools"
+          ]
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "1fe22af5f800d8c3024e9968d35bb75bd09e6b79"
+      ]
     },
     {
       "id": "nanobot",
@@ -1866,7 +1962,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "382f1b12e8d9b2d4dbe2d2803e5f5b9a6e262972"
+      ]
     },
     {
       "id": "tianshu-harness",
@@ -1893,7 +1992,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "2d0b22e0b3554686e1e4131f8bdc568ef768e060"
+      ]
     },
     {
       "id": "nausicaa-harness",
@@ -1935,7 +2037,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "b61edf67c46e1faf512695c3c12d0f7a4dd80eb3"
+      ]
     },
     {
       "id": "kilocode",
@@ -1993,7 +2098,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "bd0ab67e8b00c8d27d03cbc9d163bdaf20c37213"
+      ]
     },
     {
       "id": "devopsgpt",
@@ -2019,7 +2127,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "dba1cb5ec9145ac871168e7f2e2d2b35c43d109b"
+      ]
     },
     {
       "id": "autoref",
@@ -2045,7 +2156,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "2cd47b74226f76c785f0679e6ccc61e33e55b7e6"
+      ]
     },
     {
       "id": "open-swe",
@@ -2087,7 +2201,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "94012656e06e8ee8d16c4aa249b8dae2009a33d4"
+      ]
     },
     {
       "id": "headlong",
@@ -2113,7 +2230,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "2e39a3f94fb9acbd0d73f6b0aecc9f83dc14547e"
+      ]
     },
     {
       "id": "letta-code",
@@ -2171,7 +2291,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "353365bce618b7a7cbf620d0ca66f221664d8d86"
+      ]
     },
     {
       "id": "librechat",
@@ -2213,7 +2336,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "f4154b649efa37e1345ccc517a4d8d1ed2178c82"
+      ]
     },
     {
       "id": "looptroop",
@@ -2255,7 +2381,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "d0fa9b14d26f1a54349631cdea85c81e83a70529"
+      ]
     },
     {
       "id": "web3gpt",
@@ -2290,7 +2419,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "ada2d90b6cab6a844e86777b11f73a5d448bb2c2"
+      ]
     },
     {
       "id": "markus",
@@ -2340,7 +2472,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "72bf7d72474bcf82734753e620f2d0478e80c8e7"
+      ]
     },
     {
       "id": "hivekeep",
@@ -2414,7 +2549,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "e6bf9aea4159312730a690b94697084616b44556"
+      ]
     },
     {
       "id": "ctxagent",
@@ -2440,7 +2578,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "77ec7a9e9127e3258b035af32dc7f13730979902"
+      ]
     },
     {
       "id": "ufo",
@@ -2474,7 +2615,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "eae3c0a8d168c47cb10df0652e293e092eda1078"
+      ]
     },
     {
       "id": "anything-llm",
@@ -2508,7 +2652,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "cbaf3357c7d9810bfa1f91f075cae7f533554f80"
+      ]
     },
     {
       "id": "mirix",
@@ -2534,7 +2681,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "39e24116f1ed5904f1eb94561257513455dfe6b7"
+      ]
     },
     {
       "id": "kimi",
@@ -2565,7 +2715,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "f012aa41e46a7b7dea99d1358305f2fb605a6599"
+      ]
     },
     {
       "id": "octomind",
@@ -2615,7 +2768,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "4cc5600403885e1d9bc2cba6750f5c3c42dbed2f"
+      ]
     },
     {
       "id": "nanomuse",
@@ -2665,7 +2821,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "8b32d43c946db2bbef6fae39c48a9fc608ebd8e9"
+      ]
     },
     {
       "id": "inkos",
@@ -2688,18 +2847,13 @@
           "roles": [
             "prompt"
           ]
-        },
-        {
-          "commit": "4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c",
-          "path": "coax/lib/microcoder/tools.coax",
-          "sha256": "e83bbf576bfd35630d4941c854a3bacd01c687224aee40ff82ce66297ee5ad31",
-          "roles": [
-            "tools"
-          ]
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "53adac4e974b54dafda975edc4edd07cad364c18"
+      ]
     },
     {
       "id": "hermes",
@@ -2728,10 +2882,21 @@
           "roles": [
             "prompt"
           ]
+        },
+        {
+          "commit": "4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c",
+          "path": "coax/lib/microcoder/tools.coax",
+          "sha256": "e83bbf576bfd35630d4941c854a3bacd01c687224aee40ff82ce66297ee5ad31",
+          "roles": [
+            "tools"
+          ]
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "4af75e9b2548a5b0cff5a249e3dd4d3032cd1e4c"
+      ]
     },
     {
       "id": "codex",
@@ -2801,7 +2966,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "d32c660e4eed1a8e988d1fd58da88e41ba641d08"
+      ]
     },
     {
       "id": "openinterpreter",
@@ -2843,7 +3011,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "f12ce327eeee679d2f2f22ce23018b0db9ae092f"
+      ]
     },
     {
       "id": "orkas",
@@ -2893,7 +3064,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "c7c0e21fad7ff55f5a72a575b7a464f3cf9bc3a1"
+      ]
     },
     {
       "id": "self-operating-computer",
@@ -2912,7 +3086,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "eb8165a2efb1b34d66a28ecebf8ca97ae67cbb79"
+      ]
     },
     {
       "id": "bambooai",
@@ -2931,7 +3108,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "4ae0ced88679e1bd48dce7e59ec3e22f0a38549e"
+      ]
     },
     {
       "id": "prime-agent",
@@ -3014,7 +3194,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "74591cddef28d11249c3171112114fc4755375d7"
+      ]
     },
     {
       "id": "localgpt",
@@ -3040,7 +3223,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "34f3107f56a88203859092312231b945a711c619"
+      ]
     },
     {
       "id": "empryo",
@@ -3074,7 +3260,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "c27dac116d2ee1637abfc6634bebf08b5c379454"
+      ]
     },
     {
       "id": "qwen-code",
@@ -3138,7 +3327,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "add0ce3296c722ef99a536c52f8dcddf36494b36"
+      ]
     },
     {
       "id": "agentlink",
@@ -3172,7 +3364,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "fe7e3360d4b37e2c71269ad1b0cf4a03b422d350"
+      ]
     },
     {
       "id": "robotuse",
@@ -3238,7 +3433,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "60bdf7b31b9a9a45dbc4809d678c008c724f465b"
+      ]
     },
     {
       "id": "deepanalyze",
@@ -3257,7 +3455,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "afc697a11675c59683b9f6596c3ab3b3d661182a"
+      ]
     },
     {
       "id": "cheetahclaws",
@@ -3283,7 +3484,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "eacde3aaedcc84c0cb10ab433d4f3ea8c5bf74e6"
+      ]
     },
     {
       "id": "trashclaw",
@@ -3302,7 +3506,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "6dce9edbd7c6633da75971156911636a7b073792"
+      ]
     },
     {
       "id": "critic-training",
@@ -3321,7 +3528,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "1c4aa0d3c28c522fe9e7541b14b86fe0c4a13e5c"
+      ]
     },
     {
       "id": "autogpt",
@@ -3379,7 +3589,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "13ac38c5b6583bd01b0a6142b0060fc03e102b6e"
+      ]
     },
     {
       "id": "agent-s",
@@ -3410,6 +3623,35 @@
           "roles": [
             "prompt"
           ]
+        }
+      ],
+      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "0fff0e634869dab72027435b4586e62300185d41"
+      ]
+    },
+    {
+      "id": "skyvern",
+      "name": "skyvern",
+      "repository": "Skyvern-AI/skyvern",
+      "existing_agent": null,
+      "files": [
+        {
+          "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+          "path": "skyvern/forge/prompts/skyvern/extract-action-dynamic.j2",
+          "sha256": "a0f44fa59bf0e9e21ccfb5013c6dd4fc669b0c9c764d5cc152339efbedb173a3",
+          "roles": [
+            "prompt"
+          ]
+        },
+        {
+          "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
+          "path": "skyvern/forge/prompts/skyvern/extract-action-static.j2",
+          "sha256": "db7cec95a582832af0bcb798e848e39561327e069457d8cf5d1654a0fca25dd0",
+          "roles": [
+            "prompt"
+          ]
         },
         {
           "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
@@ -3437,33 +3679,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
-    },
-    {
-      "id": "skyvern",
-      "name": "skyvern",
-      "repository": "Skyvern-AI/skyvern",
-      "existing_agent": null,
-      "files": [
-        {
-          "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
-          "path": "skyvern/forge/prompts/skyvern/extract-action-dynamic.j2",
-          "sha256": "a0f44fa59bf0e9e21ccfb5013c6dd4fc669b0c9c764d5cc152339efbedb173a3",
-          "roles": [
-            "prompt"
-          ]
-        },
-        {
-          "commit": "73fbad916fe82ca7c4552e062b5e61127cfee98c",
-          "path": "skyvern/forge/prompts/skyvern/extract-action-static.j2",
-          "sha256": "db7cec95a582832af0bcb798e848e39561327e069457d8cf5d1654a0fca25dd0",
-          "roles": [
-            "prompt"
-          ]
-        }
-      ],
-      "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "73fbad916fe82ca7c4552e062b5e61127cfee98c"
+      ]
     },
     {
       "id": "jev-social",
@@ -3482,7 +3701,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "2f02e6f4c60943e679993634ad1017b0c97efff5"
+      ]
     },
     {
       "id": "mini-swe-agent",
@@ -3513,18 +3735,13 @@
           "roles": [
             "tools"
           ]
-        },
-        {
-          "commit": "ea553047aa49c567d99da0e2e69c7b456577ed7f",
-          "path": "tool/shell.go",
-          "sha256": "148f71aec3e40dc0b334da9efaadef9de0e0d6912adf7d99f46ba1d136c1670e",
-          "roles": [
-            "tools"
-          ]
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "a83fcae82d2a08f0ee0c688f9d137b3566c097f8"
+      ]
     },
     {
       "id": "openagent",
@@ -3547,10 +3764,21 @@
           "roles": [
             "tools"
           ]
+        },
+        {
+          "commit": "ea553047aa49c567d99da0e2e69c7b456577ed7f",
+          "path": "tool/shell.go",
+          "sha256": "148f71aec3e40dc0b334da9efaadef9de0e0d6912adf7d99f46ba1d136c1670e",
+          "roles": [
+            "tools"
+          ]
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "ea553047aa49c567d99da0e2e69c7b456577ed7f"
+      ]
     },
     {
       "id": "pr-agent",
@@ -3576,7 +3804,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "a8c604794ddb5766dc3fa674cbb64aac6f9f509f"
+      ]
     },
     {
       "id": "agent-qa",
@@ -3595,7 +3826,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "6757be8500f5847be035c0a2084fd60e183c9cc0"
+      ]
     },
     {
       "id": "omni-rewriter",
@@ -3621,7 +3855,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "846fee695fbfd9b816d481e294b5e385dabc4581"
+      ]
     },
     {
       "id": "wechat-mac-rpa",
@@ -3655,7 +3892,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "23c4bb5156ad87466131b435e8cfddbf65c18451"
+      ]
     },
     {
       "id": "grok",
@@ -3701,7 +3941,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "024669481dbb63cb7e36694469657ec5683a9d80"
+      ]
     },
     {
       "id": "zcode",
@@ -3823,7 +4066,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "a9fe401eede6e6e5e01be9048679c206fe6f02d9"
+      ]
     },
     {
       "id": "cowagent",
@@ -3889,7 +4135,10 @@
         }
       ],
       "prompt_scope": "Source templates and assembly code; runtime substitutions and optional modes are not resolved.",
-      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred."
+      "tools_scope": "Source tool declarations and registration code; enabled runtime tool schemas are not inferred.",
+      "source_commits": [
+        "354bc709bab71cf6e400addfc92a00a0dd2838ff"
+      ]
     }
   ],
   "survey_commit": "1e073446ae34d26682c01ffce76fac0cc123237f",

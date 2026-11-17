@@ -47,6 +47,8 @@ def read_catalog(path: Path = CATALOG_PATH) -> dict:
                 raise ValueError(f"{agent_id}: unsafe source path: {path}")
             if not _COMMIT.fullmatch(source["commit"]):
                 raise ValueError(f"{agent_id}: unpinned source commit")
+            if record.get("source_commits") and source["commit"] not in record["source_commits"]:
+                raise ValueError(f"{agent_id}: source commit belongs to a different survey repository")
             if not re.fullmatch(r"[0-9a-f]{64}", source["sha256"]):
                 raise ValueError(f"{agent_id}: invalid source SHA-256")
             if not source["roles"] or set(source["roles"]) - {"prompt", "tools"}:

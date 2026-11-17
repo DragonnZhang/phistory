@@ -37,6 +37,11 @@ def test_survey_catalog_preserves_all_95_and_skips_existing_integrations():
     assert len(missing) == 83
     assert all(item["existing_agent"] in AGENTS for item in existing)
     assert all(item["files"] for item in missing)
+    for item in missing:
+        identities = [(source["commit"], source["path"]) for source in item["files"]]
+        assert len(set(identities)) == len(identities), item["id"]
+        assert {role for source in item["files"] for role in source["roles"]} == {"prompt", "tools"}, item["id"]
+        assert all(source["commit"] in item["source_commits"] for source in item["files"]), item["id"]
 
 
 def test_archive_preserves_bytes_provenance_and_distinct_surfaces(tmp_path, monkeypatch):
@@ -127,6 +132,15 @@ def test_catalog_rejects_unsafe_paths(tmp_path, path):
     catalog = tmp_path / "catalog.json"
     catalog.write_text(json.dumps({"records": [record]}))
     with pytest.raises(ValueError, match="unsafe source path"):
+        source_archive.read_catalog(catalog)
+
+
+def test_catalog_rejects_source_from_another_repository(tmp_path):
+    record = project()
+    record["source_commits"] = ["b" * 40]
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(json.dumps({"records": [record]}))
+    with pytest.raises(ValueError, match="different survey repository"):
         source_archive.read_catalog(catalog)
 
 
