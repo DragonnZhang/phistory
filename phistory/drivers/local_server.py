@@ -9,9 +9,16 @@ from pathlib import Path
 
 from claude_tap.prompt_snapshot import snapshot_from_records
 
+from phistory.request_selection import matches_prompt_surface
+
 
 def has_prompt_request(
-    tap_output_dir: Path, prompt: str, *, minimum_tools: int = 0, required_system_text: tuple[str, ...] = ()
+    tap_output_dir: Path,
+    prompt: str,
+    *,
+    minimum_tools: int = 0,
+    required_system_text: tuple[str, ...] = (),
+    required_user_text: tuple[str, ...] = (),
 ) -> bool:
     for trace in tap_output_dir.glob("*/trace_*.jsonl"):
         try:
@@ -31,8 +38,12 @@ def has_prompt_request(
                     snapshot = snapshot_from_records([record])
                 except ValueError:
                     continue
-                system = snapshot.system_prompt + "\n" + snapshot.developer_prompt
-                if len(snapshot.tools) < minimum_tools or not all(text in system for text in required_system_text):
+                if not matches_prompt_surface(
+                    snapshot,
+                    minimum_tools=minimum_tools,
+                    required_system_text=required_system_text,
+                    required_user_text=required_user_text,
+                ):
                     continue
                 if snapshot.system_prompt or snapshot.developer_prompt or snapshot.user_message:
                     return True
@@ -47,11 +58,16 @@ def wait_for_prompt(
     *,
     minimum_tools: int = 0,
     required_system_text: tuple[str, ...] = (),
+    required_user_text: tuple[str, ...] = (),
 ) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if has_prompt_request(
-            tap_output_dir, prompt, minimum_tools=minimum_tools, required_system_text=required_system_text
+            tap_output_dir,
+            prompt,
+            minimum_tools=minimum_tools,
+            required_system_text=required_system_text,
+            required_user_text=required_user_text,
         ):
             return
         if process.poll() is not None:

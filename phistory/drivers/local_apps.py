@@ -85,6 +85,7 @@ def run_local_task_api(context: CaptureRunContext) -> CaptureExecution:
     requirements = {
         "minimum_tools": context.target.agent.capture_min_tools,
         "required_system_text": context.target.agent.required_system_text,
+        "required_user_text": context.target.agent.required_user_text,
     }
     argv = tap_command(context.target, context.prompt_path, context.tap_output_dir, env)
     context.tap_output_dir.mkdir(parents=True, exist_ok=True)

@@ -341,10 +341,22 @@ def _install_github_source(agent: AgentSpec, revision: str, install_dir: Path) -
             ],
             timeout=120,
         )
-        run(
-            ["uv", "pip", "install", "--python", str(bin_dir / "python"), "-r", str(roots[0] / "requirements.txt")],
-            timeout=INSTALL_TIMEOUT_SECONDS,
-        )
+        requirements = [
+            argument for path in agent.source_requirement_files for argument in ("-r", str(roots[0] / path))
+        ]
+        if requirements or agent.source_python_dependencies:
+            run(
+                [
+                    "uv",
+                    "pip",
+                    "install",
+                    "--python",
+                    str(bin_dir / "python"),
+                    *requirements,
+                    *agent.source_python_dependencies,
+                ],
+                timeout=INSTALL_TIMEOUT_SECONDS,
+            )
         if not (bin_dir / agent_executable(agent)).exists():
             raise RuntimeError("source requirements installation did not provide the runtime executable")
         complete.touch()

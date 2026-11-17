@@ -14,6 +14,9 @@ def target(agent_id, tmp_path):
 
 def test_unverified_profiles_require_explicit_selection():
     candidates = {
+        "wechat-mac-rpa",
+        "autoref",
+        "agent-s",
         "devopsgpt",
         "critic-training",
         "empryo",
@@ -28,6 +31,23 @@ def test_unverified_profiles_require_explicit_selection():
     }
     assert not candidates.intersection(parse_agent_ids(None))
     assert set(parse_agent_ids(",".join(sorted(candidates)))) == candidates
+
+
+def test_isolated_source_preserves_relative_package_launchers(tmp_path, monkeypatch):
+    source = tmp_path / "installed-source"
+    command = source / "node_modules/next/dist/bin/next"
+    command.parent.mkdir(parents=True)
+    command.write_text("require('../server/require-hook')")
+    link = source / "node_modules/.bin/next"
+    link.parent.mkdir()
+    link.symlink_to("../next/dist/bin/next")
+    monkeypatch.setattr("phistory.packages.installed_source_root", lambda _: source)
+    env = _capture_env(target("web3gpt", tmp_path), tmp_path / "bin", tmp_path / "home")
+    copied = Path(env["PHISTORY_SOURCE_ROOT"]) / "node_modules/.bin/next"
+    assert copied.is_symlink()
+    assert copied.readlink() == Path("../next/dist/bin/next")
+    assert copied.resolve().is_relative_to(Path(env["PHISTORY_SOURCE_ROOT"]))
+    assert copied.read_text() == command.read_text()
 
 
 def test_goose_uses_platform_developer_and_provider_default_model(tmp_path):

@@ -285,3 +285,38 @@ model = LitellmModel(model_name="gpt-4.1", model_kwargs={
 })
 print(DefaultPRMAgent(model, LocalEnvironment(cwd=str(Path.cwd())), **config).run("Reply with one short sentence."))
 """
+
+WECHAT_REPLY_TASK = """
+import os
+os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
+from src.tools import register_builtin_tools
+from src.utils.qwen_client import QwenClient
+from src.reply.generator import ReplyGenerator
+from src.models.base import ChatMessage, SenderType
+register_builtin_tools()
+message = ChatMessage(text="Reply with one short sentence.", sender="Phistory", sender_type=SenderType.OTHER, chat_name="Phistory")
+print(ReplyGenerator(llm_client=QwenClient()).generate([message], [message]))
+"""
+
+AUTOREF_TASK = """
+import os
+import sys
+from pathlib import Path
+from PIL import Image
+from autoref.generate import main
+state = Path(os.environ["PHISTORY_HOME"]) / "autoref"
+state.mkdir(parents=True, exist_ok=True)
+reference = state / "owned-reference.png"
+Image.new("RGB", (64, 64), (80, 120, 160)).save(reference)
+sys.argv = ["autoref.generate", "--refs", str(reference), "--prompt", "Reply with one short sentence.", "--out", str(state / "out.png")]
+main()
+"""
+
+AGENT_S_TASK = """
+import os
+os.execvp("xvfb-run", ["xvfb-run", "-a", "-s", "-screen 0 1280x800x24", "agent_s",
+    "--task", "Reply with one short sentence.",
+    "--ground_provider", "huggingface", "--ground_url", "https://api.endpoints.huggingface.cloud/v1",
+    "--ground_api_key", "phistory-fake-api-key", "--ground_model", "ui-tars-1.5-7b",
+    "--grounding_width", "1280", "--grounding_height", "800"])
+"""

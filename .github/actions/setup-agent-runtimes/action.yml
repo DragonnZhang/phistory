@@ -20,8 +20,8 @@ runs:
         pulseaudio --start --exit-idle-time=-1
         pactl load-module module-native-protocol-unix socket=/tmp/phistory-pulse.sock auth-anonymous=1
     - name: Prepare owned virtual desktop
-      if: contains(format(',{0},', inputs.agents), ',self-operating-computer,')
+      if: contains(format(',{0},', inputs.agents), ',self-operating-computer,') || contains(format(',{0},', inputs.agents), ',agent-s,')
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y xvfb xauth scrot python3-tk
+        sudo apt-get install -y xvfb xauth scrot python3-tk tesseract-ocr libgl1

@@ -138,13 +138,18 @@ class AgentSpec:
     source_project: str = "."
     source_extra_requirements: tuple[str, ...] = ()
     source_dependency_groups: tuple[str, ...] = ()
+    source_requirement_files: tuple[str, ...] = ("requirements.txt",)
+    source_python_dependencies: tuple[str, ...] = ()
     source_state: Literal["none", "readonly", "isolated"] = "none"
     source_build_commands: tuple[tuple[str, ...], ...] = ()
     capture_min_tools: int = 0
     required_system_text: tuple[str, ...] = ()
+    required_user_text: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        if self.capture_min_tools < 0 or any(not text.strip() for text in self.required_system_text):
+        if self.capture_min_tools < 0 or any(
+            not text.strip() for text in (*self.required_system_text, *self.required_user_text)
+        ):
             raise ValueError(f"{self.id}: primary request criteria must be meaningful")
         if self.capture_timeout_seconds < 1:
             raise ValueError(f"{self.id}: capture timeout must be positive")

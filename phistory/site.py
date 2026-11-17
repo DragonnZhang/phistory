@@ -2717,6 +2717,9 @@ function selectMainTraceRecord(records, selection = {}) {
     const prompts = normalizePromptBlocks(inferProvider(record.request?.path || '', body), body);
     const instructions = [...prompts.system, ...prompts.developer].map(block => block.text).join('\n');
     if (!(selection?.required_system_text || []).every(marker => instructions.includes(marker))) return;
+    const userText = normalizeMessages(inferProvider(record.request?.path || '', body), body)
+      .filter(message => ['user', 'input'].includes(message.role)).map(message => message.text).join('\n');
+    if (!(selection?.required_user_text || []).every(marker => userText.includes(marker))) return;
     const score = traceRecordScore(record);
     if (!best || score > best.score) best = { record, index, score };
   });
@@ -2823,6 +2826,7 @@ function normalizePromptBlocks(provider, body) {
 function normalizeMessages(provider, body) {
   const out = [];
   if (typeof body.prompt === 'string' && body.prompt) out.push({ role: 'user', text: body.prompt });
+  if (typeof body.input === 'string' && body.input) out.push({ role: 'user', text: body.input });
   for (const message of messageItems(body.messages)) {
     const role = String(message.role || 'message');
     if (role === 'system' || role === 'developer') continue;

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from phistory.models import AgentSpec, CaptureDriver, CaptureVariant, HomeProfile, TapMode
 from phistory.task_entries import (
+    AGENT_S_TASK,
     AGENT_ZERO_PREFETCH,
     AGENT_ZERO_TASK,
     AGENTICSEEK_TASK,
+    AUTOREF_TASK,
     BAMBOOAI_TASK,
     BROWSER_USE_PREFETCH,
     COWAGENT_TASK,
@@ -20,6 +22,7 @@ from phistory.task_entries import (
     OUROBOROS_SERVER,
     QUORUM_TASK,
     SELF_OPERATING_TASK,
+    WECHAT_REPLY_TASK,
     ZCODE_TASK,
 )
 
@@ -1755,6 +1758,126 @@ INKOS = AgentSpec(
 )
 
 
+WECHAT_MAC_RPA = AgentSpec(
+    id="wechat-mac-rpa",
+    display_name="WeChat Mac RPA",
+    package="wq19901103wq/wechat-mac-rpa",
+    source="github-source",
+    github_source_install="requirements",
+    source_state="isolated",
+    source_requirement_files=(),
+    source_python_dependencies=(
+        "openai>=2.45.0",
+        "defusedxml>=0.7.1",
+        "numpy==1.24.3",
+        "sqlalchemy>=2.0.51,<3.0.0",
+        "scikit-learn==1.2.1",
+        "scipy>=1.10.0,<1.16",
+        "Pillow>=12.3.0,<13.0.0",
+        "requests>=2.34.2",
+        "httpx>=0.28.1",
+        "beautifulsoup4>=4.15.0",
+        "tinytuya>=1.19.0",
+        "paho-mqtt>=2.1.0",
+    ),
+    python_runtime="3.11",
+    tap_client="python",
+    fake_env={"DEEPSEEK_API_KEY": "phistory-fake-api-key"},
+    required_system_text=("<instructions>",),
+    capture_min_tools=1,
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=180,
+    latest_variant_ids=("portable-reply-api",),
+    default_variant=_default(
+        capture_unavailable="The full WeChat bot requires macOS permissions; the source-owned portable ReplyGenerator can run on Linux."
+    ),
+    variants=(
+        _variant(
+            "portable-reply-api",
+            "Native portable reply API / built-in tool registry",
+            ("--no-yolo", "--", "-c", WECHAT_REPLY_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "ReplyGenerator.generate / ChatMessage",
+                "model": "native DeepSeek v4 flash",
+                "dependencies": "declared portable core and tool dependencies; no macOS UI spine",
+                "scope": "native reply engine; no WeChat send",
+            },
+        ),
+    ),
+)
+
+AUTOREF = AgentSpec(
+    id="autoref",
+    display_name="AutoRef",
+    package="KuOnoda/AutoRef",
+    source="github-source",
+    source_state="isolated",
+    python_runtime="3.12",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    extra_env={"HF_HUB_OFFLINE": "1"},
+    recorded_env=("HF_HUB_OFFLINE",),
+    required_user_text=("Reference images, numbered in order:", "1. SETTING:"),
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=180,
+    latest_variant_ids=("scene-planner-initial",),
+    default_variant=_default(
+        capture_unavailable="Full image refinement requires native GPU generation; use its initial reference-scene planner before generator execution."
+    ),
+    variants=(
+        _variant(
+            "scene-planner-initial",
+            "Native initial scene planner / owned reference image",
+            ("--no-yolo", "--", "-c", AUTOREF_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "autoref.generate CLI / native autoref_harness",
+                "model": "native gpt-5.5-2026-04-23",
+                "reference": "owned actual 64x64 PNG task input",
+                "scope": "first scene reasoning before GPU generator",
+                "protocol": "native user multimodal messages; zero JSON tools",
+            },
+        ),
+    ),
+)
+
+AGENT_S = AgentSpec(
+    id="agent-s",
+    display_name="Agent-S S3",
+    package="simular-ai/Agent-S",
+    source="github-source",
+    source_state="readonly",
+    python_runtime="3.11",
+    tap_client="python",
+    fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
+    tap_mode="forward",
+    track_latest=False,
+    capture_timeout_seconds=300,
+    latest_variant_ids=("s3-linux-desktop",),
+    default_variant=_default(
+        capture_unavailable="The native task requires a real desktop and grounding configuration; use the owned Linux S3 display lane."
+    ),
+    variants=(
+        _variant(
+            "s3-linux-desktop",
+            "Native S3 first action / owned Linux screenshot",
+            ("--no-yolo", "--", "-c", AGENT_S_TASK),
+            driver="first-request",
+            dimensions={
+                "entry": "native agent_s --task",
+                "model": "native OpenAI gpt-5-2025-08-07",
+                "display": "actual owned Xvfb 1280x800",
+                "grounding": "configured capture-only UI-TARS HuggingFace endpoint; no live deployment claimed",
+                "reflection": "native enabled",
+                "scope": "first main action request before execution",
+            },
+        ),
+    ),
+)
+
 DEVOPSGPT = AgentSpec(
     id="devopsgpt",
     display_name="DevOpsGPT",
@@ -1762,6 +1885,7 @@ DEVOPSGPT = AgentSpec(
     source="github-source",
     github_source_install="requirements",
     source_state="isolated",
+    required_user_text=("Role: You are a professional software engineer, Your task is to review the code.",),
     python_runtime="3.11",
     tap_client="python",
     fake_env={"OPENAI_API_KEY": "phistory-fake-api-key"},
@@ -2648,6 +2772,9 @@ AGENTS: dict[str, AgentSpec] = {
         CUGA,
         AUTORESEARCHCLAW,
         INKOS,
+        WECHAT_MAC_RPA,
+        AUTOREF,
+        AGENT_S,
         DEVOPSGPT,
         CRITIC_TRAINING,
         EMPRYO,

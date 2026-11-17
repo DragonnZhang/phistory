@@ -71,6 +71,11 @@ def test_primary_request_filters_and_ollama_flat_prompt_keep_raw_evidence():
         assert.ok(requestDiffMarkdown(ollama.request.body, 'messages').includes('FLAT NATIVE PROMPT'));
         assert.equal(requestDiffMarkdown(ollama.request.body, 'system'), '');
         assert.equal(ollama.request.body.prompt, 'FLAT NATIVE PROMPT');
+        const userSelection = {required_user_text: ['FLAT NATIVE PROMPT']};
+        assert.equal(selectMainTraceRecord([helper, ollama], userSelection).record, ollama);
+        assert.equal(selectMainTraceRecord([helper], userSelection), null);
+        const responses = {request: {path: '/v1/responses', body: {model: 'actor', input: 'FLAT NATIVE PROMPT'}}};
+        assert.equal(selectMainTraceRecord([responses], userSelection).record, responses);
         """
     )
 

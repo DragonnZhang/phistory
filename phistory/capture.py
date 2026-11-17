@@ -18,6 +18,7 @@ from phistory import packages
 from phistory.drivers import CaptureRunContext, run_capture
 from phistory.models import CaptureResult, CaptureTarget
 from phistory.packages import agent_executable
+from phistory.request_selection import matches_prompt_surface
 from phistory.static_prompts.extract import extract_static_prompts
 from phistory.storage import copy_trace, is_captured, latest_trace, prepare_version_dir, remove_if_exists, write_meta
 from phistory.subprocesses import run
@@ -190,12 +191,13 @@ def capture_target(
         if inherited_env:
             _sanitize_trace(working_target.trace_path, inherited_env.values())
         selected_snapshot = None
-        if target.agent.capture_min_tools or target.agent.required_system_text:
+        if target.agent.capture_min_tools or target.agent.required_system_text or target.agent.required_user_text:
             try:
                 selected_snapshot = _primary_snapshot(
                     working_target.trace_path,
                     minimum_tools=target.agent.capture_min_tools,
                     required_system_text=target.agent.required_system_text,
+                    required_user_text=target.agent.required_user_text,
                 )
             except ValueError as exc:
                 raise RuntimeError(
@@ -229,6 +231,10 @@ def capture_target(
                             "state": target.agent.source_state,
                             "extra_requirements": list(target.agent.source_extra_requirements),
                             "dependency_groups": list(target.agent.source_dependency_groups),
+                            "requirement_files": list(target.agent.source_requirement_files)
+                            if target.agent.github_source_install == "requirements"
+                            else [],
+                            "python_dependencies": list(target.agent.source_python_dependencies),
                             "build_commands": [list(command) for command in target.agent.source_build_commands],
                         }
                     }
@@ -258,6 +264,7 @@ def capture_target(
                         "capture_selection": {
                             "minimum_tools": target.agent.capture_min_tools,
                             "required_system_text": list(target.agent.required_system_text),
+                            "required_user_text": list(target.agent.required_user_text),
                         }
                     }
                     if selected_snapshot is not None
@@ -562,7 +569,7 @@ def _capture_env(
         source = packages.installed_source_root(bin_dir)
         if (target.agent.source_state == "isolated" or profile in ("openmanus", "researchclaw")) and prepare_runtime:
             isolated = home / "source"
-            shutil.copytree(source, isolated)
+            shutil.copytree(source, isolated, symlinks=True)
             source = isolated
         env["PHISTORY_SOURCE_ROOT"] = str(source)
         env["PYTHONPATH"] = str(source)
@@ -739,7 +746,11 @@ def _trace_records(trace_path: Path) -> list[dict]:
 
 
 def _primary_snapshot(
-    trace_path: Path, *, minimum_tools: int = 0, required_system_text: tuple[str, ...] = ()
+    trace_path: Path,
+    *,
+    minimum_tools: int = 0,
+    required_system_text: tuple[str, ...] = (),
+    required_user_text: tuple[str, ...] = (),
 ) -> PromptSnapshot:
     candidates = []
     for record in _trace_records(trace_path):
@@ -747,8 +758,12 @@ def _primary_snapshot(
             snapshot = snapshot_from_records([record])
         except ValueError:
             continue
-        system = snapshot.system_prompt + "\n" + snapshot.developer_prompt
-        if len(snapshot.tools) >= minimum_tools and all(text in system for text in required_system_text):
+        if matches_prompt_surface(
+            snapshot,
+            minimum_tools=minimum_tools,
+            required_system_text=required_system_text,
+            required_user_text=required_user_text,
+        ):
             candidates.append(record)
     return snapshot_from_records(candidates)
 

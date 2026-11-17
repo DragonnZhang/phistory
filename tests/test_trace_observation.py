@@ -85,6 +85,42 @@ def test_observation_selects_prompt_over_bootstrap_and_handles_broken_lines(tmp_
     assert _trace_observation(path) == {"model": "claude-test", "tool_count": 1}
 
 
+def test_user_only_primary_surface_preserves_multimodal_messages_and_role_boundary(tmp_path):
+    import pytest
+
+    path = tmp_path / "trace.jsonl"
+    helper = {
+        "request": {
+            "path": "/v1/chat/completions",
+            "body": {"model": "helper", "messages": [{"role": "system", "content": "Native scene planner"}]},
+        }
+    }
+    actor = {
+        "request": {
+            "path": "/v1/chat/completions",
+            "body": {
+                "model": "actor",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "Native scene planner"},
+                            {"type": "image_url", "image_url": {"url": "data:image/png;base64,test"}},
+                        ],
+                    }
+                ],
+            },
+        }
+    }
+    path.write_text(json.dumps(helper) + "\n")
+    with pytest.raises(ValueError):
+        _primary_snapshot(path, required_user_text=("Native scene planner",))
+    path.write_text(json.dumps(helper) + "\n" + json.dumps(actor) + "\n")
+    selected = _primary_snapshot(path, required_user_text=("Native scene planner",))
+    assert selected.model == "actor" and selected.system_prompt == "" and not selected.tools
+    assert selected.raw_request_body == actor["request"]["body"]
+
+
 def test_openai_namespaces_count_callable_tools(tmp_path):
     path = tmp_path / "trace.jsonl"
     body = {

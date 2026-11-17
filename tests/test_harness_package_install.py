@@ -165,8 +165,13 @@ def test_source_script_install_keeps_sibling_templates_and_resolves_immutable_re
         packages.install_agent(agent, "main", tmp_path / "bad")
 
 
-def test_source_requirements_use_declared_python_and_retain_importable_source(tmp_path, monkeypatch):
+@pytest.mark.parametrize("portable", [False, True])
+def test_source_requirements_use_declared_python_and_retain_importable_source(tmp_path, monkeypatch, portable):
     agent = get_agent("mini-agi")
+    if portable:
+        agent = replace(
+            agent, source_requirement_files=(), source_python_dependencies=("openai>=2.45.0", "requests>=2.34.2")
+        )
     install = tmp_path / "install"
     commands = []
 
@@ -186,8 +191,14 @@ def test_source_requirements_use_declared_python_and_retain_importable_source(tm
     monkeypatch.setattr(packages, "run", run)
     result = packages.install_agent(agent, "e" * 40, install)
     assert commands[0][-2:] == ["--python", "3.11"]
-    assert commands[1][-2:] == ["-r", str(install / "source/source-root/requirements.txt")]
+    expected = (
+        ["openai>=2.45.0", "requests>=2.34.2"]
+        if portable
+        else ["-r", str(install / "source/source-root/requirements.txt")]
+    )
+    assert commands[1][-2:] == expected
     assert (packages.installed_source_root(result) / "miniagi.py").read_bytes() == b"native source"
+    assert (packages.installed_source_root(result) / "requirements.txt").read_bytes() == b"thinkgpt==0.0.6"
     assert packages.install_agent(agent, "e" * 40, install) == result
     assert len(commands) == 2
 
