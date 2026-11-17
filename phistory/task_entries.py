@@ -496,7 +496,7 @@ import secrets
 from pathlib import Path
 source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
 os.chdir(source)
-(source / ".dev.vars").write_text("ENVIRONMENT=dev\nCUSTOM_DOMAIN=localhost\nJWT_SECRET=" + secrets.token_hex(32) + "\nGOOGLE_AI_STUDIO_API_KEY=" + os.environ["GOOGLE_AI_STUDIO_API_KEY"] + "\nCLOUDFLARE_AI_GATEWAY_URL=http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "\n")
+(source / ".dev.vars").write_text("ENVIRONMENT=dev\nCUSTOM_DOMAIN=localhost\nJWT_SECRET=" + secrets.token_urlsafe(48) + "Aa9!\nGOOGLE_AI_STUDIO_API_KEY=" + os.environ["GOOGLE_AI_STUDIO_API_KEY"] + "\nCLOUDFLARE_AI_GATEWAY_URL=http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "\n")
 config = (source / "vite.config.ts").read_text()
 anchor = "configPath: 'wrangler.jsonc',"
 if config.count(anchor) != 1:
