@@ -1,0 +1,49 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:44845
+[claude-tap] CA cert: /tmp/phistory-home-g_3yn47h/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/ctxagent/app-v0.3.2/variants/paper-api/.tap/2026-11-18/trace_104046.jsonl
+
+[claude-tap] launching python: python -c 
+import asyncio
+from pathlib import Path
+from ctxagent import store
+from ctxagent.agent import AgentSession
+from ctxagent.config import SessionConfig
+from ctxagent.segments import Conversation
+
+async def main():
+    store.init()
+    config = SessionConfig(workdirs=[str(Path.cwd())])
+    chat_id = store.create_chat("Phistory", config.to_dict())
+    session = AgentSession(chat_id, config, Conversation())
+    async for event in session.run_turn("Reply with one short sentence."):
+        print(event, flush=True)
+
+asyncio.run(main())
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:44845
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-g_3yn47h/.local/share/claude-tap/ca.pem
+{'type': 'segment', 'segment': {'id': 'f9e8c19806d9', 'seq': 1, 'role': 'user', 'kind': 'user', 'body': 'Reply with one short sentence.', 'created_at': 1794998447.1889045, 'tool_calls': None, 'tool_call_id': None, 'tool_name': None, 'resource_key': None, 'mutates': False, 'detail': 100, 'channel': 'raw', 'observation': {}, 'images': [], 'reasoning_details': [], 'state': 'original', 'original_body': None, 'original_tokens': 11, 'blob_id': None, 'frozen': False, 'pinned': False, 'pin_scope': 'manual', 'pin_until_batch': None, 'significance': 0.5, 'note': ''}}
+{'type': 'assistant_start'}
+{'type': 'delta', 'text': 'captured'}
+{'type': 'segment', 'segment': {'id': '5153d40ee57b', 'seq': 2, 'role': 'assistant', 'kind': 'assistant_text', 'body': 'captured', 'created_at': 1794998447.2480745, 'tool_calls': None, 'tool_call_id': None, 'tool_name': None, 'resource_key': None, 'mutates': False, 'detail': 100, 'channel': 'raw', 'observation': {}, 'images': [], 'reasoning_details': [], 'state': 'original', 'original_body': None, 'original_tokens': 6, 'blob_id': None, 'frozen': False, 'pinned': False, 'pin_scope': 'manual', 'pin_until_batch': None, 'significance': 0.5, 'note': ''}}
+{'type': 'usage', 'usage': {'prompt_tokens': 0, 'completion_tokens': 0, 'cache_read': 0, 'cache_write': 0, 'cost': 0.0, 'requests': 0, 'accounting_version': 2, 'legacy_unallocated_cost': 0.0, 'component_estimates': {'input': 0.0, 'cache_read': 0.0, 'cache_write': 0.0, 'output': 0.0, 'reasoning': 0.0, 'output_unsplit': 0.0}, 'component_unknown_requests': {'input': 0, 'cache_read': 0, 'cache_write': 0, 'output': 0, 'reasoning': 0, 'output_unsplit': 0}, 'token_components': {'input': 0, 'cache_read': 0, 'cache_write': 0, 'output': 0, 'reasoning': 0, 'output_unsplit': 0}, 'recent_requests': [], 'reported_cost_requests': 0, 'missing_cost_requests': 0, 'reconciliation_residual': 0.0, 'unreconciled_reported_cost': 0.0, 'by_source': {}}}
+{'type': 'stats', 'stats': {'total': 8519, 'original': 8519, 'saved': 0, 'effective_window': 655000, 'pressure': 0.013, 'frozen_tokens': 0, 'hot_tokens': 1237, 'hot_zone_budget': 50000, 'hot_excess_tokens': 0, 'review_candidate_tokens': 0, 'review_before_freeze': False, 'initial_result_max_tokens': 0, 'reviewed_through_seq': None, 'rewrite_interval_batches': 5, 'rewrite_pending_batches': 0, 'rewrite_new_tokens': 1237, 'rewrite_last_reason': None, 'hot_start': 0, 'tool_overhead': 7279, 'segments': 3, 'by_state': {'original': 1237}, 'by_kind': {'system': 1220, 'user': 11, 'assistant_text': 6}, 'significance': {'2': 1237}, 'next_tail_ratio': 0.1, 'deep_target_ratio': 0.1, 'document_compaction_enabled': True, 'turns_since_deep': 10000, 'deep_ready': True, 'token_calibration': 1.0, 'workspace_tokens': 0, 'browser_tokens': 0, 'live_workspace_tokens': 0, 'browser': [], 'document_catalog_tokens': 0, 'agents_cost': {'cost': 0.0, 'agents': 0, 'requests': 0, 'missing_cost_requests': 0, 'uncertain_agents': 0}, 'workspace': {'tokens': 0, 'budget': 24000, 'views': []}}}
+{'type': 'final', 'text': 'captured', 'finish_reason': 'stop'}
+{'type': 'stats', 'stats': {'total': 8519, 'original': 8519, 'saved': 0, 'effective_window': 655000, 'pressure': 0.013, 'frozen_tokens': 0, 'hot_tokens': 1237, 'hot_zone_budget': 50000, 'hot_excess_tokens': 0, 'review_candidate_tokens': 0, 'review_before_freeze': False, 'initial_result_max_tokens': 0, 'reviewed_through_seq': None, 'rewrite_interval_batches': 5, 'rewrite_pending_batches': 0, 'rewrite_new_tokens': 1237, 'rewrite_last_reason': None, 'hot_start': 0, 'tool_overhead': 7279, 'segments': 3, 'by_state': {'original': 1237}, 'by_kind': {'system': 1220, 'user': 11, 'assistant_text': 6}, 'significance': {'2': 1237}, 'next_tail_ratio': 0.1, 'deep_target_ratio': 0.1, 'document_compaction_enabled': True, 'turns_since_deep': 10000, 'deep_ready': True, 'token_calibration': 1.0, 'workspace_tokens': 0, 'browser_tokens': 0, 'live_workspace_tokens': 0, 'browser': [], 'document_catalog_tokens': 0, 'agents_cost': {'cost': 0.0, 'agents': 0, 'requests': 0, 'missing_cost_requests': 0, 'uncertain_agents': 0}, 'workspace': {'tokens': 0, 'budget': 24000, 'views': []}}}
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/ctxagent/app-v0.3.2/variants/paper-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/ctxagent/app-v0.3.2/variants/paper-api/.tap/2026-11-18/trace_104046.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/ctxagent/app-v0.3.2/variants/paper-api/.tap/2026-11-18/trace_104046.log
+  view:         /home/runner/work/phistory/phistory/captures/ctxagent/app-v0.3.2/variants/paper-api/.tap/2026-11-18/trace_104046.html
+  prompt:       /home/runner/work/phistory/phistory/captures/ctxagent/app-v0.3.2/variants/paper-api/prompt.md
+
+stderr:
+[claude-tap] warning: 

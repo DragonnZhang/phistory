@@ -1,0 +1,31 @@
+stdout:
+[claude-tap] 'bun' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] bun target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:32929
+[claude-tap] CA cert: /tmp/phistory-home-b9d5qca0/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/empryo/b216168172c34fe77603596adf1e30656ca18925/variants/public-soulforge-v2/.tap/2026-11-18/trace_110242.jsonl
+
+[claude-tap] launching bun: bun run /home/runner/work/phistory/phistory/.phistory-cache/installs/empryo/b216168172c34fe77603596adf1e30656ca18925/source/Empryo-b216168172c34fe77603596adf1e30656ca18925/src/boot.tsx --headless --events --model openai/gpt-4.1 --max-steps 1 --timeout 60000 Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:32929
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-b9d5qca0/.local/share/claude-tap/ca.pem
+[2mSoulForge collects anonymous usage stats (version, OS, surface — no prompts, paths, or keys).
+Opt out: set "telemetry": false in config, or DO_NOT_TRACK=1.[0m
+{"type":"start","model":"openai/gpt-4.1","mode":"default","session":null,"repoMap":{"files":0,"symbols":0},"workers":{"intelligence":"ready","io":"ready"}}
+{"type":"text","content":"captured"}
+{"type":"step","step":1,"tokens":{"input":0,"output":0,"cacheRead":0,"lastStepInput":0,"lastStepOutput":0,"lastStepCacheRead":0}}
+{"type":"error","error":"Max steps reached (1)"}
+{"type":"done","output":"captured","steps":1,"tokens":{"input":0,"output":0,"cacheRead":0,"lastStepInput":0,"lastStepOutput":0,"lastStepCacheRead":0},"toolCalls":[],"filesEdited":[],"duration":28,"error":"Max steps reached (1)"}
+
+[claude-tap] bun exited with code 1
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/empryo/b216168172c34fe77603596adf1e30656ca18925/variants/public-soulforge-v2/prompt.md
+
+[claude-tap] summary:
+  api_calls:    4
+  trace:        /home/runner/work/phistory/phistory/captures/empryo/b216168172c34fe77603596adf1e30656ca18925/variants/public-soulforge-v2/.tap/2026-11-18/trace_110242.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/empryo/b216168172c34fe77603596adf1e30656ca18925/variants/public-soulforge-v2/.tap/2026-11-18/trace_110242.log
+  view:         /home/runner/work/phistory/phistory/captures/empryo/b216168172c34fe77603596adf1e30656ca18925/variants/public-soulforge-v2/.tap/2026-11-18/trace_110242.html
+  prompt:       /home/runner/work/phistory/phistory/captures/empryo/b216168172c34fe77603596adf1e30656ca18925/variants/public-soulforge-v2/prompt.md
+
+stderr:

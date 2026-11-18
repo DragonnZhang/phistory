@@ -1,0 +1,25 @@
+stdout:
+[claude-tap] 'rpi' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] rpi target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:35631
+[claude-tap] CA cert: /tmp/phistory-home-_6tf_mfo/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/pi-rust/0.25.0/variants/default/.tap/2026-11-18/trace_104014.jsonl
+
+[claude-tap] launching rpi: rpi -p Reply with one short sentence. --no-session
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:35631
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-_6tf_mfo/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] rpi exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/pi-rust/0.25.0/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/pi-rust/0.25.0/variants/default/.tap/2026-11-18/trace_104014.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/pi-rust/0.25.0/variants/default/.tap/2026-11-18/trace_104014.log
+  view:         /home/runner/work/phistory/phistory/captures/pi-rust/0.25.0/variants/default/.tap/2026-11-18/trace_104014.html
+  prompt:       /home/runner/work/phistory/phistory/captures/pi-rust/0.25.0/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 

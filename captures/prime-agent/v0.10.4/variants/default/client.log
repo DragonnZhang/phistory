@@ -1,0 +1,32 @@
+stdout:
+[claude-tap] 'prime-agent' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] prime-agent target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:36911
+[claude-tap] CA cert: /tmp/phistory-home-oxf5e417/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/prime-agent/v0.10.4/variants/default/.tap/2026-11-18/trace_104039.jsonl
+
+[claude-tap] launching prime-agent: prime-agent --print --no-session Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:36911
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-oxf5e417/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] prime-agent exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/prime-agent/v0.10.4/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/prime-agent/v0.10.4/variants/default/.tap/2026-11-18/trace_104039.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/prime-agent/v0.10.4/variants/default/.tap/2026-11-18/trace_104039.log
+  view:         /home/runner/work/phistory/phistory/captures/prime-agent/v0.10.4/variants/default/.tap/2026-11-18/trace_104039.html
+  prompt:       /home/runner/work/phistory/phistory/captures/prime-agent/v0.10.4/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 
+Warning: Python skill agent_message failed to install and will be unavailable: bootstrap task join failed: task 19 was cancelled
+Warning: Python skill attach_image failed to install and will be unavailable: bootstrap task join failed: task 20 was cancelled
+Warning: Python skill compact failed to install and will be unavailable: bootstrap task join failed: task 21 was cancelled
+Warning: Python skill edit failed to install and will be unavailable: bootstrap task join failed: task 22 was cancelled
+Warning: Python skill goal failed to install and will be unavailable: bootstrap task join failed: task 23 was cancelled
+Warning: Python skill refine failed to install and will be unavailable: bootstrap task join failed: task 24 was cancelled
+✓ ready

@@ -1,0 +1,25 @@
+stdout:
+[claude-tap] Antigravity CLI target: https://daily-cloudcode-pa.googleapis.com  (auto: Antigravity OAuth token)  protocols: antigravity
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:37417
+[claude-tap] CA cert: /tmp/phistory-home-c2w6r4au/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/antigravity/1.5.11/variants/default/.tap/2026-11-18/trace_103933.jsonl
+
+[claude-tap] launching Antigravity CLI: agy --print Reply with one short sentence. --print-timeout 1s --dangerously-skip-permissions --model MODEL_GOOGLE_GEMINI_2_5_FLASH
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:37417
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-c2w6r4au/.local/share/claude-tap/ca.pem
+
+[claude-tap] Antigravity CLI exited with code 3
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/antigravity/1.5.11/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    80
+  trace:        /home/runner/work/phistory/phistory/captures/antigravity/1.5.11/variants/default/.tap/2026-11-18/trace_103933.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/antigravity/1.5.11/variants/default/.tap/2026-11-18/trace_103933.log
+  view:         /home/runner/work/phistory/phistory/captures/antigravity/1.5.11/variants/default/.tap/2026-11-18/trace_103933.html
+  prompt:       /home/runner/work/phistory/phistory/captures/antigravity/1.5.11/variants/default/prompt.md
+
+stderr:
+[agy] print timeout after 1s with turn in progress; returning partial output
+error: print timeout after 1s with the turn still in progress; the response is partial
+AGY_ERROR: {"short_error":"print timeout after 1s with the turn still in progress; the response is partial","status":"DEADLINE_EXCEEDED","retryable":false,"reason":"print_timeout"}

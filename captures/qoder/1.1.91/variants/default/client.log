@@ -1,0 +1,23 @@
+stdout:
+[claude-tap] Qoder CLI target: https://qoder.com  (auto: QODER_PERSONAL_ACCESS_TOKEN env var)  protocols: qoder
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:37259
+[claude-tap] CA cert: /tmp/phistory-home-kv9ip7wy/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/qoder/1.1.91/variants/default/.tap/2026-11-18/trace_110441.jsonl
+
+[claude-tap] launching Qoder CLI: qodercli --print --no-session-persistence Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:37259
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-kv9ip7wy/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] Qoder CLI exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/qoder/1.1.91/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/qoder/1.1.91/variants/default/.tap/2026-11-18/trace_110441.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/qoder/1.1.91/variants/default/.tap/2026-11-18/trace_110441.log
+  view:         /home/runner/work/phistory/phistory/captures/qoder/1.1.91/variants/default/.tap/2026-11-18/trace_110441.html
+  prompt:       /home/runner/work/phistory/phistory/captures/qoder/1.1.91/variants/default/prompt.md
+
+stderr:

@@ -1,0 +1,29 @@
+stdout:
+[claude-tap] 'goose' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] goose target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:46797
+[claude-tap] CA cert: /tmp/phistory-home-0f17orku/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/goose/v1.60.1/variants/default/.tap/2026-11-18/trace_104007.jsonl
+
+[claude-tap] launching goose: goose run --provider openai --text Reply with one short sentence. --no-session
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:46797
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-0f17orku/.local/share/claude-tap/ca.pem
+
+    __( O)>  ● new session · openai gpt-6.1-sol
+   \____)    20261118_1 · /tmp/phistory-work-4rvljlw6
+     L L     goose is ready
+captured
+
+[claude-tap] goose exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/goose/v1.60.1/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    4
+  trace:        /home/runner/work/phistory/phistory/captures/goose/v1.60.1/variants/default/.tap/2026-11-18/trace_104007.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/goose/v1.60.1/variants/default/.tap/2026-11-18/trace_104007.log
+  view:         /home/runner/work/phistory/phistory/captures/goose/v1.60.1/variants/default/.tap/2026-11-18/trace_104007.html
+  prompt:       /home/runner/work/phistory/phistory/captures/goose/v1.60.1/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 

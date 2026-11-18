@@ -1,0 +1,102 @@
+{
+  "agent_id": "agent-zero",
+  "agent": "Agent Zero",
+  "package": "agent0ai/agent-zero",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [
+      "requirements.txt"
+    ],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport os\nimport importlib\nimport tiktoken\ntiktoken.get_encoding(\"cl100k_base\")\ntiktoken.get_encoding(\"o200k_base\")\nos.chdir(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nmodule = importlib.import_module(\"plugins._model_config.extensions.python.startup_migration._20_bootstrap_model_presets\")\nassert module.BootstrapModelPresets(None).execute() != \"error\"\nfrom helpers import dotenv\ndotenv.save_dotenv_value(\"RFC_PASSWORD\", os.environ[\"RFC_PASSWORD\"])\nfrom sentence_transformers import SentenceTransformer\nSentenceTransformer(\"sentence-transformers/all-MiniLM-L6-v2\").encode([\"public asset prefetch\"])\n"
+    ],
+    "environment": {
+      "HF_HUB_OFFLINE": "0",
+      "TRANSFORMERS_OFFLINE": "0"
+    }
+  },
+  "version": "2b0b3a416d80638379dc575798a4174ab4d3e1d9",
+  "variant": {
+    "id": "context-api",
+    "label": "Native AgentContext task API · owned UI/RFC worker",
+    "dimensions": {
+      "entry": "AgentContext.communicate",
+      "runtime": "native development topology with real owned UI/RFC service; no Docker-mode override",
+      "models": "native resolved public preset",
+      "dummy_retry_bound": "1",
+      "memory": "preserved; public MiniLM weights prefetched"
+    }
+  },
+  "requested": {
+    "entry": "AgentContext.communicate",
+    "runtime": "native development topology with real owned UI/RFC service; no Docker-mode override",
+    "models": "native resolved public preset",
+    "dummy_retry_bound": "1",
+    "memory": "preserved; public MiniLM weights prefetched"
+  },
+  "observed": {
+    "model": "openai/gpt-6.1-sol"
+  },
+  "capture_selection": {
+    "minimum_tools": 0,
+    "required_system_text": [
+      "Agent Zero System Manual"
+    ],
+    "required_user_text": [],
+    "required_tool_name_fragments": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/agent0ai/agent-zero/archive/2b0b3a416d80638379dc575798a4174ab4d3e1d9.tar.gz",
+  "binary_version": "2b0b3a416d80638379dc575798a4174ab4d3e1d9",
+  "captured_at": "2026-11-18T11:04:09.857968+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "44287052057",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44287052057"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 80.356,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport asyncio\nimport os\nimport hashlib\nimport socket\nimport subprocess\nimport sys\nimport time\nimport urllib.error\nimport urllib.request\nfrom pathlib import Path\nos.chdir(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nwith socket.socket() as probe:\n    probe.bind((\"127.0.0.1\", 0))\n    port = probe.getsockname()[1]\nos.environ[\"A0_SET_RFC_URL\"] = \"127.0.0.1\"\nos.environ[\"A0_SET_RFC_PORT_HTTP\"] = str(port)\nserver = subprocess.Popen([sys.executable, \"run_ui.py\", \"--host\", \"127.0.0.1\", \"--port\", str(port)])\ntry:\n    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))\n    deadline = time.monotonic() + 90\n    while time.monotonic() < deadline:\n        if server.poll() is not None:\n            raise RuntimeError(\"native Agent Zero UI/RFC worker exited during startup\")\n        try:\n            with opener.open(f\"http://127.0.0.1:{port}/\", timeout=2):\n                break\n        except urllib.error.HTTPError as error:\n            if error.code < 500:\n                break\n        except (OSError, urllib.error.URLError):\n            pass\n        time.sleep(0.25)\n    else:\n        raise RuntimeError(\"native Agent Zero UI/RFC worker did not become ready\")\n    from helpers import runtime, dotenv\n    runtime.initialize()\n    dotenv.load_dotenv()\n    from plugins._model_config.helpers import model_config\n    path = Path(model_config._get_presets_path())\n    print(\"Native presets SHA-256:\", hashlib.sha256(path.read_bytes()).hexdigest(), flush=True)\n    print(\"Native selected preset:\", model_config.resolve_preset(model_config.get_configured_preset_name()), flush=True)\n    from agent import AgentContext, UserMessage\n    from initialize import initialize_agent\n    async def main():\n        context = AgentContext(initialize_agent())\n        task = context.communicate(UserMessage(message=\"Reply with one short sentence.\"))\n        await task.result()\n    asyncio.run(main())\nfinally:\n    if server.poll() is None:\n        server.terminate()\n        try:\n            server.wait(timeout=20)\n        except subprocess.TimeoutExpired:\n            server.kill()\n            server.wait(timeout=5)\n"
+  ],
+  "capture_environment": {
+    "A0_SET_MAX_CONSECUTIVE_UNUSABLE_RESPONSES": "1",
+    "HF_HUB_OFFLINE": "1",
+    "TRANSFORMERS_OFFLINE": "1"
+  }
+}

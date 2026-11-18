@@ -1,0 +1,78 @@
+{
+  "agent_id": "headlong",
+  "agent": "Headlong",
+  "package": "laude-institute/headlong",
+  "source_runtime": {
+    "project": ".",
+    "state": "none",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "version": "8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2",
+  "variant": {
+    "id": "default",
+    "label": "Native monolith · synchronous manual wake",
+    "dimensions": {
+      "entry": "thinkers step monolith",
+      "environment": "local",
+      "max_iterations": "1",
+      "action_protocol": "fenced Bash embedded in prompt"
+    }
+  },
+  "requested": {
+    "entry": "thinkers step monolith",
+    "environment": "local",
+    "max_iterations": "1",
+    "action_protocol": "fenced Bash embedded in prompt"
+  },
+  "observed": {
+    "model": "claude-opus-4-7"
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/laude-institute/headlong/archive/8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2.tar.gz",
+  "binary_version": "8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2",
+  "captured_at": "2026-11-18T10:41:01.776169+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "44287052057",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44287052057"
+  },
+  "tap_client": "bash",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 4.236,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "bash",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    ". \"$HEADLONG_HOME/identities/phistory/activate\"; thinkers step monolith"
+  ],
+  "capture_environment": {
+    "SHELLM_THINKER_ENV": "local",
+    "SHELLM_MAX_ITERATIONS": "1"
+  }
+}

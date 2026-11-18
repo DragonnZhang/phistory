@@ -1,0 +1,101 @@
+{
+  "agent_id": "empryo",
+  "agent": "Empryo / public SoulForge v2",
+  "package": "proxysoul/Empryo",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": [
+      [
+        "bun",
+        "install",
+        "--frozen-lockfile"
+      ]
+    ]
+  },
+  "version": "b216168172c34fe77603596adf1e30656ca18925",
+  "variant": {
+    "id": "public-soulforge-v2",
+    "label": "Public SoulForge v2 · native headless task",
+    "dimensions": {
+      "entry": "native public headless CLI",
+      "model": "configured OpenAI gpt-4.1",
+      "mode": "native default",
+      "repomap": "native enabled",
+      "scope": "public SoulForge v2 only"
+    }
+  },
+  "requested": {
+    "entry": "native public headless CLI",
+    "model": "configured OpenAI gpt-4.1",
+    "mode": "native default",
+    "repomap": "native enabled",
+    "scope": "public SoulForge v2 only"
+  },
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 8
+  },
+  "capture_selection": {
+    "minimum_tools": 0,
+    "required_system_text": [
+      "<persistence>",
+      "<tool_preambles>"
+    ],
+    "required_user_text": [],
+    "required_tool_name_fragments": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/proxysoul/Empryo/archive/b216168172c34fe77603596adf1e30656ca18925.tar.gz",
+  "binary_version": "b216168172c34fe77603596adf1e30656ca18925",
+  "captured_at": "2026-11-18T11:02:43.674823+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "44287052057",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44287052057"
+  },
+  "tap_client": "bun",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 4.131,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "bun",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "run",
+    "$PHISTORY_INSTALL/source/Empryo-b216168172c34fe77603596adf1e30656ca18925/src/boot.tsx",
+    "--headless",
+    "--events",
+    "--model",
+    "openai/gpt-4.1",
+    "--max-steps",
+    "1",
+    "--timeout",
+    "60000",
+    "Reply with one short sentence."
+  ]
+}
