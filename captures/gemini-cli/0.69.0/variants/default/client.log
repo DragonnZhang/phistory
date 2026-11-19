@@ -1,0 +1,45 @@
+stdout:
+[claude-tap] Gemini CLI target: https://generativelanguage.googleapis.com  (auto: GEMINI_API_KEY env var)  protocols: gemini
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:46317
+[claude-tap] CA cert: /tmp/phistory-home-ut7k75ur/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/gemini-cli/0.69.0/variants/default/.tap/2026-11-19/trace_104830.jsonl
+
+[claude-tap] launching Gemini CLI: gemini -p Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:46317
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-ut7k75ur/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] Gemini CLI exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/gemini-cli/0.69.0/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/gemini-cli/0.69.0/variants/default/.tap/2026-11-19/trace_104830.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/gemini-cli/0.69.0/variants/default/.tap/2026-11-19/trace_104830.log
+  view:         /home/runner/work/phistory/phistory/captures/gemini-cli/0.69.0/variants/default/.tap/2026-11-19/trace_104830.html
+  prompt:       /home/runner/work/phistory/phistory/captures/gemini-cli/0.69.0/variants/default/prompt.md
+
+stderr:
+Warning: 256-color support not detected. Using a terminal with at least 256-color support is recommended for a better visual experience.
+API returned invalid content after all retries. Full report available at: /tmp/gemini-client-error-generateJson-invalid-content-2026-11-19T10-48-45-978Z.json Error: Retry attempts exhausted
+    at retryWithBackoff (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:311255:9)
+    at async BaseLlmClient._generateWithRetry (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:311422:14)
+    at async BaseLlmClient.generateJson (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:311305:21)
+    at async NumericalClassifierStrategy.route (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:365486:28)
+    at async CompositeStrategy.route (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:365559:26)
+    at async ModelRouterService.route (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:365723:18)
+    at async GeminiClient.processTurn (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:351559:24)
+    at async GeminiClient.sendMessageStream (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:351678:14)
+    at async file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/gemini-SS7CDNKE.js:14032:26
+    at async main (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/gemini-SS7CDNKE.js:19495:5)
+[Routing] NumericalClassifierStrategy failed: Error: Failed to generate content: Retry attempts exhausted
+    at BaseLlmClient._generateWithRetry (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:311455:13)
+    at async BaseLlmClient.generateJson (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:311305:21)
+    at async NumericalClassifierStrategy.route (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:365486:28)
+    at async CompositeStrategy.route (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:365559:26)
+    at async ModelRouterService.route (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:365723:18)
+    at async GeminiClient.processTurn (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:351559:24)
+    at async GeminiClient.sendMessageStream (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/chunk-X4P3RZYU.js:351678:14)
+    at async file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/gemini-SS7CDNKE.js:14032:26
+    at async main (file:///home/runner/work/phistory/phistory/.phistory-cache/installs/gemini-cli/0.69.0/node_modules/@google/gemini-cli/bundle/gemini-SS7CDNKE.js:19495:5)

@@ -1,0 +1,97 @@
+{
+  "agent_id": "wechat-mac-rpa",
+  "agent": "WeChat Mac RPA",
+  "package": "wq19901103wq/wechat-mac-rpa",
+  "python_runtime": "3.11",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [
+      "openai>=2.45.0",
+      "defusedxml>=0.7.1",
+      "numpy==1.24.3",
+      "sqlalchemy>=2.0.51,<3.0.0",
+      "scikit-learn==1.2.1",
+      "scipy>=1.10.0,<1.16",
+      "Pillow>=12.3.0,<13.0.0",
+      "requests>=2.34.2",
+      "httpx>=0.28.1",
+      "beautifulsoup4>=4.15.0",
+      "tinytuya>=1.19.0",
+      "paho-mqtt>=2.1.0"
+    ],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "version": "4df1b56c7449b3bece6b23d06fe1f0a71b075ea9",
+  "variant": {
+    "id": "portable-reply-api",
+    "label": "Native portable reply API / built-in tool registry",
+    "dimensions": {
+      "entry": "ReplyGenerator.generate / ChatMessage",
+      "model": "native DeepSeek v4 flash",
+      "dependencies": "declared portable core and tool dependencies; no macOS UI spine",
+      "scope": "native reply engine; no WeChat send"
+    }
+  },
+  "requested": {
+    "entry": "ReplyGenerator.generate / ChatMessage",
+    "model": "native DeepSeek v4 flash",
+    "dependencies": "declared portable core and tool dependencies; no macOS UI spine",
+    "scope": "native reply engine; no WeChat send"
+  },
+  "observed": {
+    "model": "deepseek-v4-flash",
+    "tool_count": 13
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [
+      "<instructions>"
+    ],
+    "required_user_text": [],
+    "required_tool_name_fragments": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/wq19901103wq/wechat-mac-rpa/archive/4df1b56c7449b3bece6b23d06fe1f0a71b075ea9.tar.gz",
+  "binary_version": "4df1b56c7449b3bece6b23d06fe1f0a71b075ea9",
+  "captured_at": "2026-11-19T11:15:04.440074+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "44507949464",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44507949464"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 4.551,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nos.chdir(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nfrom src.tools import register_builtin_tools\nfrom src.utils.qwen_client import QwenClient\nfrom src.reply.generator import ReplyGenerator\nfrom src.models.base import ChatMessage, SenderType\nregister_builtin_tools()\nmessage = ChatMessage(text=\"Reply with one short sentence.\", sender=\"Phistory\", sender_type=SenderType.OTHER, chat_name=\"Phistory\")\nprint(ReplyGenerator(llm_client=QwenClient()).generate([message], [message]))\n"
+  ]
+}

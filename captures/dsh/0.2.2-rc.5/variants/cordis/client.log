@@ -1,0 +1,27 @@
+stdout:
+[claude-tap] DeepSeek Harness target: https://api.deepseek.com  (auto: DEEPSEEK_API_KEY env var)  protocols: openai,anthropic,gemini,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:44045
+[claude-tap] CA cert: /tmp/phistory-home-fyk9h2p6/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/cordis/.tap/2026-11-19/trace_104753.jsonl
+
+[claude-tap] launching DeepSeek Harness: dsh web --host 127.0.0.1 --port 35429
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:44045
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-fyk9h2p6/.local/share/claude-tap/ca.pem
+dsh web: http://127.0.0.1:35429/?token=JwuFpKJvjbsqqb6lCl-kzlFWPS33MpUujSpMFGoRnXY
+dsh web: opening the default browser; pass --no-open to disable
+[llm-deepseek-api-key] model listing from https://api.deepseek.com/models loaded 1 model(s), skipped 0 row(s)
+
+[claude-tap] shutting down DeepSeek Harness... (Ctrl+C again to force)
+
+[claude-tap] DeepSeek Harness exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/cordis/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/cordis/.tap/2026-11-19/trace_104753.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/cordis/.tap/2026-11-19/trace_104753.log
+  view:         /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/cordis/.tap/2026-11-19/trace_104753.html
+  prompt:       /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/cordis/prompt.md
+
+stderr:

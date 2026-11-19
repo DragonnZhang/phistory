@@ -1,0 +1,25 @@
+stdout:
+[claude-tap] DeepSeek Harness target: https://api.deepseek.com  (auto: DEEPSEEK_API_KEY env var)  protocols: openai,anthropic,gemini,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:34983
+[claude-tap] CA cert: /tmp/phistory-home-s7qjsrcg/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/headless/.tap/2026-11-19/trace_104731.jsonl
+
+[claude-tap] launching DeepSeek Harness: dsh --profile headless Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:34983
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-s7qjsrcg/.local/share/claude-tap/ca.pem
+
+
+[claude-tap] DeepSeek Harness exited with code 1
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/headless/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/headless/.tap/2026-11-19/trace_104731.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/headless/.tap/2026-11-19/trace_104731.log
+  view:         /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/headless/.tap/2026-11-19/trace_104731.html
+  prompt:       /home/runner/work/phistory/phistory/captures/dsh/0.2.2-rc.5/variants/headless/prompt.md
+
+stderr:
+[llm-deepseek-api-key] model listing from https://api.deepseek.com/models loaded 1 model(s), skipped 0 row(s)
+dsh: STREAM_CLOSED: DeepSeek Messages stream ended before message_stop

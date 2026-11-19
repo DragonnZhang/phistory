@@ -1,0 +1,99 @@
+{
+  "agent_id": "openagents",
+  "agent": "OpenAgents",
+  "package": "OpenAgentsInc/openagents",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": [
+      [
+        "bash",
+        "-c",
+        "COAX_MUTATION=0 COAX_RELEASE_CACHE=\"$HOME/.cache/coax-release-fast\" exec bash coax/build.sh"
+      ]
+    ]
+  },
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport json\nimport os\nimport platform\nimport subprocess\nfrom pathlib import Path\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nstate = Path(os.environ[\"PHISTORY_HOME\"]) / \"openagents\"\nstate.mkdir(parents=True, exist_ok=True)\nfacts = json.dumps({\"os\": platform.system(), \"architecture\": platform.machine(), \"app\": \"OpenAgents\", \"cwd\": str(Path.cwd())})\nincludes = [source / path for path in (\"coax/lib/microcoder/run.coax\", \"coax/lib/gateway/plan.coax\", \"coax/lib/gateway/openrouter.coax\")]\ncode = '#import \"Basic\";\\n' + ''.join('#load ' + json.dumps(str(path)) + ';\\n' for path in includes)\ncode += r\"\"\"\nphistory_task :: () -> int #export_c #effects(all) {\n  run: [1] McRun; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;\n  p: [1] GwPlan; pb: [1] GwPlanBuffers; bench: [1] GwBench;\n  gw_plan_init(p[..], pb[..]);\n  h := GW_OPENROUTER_HEADERS;\n  added := gw_plan_add(p[..], gw_openrouter(false), GW_OPENROUTER_FLASH, h[..]);\n  mc_init(run[0].l[..], sb[..], lb[..], FACTS, TASK, \"{\\\"route\\\":\\\"other\\\",\\\"difficulty\\\":\\\"trivial\\\",\\\"effort\\\":\\\"low\\\",\\\"local_work\\\":0.1}\", 0.1);\n  mc_run_start(run[..], p[..], bench[..], WORKDIR, \"low\");\n  ev: [16] McRunEvent;\n  while !run[0].ended { n := mc_run_poll(run[..], ev[..]); }\n  print(\"native Microcoder ended\\n\");\n  return 0;\n}\n\"\"\"\ncode = code.replace('FACTS', json.dumps(facts)).replace('TASK', json.dumps(\"Reply with one short sentence.\")).replace('WORKDIR', json.dumps(str(Path.cwd())))\ndriver = state / \"task.coax\"\ndriver.write_text(code)\nc_file = state / \"task.c\"\nheader = state / \"task.h\"\nentry = state / \"entry.c\"\nentry.write_text('#include \"task.h\"\\nint main(void) { return (int)phistory_task(); }\\n')\nwith c_file.open(\"w\") as output:\n    subprocess.run([str(source / \"coax/bin/coax\"), \"c\", str(driver), \"--library\", \"--header\", str(header)], cwd=source, stdout=output, check=True)\nsubprocess.run([\"cc\", \"-std=c11\", \"-O1\", \"-g\", \"-o\", str(state / \"task\"), str(entry), str(c_file), str(source / \"coax/platform/process-native.c\"), str(source / \"coax/platform/store-file-native.c\"), \"-lm\"], check=True)\n"
+    ],
+    "environment": {}
+  },
+  "version": "1a9e5fc9a38c5b82e6819e5dbf6ab1433247df49",
+  "variant": {
+    "id": "plain-microcoder",
+    "label": "Native Coax plain Microcoder task API",
+    "dimensions": {
+      "entry": "native mc_init / mc_run_start / mc_run_poll",
+      "provider": "native OpenRouter route",
+      "model": "native google/gemini-4-hydrogen",
+      "environment": "actual Linux architecture and owned cwd",
+      "schema": "native next_action structured response",
+      "scope": "plain Microcoder; not full Mammoth application"
+    }
+  },
+  "requested": {
+    "entry": "native mc_init / mc_run_start / mc_run_poll",
+    "provider": "native OpenRouter route",
+    "model": "native google/gemini-4-hydrogen",
+    "environment": "actual Linux architecture and owned cwd",
+    "schema": "native next_action structured response",
+    "scope": "plain Microcoder; not full Mammoth application"
+  },
+  "observed": {
+    "model": "google/gemini-4-hydrogen"
+  },
+  "capture_selection": {
+    "minimum_tools": 0,
+    "required_system_text": [
+      "You are Microcoder, a small coding agent."
+    ],
+    "required_user_text": [],
+    "required_tool_name_fragments": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/OpenAgentsInc/openagents/archive/1a9e5fc9a38c5b82e6819e5dbf6ab1433247df49.tar.gz",
+  "binary_version": "1a9e5fc9a38c5b82e6819e5dbf6ab1433247df49",
+  "captured_at": "2026-11-19T11:14:55.836394+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "44507949464",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44507949464"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 559.621,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nfrom pathlib import Path\nos.environ[\"CURL_CA_BUNDLE\"] = os.environ[\"SSL_CERT_FILE\"]\nos.execv(str(Path(os.environ[\"PHISTORY_HOME\"]) / \"openagents/task\"), [\"openagents-native-microcoder-task\"])\n"
+  ]
+}
