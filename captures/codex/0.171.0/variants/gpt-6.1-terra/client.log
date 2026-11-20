@@ -1,0 +1,52 @@
+stdout:
+[claude-tap] Codex CLI target: https://chatgpt.com/backend-api/codex  (auto: Codex ChatGPT OAuth)  protocols: openai
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:41271
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/codex/0.171.0/variants/gpt-6.1-terra/.tap/2026-11-20/trace_102419.jsonl
+
+[claude-tap] launching Codex CLI: codex -c model_provider="claude-tap-openai" -c model_providers.claude-tap-openai.name="claude-tap" -c model_providers.claude-tap-openai.base_url="http://127.0.0.1:41271/v1" -c model_providers.claude-tap-openai.wire_api="responses" -c model_providers.claude-tap-openai.requires_openai_auth=true -c model_providers.claude-tap-openai.supports_websockets=false exec Reply with one short sentence. --model gpt-6.1-terra --skip-git-repo-check --json
+[claude-tap] cli args: -c model_provider="claude-tap-openai" -c model_providers.claude-tap-openai.name="claude-tap" -c model_providers.claude-tap-openai.base_url="http://127.0.0.1:41271/v1" -c model_providers.claude-tap-openai.wire_api="responses" -c model_providers.claude-tap-openai.requires_openai_auth=true -c model_providers.claude-tap-openai.supports_websockets=false
+{"type":"thread.started","thread_id":"01a1f87c-544d-7ed1-a0fd-9ab87cff0cc6"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"captured"}}
+{"type":"turn.completed","usage":{"input_tokens":0,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":0,"reasoning_output_tokens":0}}
+
+[claude-tap] Codex CLI exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/codex/0.171.0/variants/gpt-6.1-terra/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/codex/0.171.0/variants/gpt-6.1-terra/.tap/2026-11-20/trace_102419.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/codex/0.171.0/variants/gpt-6.1-terra/.tap/2026-11-20/trace_102419.log
+  view:         /home/runner/work/phistory/phistory/captures/codex/0.171.0/variants/gpt-6.1-terra/.tap/2026-11-20/trace_102419.html
+  prompt:       /home/runner/work/phistory/phistory/captures/codex/0.171.0/variants/gpt-6.1-terra/prompt.md
+
+stderr:
+WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir "/tmp" (codex_home: AbsolutePathBuf("/tmp/phistory-home-0_0z5bdf/.codex"))
+Reading additional input from stdin...
+2026-11-20T10:24:19.930324Z ERROR codex_login::auth::manager: Failed to refresh token status=401 Unauthorized
+2026-11-20T10:24:19.930366Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.043317Z ERROR codex_login::auth::manager: Failed to refresh token status=401 Unauthorized
+2026-11-20T10:24:20.043346Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.112389Z ERROR codex_login::auth::manager: Failed to refresh token status=401 Unauthorized
+2026-11-20T10:24:20.112409Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.112731Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.112869Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.114896Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.115046Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.138447Z ERROR codex_models_manager::manager: failed to refresh available models: stream disconnected before completion: failed to decode models response: Data at line 1 column 174 (body: 174 bytes)
+2026-11-20T10:24:20.138914Z ERROR codex_models_manager::manager: failed to refresh available models: stream disconnected before completion: failed to decode models response: Data at line 1 column 174 (body: 174 bytes)
+2026-11-20T10:24:20.139338Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.144728Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.147635Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.148190Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.151196Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.152482Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.184355Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.243739Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when UnexpectedServerResponse("HTTP 451: {\"message\":\"no_biscuit_no_service\"}")
+2026-11-20T10:24:20.244267Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.286628Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when UnexpectedServerResponse("HTTP 451: {\"message\":\"no_biscuit_no_service\"}")
+2026-11-20T10:24:20.347061Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.428727Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.536301Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.
+2026-11-20T10:24:20.550973Z ERROR codex_login::auth::manager: Failed to refresh token: Your access token could not be refreshed. Please log out and sign in again.

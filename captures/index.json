@@ -1,25 +1,25 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-19T11:16:17.259379Z",
+  "updated_at": "2026-11-20T10:58:36.635827Z",
   "agents": [
     {
       "agent_id": "claude-code",
       "agent": "Claude Code",
-      "latest_version": "2.1.328",
-      "latest_published_at": "2026-11-18T23:09:39.159Z",
-      "latest_captured_at": "2026-11-19T10:46:13.905635+00:00",
-      "versions": 474,
-      "snapshots": 3882
+      "latest_version": "2.1.329",
+      "latest_published_at": "2026-11-19T18:40:25.219Z",
+      "latest_captured_at": "2026-11-20T10:23:55.287639+00:00",
+      "versions": 475,
+      "snapshots": 3898
     },
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
-      "latest_version": "0.170.0",
-      "latest_published_at": "2026-11-18T03:45:45.798Z",
-      "latest_captured_at": "2026-11-18T10:39:06.210336+00:00",
-      "versions": 115,
-      "snapshots": 571
+      "latest_version": "0.171.0",
+      "latest_published_at": "2026-11-20T00:51:29.762Z",
+      "latest_captured_at": "2026-11-20T10:24:15.812675+00:00",
+      "versions": 116,
+      "snapshots": 582
     },
     {
       "agent_id": "dsh",
@@ -33,11 +33,11 @@
     {
       "agent_id": "antigravity",
       "agent": "Antigravity CLI",
-      "latest_version": "1.5.12",
-      "latest_published_at": "2026-11-19T00:26:28Z",
-      "latest_captured_at": "2026-11-19T10:48:12.770534+00:00",
-      "versions": 87,
-      "snapshots": 87
+      "latest_version": "1.5.13",
+      "latest_published_at": "2026-11-19T21:48:43Z",
+      "latest_captured_at": "2026-11-20T10:24:38.610589+00:00",
+      "versions": 88,
+      "snapshots": 88
     },
     {
       "agent_id": "grok",
@@ -60,11 +60,11 @@
     {
       "agent_id": "kimi-code",
       "agent": "Kimi Code",
-      "latest_version": "2.6.3",
-      "latest_published_at": "2026-11-17T15:20:31.269Z",
-      "latest_captured_at": "2026-11-18T10:39:43.582422+00:00",
-      "versions": 93,
-      "snapshots": 93
+      "latest_version": "2.7.2",
+      "latest_published_at": "2026-11-20T09:15:06.305Z",
+      "latest_captured_at": "2026-11-20T10:24:43.081521+00:00",
+      "versions": 94,
+      "snapshots": 94
     },
     {
       "agent_id": "qwen-code",
@@ -78,11 +78,11 @@
     {
       "agent_id": "qoder",
       "agent": "Qoder CLI",
-      "latest_version": "1.1.92",
-      "latest_published_at": "2026-11-18T13:44:53.779Z",
-      "latest_captured_at": "2026-11-19T11:16:17.259379+00:00",
-      "versions": 202,
-      "snapshots": 202
+      "latest_version": "1.1.93",
+      "latest_published_at": "2026-11-19T13:39:55.436Z",
+      "latest_captured_at": "2026-11-20T10:58:36.635827+00:00",
+      "versions": 203,
+      "snapshots": 203
     },
     {
       "agent_id": "mimo",
@@ -96,20 +96,20 @@
     {
       "agent_id": "openclaw",
       "agent": "OpenClaw",
-      "latest_version": "2026.11.5",
-      "latest_published_at": "2026-11-17T09:59:33.472Z",
-      "latest_captured_at": "2026-11-17T11:03:20.700916+00:00",
-      "versions": 95,
-      "snapshots": 95
+      "latest_version": "2026.11.6",
+      "latest_published_at": "2026-11-19T16:52:13.687Z",
+      "latest_captured_at": "2026-11-20T10:25:11.488422+00:00",
+      "versions": 96,
+      "snapshots": 96
     },
     {
       "agent_id": "hermes",
       "agent": "Hermes Agent",
-      "latest_version": "v0.23.2",
-      "latest_published_at": "2026-11-16T20:59:18Z",
-      "latest_captured_at": "2026-11-17T11:03:47.393876+00:00",
-      "versions": 47,
-      "snapshots": 47
+      "latest_version": "v0.23.3",
+      "latest_published_at": "2026-11-20T00:34:38Z",
+      "latest_captured_at": "2026-11-20T10:25:41.857232+00:00",
+      "versions": 48,
+      "snapshots": 48
     },
     {
       "agent_id": "kimi",
@@ -141,38 +141,38 @@
     {
       "agent_id": "omp",
       "agent": "Oh My Pi",
-      "latest_version": "19.0.0",
-      "latest_published_at": "2026-11-19T00:18:42.942Z",
-      "latest_captured_at": "2026-11-19T10:48:21.663570+00:00",
-      "versions": 146,
-      "snapshots": 146
+      "latest_version": "19.0.1",
+      "latest_published_at": "2026-11-19T23:04:59.756Z",
+      "latest_captured_at": "2026-11-20T10:25:46.530019+00:00",
+      "versions": 147,
+      "snapshots": 147
     },
     {
       "agent_id": "gemini-cli",
       "agent": "Gemini CLI",
-      "latest_version": "0.69.0",
-      "latest_published_at": "2026-11-19T01:51:24.317Z",
-      "latest_captured_at": "2026-11-19T10:48:46.119376+00:00",
-      "versions": 2,
-      "snapshots": 2
+      "latest_version": "0.70.0",
+      "latest_published_at": "2026-11-19T21:13:43.733Z",
+      "latest_captured_at": "2026-11-20T10:26:12.491768+00:00",
+      "versions": 3,
+      "snapshots": 3
     },
     {
       "agent_id": "goose",
       "agent": "Goose",
-      "latest_version": "v1.60.1",
-      "latest_published_at": "2026-11-18T01:21:19Z",
-      "latest_captured_at": "2026-11-18T10:40:08.379585+00:00",
-      "versions": 2,
-      "snapshots": 2
+      "latest_version": "v1.60.2",
+      "latest_published_at": "2026-11-20T06:18:55Z",
+      "latest_captured_at": "2026-11-20T10:26:20.952991+00:00",
+      "versions": 3,
+      "snapshots": 3
     },
     {
       "agent_id": "crush",
       "agent": "Crush",
-      "latest_version": "0.101.0",
-      "latest_published_at": "2026-11-12T16:04:41.770Z",
-      "latest_captured_at": "2026-11-17T11:59:03.484044+00:00",
-      "versions": 1,
-      "snapshots": 1
+      "latest_version": "0.102.0",
+      "latest_published_at": "2026-11-19T17:31:58.016Z",
+      "latest_captured_at": "2026-11-20T10:26:52.782138+00:00",
+      "versions": 2,
+      "snapshots": 2
     },
     {
       "agent_id": "mini-swe-agent",
@@ -213,11 +213,11 @@
     {
       "agent_id": "pi-rust",
       "agent": "pi-rust",
-      "latest_version": "0.26.0",
-      "latest_published_at": "2026-11-19T07:24:37.726Z",
-      "latest_captured_at": "2026-11-19T10:48:57.489002+00:00",
-      "versions": 3,
-      "snapshots": 3
+      "latest_version": "0.26.1",
+      "latest_published_at": "2026-11-19T18:59:23.123Z",
+      "latest_captured_at": "2026-11-20T10:26:58.522175+00:00",
+      "versions": 4,
+      "snapshots": 4
     },
     {
       "agent_id": "codewhale",
@@ -258,11 +258,11 @@
     {
       "agent_id": "letta-code",
       "agent": "Letta Code",
-      "latest_version": "0.34.66",
-      "latest_published_at": "2026-11-19T02:11:41.023Z",
-      "latest_captured_at": "2026-11-19T10:49:17.001973+00:00",
-      "versions": 3,
-      "snapshots": 3
+      "latest_version": "0.34.67",
+      "latest_published_at": "2026-11-20T01:57:08.164Z",
+      "latest_captured_at": "2026-11-20T10:27:12.076946+00:00",
+      "versions": 4,
+      "snapshots": 4
     },
     {
       "agent_id": "prime-agent",
@@ -459,17 +459,17 @@
       "latest_version": "160afa00ac0eca6315aabe662b2e7673c8c96172",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-17T18:15:29.934265+00:00",
-      "versions": 3,
-      "snapshots": 3
+      "versions": 4,
+      "snapshots": 4
     },
     {
       "agent_id": "librechat",
       "agent": "LibreChat",
-      "latest_version": "d4e85d2205c78413ee27d631d7e3b7313556f21d",
+      "latest_version": "4700c44eb77c142b4f9f8b87476924f22890eb39",
       "latest_published_at": "",
-      "latest_captured_at": "2026-11-17T18:58:59.878992+00:00",
-      "versions": 1,
-      "snapshots": 1
+      "latest_captured_at": "2026-11-20T10:41:34.186547+00:00",
+      "versions": 2,
+      "snapshots": 2
     },
     {
       "agent_id": "vibesdk",
@@ -483,20 +483,20 @@
     {
       "agent_id": "dark-moon",
       "agent": "DarkMoon",
-      "latest_version": "edfe9cb12a263036a0c3dc1af604713e8197cce9",
+      "latest_version": "539607182cc4070ddcb9cf8e75fa71d0fa6eacc8",
       "latest_published_at": "",
-      "latest_captured_at": "2026-11-17T18:32:07.563039+00:00",
-      "versions": 1,
-      "snapshots": 1
+      "latest_captured_at": "2026-11-20T10:45:05.459991+00:00",
+      "versions": 2,
+      "snapshots": 2
     },
     {
       "agent_id": "autogpt",
       "agent": "AutoGPT",
-      "latest_version": "autogpt-platform-beta-v0.11.3",
-      "latest_published_at": "2026-11-15T08:59:39Z",
-      "latest_captured_at": "2026-11-17T18:32:02.351400+00:00",
-      "versions": 1,
-      "snapshots": 1
+      "latest_version": "autogpt-platform-beta-v0.12.0",
+      "latest_published_at": "2026-11-19T18:03:33Z",
+      "latest_captured_at": "2026-11-20T10:47:48.084958+00:00",
+      "versions": 2,
+      "snapshots": 2
     },
     {
       "agent_id": "qm",
@@ -522,8 +522,8 @@
       "latest_version": "63d28b887c1b62b8509373ba58d4b03573bb714a",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-17T19:03:40.066088+00:00",
-      "versions": 1,
-      "snapshots": 1
+      "versions": 2,
+      "snapshots": 2
     },
     {
       "agent_id": "agentlink",
@@ -567,8 +567,8 @@
       "latest_version": "9024c135b7cf02a27f107bc52f98ddfcc928201b",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-18T11:02:24.349363+00:00",
-      "versions": 3,
-      "snapshots": 3
+      "versions": 4,
+      "snapshots": 4
     },
     {
       "agent_id": "markus",
@@ -738,8 +738,8 @@
       "latest_version": "01583a4af4e24818cb608ec65aa51f1c6ce7d0b4",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-19T11:15:23.020592+00:00",
-      "versions": 3,
-      "snapshots": 3
+      "versions": 4,
+      "snapshots": 4
     },
     {
       "agent_id": "deer-flow",
@@ -747,8 +747,8 @@
       "latest_version": "585abb979fbc483485c0fc53ed0e571ab7eebadb",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-19T11:15:41.687029+00:00",
-      "versions": 3,
-      "snapshots": 3
+      "versions": 4,
+      "snapshots": 4
     },
     {
       "agent_id": "omni-rewriter",
@@ -807,23 +807,358 @@
     {
       "agent_id": "bambooai",
       "agent": "BambooAI",
-      "latest_version": "2.8.0",
-      "latest_published_at": "2026-11-19T03:20:18.593454Z",
-      "latest_captured_at": "2026-11-19T11:15:55.473017+00:00",
-      "versions": 2,
-      "snapshots": 2
+      "latest_version": "2.8.1",
+      "latest_published_at": "2026-11-20T04:59:35.030055Z",
+      "latest_captured_at": "2026-11-20T10:58:18.460572+00:00",
+      "versions": 3,
+      "snapshots": 3
     },
     {
       "agent_id": "cowagent",
       "agent": "CowAgent",
-      "latest_version": "dd697c0f96034e40171bbf02080ce4007193df48",
+      "latest_version": "51ffe5a8df75295a5c063d5bc32a055c643a2599",
       "latest_published_at": "",
-      "latest_captured_at": "2026-11-19T11:16:00.392048+00:00",
-      "versions": 2,
-      "snapshots": 2
+      "latest_captured_at": "2026-11-20T10:58:22.772246+00:00",
+      "versions": 3,
+      "snapshots": 3
     }
   ],
   "captures": [
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "claude-opus-5-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:23:55.287639+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/default/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/default/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/default/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-sonnet-5-5",
+      "variant_label": "Official API · Sonnet 5.5",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-sonnet-5-5"
+      },
+      "observed": {
+        "model": "claude-sonnet-5-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:04.610147+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-sonnet-5-5/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-sonnet-5-5/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-sonnet-5-5/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-opus-5-5",
+      "variant_label": "Official API · Opus 5.5",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-opus-5-5[1m]"
+      },
+      "observed": {
+        "model": "claude-opus-5-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:00.913018+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-opus-5-5/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-opus-5-5/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-opus-5-5/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-opus-4-8",
+      "variant_label": "Official API · Opus 4.8",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-opus-4-8[1m]"
+      },
+      "observed": {
+        "model": "claude-opus-4-8",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:02.761251+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-opus-4-8/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-opus-4-8/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-opus-4-8/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-opus-4-7",
+      "variant_label": "Official API · Opus 4.7",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-opus-4-7[1m]"
+      },
+      "observed": {
+        "model": "claude-opus-4-7",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:03.666198+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-opus-4-7/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-opus-4-7/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-opus-4-7/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-opus",
+      "variant_label": "Official API · Opus 5",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-opus-5[1m]"
+      },
+      "observed": {
+        "model": "claude-opus-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:01.857116+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-opus/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-opus/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-opus/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-mythos-5-2",
+      "variant_label": "Official API · Mythos 5.2 (verification required)",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-mythos-5-2",
+        "availability": "verification-required"
+      },
+      "observed": {
+        "model": "claude-mythos-5-2",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:08.646919+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-mythos-5-2/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-mythos-5-2/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-mythos-5-2/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-mythos-5-1",
+      "variant_label": "Official API · Mythos 5.1 (verification required)",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-mythos-5-1",
+        "availability": "verification-required"
+      },
+      "observed": {
+        "model": "claude-mythos-5-1",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:09.559363+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-mythos-5-1/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-mythos-5-1/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-mythos-5-1/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-mythos",
+      "variant_label": "Official API · Mythos 5 (verification required)",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-mythos-5",
+        "availability": "verification-required"
+      },
+      "observed": {
+        "model": "claude-mythos-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:10.440382+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-mythos/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-mythos/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-mythos/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-haiku-5-5",
+      "variant_label": "Official API · Haiku 5.5",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-haiku-5-5"
+      },
+      "observed": {
+        "model": "claude-haiku-5-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:06.557590+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-haiku-5-5/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-haiku-5-5/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-haiku-5-5/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-haiku",
+      "variant_label": "Official API · Haiku 4.5",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-haiku-4-5"
+      },
+      "observed": {
+        "model": "claude-haiku-4-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:07.762506+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-haiku/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-haiku/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-haiku/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-fable-5-2",
+      "variant_label": "Official API · Fable 5.2",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-fable-5-2"
+      },
+      "observed": {
+        "model": "claude-fable-5-2",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:23:58.117736+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-fable-5-2/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-fable-5-2/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-fable-5-2/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-fable-5-1",
+      "variant_label": "Official API · Fable 5.1",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-fable-5-1"
+      },
+      "observed": {
+        "model": "claude-fable-5-1",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:23:58.981434+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-fable-5-1/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-fable-5-1/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-fable-5-1/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official-fable",
+      "variant_label": "Official API · Fable 5",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-fable-5"
+      },
+      "observed": {
+        "model": "claude-fable-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:23:59.908416+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official-fable/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official-fable/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official-fable/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "official",
+      "variant_label": "Official API · Sonnet 5",
+      "variant_dimensions": {
+        "api": "official",
+        "model": "claude-sonnet-5"
+      },
+      "observed": {
+        "model": "claude-sonnet-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:24:05.580423+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/official/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/official/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/official/meta.json"
+    },
+    {
+      "agent_id": "claude-code",
+      "agent": "Claude Code",
+      "version": "2.1.329",
+      "variant_id": "non-official",
+      "variant_label": "Non-official API",
+      "variant_dimensions": {
+        "api": "non-official"
+      },
+      "observed": {
+        "model": "claude-opus-5-5",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:40:25.219Z",
+      "captured_at": "2026-11-20T10:23:57.233946+00:00",
+      "prompt": "captures/claude-code/2.1.329/variants/non-official/prompt.md",
+      "trace": "captures/claude-code/2.1.329/variants/non-official/trace.jsonl",
+      "meta": "captures/claude-code/2.1.329/variants/non-official/meta.json"
+    },
     {
       "agent_id": "claude-code",
       "agent": "Claude Code",
@@ -81699,6 +82034,225 @@
     {
       "agent_id": "codex",
       "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-6.2-sol",
+        "tool_count": 12
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:15.812675+00:00",
+      "prompt": "captures/codex/0.171.0/variants/default/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/default/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "non-official",
+      "variant_label": "Non-official · Qwen3 Coder Plus",
+      "variant_dimensions": {
+        "model": "qwen3-coder-plus",
+        "model_family": "non-official"
+      },
+      "observed": {
+        "model": "qwen3-coder-plus",
+        "tool_count": 17
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:17.441278+00:00",
+      "prompt": "captures/codex/0.171.0/variants/non-official/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/non-official/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/non-official/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-6.1-terra",
+      "variant_label": "GPT-6.1 Terra",
+      "variant_dimensions": {
+        "model": "gpt-6.1-terra"
+      },
+      "observed": {
+        "model": "gpt-6.1-terra",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:20.791285+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-6.1-terra/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-6.1-terra/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-6.1-terra/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-6.1-sol",
+      "variant_label": "GPT-6.1 Sol",
+      "variant_dimensions": {
+        "model": "gpt-6.1-sol"
+      },
+      "observed": {
+        "model": "gpt-6.1-sol",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:19.105853+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-6.1-sol/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-6.1-sol/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-6.1-sol/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-6-sol",
+      "variant_label": "GPT-6 Sol",
+      "variant_dimensions": {
+        "model": "gpt-6-sol"
+      },
+      "observed": {
+        "model": "gpt-6-sol",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:24.908256+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-6-sol/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-6-sol/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-6-sol/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-6-luna",
+      "variant_label": "GPT-6 Luna",
+      "variant_dimensions": {
+        "model": "gpt-6-luna"
+      },
+      "observed": {
+        "model": "gpt-6-luna",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:26.424716+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-6-luna/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-6-luna/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-6-luna/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-6-astra",
+      "variant_label": "GPT-6 Astra",
+      "variant_dimensions": {
+        "model": "gpt-6-astra"
+      },
+      "observed": {
+        "model": "gpt-6-astra",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:22.521794+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-6-astra/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-6-astra/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-6-astra/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-5.6-terra",
+      "variant_label": "GPT-5.6 Terra",
+      "variant_dimensions": {
+        "model": "gpt-5.6-terra"
+      },
+      "observed": {
+        "model": "gpt-5.6-terra",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:29.664040+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-5.6-terra/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-5.6-terra/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-5.6-terra/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-5.6-sol",
+      "variant_label": "GPT-5.6 Sol",
+      "variant_dimensions": {
+        "model": "gpt-5.6-sol"
+      },
+      "observed": {
+        "model": "gpt-5.6-sol",
+        "tool_count": 9
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:28.138937+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-5.6-sol/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-5.6-sol/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-5.6-sol/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-5.6-luna",
+      "variant_label": "GPT-5.6 Luna",
+      "variant_dimensions": {
+        "model": "gpt-5.6-luna"
+      },
+      "observed": {
+        "model": "gpt-5.6-luna",
+        "tool_count": 3
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:31.261928+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-5.6-luna/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-5.6-luna/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-5.6-luna/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
+      "version": "0.171.0",
+      "variant_id": "gpt-5.5",
+      "variant_label": "GPT-5.5",
+      "variant_dimensions": {
+        "model": "gpt-5.5"
+      },
+      "observed": {
+        "model": "gpt-5.5",
+        "tool_count": 14
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:51:29.762Z",
+      "captured_at": "2026-11-20T10:24:32.791823+00:00",
+      "prompt": "captures/codex/0.171.0/variants/gpt-5.5/prompt.md",
+      "trace": "captures/codex/0.171.0/variants/gpt-5.5/trace.jsonl",
+      "meta": "captures/codex/0.171.0/variants/gpt-5.5/meta.json"
+    },
+    {
+      "agent_id": "codex",
+      "agent": "Codex CLI",
       "version": "0.170.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -95038,6 +95592,24 @@
     {
       "agent_id": "antigravity",
       "agent": "Antigravity CLI",
+      "version": "1.5.13",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "MODEL_GOOGLE_GEMINI_2_5_FLASH",
+        "tool_count": 10
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T21:48:43Z",
+      "captured_at": "2026-11-20T10:24:38.610589+00:00",
+      "prompt": "captures/antigravity/1.5.13/variants/default/prompt.md",
+      "trace": "captures/antigravity/1.5.13/variants/default/trace.jsonl",
+      "meta": "captures/antigravity/1.5.13/variants/default/meta.json"
+    },
+    {
+      "agent_id": "antigravity",
+      "agent": "Antigravity CLI",
       "version": "1.5.12",
       "variant_id": "default",
       "variant_label": "Default",
@@ -100131,6 +100703,24 @@
     {
       "agent_id": "kimi-code",
       "agent": "Kimi Code",
+      "version": "2.7.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "kimi-for-coding",
+        "tool_count": 24
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T09:15:06.305Z",
+      "captured_at": "2026-11-20T10:24:43.081521+00:00",
+      "prompt": "captures/kimi-code/2.7.2/variants/default/prompt.md",
+      "trace": "captures/kimi-code/2.7.2/variants/default/trace.jsonl",
+      "meta": "captures/kimi-code/2.7.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "kimi-code",
+      "agent": "Kimi Code",
       "version": "2.6.3",
       "variant_id": "default",
       "variant_label": "Default",
@@ -104613,6 +105203,24 @@
     {
       "agent_id": "qoder",
       "agent": "Qoder CLI",
+      "version": "1.1.93",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "auto",
+        "tool_count": 34
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T13:39:55.436Z",
+      "captured_at": "2026-11-20T10:58:36.635827+00:00",
+      "prompt": "captures/qoder/1.1.93/variants/default/prompt.md",
+      "trace": "captures/qoder/1.1.93/variants/default/trace.jsonl",
+      "meta": "captures/qoder/1.1.93/variants/default/meta.json"
+    },
+    {
+      "agent_id": "qoder",
+      "agent": "Qoder CLI",
       "version": "1.1.92",
       "variant_id": "default",
       "variant_label": "Default",
@@ -108412,6 +109020,24 @@
     {
       "agent_id": "openclaw",
       "agent": "OpenClaw",
+      "version": "2026.11.6",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "phistory-dummy",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T16:52:13.687Z",
+      "captured_at": "2026-11-20T10:25:11.488422+00:00",
+      "prompt": "captures/openclaw/2026.11.6/variants/default/prompt.md",
+      "trace": "captures/openclaw/2026.11.6/variants/default/trace.jsonl",
+      "meta": "captures/openclaw/2026.11.6/variants/default/meta.json"
+    },
+    {
+      "agent_id": "openclaw",
+      "agent": "OpenClaw",
       "version": "2026.11.5",
       "variant_id": "default",
       "variant_label": "Default",
@@ -110118,6 +110744,24 @@
       "prompt": "captures/openclaw/2026.1.29/variants/default/prompt.md",
       "trace": "captures/openclaw/2026.1.29/variants/default/trace.jsonl",
       "meta": "captures/openclaw/2026.1.29/variants/default/meta.json"
+    },
+    {
+      "agent_id": "hermes",
+      "agent": "Hermes Agent",
+      "version": "v0.23.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "phistory-dummy",
+        "tool_count": 18
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T00:34:38Z",
+      "captured_at": "2026-11-20T10:25:41.857232+00:00",
+      "prompt": "captures/hermes/v0.23.3/variants/default/prompt.md",
+      "trace": "captures/hermes/v0.23.3/variants/default/trace.jsonl",
+      "meta": "captures/hermes/v0.23.3/variants/default/meta.json"
     },
     {
       "agent_id": "hermes",
@@ -114748,6 +115392,24 @@
     {
       "agent_id": "omp",
       "agent": "Oh My Pi",
+      "version": "19.0.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T23:04:59.756Z",
+      "captured_at": "2026-11-20T10:25:46.530019+00:00",
+      "prompt": "captures/omp/19.0.1/variants/default/prompt.md",
+      "trace": "captures/omp/19.0.1/variants/default/trace.jsonl",
+      "meta": "captures/omp/19.0.1/variants/default/meta.json"
+    },
+    {
+      "agent_id": "omp",
+      "agent": "Oh My Pi",
       "version": "19.0.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -117376,6 +118038,24 @@
     {
       "agent_id": "gemini-cli",
       "agent": "Gemini CLI",
+      "version": "0.70.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gemini-3.1-pro-preview-customtools",
+        "tool_count": 8
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T21:13:43.733Z",
+      "captured_at": "2026-11-20T10:26:12.491768+00:00",
+      "prompt": "captures/gemini-cli/0.70.0/variants/default/prompt.md",
+      "trace": "captures/gemini-cli/0.70.0/variants/default/trace.jsonl",
+      "meta": "captures/gemini-cli/0.70.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "gemini-cli",
+      "agent": "Gemini CLI",
       "version": "0.69.0",
       "variant_id": "default",
       "variant_label": "Default",
@@ -117408,6 +118088,27 @@
       "prompt": "captures/gemini-cli/0.68.0/variants/default/prompt.md",
       "trace": "captures/gemini-cli/0.68.0/variants/default/trace.jsonl",
       "meta": "captures/gemini-cli/0.68.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "goose",
+      "agent": "Goose",
+      "version": "v1.60.2",
+      "variant_id": "default",
+      "variant_label": "Default · OpenAI provider",
+      "variant_dimensions": {
+        "provider": "openai",
+        "extensions": "platform developer"
+      },
+      "observed": {
+        "model": "gpt-6.1-sol",
+        "tool_count": 17
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T06:18:55Z",
+      "captured_at": "2026-11-20T10:26:20.952991+00:00",
+      "prompt": "captures/goose/v1.60.2/variants/default/prompt.md",
+      "trace": "captures/goose/v1.60.2/variants/default/trace.jsonl",
+      "meta": "captures/goose/v1.60.2/variants/default/meta.json"
     },
     {
       "agent_id": "goose",
@@ -117450,6 +118151,27 @@
       "prompt": "captures/goose/v1.59.2/variants/default/prompt.md",
       "trace": "captures/goose/v1.59.2/variants/default/trace.jsonl",
       "meta": "captures/goose/v1.59.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "crush",
+      "agent": "Crush",
+      "version": "0.102.0",
+      "variant_id": "default",
+      "variant_label": "Default · configured OpenAI",
+      "variant_dimensions": {
+        "provider": "openai",
+        "model": "gpt-4.1"
+      },
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 30
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T17:31:58.016Z",
+      "captured_at": "2026-11-20T10:26:52.782138+00:00",
+      "prompt": "captures/crush/0.102.0/variants/default/prompt.md",
+      "trace": "captures/crush/0.102.0/variants/default/trace.jsonl",
+      "meta": "captures/crush/0.102.0/variants/default/meta.json"
     },
     {
       "agent_id": "crush",
@@ -117566,6 +118288,26 @@
       "prompt": "captures/jcode/v1.0.0/variants/default/prompt.md",
       "trace": "captures/jcode/v1.0.0/variants/default/trace.jsonl",
       "meta": "captures/jcode/v1.0.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "pi-rust",
+      "agent": "pi-rust",
+      "version": "0.26.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {
+        "transport": "HTTP capture-only proxy; native Anthropic provider/model"
+      },
+      "observed": {
+        "model": "claude-opus-4-8",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:59:23.123Z",
+      "captured_at": "2026-11-20T10:26:58.522175+00:00",
+      "prompt": "captures/pi-rust/0.26.1/variants/default/prompt.md",
+      "trace": "captures/pi-rust/0.26.1/variants/default/trace.jsonl",
+      "meta": "captures/pi-rust/0.26.1/variants/default/meta.json"
     },
     {
       "agent_id": "pi-rust",
@@ -117744,6 +118486,27 @@
       "prompt": "captures/cline/3.0.74/variants/anthropic/prompt.md",
       "trace": "captures/cline/3.0.74/variants/anthropic/trace.jsonl",
       "meta": "captures/cline/3.0.74/variants/anthropic/meta.json"
+    },
+    {
+      "agent_id": "letta-code",
+      "agent": "Letta Code",
+      "version": "0.34.67",
+      "variant_id": "local",
+      "variant_label": "Local backend",
+      "variant_dimensions": {
+        "backend": "local",
+        "provider": "anthropic"
+      },
+      "observed": {
+        "model": "claude-opus-5-5",
+        "tool_count": 22
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T01:57:08.164Z",
+      "captured_at": "2026-11-20T10:27:12.076946+00:00",
+      "prompt": "captures/letta-code/0.34.67/variants/local/prompt.md",
+      "trace": "captures/letta-code/0.34.67/variants/local/trace.jsonl",
+      "meta": "captures/letta-code/0.34.67/variants/local/meta.json"
     },
     {
       "agent_id": "letta-code",
@@ -118520,6 +119283,53 @@
       "meta": "captures/anything-llm/2f6a451f55aca970311af2579088fe0c27af3ce8/variants/native-workspace-agent/meta.json"
     },
     {
+      "agent_id": "anything-llm",
+      "agent": "AnythingLLM",
+      "version": "b2da188766b245449fb573f1414632eb6afb57e8",
+      "variant_id": "native-workspace-agent",
+      "variant_label": "Native workspace @agent API",
+      "variant_dimensions": {
+        "entry": "native API key, workspace and @agent turn",
+        "model": "native OpenAI default / Responses",
+        "storage": "native SQLite, LanceDB and local Xenova embedder",
+        "tools": "native AIbitat defaults; no tool suppression"
+      },
+      "observed": {
+        "model": "gpt-5.6-luna",
+        "tool_count": 4
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-20T10:39:32.993057+00:00",
+      "prompt": "captures/anything-llm/b2da188766b245449fb573f1414632eb6afb57e8/variants/native-workspace-agent/prompt.md",
+      "trace": "captures/anything-llm/b2da188766b245449fb573f1414632eb6afb57e8/variants/native-workspace-agent/trace.jsonl",
+      "meta": "captures/anything-llm/b2da188766b245449fb573f1414632eb6afb57e8/variants/native-workspace-agent/meta.json"
+    },
+    {
+      "agent_id": "librechat",
+      "agent": "LibreChat",
+      "version": "4700c44eb77c142b4f9f8b87476924f22890eb39",
+      "variant_id": "native-calculator-agent",
+      "variant_label": "Native authenticated agent / calculator",
+      "variant_dimensions": {
+        "entry": "real MongoDB, registration, agent and chat APIs",
+        "model": "configured OpenAI gpt-6.1-sol",
+        "tools": "native calculator",
+        "control_client": "native authenticated web-task API with recognized browser-compatible User-Agent",
+        "scope": "configured calculator agent; optional external integrations are not configured"
+      },
+      "observed": {
+        "model": "gpt-6.1-sol",
+        "tool_count": 1
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-20T10:41:34.186547+00:00",
+      "prompt": "captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/prompt.md",
+      "trace": "captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/trace.jsonl",
+      "meta": "captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/meta.json"
+    },
+    {
       "agent_id": "librechat",
       "agent": "LibreChat",
       "version": "d4e85d2205c78413ee27d631d7e3b7313556f21d",
@@ -118569,6 +119379,31 @@
     {
       "agent_id": "dark-moon",
       "agent": "DarkMoon",
+      "version": "539607182cc4070ddcb9cf8e75fa71d0fa6eacc8",
+      "variant_id": "native-compatible-pentest",
+      "variant_label": "Native full stack / configured pentest role",
+      "variant_dimensions": {
+        "entry": "native darkmoon.sh headless wrapper; complete two-container stack",
+        "role": "native pentest primary agent",
+        "model": "configured compatible openai/gpt-4.1",
+        "tools": "all 13 native MCP functions plus host tools",
+        "privacy": "actual persistent MCP tokenizer/socket; native plugins",
+        "provenance": "published image digests; main role/privacy/server file hashes verified"
+      },
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 23
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-20T10:45:05.459991+00:00",
+      "prompt": "captures/dark-moon/539607182cc4070ddcb9cf8e75fa71d0fa6eacc8/variants/native-compatible-pentest/prompt.md",
+      "trace": "captures/dark-moon/539607182cc4070ddcb9cf8e75fa71d0fa6eacc8/variants/native-compatible-pentest/trace.jsonl",
+      "meta": "captures/dark-moon/539607182cc4070ddcb9cf8e75fa71d0fa6eacc8/variants/native-compatible-pentest/meta.json"
+    },
+    {
+      "agent_id": "dark-moon",
+      "agent": "DarkMoon",
       "version": "edfe9cb12a263036a0c3dc1af604713e8197cce9",
       "variant_id": "native-compatible-pentest",
       "variant_label": "Native full stack / configured pentest role",
@@ -118590,6 +119425,30 @@
       "prompt": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/prompt.md",
       "trace": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/trace.jsonl",
       "meta": "captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/meta.json"
+    },
+    {
+      "agent_id": "autogpt",
+      "agent": "AutoGPT",
+      "version": "autogpt-platform-beta-v0.12.0",
+      "variant_id": "native-baseline-copilot",
+      "variant_label": "Native appliance / baseline Copilot",
+      "variant_dimensions": {
+        "entry": "official full appliance; native Better Auth and chat session",
+        "engine": "native baseline Copilot; server-owned per-flag configuration",
+        "model": "native standard OpenRouter model",
+        "tools": "complete native baseline registry and Graphiti memory",
+        "scope": "first ordinary Copilot request"
+      },
+      "observed": {
+        "model": "anthropic/claude-sonnet-5-5",
+        "tool_count": 20
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-19T18:03:33Z",
+      "captured_at": "2026-11-20T10:47:48.084958+00:00",
+      "prompt": "captures/autogpt/autogpt-platform-beta-v0.12.0/variants/native-baseline-copilot/prompt.md",
+      "trace": "captures/autogpt/autogpt-platform-beta-v0.12.0/variants/native-baseline-copilot/trace.jsonl",
+      "meta": "captures/autogpt/autogpt-platform-beta-v0.12.0/variants/native-baseline-copilot/meta.json"
     },
     {
       "agent_id": "autogpt",
@@ -118684,6 +119543,30 @@
       "prompt": "captures/dyad/63d28b887c1b62b8509373ba58d4b03573bb714a/variants/native-electron-basic-agent/prompt.md",
       "trace": "captures/dyad/63d28b887c1b62b8509373ba58d4b03573bb714a/variants/native-electron-basic-agent/trace.jsonl",
       "meta": "captures/dyad/63d28b887c1b62b8509373ba58d4b03573bb714a/variants/native-electron-basic-agent/meta.json"
+    },
+    {
+      "agent_id": "dyad",
+      "agent": "Dyad",
+      "version": "56cc3964a8983296a1f49d511cb8afde1719c6f3",
+      "variant_id": "native-electron-basic-agent",
+      "variant_label": "Production Electron / native BasicAgent",
+      "variant_dimensions": {
+        "entry": "production package; actual renderer/preload/native IPC and imported Git/SQLite app",
+        "model": "native custom OpenAI-compatible gpt-4.1",
+        "mode": "native non-Pro local-agent / BasicAgent",
+        "instrumentation": "renderer CDP attached to the owned production Electron; original fuses retained",
+        "runtime": "D-Bus/Xvfb; owned Electron --no-sandbox --disable-gpu"
+      },
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 29
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-20T10:50:44.099570+00:00",
+      "prompt": "captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/prompt.md",
+      "trace": "captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/trace.jsonl",
+      "meta": "captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/meta.json"
     },
     {
       "agent_id": "agentlink",
@@ -118878,6 +119761,30 @@
       "prompt": "captures/openagents/9024c135b7cf02a27f107bc52f98ddfcc928201b/variants/plain-microcoder/prompt.md",
       "trace": "captures/openagents/9024c135b7cf02a27f107bc52f98ddfcc928201b/variants/plain-microcoder/trace.jsonl",
       "meta": "captures/openagents/9024c135b7cf02a27f107bc52f98ddfcc928201b/variants/plain-microcoder/meta.json"
+    },
+    {
+      "agent_id": "openagents",
+      "agent": "OpenAgents",
+      "version": "9e0bca22dc8a16c07c4f91fa78e810af13de42dc",
+      "variant_id": "plain-microcoder",
+      "variant_label": "Native Coax plain Microcoder task API",
+      "variant_dimensions": {
+        "entry": "native mc_init / mc_run_start / mc_run_poll",
+        "provider": "native OpenRouter route",
+        "model": "native google/gemini-4-hydrogen",
+        "environment": "actual Linux architecture and owned cwd",
+        "schema": "native next_action structured response",
+        "scope": "plain Microcoder; not full Mammoth application"
+      },
+      "observed": {
+        "model": "google/gemini-4-hydrogen"
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-20T10:57:33.362036+00:00",
+      "prompt": "captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/prompt.md",
+      "trace": "captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/trace.jsonl",
+      "meta": "captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/meta.json"
     },
     {
       "agent_id": "openagents",
@@ -119501,6 +120408,27 @@
     {
       "agent_id": "openevolve",
       "agent": "OpenEvolve",
+      "version": "ac5f8f5e39b7bffb707def97039076bb2135e992",
+      "variant_id": "function-minimization",
+      "variant_label": "Official function-minimization example",
+      "variant_dimensions": {
+        "entry": "official example / native controller",
+        "iterations": "1",
+        "model": "native weighted Gemini ensemble"
+      },
+      "observed": {
+        "model": "gemini-2.5-flash-lite"
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-20T10:57:52.713180+00:00",
+      "prompt": "captures/openevolve/ac5f8f5e39b7bffb707def97039076bb2135e992/variants/function-minimization/prompt.md",
+      "trace": "captures/openevolve/ac5f8f5e39b7bffb707def97039076bb2135e992/variants/function-minimization/trace.jsonl",
+      "meta": "captures/openevolve/ac5f8f5e39b7bffb707def97039076bb2135e992/variants/function-minimization/meta.json"
+    },
+    {
+      "agent_id": "openevolve",
+      "agent": "OpenEvolve",
       "version": "a7950ffc0150f1e7282a39d1ffac57d675dc5551",
       "variant_id": "function-minimization",
       "variant_label": "Official function-minimization example",
@@ -119540,6 +120468,28 @@
       "prompt": "captures/deer-flow/585abb979fbc483485c0fc53ed0e571ab7eebadb/variants/embedded-openai/prompt.md",
       "trace": "captures/deer-flow/585abb979fbc483485c0fc53ed0e571ab7eebadb/variants/embedded-openai/trace.jsonl",
       "meta": "captures/deer-flow/585abb979fbc483485c0fc53ed0e571ab7eebadb/variants/embedded-openai/meta.json"
+    },
+    {
+      "agent_id": "deer-flow",
+      "agent": "DeerFlow",
+      "version": "92d884b6d7f57e066c66e700f3c8d733eb36ff98",
+      "variant_id": "embedded-openai",
+      "variant_label": "Configured embedded SDK · OpenAI",
+      "variant_dimensions": {
+        "entry": "DeerFlowClient.chat",
+        "model": "gpt-4.1",
+        "config": "complete official example with one enabled model"
+      },
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 16
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-20T10:58:06.734789+00:00",
+      "prompt": "captures/deer-flow/92d884b6d7f57e066c66e700f3c8d733eb36ff98/variants/embedded-openai/prompt.md",
+      "trace": "captures/deer-flow/92d884b6d7f57e066c66e700f3c8d733eb36ff98/variants/embedded-openai/trace.jsonl",
+      "meta": "captures/deer-flow/92d884b6d7f57e066c66e700f3c8d733eb36ff98/variants/embedded-openai/meta.json"
     },
     {
       "agent_id": "deer-flow",
@@ -119717,6 +120667,27 @@
     {
       "agent_id": "bambooai",
       "agent": "BambooAI",
+      "version": "2.8.1",
+      "variant_id": "sdk-free-quick",
+      "variant_label": "Native SDK · free tier quick analysis",
+      "variant_dimensions": {
+        "entry": "BambooAI.pd_agent_converse",
+        "budget": "quick",
+        "models": "native free-tier template"
+      },
+      "observed": {
+        "model": "deepseek/deepseek-v4.1-flash-1017"
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-20T04:59:35.030055Z",
+      "captured_at": "2026-11-20T10:58:18.460572+00:00",
+      "prompt": "captures/bambooai/2.8.1/variants/sdk-free-quick/prompt.md",
+      "trace": "captures/bambooai/2.8.1/variants/sdk-free-quick/trace.jsonl",
+      "meta": "captures/bambooai/2.8.1/variants/sdk-free-quick/meta.json"
+    },
+    {
+      "agent_id": "bambooai",
+      "agent": "BambooAI",
       "version": "2.8.0",
       "variant_id": "sdk-free-quick",
       "variant_label": "Native SDK · free tier quick analysis",
@@ -119755,6 +120726,28 @@
       "prompt": "captures/bambooai/2.7.4/variants/sdk-free-quick/prompt.md",
       "trace": "captures/bambooai/2.7.4/variants/sdk-free-quick/trace.jsonl",
       "meta": "captures/bambooai/2.7.4/variants/sdk-free-quick/meta.json"
+    },
+    {
+      "agent_id": "cowagent",
+      "agent": "CowAgent",
+      "version": "51ffe5a8df75295a5c063d5bc32a055c643a2599",
+      "variant_id": "bridge-api",
+      "variant_label": "Native Bridge API · default agent profile",
+      "variant_dimensions": {
+        "entry": "Bridge.fetch_agent_reply",
+        "model": "native DeepSeek default",
+        "config": "complete config template with fake credential"
+      },
+      "observed": {
+        "model": "deepseek-flash",
+        "tool_count": 18
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-20T10:58:22.772246+00:00",
+      "prompt": "captures/cowagent/51ffe5a8df75295a5c063d5bc32a055c643a2599/variants/bridge-api/prompt.md",
+      "trace": "captures/cowagent/51ffe5a8df75295a5c063d5bc32a055c643a2599/variants/bridge-api/trace.jsonl",
+      "meta": "captures/cowagent/51ffe5a8df75295a5c063d5bc32a055c643a2599/variants/bridge-api/meta.json"
     },
     {
       "agent_id": "cowagent",

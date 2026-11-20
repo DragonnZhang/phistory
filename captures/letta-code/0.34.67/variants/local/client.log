@@ -1,0 +1,25 @@
+stdout:
+[claude-tap] 'letta' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] letta target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:41533
+[claude-tap] CA cert: /tmp/phistory-home-s4hyoj68/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/letta-code/0.34.67/variants/local/.tap/2026-11-20/trace_102710.jsonl
+
+[claude-tap] launching letta: letta --backend local -p Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:41533
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-s4hyoj68/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] letta exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/letta-code/0.34.67/variants/local/prompt.md
+
+[claude-tap] summary:
+  api_calls:    4
+  trace:        /home/runner/work/phistory/phistory/captures/letta-code/0.34.67/variants/local/.tap/2026-11-20/trace_102710.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/letta-code/0.34.67/variants/local/.tap/2026-11-20/trace_102710.log
+  view:         /home/runner/work/phistory/phistory/captures/letta-code/0.34.67/variants/local/.tap/2026-11-20/trace_102710.html
+  prompt:       /home/runner/work/phistory/phistory/captures/letta-code/0.34.67/variants/local/prompt.md
+
+stderr:
+[claude-tap] warning: 

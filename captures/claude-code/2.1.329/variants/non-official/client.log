@@ -1,0 +1,21 @@
+stdout:
+[claude-tap] Claude Code target: https://api.anthropic.com  (auto: ANTHROPIC_API_KEY env var)  protocols: anthropic
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:35621
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/non-official/.tap/2026-11-20/trace_102356.jsonl
+
+[claude-tap] launching Claude Code: claude --no-session-persistence -p Reply with one short sentence.
+[claude-tap] ANTHROPIC_BASE_URL=http://127.0.0.1:35621
+captured
+
+[claude-tap] Claude Code exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/non-official/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/non-official/.tap/2026-11-20/trace_102356.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/non-official/.tap/2026-11-20/trace_102356.log
+  view:         /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/non-official/.tap/2026-11-20/trace_102356.html
+  prompt:       /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/non-official/prompt.md
+
+stderr:

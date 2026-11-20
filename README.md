@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-19 11:16 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-20 10:58 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,39 +92,39 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-19 11:16 UTC
+Last capture update: 2026-11-20 10:58 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
-| Claude Code | [2.1.328 - 2026-11-18](captures/claude-code/2.1.328/variants/default/prompt.md) | 474 | 3882 | 2026-11-19 10:46 UTC |
-| Codex CLI | [0.170.0 - 2026-11-18](captures/codex/0.170.0/variants/default/prompt.md) | 115 | 571 | 2026-11-18 10:39 UTC |
+| Claude Code | [2.1.329 - 2026-11-19](captures/claude-code/2.1.329/variants/default/prompt.md) | 475 | 3898 | 2026-11-20 10:23 UTC |
+| Codex CLI | [0.171.0 - 2026-11-20](captures/codex/0.171.0/variants/default/prompt.md) | 116 | 582 | 2026-11-20 10:24 UTC |
 | DeepSeek Harness | [0.2.2-rc.5 - 2026-11-18](captures/dsh/0.2.2-rc.5/variants/default/prompt.md) | 18 | 99 | 2026-11-19 10:47 UTC |
-| Antigravity CLI | [1.5.12 - 2026-11-19](captures/antigravity/1.5.12/variants/default/prompt.md) | 87 | 87 | 2026-11-19 10:48 UTC |
+| Antigravity CLI | [1.5.13 - 2026-11-19](captures/antigravity/1.5.13/variants/default/prompt.md) | 88 | 88 | 2026-11-20 10:24 UTC |
 | Grok Build | [1.0.89 - 2026-11-17](captures/grok/1.0.89/variants/default/prompt.md) | 148 | 148 | 2026-11-18 10:39 UTC |
 | MiniMax Code | [3.1.16 - 2026-11-16](captures/minimax-code/3.1.16/variants/default/prompt.md) | 54 | 54 | 2026-11-16 10:06 UTC |
-| Kimi Code | [2.6.3 - 2026-11-17](captures/kimi-code/2.6.3/variants/default/prompt.md) | 93 | 93 | 2026-11-18 10:39 UTC |
+| Kimi Code | [2.7.2 - 2026-11-20](captures/kimi-code/2.7.2/variants/default/prompt.md) | 94 | 94 | 2026-11-20 10:24 UTC |
 | Qwen Code | [0.28.0 - 2026-11-17](captures/qwen-code/0.28.0/variants/default/prompt.md) | 156 | 156 | 2026-11-18 10:39 UTC |
-| Qoder CLI | [1.1.92 - 2026-11-18](captures/qoder/1.1.92/variants/default/prompt.md) | 202 | 202 | 2026-11-19 11:16 UTC |
+| Qoder CLI | [1.1.93 - 2026-11-19](captures/qoder/1.1.93/variants/default/prompt.md) | 203 | 203 | 2026-11-20 10:58 UTC |
 | MiMo Code | [0.1.17 - 2026-11-13](captures/mimo/0.1.17/variants/default/prompt.md) | 17 | 17 | 2026-11-13 09:55 UTC |
-| OpenClaw | [2026.11.5 - 2026-11-17](captures/openclaw/2026.11.5/variants/default/prompt.md) | 95 | 95 | 2026-11-17 11:03 UTC |
-| Hermes Agent | [v0.23.2 - 2026-11-16](captures/hermes/v0.23.2/variants/default/prompt.md) | 47 | 47 | 2026-11-17 11:03 UTC |
+| OpenClaw | [2026.11.6 - 2026-11-19](captures/openclaw/2026.11.6/variants/default/prompt.md) | 96 | 96 | 2026-11-20 10:25 UTC |
+| Hermes Agent | [v0.23.3 - 2026-11-20](captures/hermes/v0.23.3/variants/default/prompt.md) | 48 | 48 | 2026-11-20 10:25 UTC |
 | Kimi CLI | [1.51.0 - 2026-09-21](captures/kimi/1.51.0/variants/default/prompt.md) | 23 | 23 | 2026-09-22 07:56 UTC |
 | opencode | [1.19.6 - 2026-11-17](captures/opencode/1.19.6/variants/default/prompt.md) | 125 | 125 | 2026-11-17 11:03 UTC |
 | Pi | [1.5.2 - 2026-11-10](captures/pi/1.5.2/variants/default/prompt.md) | 62 | 62 | 2026-11-11 09:49 UTC |
-| Oh My Pi | [19.0.0 - 2026-11-19](captures/omp/19.0.0/variants/default/prompt.md) | 146 | 146 | 2026-11-19 10:48 UTC |
-| Gemini CLI | [0.69.0 - 2026-11-19](captures/gemini-cli/0.69.0/variants/default/prompt.md) | 2 | 2 | 2026-11-19 10:48 UTC |
-| Goose | [v1.60.1 - 2026-11-18](captures/goose/v1.60.1/variants/default/prompt.md) | 2 | 2 | 2026-11-18 10:40 UTC |
-| Crush | [0.101.0 - 2026-11-12](captures/crush/0.101.0/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
+| Oh My Pi | [19.0.1 - 2026-11-19](captures/omp/19.0.1/variants/default/prompt.md) | 147 | 147 | 2026-11-20 10:25 UTC |
+| Gemini CLI | [0.70.0 - 2026-11-19](captures/gemini-cli/0.70.0/variants/default/prompt.md) | 3 | 3 | 2026-11-20 10:26 UTC |
+| Goose | [v1.60.2 - 2026-11-20](captures/goose/v1.60.2/variants/default/prompt.md) | 3 | 3 | 2026-11-20 10:26 UTC |
+| Crush | [0.102.0 - 2026-11-19](captures/crush/0.102.0/variants/default/prompt.md) | 2 | 2 | 2026-11-20 10:26 UTC |
 | mini-swe-agent | [2.4.6 - 2026-07-23](captures/mini-swe-agent/2.4.6/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
 | nanobot | [0.4.1 - 2026-11-06](captures/nanobot/0.4.1/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
 | Bub | [0.6.1 - 2026-11-04](captures/bub/0.6.1/variants/default/prompt.md) | 1 | 1 | 2026-11-17 11:59 UTC |
 | Jcode | [v1.0.1 - 2026-11-18](captures/jcode/v1.0.1/variants/default/prompt.md) | 2 | 2 | 2026-11-19 10:48 UTC |
-| pi-rust | [0.26.0 - 2026-11-19](captures/pi-rust/0.26.0/variants/default/prompt.md) | 3 | 3 | 2026-11-19 10:48 UTC |
+| pi-rust | [0.26.1 - 2026-11-19](captures/pi-rust/0.26.1/variants/default/prompt.md) | 4 | 4 | 2026-11-20 10:26 UTC |
 | Codewhale | [0.10.2 - 2026-10-24](captures/codewhale/0.10.2/variants/default/prompt.md) | 1 | 2 | 2026-11-17 12:41 UTC |
 | OpenDev | [v0.1.9 - 2026-07-10](captures/opendev/v0.1.9/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:51 UTC |
 | Kilo Code | [7.8.27 - 2026-11-05](captures/kilocode/7.8.27/variants/default/prompt.md) | 1 | 1 | 2026-11-17 12:42 UTC |
 | Cline | [3.0.74 - 2026-10-26](captures/cline/3.0.74/variants/default/prompt.md) | 1 | 2 | 2026-11-17 12:42 UTC |
-| Letta Code | [0.34.66 - 2026-11-19](captures/letta-code/0.34.66/variants/local/prompt.md) | 3 | 3 | 2026-11-19 10:49 UTC |
+| Letta Code | [0.34.67 - 2026-11-20](captures/letta-code/0.34.67/variants/local/prompt.md) | 4 | 4 | 2026-11-20 10:27 UTC |
 | Prime Agent | [v0.10.5 - 2026-11-18](captures/prime-agent/v0.10.5/variants/default/prompt.md) | 3 | 3 | 2026-11-19 10:49 UTC |
 | OpenInterpreter | [rust-v0.0.61 - 2026-11-11](captures/openinterpreter/rust-v0.0.61/variants/default/prompt.md) | 1 | 1 | 2026-11-17 13:03 UTC |
 | Fibona · Python | [js-v0.1.3 - 2026-11-16](captures/fibona-agent/js-v0.1.3/variants/minimal/prompt.md) | 1 | 2 | 2026-11-17 12:55 UTC |
@@ -146,19 +146,19 @@ Last capture update: 2026-11-19 11:16 UTC
 | DB-GPT | [547882b84b15b32b2894f1bccc6bfb535b7b70c3](captures/db-gpt/547882b84b15b32b2894f1bccc6bfb535b7b70c3/variants/official-react-example/prompt.md) | 2 | 2 | 2026-11-17 16:51 UTC |
 | LoopTroop | [0.6.4 - 2026-11-06](captures/looptroop/0.6.4/variants/native-relevant-files-scan/prompt.md) | 1 | 1 | 2026-11-17 18:30 UTC |
 | Hivekeep | [e6bf9aea4159312730a690b94697084616b44556](captures/hivekeep/e6bf9aea4159312730a690b94697084616b44556/variants/native-queenie-onboarding/prompt.md) | 1 | 1 | 2026-11-17 17:25 UTC |
-| AnythingLLM | [160afa00ac0eca6315aabe662b2e7673c8c96172](captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/prompt.md) | 3 | 3 | 2026-11-17 18:15 UTC |
-| LibreChat | [d4e85d2205c78413ee27d631d7e3b7313556f21d](captures/librechat/d4e85d2205c78413ee27d631d7e3b7313556f21d/variants/native-calculator-agent/prompt.md) | 1 | 1 | 2026-11-17 18:58 UTC |
+| AnythingLLM | [160afa00ac0eca6315aabe662b2e7673c8c96172](captures/anything-llm/160afa00ac0eca6315aabe662b2e7673c8c96172/variants/native-workspace-agent/prompt.md) | 4 | 4 | 2026-11-17 18:15 UTC |
+| LibreChat | [4700c44eb77c142b4f9f8b87476924f22890eb39](captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/prompt.md) | 2 | 2 | 2026-11-20 10:41 UTC |
 | VibeSDK | [32c9e429cd2712ea5959a89f65ae434162b89229](captures/vibesdk/32c9e429cd2712ea5959a89f65ae434162b89229/variants/native-general-agentic/prompt.md) | 1 | 1 | 2026-11-17 18:46 UTC |
-| DarkMoon | [edfe9cb12a263036a0c3dc1af604713e8197cce9](captures/dark-moon/edfe9cb12a263036a0c3dc1af604713e8197cce9/variants/native-compatible-pentest/prompt.md) | 1 | 1 | 2026-11-17 18:32 UTC |
-| AutoGPT | [autogpt-platform-beta-v0.11.3 - 2026-11-15](captures/autogpt/autogpt-platform-beta-v0.11.3/variants/native-baseline-copilot/prompt.md) | 1 | 1 | 2026-11-17 18:32 UTC |
+| DarkMoon | [539607182cc4070ddcb9cf8e75fa71d0fa6eacc8](captures/dark-moon/539607182cc4070ddcb9cf8e75fa71d0fa6eacc8/variants/native-compatible-pentest/prompt.md) | 2 | 2 | 2026-11-20 10:45 UTC |
+| AutoGPT | [autogpt-platform-beta-v0.12.0 - 2026-11-19](captures/autogpt/autogpt-platform-beta-v0.12.0/variants/native-baseline-copilot/prompt.md) | 2 | 2 | 2026-11-20 10:47 UTC |
 | QM | [0.1.18 - 2026-11-11](captures/qm/0.1.18/variants/native-local-web-turn/prompt.md) | 1 | 1 | 2026-11-17 18:39 UTC |
 | Orkas | [3163c7ef1c2b03e21e6f85c6301515609361c570](captures/orkas/3163c7ef1c2b03e21e6f85c6301515609361c570/variants/native-electron-commander/prompt.md) | 1 | 1 | 2026-11-17 18:57 UTC |
-| Dyad | [63d28b887c1b62b8509373ba58d4b03573bb714a](captures/dyad/63d28b887c1b62b8509373ba58d4b03573bb714a/variants/native-electron-basic-agent/prompt.md) | 1 | 1 | 2026-11-17 19:03 UTC |
+| Dyad | [63d28b887c1b62b8509373ba58d4b03573bb714a](captures/dyad/63d28b887c1b62b8509373ba58d4b03573bb714a/variants/native-electron-basic-agent/prompt.md) | 2 | 2 | 2026-11-17 19:03 UTC |
 | AgentLink | [5e6450f0a8f420991ddff5c4c17f921c5f40790c](captures/agentlink/5e6450f0a8f420991ddff5c4c17f921c5f40790c/variants/native-tui-openai/prompt.md) | 2 | 2 | 2026-11-17 18:39 UTC |
 | UFO LinuxAgent | [eae3c0a8d168c47cb10df0652e293e092eda1078](captures/ufo/eae3c0a8d168c47cb10df0652e293e092eda1078/variants/linux-device-agent/prompt.md) | 1 | 1 | 2026-11-17 16:51 UTC |
 | Agentlas OS | [6108604d8487519b820cac916c5061cd6e619688](captures/agentlas-os/6108604d8487519b820cac916c5061cd6e619688/variants/claude-core-ready-inline/prompt.md) | 2 | 3 | 2026-11-17 18:04 UTC |
 | LongHorizon-Harness | [0.1.8 - 2026-10-21](captures/longhorizon-harness/0.1.8/variants/codex-manager-initial/prompt.md) | 1 | 1 | 2026-11-17 16:09 UTC |
-| OpenAgents | [9024c135b7cf02a27f107bc52f98ddfcc928201b](captures/openagents/9024c135b7cf02a27f107bc52f98ddfcc928201b/variants/plain-microcoder/prompt.md) | 3 | 3 | 2026-11-18 11:02 UTC |
+| OpenAgents | [9024c135b7cf02a27f107bc52f98ddfcc928201b](captures/openagents/9024c135b7cf02a27f107bc52f98ddfcc928201b/variants/plain-microcoder/prompt.md) | 4 | 4 | 2026-11-18 11:02 UTC |
 | Markus | [0.12.4 - 2026-11-14](captures/markus/0.12.4/variants/secretary-openai-api/prompt.md) | 1 | 1 | 2026-11-17 15:56 UTC |
 | WeChat Mac RPA | [31cf55be1264acf35d436e754deda06833ec4087](captures/wechat-mac-rpa/31cf55be1264acf35d436e754deda06833ec4087/variants/portable-reply-api/prompt.md) | 3 | 3 | 2026-11-17 15:45 UTC |
 | AutoRef | [2cd47b74226f76c785f0679e6ccc61e33e55b7e6](captures/autoref/2cd47b74226f76c785f0679e6ccc61e33e55b7e6/variants/scene-planner-initial/prompt.md) | 1 | 1 | 2026-11-17 15:45 UTC |
@@ -177,16 +177,16 @@ Last capture update: 2026-11-19 11:16 UTC
 | Agent Zero | [2b0b3a416d80638379dc575798a4174ab4d3e1d9](captures/agent-zero/2b0b3a416d80638379dc575798a4174ab4d3e1d9/variants/context-api/prompt.md) | 2 | 2 | 2026-11-18 11:04 UTC |
 | Raven | [v0.2.8 - 2026-11-17](captures/raven/v0.2.8/variants/default/prompt.md) | 1 | 1 | 2026-11-17 14:20 UTC |
 | GPT Researcher | [ddd4db36208d9c8e49f3b2436efda97baecb5433](captures/gpt-researcher/ddd4db36208d9c8e49f3b2436efda97baecb5433/variants/deep-agent/prompt.md) | 1 | 1 | 2026-11-17 14:12 UTC |
-| OpenEvolve | [01583a4af4e24818cb608ec65aa51f1c6ce7d0b4](captures/openevolve/01583a4af4e24818cb608ec65aa51f1c6ce7d0b4/variants/function-minimization/prompt.md) | 3 | 3 | 2026-11-19 11:15 UTC |
-| DeerFlow | [585abb979fbc483485c0fc53ed0e571ab7eebadb](captures/deer-flow/585abb979fbc483485c0fc53ed0e571ab7eebadb/variants/embedded-openai/prompt.md) | 3 | 3 | 2026-11-19 11:15 UTC |
+| OpenEvolve | [01583a4af4e24818cb608ec65aa51f1c6ce7d0b4](captures/openevolve/01583a4af4e24818cb608ec65aa51f1c6ce7d0b4/variants/function-minimization/prompt.md) | 4 | 4 | 2026-11-19 11:15 UTC |
+| DeerFlow | [585abb979fbc483485c0fc53ed0e571ab7eebadb](captures/deer-flow/585abb979fbc483485c0fc53ed0e571ab7eebadb/variants/embedded-openai/prompt.md) | 4 | 4 | 2026-11-19 11:15 UTC |
 | Omni-Rewriter | [846fee695fbfd9b816d481e294b5e385dabc4581](captures/omni-rewriter/846fee695fbfd9b816d481e294b5e385dabc4581/variants/api-writer-analysis/prompt.md) | 1 | 1 | 2026-11-17 14:12 UTC |
 | AgenticSeek | [8f705be8ca625e9549389f188b1e37f700d3ed34](captures/agenticseek/8f705be8ca625e9549389f188b1e37f700d3ed34/variants/coder-openai/prompt.md) | 1 | 1 | 2026-11-17 14:32 UTC |
 | nanoMuse | [v1.0.9 - 2026-10-29](captures/nanomuse/v1.0.9/variants/default/prompt.md) | 1 | 1 | 2026-11-17 14:12 UTC |
 | PR-Agent | [0.50.0 - 2026-11-08](captures/pr-agent/0.50.0/variants/plain-diff-review/prompt.md) | 1 | 1 | 2026-11-17 14:13 UTC |
 | DeepAnalyze | [afc697a11675c59683b9f6596c3ab3b3d661182a](captures/deepanalyze/afc697a11675c59683b9f6596c3ab3b3d661182a/variants/vllm-client/prompt.md) | 1 | 1 | 2026-11-17 14:13 UTC |
 | localGPT | [34f3107f56a88203859092312231b945a711c619](captures/localgpt/34f3107f56a88203859092312231b945a711c619/variants/default/prompt.md) | 1 | 1 | 2026-11-17 14:14 UTC |
-| BambooAI | [2.8.0 - 2026-11-19](captures/bambooai/2.8.0/variants/sdk-free-quick/prompt.md) | 2 | 2 | 2026-11-19 11:15 UTC |
-| CowAgent | [dd697c0f96034e40171bbf02080ce4007193df48](captures/cowagent/dd697c0f96034e40171bbf02080ce4007193df48/variants/bridge-api/prompt.md) | 2 | 2 | 2026-11-19 11:16 UTC |
+| BambooAI | [2.8.1 - 2026-11-20](captures/bambooai/2.8.1/variants/sdk-free-quick/prompt.md) | 3 | 3 | 2026-11-20 10:58 UTC |
+| CowAgent | [51ffe5a8df75295a5c063d5bc32a055c643a2599](captures/cowagent/51ffe5a8df75295a5c063d5bc32a055c643a2599/variants/bridge-api/prompt.md) | 3 | 3 | 2026-11-20 10:58 UTC |
 
 ## Project Trend
 

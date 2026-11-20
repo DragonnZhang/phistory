@@ -1,0 +1,799 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.openai.com  (from --target)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:52781
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/.tap/2026-11-20/trace_105021.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+os.execvp("dbus-run-session", ["dbus-run-session", "--", "xvfb-run", "--auto-servernum", "node", os.environ["PHISTORY_ELECTRON_DRIVER"], str(source), os.environ["PHISTORY_ELECTRON_PROFILE"], "http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "/v1", "Reply with one short sentence."])
+
+10:50:24.822 › ===== Dyad started | pid 32011 | 1.24.0-beta.2 | linux x64 | electron 40.0.0 | node 24.11.1 =====
+10:50:24.880 (process_manager) › Starting app garbage collection (interval: 60s, idle timeout: 10 minutes)
+10:50:24.881 (chat_handlers) › Registered chat IPC handlers
+10:50:24.882 (vercel_handlers) › Registered Vercel IPC handlers
+10:50:24.882 (cloudflare_handlers) › Registered Cloudflare IPC handlers
+10:50:24.883 › Registered debug IPC handlers
+10:50:24.884 (window-handlers) › Registering window control handlers
+10:50:24.884 (upload_handlers) › Registered upload IPC handlers
+10:50:24.884 (release_note_handlers) › Registered release note IPC handlers
+10:50:24.885 (import-handlers) › Registered import IPC handlers
+10:50:24.886 (mcp_handlers) › Registered MCP IPC handlers
+10:50:24.886 (terminal_handlers) › Registered terminal IPC handlers
+10:50:24.887 (tests_handlers) › Registered tests IPC handlers
+10:50:24.887 (recording_handlers) › Registered recording IPC handlers
+10:50:24.887 (coolify_handlers) › Registered Coolify IPC handlers
+10:50:27.111 › Startup executable paths {
+  pid: 32011,
+  node: '/opt/hostedtoolcache/node/24.22.3/x64/bin/node',
+  npm: '/opt/hostedtoolcache/node/24.22.3/x64/bin/npm',
+  pnpm: null,
+  managedPnpmBinDir: '/tmp/phistory-home-0gaycmp5/dyad/electron-user-data/managed-tools/pnpm/node_modules/.bin',
+  managedPnpmInstallDir: '/tmp/phistory-home-0gaycmp5/dyad/electron-user-data/managed-tools/pnpm'
+}
+
+DevTools listening on ws://127.0.0.1:44143/devtools/browser/d8a67607-89e8-4c86-ac48-9e7db5fd1f08
+10:50:27.121 (backup_manager) › Initializing backup system...
+10:50:27.121 (backup_manager) › Backup system paths - UserData: /tmp/phistory-home-0gaycmp5/dyad/electron-user-data, Backups: /tmp/phistory-home-0gaycmp5/dyad/electron-user-data/backups
+10:50:27.128 (backup_manager) › No previous version file found
+10:50:27.128 (backup_manager) › No previous version found, skipping backup
+10:50:27.129 (db) › Initializing database at: /tmp/phistory-home-0gaycmp5/dyad/electron-user-data/sqlite.db
+10:50:27.156 (db) › Running migrations from: /tmp/phistory-home-0gaycmp5/source/out/dyad-linux-x64/resources/app.asar/drizzle
+10:50:27.177 (ai_messages_cleanup) › Cleaned up old ai_messages_json entries
+10:50:27.178 (media_cleanup) › Cleaned up 0 old media files
+10:50:27.210 (linux_protocol) › update-desktop-database failed: Error: spawn update-desktop-database ENOENT
+    at ChildProcess._handle.onexit (node:internal/child_process:286:19)
+    at onErrorNT (node:internal/child_process:484:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+10:50:27.236 (linux_protocol) › Registered x-scheme-handler/dyad handler at /tmp/phistory-home-0gaycmp5/.local/share/applications/dyad-url-handler.desktop
+10:50:27.504 (main) › Crash dumps directory: /tmp/phistory-home-0gaycmp5/dyad/electron-user-data/Crashpad
+10:50:27.505 (performance-monitor) › Starting performance monitoring
+10:50:27.509 (performance-monitor) › Performance: Memory=544MB, All Processes=697MB, CPU=initializing, System Memory=12.62%, System CPU=initializing
+10:50:27.611 (app_lifecycle) › window:created {
+  sequence: 1,
+  elapsedMs: 2653,
+  isAppQuitting: false,
+  hasCreatedInitialWindow: false,
+  mainWindowId: 1,
+  productWindowCount: 1,
+  windows: [
+    {
+      id: 1,
+      destroyed: false,
+      visible: true,
+      focused: true,
+      webContentsDestroyed: false
+    }
+  ],
+  windowId: 1,
+  windowSessionId: '00000000-0000-4000-8000-000000000001'
+}
+10:50:27.618 (main) › Auto-update enabled= true
+10:50:27.618 (main) › Auto-update release channel= stable
+10:50:27.619 (main) › Electron's autoUpdater does not support the 'linux' platform. Ref: https://www.electronjs.org/docs/latest/api/auto-updater#platform-notices
+10:50:27.619 (git_utils) › Added safe directory: /tmp/phistory-home-0gaycmp5/dyad-apps/*
+10:50:27.851 (language_model_handlers) › IPC: create-custom-language-model-provider called with args: [{"id":"phistory","name":"Phistory","apiBaseUrl":"http://127.0.0.1:52781/v1"}]
+10:50:27.853 (language_model_handlers) › IPC: create-custom-language-model-provider returned: {"id":"phistory","name":"Phistory","apiBaseUrl":"http://127.0.0.1:52781/v1","type":"custom"}...
+10:50:27.858 (language_model_handlers) › IPC: create-custom-language-model called with args: [{"providerId":"custom::phistory","apiName":"gpt-4.1","displayName":"gpt-4.1","contextWindow":131072,"maxOutputTokens":32768}]
+10:50:27.859 (remote_language_model_catalog) › Cold start catalog request; waiting for initial remote fetch
+10:50:27.860 (remote_language_model_catalog) › Fetching remote language model catalog {
+  catalogUrl: 'https://api.dyad.sh/v1/language-model-catalog',
+  timeoutMs: 5000
+}
+10:50:27.903 (remote_language_model_catalog) › Loaded remote language model catalog {
+  catalogUrl: 'https://api.dyad.sh/v1/language-model-catalog',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5,
+  aliasCount: 9,
+  themeGenerationOptionCount: 3
+}
+10:50:27.904 (remote_language_model_catalog) › Initialized language model catalog after cold start fetch {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5,
+  aliasCount: 9
+}
+10:50:27.904 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:27.905 (language_model_handlers) › IPC: create-custom-language-model returned: 1...
+10:50:27.933 (import-handlers) › IPC: import-app called with args: [{"path":"/tmp/phistory-home-0gaycmp5/dyad/app","appName":"Phistory","skipCopy":true}]
+10:50:28.057 (git_utils) › Created default .gitattributes in /tmp/phistory-home-0gaycmp5/dyad/app
+10:50:28.154 (import-handlers) › IPC: import-app returned: {"appId":1,"chatId":1}...
+10:50:28.416 (pro_handlers) › IPC: get-user-budget called with args: [null]
+10:50:28.416 (pro_handlers) › Attempting to fetch user budget information.
+10:50:28.417 (pro_handlers) › LLM Gateway API key (Dyad Pro) is not configured.
+10:50:28.417 (pro_handlers) › IPC: get-user-budget returned: null...
+10:50:28.418 (main) › Product window renderer failed to load: Error: ERR_ABORTED (-3) loading 'file:///tmp/phistory-home-0gaycmp5/source/out/dyad-linux-x64/resources/app.asar/.vite/renderer/main_window/index.html'
+    at rejectAndCleanup (node:electron/js2c/browser_init:2:83298)
+    at WebContents.navigationListener (node:electron/js2c/browser_init:2:83578)
+    at WebContents.emit (node:events:520:35)
+10:50:28.468 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.469 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.514 (pro_handlers) › [get-subscription-status] Handling request
+10:50:28.517 (language_model_handlers) › IPC: get-language-models-by-providers called with args: [null]
+10:50:28.518 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.519 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.520 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.520 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.521 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.521 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.521 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.521 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.521 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.521 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.521 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.522 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.522 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.522 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.522 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.522 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.522 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.523 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.523 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.524 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.524 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.524 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.524 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.524 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.525 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.525 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.525 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.525 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.526 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.526 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.526 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.526 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.526 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.526 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.526 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'openai',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.526 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'anthropic',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.526 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'google',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.526 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'vertex',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.526 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'openrouter',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.526 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'auto',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.527 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'azure',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: false
+}
+10:50:28.527 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'xai',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: false
+}
+10:50:28.527 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'bedrock',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: false
+}
+10:50:28.527 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'minimax',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: false
+}
+10:50:28.527 (language_model_handlers) › IPC: get-language-models-by-providers returned: {"openai":[{"apiName":"gpt-6.2-sol","displayName":"GPT 6.2 Sol","description":"Efficient reasoning f...
+10:50:28.528 (language_model_handlers) › IPC: get-language-model-providers called with args: [null]
+10:50:28.528 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.528 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.528 (language_model_handlers) › IPC: get-language-model-providers returned: [{"id":"openai","name":"OpenAI","websiteUrl":"https://platform.openai.com/api-keys","gatewayPrefix":...
+10:50:28.530 › WebContents#did-fail-load: {
+  errorCode: -3,
+  errorDescription: '',
+  validatedURL: 'file:///',
+  isMainFrame: true,
+  frameProcessId: 4,
+  frameRoutingId: 1
+}
+10:50:28.935 (pro_handlers) › IPC: get-user-budget called with args: [null]
+10:50:28.936 (pro_handlers) › Attempting to fetch user budget information.
+10:50:28.936 (pro_handlers) › LLM Gateway API key (Dyad Pro) is not configured.
+10:50:28.936 (pro_handlers) › IPC: get-user-budget returned: null...
+10:50:28.957 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.958 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.962 (pro_handlers) › [get-subscription-status] Handling request
+10:50:28.963 (language_model_handlers) › IPC: get-language-models-by-providers called with args: [null]
+10:50:28.963 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.963 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.966 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.967 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.968 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.968 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.968 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.969 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.971 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.971 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.972 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.972 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.972 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.972 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.972 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.972 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.972 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.972 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.974 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.974 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.974 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.974 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.974 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.974 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.975 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.976 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.976 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.976 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.976 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.976 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.976 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.976 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.976 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.977 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.977 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'openai',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.977 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'anthropic',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.978 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'google',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.978 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'vertex',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.978 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'openrouter',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.978 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'auto',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: true
+}
+10:50:28.979 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'azure',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: false
+}
+10:50:28.979 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'xai',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: false
+}
+10:50:28.979 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'bedrock',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: false
+}
+10:50:28.980 (language_model_helpers) › Loading cloud models from builtin catalog {
+  providerId: 'minimax',
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  hasProviderModels: false
+}
+10:50:28.980 (language_model_handlers) › IPC: get-language-models-by-providers returned: {"openai":[{"apiName":"gpt-6.2-sol","displayName":"GPT 6.2 Sol","description":"Efficient reasoning f...
+10:50:28.981 (language_model_handlers) › IPC: get-language-model-providers called with args: [null]
+10:50:28.981 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:28.982 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:28.983 (language_model_handlers) › IPC: get-language-model-providers returned: [{"id":"openai","name":"OpenAI","websiteUrl":"https://platform.openai.com/api-keys","gatewayPrefix":...
+10:50:29.083 (themes_handlers) › IPC: get-themes called with args: [null]
+10:50:29.083 (themes_handlers) › IPC: get-themes returned: [{"id":"default","name":"Default Theme","description":"Balanced design system emphasizing aesthetics...
+10:50:29.084 (themes_handlers) › IPC: get-custom-themes called with args: [null]
+10:50:29.084 (themes_handlers) › IPC: get-custom-themes returned: []...
+10:50:29.985 (app_upgrade_handlers) › IPC: get-app-upgrades called with args: [{"appId":1}]
+10:50:29.987 (app_upgrade_handlers) › IPC: get-app-upgrades returned: [{"id":"component-tagger","title":"Enable select component to edit","description":"Installs the Dyad...
+10:50:30.159 (themes_handlers) › IPC: get-app-theme called with args: [{"appId":1}]
+10:50:30.160 (themes_handlers) › IPC: get-app-theme returned: null...
+10:50:30.162 (proposal_handlers) › IPC: get-proposal called with args: [{"chatId":1}]
+10:50:30.163 (proposal_handlers) › IPC: get-proposal called for chatId: 1
+10:50:30.164 (proposal_handlers) › IPC: get-proposal returned: null...
+10:50:30.164 (token_count_handlers) › IPC: chat:count-tokens called with args: [{"chatId":1,"input":""}]
+10:50:30.166 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.166 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.168 (node_handlers) › handling ipc: nodejs-status for platform: linux and arch: x64
+10:50:30.182 (runShellCommand) › Running command: node --version
+10:50:30.190 (app_handlers) › App 1 selected for preview
+10:50:30.191 (system_prompt) › Error reading AI_RULES.md, fallback to default AI rules: Error: ENOENT: no such file or directory, open '/tmp/phistory-home-0gaycmp5/dyad/app/AI_RULES.md'
+10:50:30.204 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.205 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.206 (token_count_handlers) › IPC: chat:count-tokens returned: {"estimatedTotalTokens":13314,"actualMaxTokens":null,"messageHistoryTokens":0,"codebaseTokens":0,"me...
+10:50:30.209 (runShellCommand) › Command "node --version" succeeded with code 0: v24.22.3
+10:50:30.209 (runShellCommand) › Running command: command -v node
+10:50:30.219 (runShellCommand) › Command "command -v node" succeeded with code 0: /opt/hostedtoolcache/node/24.22.3/x64/bin/node
+10:50:30.242 (node_handlers) › pnpm not found; installing Dyad-managed pnpm in the background.
+10:50:30.260 (app_handlers) › No app selected for preview
+10:50:30.260 (app_handlers) › App 1 selected for preview
+10:50:30.290 (app_runtime_service) › Starting app 1 in path /tmp/phistory-home-0gaycmp5/dyad/app
+10:50:30.462 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.464 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.468 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.468 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.473 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.473 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.498 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.498 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.532 (chat_stream_handlers) › isDeepContextEnabled: undefined
+10:50:30.532 (chat_stream_handlers) › Extracted codebase information from /tmp/phistory-home-0gaycmp5/dyad/app
+10:50:30.534 (chat_stream_handlers) › codebaseInfo: length 0 estimated tokens 0
+10:50:30.534 (system_prompt) › Error reading AI_RULES.md, fallback to default AI rules: Error: ENOENT: no such file or directory, open '/tmp/phistory-home-0gaycmp5/dyad/app/AI_RULES.md'
+10:50:30.534 (chat_stream_handlers) › Theme for app 1: none, prompt length: 0 chars
+10:50:30.564 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.565 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.566 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.567 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.670 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.670 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.671 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.671 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+10:50:30.716 (local_agent_handler) › Total tokens used: null Input tokens: null Cached input tokens: null Cache hit ratio: 0
+10:50:30.781 (pro_handlers) › IPC: get-user-budget called with args: [null]
+10:50:30.782 (pro_handlers) › Attempting to fetch user budget information.
+10:50:30.782 (pro_handlers) › LLM Gateway API key (Dyad Pro) is not configured.
+10:50:30.782 (pro_handlers) › IPC: get-user-budget returned: null...
+10:50:30.829 (proposal_handlers) › IPC: get-proposal called with args: [{"chatId":1}]
+10:50:30.833 (proposal_handlers) › IPC: get-proposal called for chatId: 1
+10:50:30.834 (proposal_handlers) › IPC: get-proposal returned: null...
+10:50:30.834 (token_count_handlers) › IPC: chat:count-tokens called with args: [{"chatId":1,"input":""}]
+10:50:30.836 (remote_language_model_catalog) › Returning cached language model catalog {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  expiresAt: '2026-11-20T11:28:31.146Z'
+}
+10:50:30.837 (language_model_helpers) › Loaded builtin catalog for provider list {
+  source: 'remote',
+  version: '2026-11-20T10:28:31.146Z',
+  providerCount: 5
+}
+
+[claude-tap] python exited with code -2
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/.tap/2026-11-20/trace_105021.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/.tap/2026-11-20/trace_105021.log
+  view:         /home/runner/work/phistory/phistory/captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/.tap/2026-11-20/trace_105021.html
+  prompt:       /home/runner/work/phistory/phistory/captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/prompt.md
+
+stderr:

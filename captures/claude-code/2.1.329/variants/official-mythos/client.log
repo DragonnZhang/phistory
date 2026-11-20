@@ -1,0 +1,23 @@
+stdout:
+[claude-tap] Claude Code target: https://api.anthropic.com  (auto: ANTHROPIC_API_KEY env var)  protocols: anthropic
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:37575
+[claude-tap] CA cert: /tmp/phistory-home-zr6_2bgb/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/official-mythos/.tap/2026-11-20/trace_102410.jsonl
+
+[claude-tap] launching Claude Code: claude --settings {"env":{"HTTP_PROXY":"http://127.0.0.1:37575","HTTPS_PROXY":"http://127.0.0.1:37575","ALL_PROXY":"http://127.0.0.1:37575","http_proxy":"http://127.0.0.1:37575","https_proxy":"http://127.0.0.1:37575","all_proxy":"http://127.0.0.1:37575","NODE_EXTRA_CA_CERTS":"/tmp/phistory-home-zr6_2bgb/.local/share/claude-tap/ca.pem"}} --no-session-persistence --model claude-mythos-5 -p Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:37575
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-zr6_2bgb/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] Claude Code exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/official-mythos/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/official-mythos/.tap/2026-11-20/trace_102410.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/official-mythos/.tap/2026-11-20/trace_102410.log
+  view:         /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/official-mythos/.tap/2026-11-20/trace_102410.html
+  prompt:       /home/runner/work/phistory/phistory/captures/claude-code/2.1.329/variants/official-mythos/prompt.md
+
+stderr:

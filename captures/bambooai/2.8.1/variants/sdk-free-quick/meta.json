@@ -1,0 +1,70 @@
+{
+  "agent_id": "bambooai",
+  "agent": "BambooAI",
+  "package": "bambooai",
+  "python_runtime": "3.12",
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "import tiktoken; tiktoken.get_encoding('cl100k_base')"
+    ],
+    "environment": {}
+  },
+  "version": "2.8.1",
+  "variant": {
+    "id": "sdk-free-quick",
+    "label": "Native SDK · free tier quick analysis",
+    "dimensions": {
+      "entry": "BambooAI.pd_agent_converse",
+      "budget": "quick",
+      "models": "native free-tier template"
+    }
+  },
+  "requested": {
+    "entry": "BambooAI.pd_agent_converse",
+    "budget": "quick",
+    "models": "native free-tier template"
+  },
+  "observed": {
+    "model": "deepseek/deepseek-v4.1-flash-1017"
+  },
+  "published_at": "2026-11-20T04:59:35.030055Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/fb/7a/4e9274a2b0d7b47894f4810de8ad69dd34480368bf2146a590ad91c78e0e/bambooai-2.8.1-py3-none-any.whl",
+  "binary_version": "2.8.1",
+  "captured_at": "2026-11-20T10:58:18.460572+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "44718622705",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44718622705"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 8.318,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nfrom pathlib import Path\nfrom bambooai.cli import init_home, load_env\nstate = Path(os.environ[\"PHISTORY_HOME\"]) / \"bambooai\"\ninit_home(str(state), quiet=True)\nload_env(str(state))\nos.chdir(state)\nfrom web_app.llm_config_builder import build_user_config\nassert build_user_config(\"phistory\")\nfrom bambooai import BambooAI\nBambooAI(user_id=\"phistory\").pd_agent_converse(question=\"Reply with one short sentence.\", mode=\"quick\")\n"
+  ]
+}

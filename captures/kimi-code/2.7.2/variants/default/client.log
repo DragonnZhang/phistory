@@ -1,0 +1,26 @@
+stdout:
+[claude-tap] Kimi Code target: https://api.kimi.com/coding/v1  (from Kimi Code config)  protocols: anthropic,openai,gemini,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:40001
+[claude-tap] CA cert: /tmp/phistory-home-dv5q12_h/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/kimi-code/2.7.2/variants/default/.tap/2026-11-20/trace_102441.jsonl
+
+[claude-tap] launching Kimi Code: kimi --prompt Reply with one short sentence. --output-format text
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:40001
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-dv5q12_h/.local/share/claude-tap/ca.pem
+• captured
+
+
+[claude-tap] Kimi Code exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/kimi-code/2.7.2/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    4
+  trace:        /home/runner/work/phistory/phistory/captures/kimi-code/2.7.2/variants/default/.tap/2026-11-20/trace_102441.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/kimi-code/2.7.2/variants/default/.tap/2026-11-20/trace_102441.log
+  view:         /home/runner/work/phistory/phistory/captures/kimi-code/2.7.2/variants/default/.tap/2026-11-20/trace_102441.html
+  prompt:       /home/runner/work/phistory/phistory/captures/kimi-code/2.7.2/variants/default/prompt.md
+
+stderr:
+kimi version 2.7.2
+To resume this session: kimi -r session_3a151260-01a5-4671-a56b-bd9b82cedd2f

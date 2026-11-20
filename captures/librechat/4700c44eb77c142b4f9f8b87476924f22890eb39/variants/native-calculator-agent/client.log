@@ -1,0 +1,89 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.openai.com  (from --target)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:51797
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/.tap/2026-11-20/trace_104109.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+import secrets
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+base = "http://127.0.0.1:" + os.environ["PHISTORY_SERVER_PORT"]
+os.environ.update(MONGO_URI="mongodb://127.0.0.1:27017/phistory_" + secrets.token_hex(12), HOST="127.0.0.1", PORT=os.environ["PHISTORY_SERVER_PORT"], DOMAIN_CLIENT=base, DOMAIN_SERVER=base, ENDPOINTS="openAI,agents", OPENAI_MODELS="gpt-6.1-sol", OPENAI_REVERSE_PROXY="http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "/v1", SEARCH="false", USE_REDIS="false", OPENAI_MODERATION="false", ALLOW_EMAIL_LOGIN="true", ALLOW_REGISTRATION="true", ALLOW_UNVERIFIED_EMAIL_LOGIN="true", CREDS_KEY=secrets.token_hex(32), CREDS_IV=secrets.token_hex(16), JWT_SECRET=secrets.token_hex(32), JWT_REFRESH_SECRET=secrets.token_hex(32))
+os.execvp("npm", ["npm", "run", "backend"])
+
+
+> LibreChat@v0.8.9 backend
+> cross-env NODE_ENV=production node api/server/index.js
+
+2026-11-20 10:41:11 [33m[3mwarn[23m[39m: [33m[3m[metrics] METRICS_SECRET is not set - /metrics will return 401 for all requests[23m[39m
+2026-11-20 10:41:11 [32minfo[39m: [32mMongo Connection options[39m
+2026-11-20 10:41:11 [32minfo[39m: [32m{[39m
+[32m  "bufferCommands": false[39m
+[32m}[39m
+2026-11-20 10:41:11 [32minfo[39m: [32mConnected to MongoDB[39m
+2026-11-20 10:41:11 [31merror[39m: [31mConfig file YAML format is invalid: ENOENT: no such file or directory, open '/tmp/phistory-home-8jgicc2z/source/librechat.yaml'[39m
+2026-11-20 10:41:11 [32minfo[39m: [32m[ensureBaseConfig] Loading base configuration...[39m
+2026-11-20 10:41:11 [32minfo[39m: [32m[credentials] New database detected. Credential fingerprints were recorded for future key-drift checks.[39m
+2026-11-20 10:41:11 [32minfo[39m: [32m[39m
+[32mOutdated Config version: undefined[39m
+[32mLatest version: 1.3.19[39m
+
+[32m      Check out the Config changelogs for the latest options and features added.[39m
+
+[32m      https://www.librechat.ai/changelog[39m
+
+[32m[39m
+2026-11-20 10:41:11 [33m[3mwarn[23m[39m: [33m[3mRAG API is either not running or not reachable at undefined, you may experience errors with file uploads.[23m[39m
+Social logins are disabled. Set ALLOW_SOCIAL_LOGIN=true to enable them.
+2026-11-20 10:41:12 [32minfo[39m: [32m[StreamServices] Created in-memory stream services[39m
+2026-11-20 10:41:12 [32minfo[39m: [32m[GenerationJobManager] Configured with in-memory stores[39m
+2026-11-20 10:41:12 [32minfo[39m: [32mHTTP server timeout configuration[39m
+2026-11-20 10:41:12 [32minfo[39m: [32mServer listening at http://127.0.0.1:41607[39m
+2026-11-20 10:41:12 [32minfo[39m: [32m[MCPServersRegistry] Creating new instance[39m
+2026-11-20 10:41:12 [32minfo[39m: [32mOAuth reconnect manager initialized successfully.[39m
+2026-11-20 10:41:12 [33m[3mwarn[23m[39m: [33m[3m[SearchTokenMigration] Some users and groups lack search tokens or their indexes; people search scans the collection until you run: npm run migrate:search-tokens[23m[39m
+2026-11-20 10:41:12 [32minfo[39m: [32mCreated collection: projects[39m
+2026-11-20 10:41:12 [32minfo[39m: [32mCreated collection: projects[39m
+2026-11-20 10:41:12 [32minfo[39m: [32m[agent-triggers] durable delivery engine started[39m
+2026-11-20 10:41:12 [31merror[39m: [31m[schedules] scheduler NOT started: this process cannot see other replicas' generations. The job store is process-local (Redis is off), but nothing here proves this is the only replica — and the standard server arms the scheduler in EVERY replica. A peer would reconcile runs whose jobs it cannot see, eventually marking a still-running generation interrupted and releasing its capacity, and deletions routed elsewhere could not abort the generation at all. Enable a shared stream store (USE_REDIS_STREAMS), or set SCHEDULES_SINGLE_PROCESS=true to assert this deployment runs exactly one replica. Schedule writes are refused (503) until then.[39m
+2026-11-20 10:41:12 [31merror[39m: [31m[schedules] write routes are PERMANENTLY unavailable in this process: the engine did not arm. Resolve the cause logged above and restart.[39m
+2026-11-20 10:41:12 [32minfo[39m: [32mServer readiness checks passing.[39m
+2026-11-20 10:41:13 [32minfo[39m: [32m[Login] [Login successful] [Username: [REDACTED_EMAIL]] [Request-IP: 127.0.0.1][39m {"requestId":"48a4e124-a83e-49e1-9ec8-6498fe75158c","request_id":"48a4e124-a83e-49e1-9ec8-6498fe75158c","request_method":"POST","request_path":"/api/auth"}
+
+[claude-tap] shutting down python... (Ctrl+C again to force)
+
+[claude-tap] python stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/prompt.md
+2026-11-20 10:41:13 [32minfo[39m: [32mReceived SIGINT, draining HTTP server...[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning pre-drain shutdown task: background task admission[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning pre-drain shutdown task: agent trigger delivery engine[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning pre-drain shutdown task: subagent activity streams prepare[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning pre-drain shutdown task: generation job manager prepare[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning pre-drain shutdown task: schedule erasure sweep[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: generation job manager[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: channel feedback export[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: channel authority cleanup[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: background tasks[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: subagent task store[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: role cache invalidation[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: github skill sync scheduler[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: MCP authorization fence retry worker[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: MCP app connections[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: flow manager cleanup[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mCleaning up FlowStateManager intervals...[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mRunning post-drain shutdown task: favorites persistence[39m
+2026-11-20 10:41:13 [32minfo[39m: [32mGraceful shutdown complete, exiting[39m
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/.tap/2026-11-20/trace_104109.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/.tap/2026-11-20/trace_104109.log
+  view:         /home/runner/work/phistory/phistory/captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/.tap/2026-11-20/trace_104109.html
+  prompt:       /home/runner/work/phistory/phistory/captures/librechat/4700c44eb77c142b4f9f8b87476924f22890eb39/variants/native-calculator-agent/prompt.md
+
+stderr:

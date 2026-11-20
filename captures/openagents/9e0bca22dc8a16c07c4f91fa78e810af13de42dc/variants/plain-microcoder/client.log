@@ -1,0 +1,31 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:36937
+[claude-tap] CA cert: /tmp/phistory-home-ot_5d677/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/.tap/2026-11-20/trace_105733.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+os.environ["CURL_CA_BUNDLE"] = os.environ["SSL_CERT_FILE"]
+os.execv(str(Path(os.environ["PHISTORY_HOME"]) / "openagents/task"), ["openagents-native-microcoder-task"])
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:36937
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-ot_5d677/.local/share/claude-tap/ca.pem
+
+[claude-tap] shutting down python... (Ctrl+C again to force)
+
+[claude-tap] python stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/.tap/2026-11-20/trace_105733.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/.tap/2026-11-20/trace_105733.log
+  view:         /home/runner/work/phistory/phistory/captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/.tap/2026-11-20/trace_105733.html
+  prompt:       /home/runner/work/phistory/phistory/captures/openagents/9e0bca22dc8a16c07c4f91fa78e810af13de42dc/variants/plain-microcoder/prompt.md
+
+stderr:
