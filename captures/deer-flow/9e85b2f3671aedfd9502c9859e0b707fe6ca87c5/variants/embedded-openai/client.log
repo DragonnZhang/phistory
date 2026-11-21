@@ -1,0 +1,43 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:37247
+[claude-tap] CA cert: /tmp/phistory-home-gm2knynp/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/deer-flow/9e85b2f3671aedfd9502c9859e0b707fe6ca87c5/variants/embedded-openai/.tap/2026-11-21/trace_104531.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+import yaml
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+os.chdir(source)
+config = yaml.safe_load((source / "config.example.yaml").read_text())
+config["models"] = [{
+    "name": "phistory-openai", "use": "langchain_openai:ChatOpenAI",
+    "model": "gpt-4.1", "api_key": "$OPENAI_API_KEY",
+    "base_url": "https://api.openai.com/v1", "supports_thinking": False,
+    "supports_vision": True,
+}]
+path = source / "config.yaml"
+path.write_text(yaml.safe_dump(config, sort_keys=False))
+os.environ["DEER_FLOW_PROJECT_ROOT"] = str(source)
+from deerflow.client import DeerFlowClient
+print(DeerFlowClient(config_path=str(path)).chat("Reply with one short sentence."))
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:37247
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-gm2knynp/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/deer-flow/9e85b2f3671aedfd9502c9859e0b707fe6ca87c5/variants/embedded-openai/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/deer-flow/9e85b2f3671aedfd9502c9859e0b707fe6ca87c5/variants/embedded-openai/.tap/2026-11-21/trace_104531.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/deer-flow/9e85b2f3671aedfd9502c9859e0b707fe6ca87c5/variants/embedded-openai/.tap/2026-11-21/trace_104531.log
+  view:         /home/runner/work/phistory/phistory/captures/deer-flow/9e85b2f3671aedfd9502c9859e0b707fe6ca87c5/variants/embedded-openai/.tap/2026-11-21/trace_104531.html
+  prompt:       /home/runner/work/phistory/phistory/captures/deer-flow/9e85b2f3671aedfd9502c9859e0b707fe6ca87c5/variants/embedded-openai/prompt.md
+
+stderr:
+[claude-tap] warning: 

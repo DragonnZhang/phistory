@@ -1,0 +1,67 @@
+{
+  "agent_id": "kilocode",
+  "agent": "Kilo Code",
+  "package": "@kilocode/cli",
+  "version": "7.8.32",
+  "variant": {
+    "id": "default",
+    "label": "Default · configured compatible provider",
+    "dimensions": {
+      "provider": "OpenAI-compatible",
+      "model": "gpt-4.1"
+    }
+  },
+  "requested": {
+    "provider": "OpenAI-compatible",
+    "model": "gpt-4.1"
+  },
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 23
+  },
+  "published_at": "2026-11-20T14:52:27.952Z",
+  "tarball_url": "https://registry.npmjs.org/@kilocode/cli/-/cli-7.8.32.tgz",
+  "binary_version": "7.8.32",
+  "captured_at": "2026-11-21T10:10:07.956990+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "44892721599",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44892721599"
+  },
+  "tap_client": "kilo",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 14.752,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "kilo",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "run",
+    "--format",
+    "json",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "KILO_DISABLE_MODELS_FETCH": "1",
+    "KILO_DISABLE_AUTOUPDATE": "1"
+  }
+}

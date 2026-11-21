@@ -1,0 +1,106 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.openai.com  (from --target)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:38107
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/anything-llm/472b1e3f4715c6ccd38a099aecd4651a449188aa/variants/native-workspace-agent/.tap/2026-11-21/trace_103131.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+import subprocess
+from pathlib import Path
+source = Path(os.environ["PHISTORY_SOURCE_ROOT"])
+env = dict(os.environ, STORAGE_DIR=str(source / "server/storage"), NODE_ENV="production", SERVER_PORT=os.environ["PHISTORY_SERVER_PORT"], COLLECTOR_PORT=os.environ["PHISTORY_COLLECTOR_PORT"], OPENAI_BASE_URL="http://127.0.0.1:" + os.environ["PHISTORY_TAP_PORT"] + "/v1")
+processes = []
+try:
+    for name in ["collector", "server"]:
+        processes.append(subprocess.Popen(["node", "index.js"], cwd=source / name, env=env))
+    processes[-1].wait()
+finally:
+    for process in processes:
+        if process.poll() is None:
+            process.terminate()
+    for process in processes:
+        process.wait(timeout=10)
+
+[36m[backend][0m [32minfo[39m: [36m[SDK Timeout Patch][0m undici global dispatcher — headersTimeout & bodyTimeout 600s
+[36m[backend][0m [32minfo[39m: [36m[SDK Timeout Patch][0m OpenAI SDK — timeout 600s, maxRetries 0
+[36m[backend][0m [32minfo[39m: [36m[SDK Timeout Patch][0m Anthropic SDK — timeout 600s, maxRetries 0
+[36m[backend][0m [32minfo[39m: [36m[EncryptionManager][0m Self-assigning key & salt for encrypting arbitrary data.
+[36m[collector][0m [32minfo[39m: [35m[TikTokenTokenizer][0m Initialized new TikTokenTokenizer instance.
+[36m[collector][0m [32minfo[39m: Collector hot directory and tmp storage wiped!
+[36m[collector][0m [32minfo[39m: Document processor app listening on port 42631
+[36m[backend][0m [32minfo[39m: [35m[TokenManager][0m Initialized new TokenManager instance for model: gpt-3.5-turbo
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m Pulling remote model map...
+[36m[backend][0m [32minfo[39m: [35m[TokenManager][0m Returning existing instance for model: gpt-3.5-turbo
+[36m[backend][0m [32minfo[39m: prisma:info Starting a sqlite pool with 5 connections.
+[36m[backend][0m [32minfo[39m: [33m[ONBOARDING PATCH][0m Legacy instance is already onboarded, marking onboarding as complete. You will not see this message again.
+[36m[backend][0m [32minfo[39m: [32m[TELEMETRY SENT][0m {"event":"onboarding_complete","distinctId":"dddc9cbd-fc12-4211-be8b-f03624c49dd7","properties":{"runtime":"production"}}
+[36m[backend][0m [32minfo[39m: [32m[TELEMETRY ENABLED][0m Anonymous Telemetry enabled. Telemetry helps Mintplex Labs Inc improve AnythingLLM.
+fatal: not a git repository (or any of the parent directories): .git
+[36m[backend][0m [31merror[39m: getGitVersion Command failed: git rev-parse HEAD
+fatal: not a git repository (or any of the parent directories): .git
+
+[36m[backend][0m [32minfo[39m: [32m[TELEMETRY SENT][0m {"event":"server_boot","distinctId":"dddc9cbd-fc12-4211-be8b-f03624c49dd7","properties":{"commit":"--","runtime":"production"}}
+[36m[backend][0m [32minfo[39m: [36m[CommunicationKey][0m RSA key pair generated for signed payloads within AnythingLLM services.
+[36m[backend][0m [32minfo[39m: [36m[EncryptionManager][0m Loaded existing key & salt for encrypting arbitrary data.
+[36m[backend][0m [32minfo[39m: [36m[BackgroundWorkerService][0m SINGLETON LOCK: Using existing BackgroundService.
+[36m[backend][0m [32minfo[39m: [36m[PushNotifications][0m Generating new VAPID keys...
+[36m[backend][0m [32minfo[39m: [36m[PushNotifications][0m New VAPID keys generated!
+[36m[backend][0m [32minfo[39m: [36m[PushNotifications][0m Loading single user mode subscriptions...
+[36m[backend][0m [32minfo[39m: Primary server in HTTP mode listening on port 54551
+[36m[backend][0m [32minfo[39m: [36m[BackgroundWorkerService][0m Starting...
+[36m[backend][0m [32minfo[39m: [36m[BackgroundWorkerService][0m Service started with 3 jobs ["cleanup-orphan-documents","cleanup-generated-files","cleanup-generated-images"]
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:titan-embed-text-v2 - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:embed-v4.0 - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:gemini-embedding-001 - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:text-embedding-005 - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:text-multilingual-embedding-002 - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:codestral-embed - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:mistral-embed - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:text-embedding-3-large - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:text-embedding-3-small - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m zai:text-embedding-ada-002 - context window is not a positive number. Got 0.
+[36m[backend][0m [32minfo[39m: [33m[ContextWindowFinder][0m Remote model map synced and cached
+[36m[backend][0m [32minfo[39m: [36m[MetaGenerator][0m fetching custom meta tag settings...
+[36m[backend][0m [32minfo[39m: [32m[Event Logged][0m - api_key_created
+[36m[backend][0m [32minfo[39m: [32m[TELEMETRY SENT][0m {"event":"workspace_created","distinctId":"dddc9cbd-fc12-4211-be8b-f03624c49dd7","properties":{"multiUserMode":false,"LLMSelection":"openai","Embedder":"inherit","VectorDbSelection":"lancedb","TTSSelection":"native","runtime":"production"}}
+[36m[backend][0m [32minfo[39m: [32m[Event Logged][0m - api_workspace_created
+[36m[backend][0m [32minfo[39m: [32m[TELEMETRY SENT][0m {"event":"agent_chat_started","distinctId":"dddc9cbd-fc12-4211-be8b-f03624c49dd7","properties":{"runtime":"production"}}
+[36m[backend][0m [32minfo[39m: [36m[EphemeralAgentHandler][0m Start 85b72ce0-1726-4fd1-b473-f84bdecb1395::openai:gpt-5.6-luna
+[36m[backend][0m [32minfo[39m: [36m[EphemeralAgentHandler][0m Attached httpSocket plugin to Agent cluster
+[36m[backend][0m [32minfo[39m: [36m[EphemeralAgentHandler][0m Attaching user and default agent to Agent cluster.
+[36m[backend][0m [32minfo[39m: [36m[MCPHypervisor][0m Initializing MCP Hypervisor - subsequent calls will boot faster
+[36m[backend][0m [32minfo[39m: [36m[MCPHypervisor][0m MCP Config File: /tmp/phistory-home-7r45n4b5/source/server/storage/plugins/anythingllm_mcp_servers.json
+[36m[backend][0m [32minfo[39m: [36m[MCPHypervisor][0m Successfully started 0 MCP servers: []
+[36m[backend][0m [32minfo[39m: [36m[MCPHypervisor][0m Successfully started 0 MCP servers: []
+[36m[backend][0m [32minfo[39m: [36m[EphemeralAgentHandler][0m Attached rag-memory plugin to Agent cluster
+[36m[backend][0m [32minfo[39m: [36m[EphemeralAgentHandler][0m Attached document-summarizer plugin to Agent cluster
+[36m[backend][0m [32minfo[39m: [36m[EphemeralAgentHandler][0m Attached web-scraping plugin to Agent cluster
+[36m[backend][0m [32minfo[39m: [36m[EphemeralAgentHandler][0m Attached web-browsing plugin to Agent cluster
+[36m[backend][0m [32minfo[39m: [35m[TokenManager][0m Returning existing instance for model: gpt-3.5-turbo
+[36m[backend][0m [32minfo[39m: [33m[IntelligentSkillSelector][0m 4 tools <= 15, skipping reranking
+[36m[backend][0m [32minfo[39m: [36m[EphemeralAgentHandler][0m [DEBUG] Provider supports agent streaming - will use async execution!
+[36m[backend][0m [32minfo[39m: [36m[AgentLLM - gpt-5.6-luna][0m OpenAI.stream - will process this chat completion.
+[36m[backend][0m [32minfo[39m: [32m[TELEMETRY SENT][0m {"event":"agent_chat_sent","distinctId":"dddc9cbd-fc12-4211-be8b-f03624c49dd7","properties":{"runtime":"production"}}
+[36m[backend][0m [32minfo[39m: [32m[TELEMETRY SENT][0m {"event":"sent_chat","distinctId":"dddc9cbd-fc12-4211-be8b-f03624c49dd7","properties":{"LLMSelection":"openai","Embedder":"inherit","VectorDbSelection":"lancedb","TTSSelection":"native","runtime":"production"}}
+[36m[backend][0m [32minfo[39m: [36m[ModelPricing][0m Remote pricing data synced and cached.
+[36m[backend][0m [32minfo[39m: [36m[ModelPricing][0m ⚡[32mPre-cached model pricing data[0m
+[36m[backend][0m [32minfo[39m: [32m[Event Logged][0m - api_sent_chat
+
+[claude-tap] shutting down python... (Ctrl+C again to force)
+[36m[backend][0m [32minfo[39m: Gracefully exiting
+[36m[backend][0m [32minfo[39m: Gracefully exited
+
+[claude-tap] python stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/anything-llm/472b1e3f4715c6ccd38a099aecd4651a449188aa/variants/native-workspace-agent/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/anything-llm/472b1e3f4715c6ccd38a099aecd4651a449188aa/variants/native-workspace-agent/.tap/2026-11-21/trace_103131.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/anything-llm/472b1e3f4715c6ccd38a099aecd4651a449188aa/variants/native-workspace-agent/.tap/2026-11-21/trace_103131.log
+  view:         /home/runner/work/phistory/phistory/captures/anything-llm/472b1e3f4715c6ccd38a099aecd4651a449188aa/variants/native-workspace-agent/.tap/2026-11-21/trace_103131.html
+  prompt:       /home/runner/work/phistory/phistory/captures/anything-llm/472b1e3f4715c6ccd38a099aecd4651a449188aa/variants/native-workspace-agent/prompt.md
+
+stderr:

@@ -1,0 +1,23 @@
+stdout:
+[claude-tap] Grok Build target: https://api.x.ai/v1  (auto: XAI_API_KEY env var)  protocols: openai,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:44401
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/grok/1.0.92/variants/default/.tap/2026-11-21/trace_100858.jsonl
+
+[claude-tap] launching Grok Build: grok --no-auto-update --single Reply with one short sentence.
+[claude-tap] GROK_CLI_CHAT_PROXY_BASE_URL=http://127.0.0.1:44401/v1
+[claude-tap] GROK_XAI_API_BASE_URL=http://127.0.0.1:44401/v1
+[claude-tap] GROK_DISABLE_AUTOUPDATER=1
+captured
+
+[claude-tap] Grok Build exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/grok/1.0.92/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    6
+  trace:        /home/runner/work/phistory/phistory/captures/grok/1.0.92/variants/default/.tap/2026-11-21/trace_100858.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/grok/1.0.92/variants/default/.tap/2026-11-21/trace_100858.log
+  view:         /home/runner/work/phistory/phistory/captures/grok/1.0.92/variants/default/.tap/2026-11-21/trace_100858.html
+  prompt:       /home/runner/work/phistory/phistory/captures/grok/1.0.92/variants/default/prompt.md
+
+stderr:

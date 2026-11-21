@@ -1,0 +1,72 @@
+stdout:
+[claude-tap] 'openevolve-run' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] openevolve-run target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:33867
+[claude-tap] CA cert: /tmp/phistory-home-q66ujxc1/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/openevolve/4167db4325727138215c55470fdd5cd302f74b66/variants/function-minimization/.tap/2026-11-21/trace_104520.jsonl
+
+[claude-tap] launching openevolve-run: openevolve-run /home/runner/work/phistory/phistory/.phistory-cache/installs/openevolve/4167db4325727138215c55470fdd5cd302f74b66/source/openevolve-4167db4325727138215c55470fdd5cd302f74b66/examples/function_minimization/initial_program.py /home/runner/work/phistory/phistory/.phistory-cache/installs/openevolve/4167db4325727138215c55470fdd5cd302f74b66/source/openevolve-4167db4325727138215c55470fdd5cd302f74b66/examples/function_minimization/evaluator.py --config /home/runner/work/phistory/phistory/.phistory-cache/installs/openevolve/4167db4325727138215c55470fdd5cd302f74b66/source/openevolve-4167db4325727138215c55470fdd5cd302f74b66/examples/function_minimization/config.yaml --iterations 1 --output /tmp/phistory-home-q66ujxc1/evolution
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:33867
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-q66ujxc1/.local/share/claude-tap/ca.pem
+
+Evolution failed: 0/1 iterations produced a candidate program. Last error: No valid diffs found in response
+
+[claude-tap] openevolve-run exited with code 1
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/openevolve/4167db4325727138215c55470fdd5cd302f74b66/variants/function-minimization/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/openevolve/4167db4325727138215c55470fdd5cd302f74b66/variants/function-minimization/.tap/2026-11-21/trace_104520.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/openevolve/4167db4325727138215c55470fdd5cd302f74b66/variants/function-minimization/.tap/2026-11-21/trace_104520.log
+  view:         /home/runner/work/phistory/phistory/captures/openevolve/4167db4325727138215c55470fdd5cd302f74b66/variants/function-minimization/.tap/2026-11-21/trace_104520.html
+  prompt:       /home/runner/work/phistory/phistory/captures/openevolve/4167db4325727138215c55470fdd5cd302f74b66/variants/function-minimization/prompt.md
+
+stderr:
+[claude-tap] warning: 
+2026-11-21 10:45:21,100 - INFO - Logging to /tmp/phistory-home-q66ujxc1/evolution/logs/openevolve_20261121_104521.log
+2026-11-21 10:45:21,106 - INFO - Set random seed to 42 for reproducibility
+2026-11-21 10:45:21,191 - INFO - Initialized OpenAI LLM with model: gemini-2.5-flash-lite
+2026-11-21 10:45:21,193 - INFO - Initialized OpenAI LLM with model: gemini-2.5-flash
+2026-11-21 10:45:21,193 - INFO - Initialized LLM ensemble with models: gemini-2.5-flash-lite (weight: 0.80), gemini-2.5-flash (weight: 0.20)
+2026-11-21 10:45:21,196 - INFO - Initialized LLM ensemble with models: gemini-2.5-flash-lite (weight: 0.80), gemini-2.5-flash (weight: 0.20)
+2026-11-21 10:45:21,197 - INFO - Initialized prompt sampler
+2026-11-21 10:45:21,198 - INFO - Set custom templates: system=evaluator_system_message, user=None
+2026-11-21 10:45:21,198 - INFO - Initialized program database with 0 programs
+2026-11-21 10:45:21,201 - INFO - Successfully loaded evaluation function from /home/runner/work/phistory/phistory/.phistory-cache/installs/openevolve/4167db4325727138215c55470fdd5cd302f74b66/source/openevolve-4167db4325727138215c55470fdd5cd302f74b66/examples/function_minimization/evaluator.py
+2026-11-21 10:45:21,201 - INFO - Initialized evaluator with /home/runner/work/phistory/phistory/.phistory-cache/installs/openevolve/4167db4325727138215c55470fdd5cd302f74b66/source/openevolve-4167db4325727138215c55470fdd5cd302f74b66/examples/function_minimization/evaluator.py
+2026-11-21 10:45:21,201 - INFO - Initialized OpenEvolve with /home/runner/work/phistory/phistory/.phistory-cache/installs/openevolve/4167db4325727138215c55470fdd5cd302f74b66/source/openevolve-4167db4325727138215c55470fdd5cd302f74b66/examples/function_minimization/initial_program.py
+2026-11-21 10:45:21,201 - INFO - Adding initial program to database
+2026-11-21 10:45:21,208 - INFO - Evaluated program 76c9d268-4b6c-47cd-807c-8a7d81467dd7 in 0.01s: runs_successfully=1.0000, value_score=0.9418, distance_score=0.7566, combined_score=1.2148
+2026-11-21 10:45:21,208 - INFO - New MAP-Elites cell occupied in island 0: {'complexity': 5, 'diversity': 0}
+2026-11-21 10:45:21,208 - INFO - Stored artifacts for initial program
+2026-11-21 10:45:21,209 - INFO - Initialized process parallel controller with 3 workers
+2026-11-21 10:45:21,209 - INFO - Set max None tasks per child
+2026-11-21 10:45:21,209 - INFO - Started process pool with 3 processes
+2026-11-21 10:45:21,209 - INFO - Using island-based evolution with 3 islands
+2026-11-21 10:45:21,209 - INFO - Island Status:
+2026-11-21 10:45:21,209 - INFO -  * Island 0: 1 programs, best=1.2148, avg=1.2148, diversity=0.00, gen=0 (best: 76c9d268-4b6c-47cd-807c-8a7d81467dd7)
+2026-11-21 10:45:21,209 - INFO -    Island 1: 0 programs, best=0.0000, avg=0.0000, diversity=0.00, gen=0
+2026-11-21 10:45:21,209 - INFO -    Island 2: 0 programs, best=0.0000, avg=0.0000, diversity=0.00, gen=0
+2026-11-21 10:45:21,209 - INFO - Starting process-based evolution from iteration 1 for 1 iterations (total: 2)
+2026-11-21 10:45:21,219 - INFO - Early stopping disabled
+2026-11-21 10:45:21,225 - INFO - Initialized LLM ensemble with models: gemini-2.5-flash-lite (weight: 0.80), gemini-2.5-flash (weight: 0.20)
+2026-11-21 10:45:21,229 - INFO - Initialized LLM ensemble with models: gemini-2.5-flash-lite (weight: 0.80), gemini-2.5-flash (weight: 0.20)
+2026-11-21 10:45:21,230 - INFO - Set custom templates: system=evaluator_system_message, user=None
+2026-11-21 10:45:21,230 - INFO - Successfully loaded evaluation function from /home/runner/work/phistory/phistory/.phistory-cache/installs/openevolve/4167db4325727138215c55470fdd5cd302f74b66/source/openevolve-4167db4325727138215c55470fdd5cd302f74b66/examples/function_minimization/evaluator.py
+2026-11-21 10:45:21,230 - INFO - Initialized evaluator with /home/runner/work/phistory/phistory/.phistory-cache/installs/openevolve/4167db4325727138215c55470fdd5cd302f74b66/source/openevolve-4167db4325727138215c55470fdd5cd302f74b66/examples/function_minimization/evaluator.py
+2026-11-21 10:45:21,232 - INFO - Sampled model: gemini-2.5-flash-lite
+2026-11-21 10:45:21,232 - WARNING - Skipping seed parameter as Google AI Studio endpoint doesn't support it. Reproducibility may be limited.
+2026-11-21 10:45:21,406 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+2026-11-21 10:45:21,412 - INFO - LLM Token Usage (gemini-2.5-flash-lite): prompt_tokens=0, completion_tokens=0, total_tokens=0
+2026-11-21 10:45:21,412 - WARNING - Iteration 1 error [diff]: No valid diffs found in response | tokens: 0 (prompt: 0, completion: 0)
+2026-11-21 10:45:21,412 - INFO - ✅ Evolution completed - Maximum iterations reached
+2026-11-21 10:45:21,413 - ERROR - ❌ None of the 1 iterations produced a candidate program. Last error: No valid diffs found in response
+2026-11-21 10:45:21,413 - INFO - 📊 Total LLM Token Usage (1 calls): total_tokens=0 (prompt_tokens=0, completion_tokens=0)
+2026-11-21 10:45:21,413 - INFO - Received signal 15, initiating graceful shutdown...
+2026-11-21 10:45:21,413 - INFO - Graceful shutdown requested...
+2026-11-21 10:45:21,413 - INFO - Received signal 15, initiating graceful shutdown...
+2026-11-21 10:45:21,413 - INFO - Received signal 15, initiating graceful shutdown...
+2026-11-21 10:45:21,414 - INFO - Graceful shutdown requested...
+2026-11-21 10:45:21,414 - INFO - Graceful shutdown requested...
+2026-11-21 10:45:21,419 - INFO - Stopped process pool

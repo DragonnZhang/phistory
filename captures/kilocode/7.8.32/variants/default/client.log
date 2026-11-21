@@ -1,0 +1,27 @@
+stdout:
+[claude-tap] 'kilo' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] kilo target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:36935
+[claude-tap] CA cert: /tmp/phistory-home-kh_35589/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/kilocode/7.8.32/variants/default/.tap/2026-11-21/trace_101001.jsonl
+
+[claude-tap] launching kilo: kilo run --format json Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:36935
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-kh_35589/.local/share/claude-tap/ca.pem
+{"type":"step_start","timestamp":1795255807781,"sessionID":"ses_e026a62c6ffewPPzLs66kfogbd","part":{"id":"prt_1fd95af1a001XAjZKRPxjUn6wM","sessionID":"ses_e026a62c6ffewPPzLs66kfogbd","messageID":"msg_1fd95ae72001b9OqZtT4SRkBum","type":"step-start"}}
+{"type":"text","timestamp":1795255807781,"sessionID":"ses_e026a62c6ffewPPzLs66kfogbd","part":{"id":"prt_1fd95af1d001qWa1SKcBKosps8","sessionID":"ses_e026a62c6ffewPPzLs66kfogbd","messageID":"msg_1fd95ae72001b9OqZtT4SRkBum","type":"text","text":"captured","time":{"start":1795255807773,"end":1795255807776}}}
+{"type":"step_finish","timestamp":1795255807791,"sessionID":"ses_e026a62c6ffewPPzLs66kfogbd","part":{"id":"prt_1fd95af2a00155643qLq36dJ6a","sessionID":"ses_e026a62c6ffewPPzLs66kfogbd","messageID":"msg_1fd95ae72001b9OqZtT4SRkBum","type":"step-finish","reason":"stop","time":{"start":1795255807766,"end":1795255807785,"elapsed":19},"cost":0,"tokens":{"input":0,"output":0,"reasoning":0,"cache":{"read":0,"write":0}}}}
+
+[claude-tap] kilo exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/kilocode/7.8.32/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/kilocode/7.8.32/variants/default/.tap/2026-11-21/trace_101001.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/kilocode/7.8.32/variants/default/.tap/2026-11-21/trace_101001.log
+  view:         /home/runner/work/phistory/phistory/captures/kilocode/7.8.32/variants/default/.tap/2026-11-21/trace_101001.html
+  prompt:       /home/runner/work/phistory/phistory/captures/kilocode/7.8.32/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 

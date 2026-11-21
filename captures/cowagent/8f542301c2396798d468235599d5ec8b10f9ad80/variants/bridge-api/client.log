@@ -1,0 +1,66 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:34691
+[claude-tap] CA cert: /tmp/phistory-home-m85i4o3m/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/cowagent/8f542301c2396798d468235599d5ec8b10f9ad80/variants/bridge-api/.tap/2026-11-21/trace_104546.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
+from config import load_config
+load_config()
+from bridge.bridge import Bridge
+from bridge.context import Context, ContextType
+text = "Reply with one short sentence."
+context = Context(ContextType.TEXT, text, kwargs={"session_id": "phistory"})
+print(Bridge().fetch_agent_reply(text, context))
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:34691
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-m85i4o3m/.local/share/claude-tap/ca.pem
+[INFO][2026-11-21 10:45:46][config.py:591] -   ____                _                    _   
+[INFO][2026-11-21 10:45:46][config.py:592] -  / ___|_____      __ / \   __ _  ___ _ __ | |_ 
+[INFO][2026-11-21 10:45:46][config.py:593] - | |   / _ \ \ /\ / // _ \ / _` |/ _ \ '_ \| __|
+[INFO][2026-11-21 10:45:46][config.py:594] - | |__| (_) \ V  V // ___ \ (_| |  __/ | | | |_ 
+[INFO][2026-11-21 10:45:46][config.py:595] -  \____\___/ \_/\_//_/   \_\__, |\___|_| |_|\__|
+[INFO][2026-11-21 10:45:46][config.py:596] -                           |___/                 
+[INFO][2026-11-21 10:45:46][config.py:597] - 
+[INFO][2026-11-21 10:45:46][config.py:721] - [INIT] load config: {'cow_lang': 'auto', 'channel_type': 'web', 'model': 'deepseek-flash', 'deepseek_api_key': 'phi*****key', 'deepseek_api_base': 'https://api.deepseek.com/v1', 'qianfan_api_key': '', 'qianfan_api_base': 'https://qianfan.baidubce.com/v2', 'minimax_api_key': '', 'zhipu_ai_api_key': '', 'ark_api_key': '', 'moonshot_api_key': '', 'dashscope_api_key': '', 'claude_api_key': '', 'claude_api_base': 'https://api.anthropic.com/v1', 'open_ai_api_key': '', 'open_ai_api_base': 'https://api.openai.com/v1', 'gemini_api_key': '', 'gemini_api_base': 'https://generativelanguage.googleapis.com', 'cowagent_api_key': '', 'cowagent_api_base': '', 'voice_to_text': '', 'text_to_voice': '', 'voice_reply_voice': False, 'speech_recognition': True, 'group_speech_recognition': False, 'use_linkai': False, 'linkai_api_key': '', 'linkai_app_code': '', 'feishu_app_id': '', 'feishu_app_secret': '', 'feishu_stream_reply': True, 'dingtalk_client_id': '', 'dingtalk_client_secret': '', 'wecom_bot_id': '', 'wecom_bot_secret': '', 'web_host': '', 'web_password': '', 'external_api_enabled': False, 'external_api_token': '', 'agent': True, 'agent_max_context_tokens': 200000, 'agent_max_context_turns': 30, 'agent_max_steps': 100, 'agent_permission_mode': 'full-access', 'subagent': {'enabled': True, 'max_concurrent': 3}, 'enable_thinking': False, 'reasoning_effort': 'high', 'knowledge': True, 'self_evolution_enabled': True, 'mcp_tool_retrieval_enabled': False}
+[INFO][2026-11-21 10:45:46][config.py:724] - [INIT] ========================================
+[INFO][2026-11-21 10:45:46][config.py:725] - [INIT] System Initialization
+[INFO][2026-11-21 10:45:46][config.py:726] - [INIT] ========================================
+[INFO][2026-11-21 10:45:46][config.py:727] - [INIT] Language: en
+[INFO][2026-11-21 10:45:46][config.py:728] - [INIT] Channel: web
+[INFO][2026-11-21 10:45:46][config.py:729] - [INIT] Model: deepseek-flash
+[INFO][2026-11-21 10:45:46][config.py:735] - [INIT] Mode: Agent (workspace: /tmp/phistory-home-m85i4o3m/cow)
+[INFO][2026-11-21 10:45:46][config.py:746] - [INIT] Debug: False
+[INFO][2026-11-21 10:45:46][config.py:747] - [INIT] ========================================
+[INFO][2026-11-21 10:45:46][config.py:771] - [INIT] Synced 6 config values to environment variables
+[INFO][2026-11-21 10:45:46][scheduler_service.py:114] - [Scheduler] Scheduler loop started
+[INFO][2026-11-21 10:45:46][integration.py:311] - [Scheduler] Global service initialized, store=/tmp/phistory-home-m85i4o3m/cow/scheduler/tasks.json
+[INFO][2026-11-21 10:45:46][trigger.py:106] - [Evolution] Idle trigger started
+[INFO][2026-11-21 10:45:47][agent_initializer.py:1274] - [AgentInitializer] Synced API keys from config.json to .env
+[INFO][2026-11-21 10:45:47][manager.py:108] - [MemoryManager] No embedding provider; memory will use keyword search only
+[INFO][2026-11-21 10:45:47][conversation_store.py:2624] - [ConversationStore] Migrated: added messages.run_id column
+[INFO][2026-11-21 10:45:47][agent_initializer.py:1299] - [DailyFlush] Next flush at 2026-11-21 23:53:56 (in 13.1h)
+[INFO][2026-11-21 10:45:47][agent_stream.py:1117] - 🤖 deepseek-flash | 👤 Reply with one short sentence.
+[INFO][2026-11-21 10:45:47][agent_stream.py:1133] - [Agent] Turn 1
+[INFO][2026-11-21 10:45:47][agent_stream.py:1770] - Sending 1 messages (1 turns) to LLM
+[INFO][2026-11-21 10:45:47][agent_stream.py:2244] - [Usage] model=deepseek-flash did NOT return token usage this turn — its streaming path needs stream_options.include_usage or a trailing usage chunk; context indicator falls back to the char estimate
+[INFO][2026-11-21 10:45:47][agent_stream.py:1211] - 💭 captured
+[INFO][2026-11-21 10:45:47][agent_stream.py:1517] - [Agent] 🏁 Done (1 turns)
+Reply(type=TEXT, content=captured)
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/cowagent/8f542301c2396798d468235599d5ec8b10f9ad80/variants/bridge-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/cowagent/8f542301c2396798d468235599d5ec8b10f9ad80/variants/bridge-api/.tap/2026-11-21/trace_104546.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/cowagent/8f542301c2396798d468235599d5ec8b10f9ad80/variants/bridge-api/.tap/2026-11-21/trace_104546.log
+  view:         /home/runner/work/phistory/phistory/captures/cowagent/8f542301c2396798d468235599d5ec8b10f9ad80/variants/bridge-api/.tap/2026-11-21/trace_104546.html
+  prompt:       /home/runner/work/phistory/phistory/captures/cowagent/8f542301c2396798d468235599d5ec8b10f9ad80/variants/bridge-api/prompt.md
+
+stderr:
+[claude-tap] warning: 

@@ -1,0 +1,30 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:41727
+[claude-tap] CA cert: /tmp/phistory-home-ddcogh3x/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/openagents/b125fa554d71705a90885bf0676fa9b54a917166/variants/plain-microcoder/.tap/2026-11-21/trace_104327.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+os.environ["CURL_CA_BUNDLE"] = os.environ["SSL_CERT_FILE"]
+os.execv(str(Path(os.environ["PHISTORY_HOME"]) / "openagents/task"), ["openagents-native-microcoder-task"])
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:41727
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-ddcogh3x/.local/share/claude-tap/ca.pem
+native Microcoder ended
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/openagents/b125fa554d71705a90885bf0676fa9b54a917166/variants/plain-microcoder/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/openagents/b125fa554d71705a90885bf0676fa9b54a917166/variants/plain-microcoder/.tap/2026-11-21/trace_104327.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/openagents/b125fa554d71705a90885bf0676fa9b54a917166/variants/plain-microcoder/.tap/2026-11-21/trace_104327.log
+  view:         /home/runner/work/phistory/phistory/captures/openagents/b125fa554d71705a90885bf0676fa9b54a917166/variants/plain-microcoder/.tap/2026-11-21/trace_104327.html
+  prompt:       /home/runner/work/phistory/phistory/captures/openagents/b125fa554d71705a90885bf0676fa9b54a917166/variants/plain-microcoder/prompt.md
+
+stderr:

@@ -1,0 +1,52 @@
+{
+  "agent_id": "minimax-code",
+  "agent": "MiniMax Code",
+  "package": "MiniMax Code desktop app",
+  "version": "3.1.17",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "minimax-code-capture",
+    "tool_count": 23
+  },
+  "published_at": "2026-11-20T10:38:50.532Z",
+  "tarball_url": "https://file.cdn.minimax.io/public/minimax-agent-prod/release/MiniMax%20Code-3.1.17-arm64-mac.zip",
+  "binary_version": "MiniMax Code 3.1.17",
+  "captured_at": "2026-11-21T10:09:14.679426+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "44892721599",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/44892721599"
+  },
+  "tap_client": "minimax-code",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 15.699,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "minimax-code",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--"
+  ]
+}
