@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-22 05:11 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-22 05:14 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,12 +92,12 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-22 05:11 UTC
+Last capture update: 2026-11-22 05:14 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
 | Claude Code | [2.1.330 - 2026-11-20](captures/claude-code/2.1.330/variants/default/prompt.md) | 476 | 3914 | 2026-11-21 10:08 UTC |
-| Codex CLI | [0.171.0 - 2026-11-20](captures/codex/0.171.0/variants/default/prompt.md) | 116 | 582 | 2026-11-20 10:24 UTC |
+| Codex CLI | [0.171.0 - 2026-11-20](captures/codex/0.171.0/variants/default/prompt.md) | 116 | 586 | 2026-11-20 10:24 UTC |
 | DeepSeek Harness | [0.2.2-rc.5 - 2026-11-18](captures/dsh/0.2.2-rc.5/variants/default/prompt.md) | 18 | 99 | 2026-11-19 10:47 UTC |
 | Antigravity CLI | [1.5.14 - 2026-11-21](captures/antigravity/1.5.14/variants/default/prompt.md) | 89 | 89 | 2026-11-21 10:08 UTC |
 | Grok Build | [1.0.92 - 2026-11-20](captures/grok/1.0.92/variants/default/prompt.md) | 149 | 149 | 2026-11-21 10:08 UTC |
