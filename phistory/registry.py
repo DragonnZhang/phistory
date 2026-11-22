@@ -397,6 +397,38 @@ CODEX = AgentSpec(
             dimensions={"model": "qwen3-coder-plus", "model_family": "non-official"},
         ),
         _variant(
+            "gpt-6.2-astra",
+            "GPT-6.2 Astra",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-6.2-astra",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-6.2-astra"},
+            min_version="0.170.0",
+        ),
+        _variant(
+            "gpt-6.2-sol",
+            "GPT-6.2 Sol",
+            (
+                "--no-yolo",
+                "--",
+                "exec",
+                "Reply with one short sentence.",
+                "--model",
+                "gpt-6.2-sol",
+                "--skip-git-repo-check",
+                "--json",
+            ),
+            dimensions={"model": "gpt-6.2-sol"},
+            min_version="0.170.0",
+        ),
+        _variant(
             "gpt-6.1-sol",
             "GPT-6.1 Sol",
             (

@@ -145,6 +145,8 @@ def test_get_agent_has_capture_contract():
     assert "--model" not in agent.default_variant.run_args
     assert [(variant.id, variant.dimensions) for variant in agent.variants] == [
         ("non-official", {"model": "qwen3-coder-plus", "model_family": "non-official"}),
+        ("gpt-6.2-astra", {"model": "gpt-6.2-astra"}),
+        ("gpt-6.2-sol", {"model": "gpt-6.2-sol"}),
         ("gpt-6.1-sol", {"model": "gpt-6.1-sol"}),
         ("gpt-6.1-terra", {"model": "gpt-6.1-terra"}),
         ("gpt-6-astra", {"model": "gpt-6-astra"}),
@@ -157,6 +159,8 @@ def test_get_agent_has_capture_contract():
     ]
     assert {variant.id: variant.min_version for variant in agent.variants} == {
         "non-official": None,
+        "gpt-6.2-astra": "0.170.0",
+        "gpt-6.2-sol": "0.170.0",
         "gpt-6.1-sol": "0.159.1",
         "gpt-6.1-terra": "0.165.0",
         "gpt-6-astra": "0.153.1",
