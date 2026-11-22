@@ -1,0 +1,34 @@
+stdout:
+[claude-tap] 'nanobot' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] nanobot target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:41217
+[claude-tap] CA cert: /tmp/phistory-home-vde2cnb8/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/nanobot/0.4.2/variants/default/.tap/2026-11-22/trace_101117.jsonl
+
+[claude-tap] launching nanobot: nanobot agent --message Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:41217
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-vde2cnb8/.local/share/claude-tap/ca.pem
+  Created SOUL.md
+  Created HEARTBEAT.md
+  Created AGENTS.md
+  Created USER.md
+  Created memory/MEMORY.md
+  Created prompts/README.md
+  Created memory/history.jsonl
+
+🐈 nanobot
+captured                                                                        
+
+[claude-tap] nanobot exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/nanobot/0.4.2/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/nanobot/0.4.2/variants/default/.tap/2026-11-22/trace_101117.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/nanobot/0.4.2/variants/default/.tap/2026-11-22/trace_101117.log
+  view:         /home/runner/work/phistory/phistory/captures/nanobot/0.4.2/variants/default/.tap/2026-11-22/trace_101117.html
+  prompt:       /home/runner/work/phistory/phistory/captures/nanobot/0.4.2/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 

@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-22T05:14:16.817253Z",
+  "updated_at": "2026-11-22T10:33:46.781559Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -141,11 +141,11 @@
     {
       "agent_id": "omp",
       "agent": "Oh My Pi",
-      "latest_version": "19.0.1",
-      "latest_published_at": "2026-11-19T23:04:59.756Z",
-      "latest_captured_at": "2026-11-20T10:25:46.530019+00:00",
-      "versions": 147,
-      "snapshots": 147
+      "latest_version": "19.1.0",
+      "latest_published_at": "2026-11-21T14:42:15.434Z",
+      "latest_captured_at": "2026-11-22T10:11:10.329073+00:00",
+      "versions": 148,
+      "snapshots": 148
     },
     {
       "agent_id": "gemini-cli",
@@ -186,11 +186,11 @@
     {
       "agent_id": "nanobot",
       "agent": "nanobot",
-      "latest_version": "0.4.1",
-      "latest_published_at": "2026-11-06T16:14:08.091834Z",
-      "latest_captured_at": "2026-11-17T11:59:20.793866+00:00",
-      "versions": 1,
-      "snapshots": 1
+      "latest_version": "0.4.2",
+      "latest_published_at": "2026-11-21T13:22:24.111683Z",
+      "latest_captured_at": "2026-11-22T10:11:20.837833+00:00",
+      "versions": 2,
+      "snapshots": 2
     },
     {
       "agent_id": "bub",
@@ -204,20 +204,20 @@
     {
       "agent_id": "jcode",
       "agent": "Jcode",
-      "latest_version": "v1.0.1",
-      "latest_published_at": "2026-11-18T13:08:58Z",
-      "latest_captured_at": "2026-11-19T10:48:55.303483+00:00",
-      "versions": 2,
-      "snapshots": 2
+      "latest_version": "v1.0.3",
+      "latest_published_at": "2026-11-22T04:03:41Z",
+      "latest_captured_at": "2026-11-22T10:11:25.877901+00:00",
+      "versions": 3,
+      "snapshots": 3
     },
     {
       "agent_id": "pi-rust",
       "agent": "pi-rust",
-      "latest_version": "0.27.0",
-      "latest_published_at": "2026-11-21T00:41:40.792Z",
-      "latest_captured_at": "2026-11-21T10:09:51.884213+00:00",
-      "versions": 5,
-      "snapshots": 5
+      "latest_version": "0.27.1",
+      "latest_published_at": "2026-11-22T07:07:05.356Z",
+      "latest_captured_at": "2026-11-22T10:11:28.456091+00:00",
+      "versions": 6,
+      "snapshots": 6
     },
     {
       "agent_id": "codewhale",
@@ -486,8 +486,8 @@
       "latest_version": "539607182cc4070ddcb9cf8e75fa71d0fa6eacc8",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-20T10:45:05.459991+00:00",
-      "versions": 3,
-      "snapshots": 3
+      "versions": 4,
+      "snapshots": 4
     },
     {
       "agent_id": "autogpt",
@@ -528,11 +528,11 @@
     {
       "agent_id": "agentlink",
       "agent": "AgentLink",
-      "latest_version": "5e6450f0a8f420991ddff5c4c17f921c5f40790c",
+      "latest_version": "3968dd5f4205973ddf3ab12e556bf58378b053b3",
       "latest_published_at": "",
-      "latest_captured_at": "2026-11-17T18:39:07.861754+00:00",
-      "versions": 2,
-      "snapshots": 2
+      "latest_captured_at": "2026-11-22T10:24:40.604245+00:00",
+      "versions": 3,
+      "snapshots": 3
     },
     {
       "agent_id": "ufo",
@@ -603,8 +603,8 @@
       "latest_version": "05287e93e557078638219a9ed9ffc40d7a39772a",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-21T10:43:47.585509+00:00",
-      "versions": 2,
-      "snapshots": 2
+      "versions": 3,
+      "snapshots": 3
     },
     {
       "agent_id": "devopsgpt",
@@ -738,8 +738,8 @@
       "latest_version": "4167db4325727138215c55470fdd5cd302f74b66",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-21T10:45:21.540710+00:00",
-      "versions": 5,
-      "snapshots": 5
+      "versions": 6,
+      "snapshots": 6
     },
     {
       "agent_id": "deer-flow",
@@ -747,8 +747,8 @@
       "latest_version": "585abb979fbc483485c0fc53ed0e571ab7eebadb",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-19T11:15:41.687029+00:00",
-      "versions": 5,
-      "snapshots": 5
+      "versions": 6,
+      "snapshots": 6
     },
     {
       "agent_id": "omni-rewriter",
@@ -819,8 +819,8 @@
       "latest_version": "51ffe5a8df75295a5c063d5bc32a055c643a2599",
       "latest_published_at": "",
       "latest_captured_at": "2026-11-20T10:58:22.772246+00:00",
-      "versions": 4,
-      "snapshots": 4
+      "versions": 5,
+      "snapshots": 5
     }
   ],
   "captures": [
@@ -115969,6 +115969,24 @@
     {
       "agent_id": "omp",
       "agent": "Oh My Pi",
+      "version": "19.1.0",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 11
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-21T14:42:15.434Z",
+      "captured_at": "2026-11-22T10:11:10.329073+00:00",
+      "prompt": "captures/omp/19.1.0/variants/default/prompt.md",
+      "trace": "captures/omp/19.1.0/variants/default/trace.jsonl",
+      "meta": "captures/omp/19.1.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "omp",
+      "agent": "Oh My Pi",
       "version": "19.0.1",
       "variant_id": "default",
       "variant_label": "Default",
@@ -118797,6 +118815,24 @@
     {
       "agent_id": "nanobot",
       "agent": "nanobot",
+      "version": "0.4.2",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "claude-opus-4-5",
+        "tool_count": 21
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-21T13:22:24.111683Z",
+      "captured_at": "2026-11-22T10:11:20.837833+00:00",
+      "prompt": "captures/nanobot/0.4.2/variants/default/prompt.md",
+      "trace": "captures/nanobot/0.4.2/variants/default/trace.jsonl",
+      "meta": "captures/nanobot/0.4.2/variants/default/meta.json"
+    },
+    {
+      "agent_id": "nanobot",
+      "agent": "nanobot",
       "version": "0.4.1",
       "variant_id": "default",
       "variant_label": "Default",
@@ -118833,6 +118869,24 @@
     {
       "agent_id": "jcode",
       "agent": "Jcode",
+      "version": "v1.0.3",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "claude-opus-5-5",
+        "tool_count": 27
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-22T04:03:41Z",
+      "captured_at": "2026-11-22T10:11:25.877901+00:00",
+      "prompt": "captures/jcode/v1.0.3/variants/default/prompt.md",
+      "trace": "captures/jcode/v1.0.3/variants/default/trace.jsonl",
+      "meta": "captures/jcode/v1.0.3/variants/default/meta.json"
+    },
+    {
+      "agent_id": "jcode",
+      "agent": "Jcode",
       "version": "v1.0.1",
       "variant_id": "default",
       "variant_label": "Default",
@@ -118865,6 +118919,26 @@
       "prompt": "captures/jcode/v1.0.0/variants/default/prompt.md",
       "trace": "captures/jcode/v1.0.0/variants/default/trace.jsonl",
       "meta": "captures/jcode/v1.0.0/variants/default/meta.json"
+    },
+    {
+      "agent_id": "pi-rust",
+      "agent": "pi-rust",
+      "version": "0.27.1",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {
+        "transport": "HTTP capture-only proxy; native Anthropic provider/model"
+      },
+      "observed": {
+        "model": "claude-opus-4-8",
+        "tool_count": 6
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-22T07:07:05.356Z",
+      "captured_at": "2026-11-22T10:11:28.456091+00:00",
+      "prompt": "captures/pi-rust/0.27.1/variants/default/prompt.md",
+      "trace": "captures/pi-rust/0.27.1/variants/default/trace.jsonl",
+      "meta": "captures/pi-rust/0.27.1/variants/default/meta.json"
     },
     {
       "agent_id": "pi-rust",
@@ -120091,6 +120165,31 @@
     {
       "agent_id": "dark-moon",
       "agent": "DarkMoon",
+      "version": "451ca1198219662af6188b8f53dd0c44e1a732f2",
+      "variant_id": "native-compatible-pentest",
+      "variant_label": "Native full stack / configured pentest role",
+      "variant_dimensions": {
+        "entry": "native darkmoon.sh headless wrapper; complete two-container stack",
+        "role": "native pentest primary agent",
+        "model": "configured compatible openai/gpt-4.1",
+        "tools": "all 13 native MCP functions plus host tools",
+        "privacy": "actual persistent MCP tokenizer/socket; native plugins",
+        "provenance": "published image digests; main role/privacy/server file hashes verified"
+      },
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 23
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-22T10:23:31.502733+00:00",
+      "prompt": "captures/dark-moon/451ca1198219662af6188b8f53dd0c44e1a732f2/variants/native-compatible-pentest/prompt.md",
+      "trace": "captures/dark-moon/451ca1198219662af6188b8f53dd0c44e1a732f2/variants/native-compatible-pentest/trace.jsonl",
+      "meta": "captures/dark-moon/451ca1198219662af6188b8f53dd0c44e1a732f2/variants/native-compatible-pentest/meta.json"
+    },
+    {
+      "agent_id": "dark-moon",
+      "agent": "DarkMoon",
       "version": "edfe9cb12a263036a0c3dc1af604713e8197cce9",
       "variant_id": "native-compatible-pentest",
       "variant_label": "Native full stack / configured pentest role",
@@ -120254,6 +120353,30 @@
       "prompt": "captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/prompt.md",
       "trace": "captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/trace.jsonl",
       "meta": "captures/dyad/56cc3964a8983296a1f49d511cb8afde1719c6f3/variants/native-electron-basic-agent/meta.json"
+    },
+    {
+      "agent_id": "agentlink",
+      "agent": "AgentLink",
+      "version": "3968dd5f4205973ddf3ab12e556bf58378b053b3",
+      "variant_id": "native-tui-openai",
+      "variant_label": "Native TUI / configured OpenAI",
+      "variant_dimensions": {
+        "entry": "source-built CLI TUI / native WorkspaceHost",
+        "model": "configured direct OpenAI gpt-5.6-sol",
+        "provider_config": "native API-only model inventory; HTTP transport; no Codex OAuth lane",
+        "terminal": "owned POSIX PTY 100x30; actual Enter after native ready prompt",
+        "scope": "initial CLI task; default Codex OAuth not claimed"
+      },
+      "observed": {
+        "model": "gpt-5.6-sol",
+        "tool_count": 28
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-22T10:24:40.604245+00:00",
+      "prompt": "captures/agentlink/3968dd5f4205973ddf3ab12e556bf58378b053b3/variants/native-tui-openai/prompt.md",
+      "trace": "captures/agentlink/3968dd5f4205973ddf3ab12e556bf58378b053b3/variants/native-tui-openai/trace.jsonl",
+      "meta": "captures/agentlink/3968dd5f4205973ddf3ab12e556bf58378b053b3/variants/native-tui-openai/meta.json"
     },
     {
       "agent_id": "agentlink",
@@ -120731,6 +120854,30 @@
       "prompt": "captures/agent-s/05287e93e557078638219a9ed9ffc40d7a39772a/variants/s3-linux-desktop/prompt.md",
       "trace": "captures/agent-s/05287e93e557078638219a9ed9ffc40d7a39772a/variants/s3-linux-desktop/trace.jsonl",
       "meta": "captures/agent-s/05287e93e557078638219a9ed9ffc40d7a39772a/variants/s3-linux-desktop/meta.json"
+    },
+    {
+      "agent_id": "agent-s",
+      "agent": "Agent-S S3",
+      "version": "3e33403aa9c21b7926fd19a9ae730e2297e8d42f",
+      "variant_id": "s3-linux-desktop",
+      "variant_label": "Native S3 first action / owned Linux screenshot",
+      "variant_dimensions": {
+        "entry": "native agent_s --task",
+        "model": "native OpenAI gpt-5-2025-08-07",
+        "display": "actual owned Xvfb 1280x800",
+        "grounding": "configured capture-only UI-TARS HuggingFace endpoint; no live deployment claimed",
+        "reflection": "native enabled",
+        "scope": "first main action request before execution"
+      },
+      "observed": {
+        "model": "gpt-5-2025-08-07"
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-22T10:33:08.100849+00:00",
+      "prompt": "captures/agent-s/3e33403aa9c21b7926fd19a9ae730e2297e8d42f/variants/s3-linux-desktop/prompt.md",
+      "trace": "captures/agent-s/3e33403aa9c21b7926fd19a9ae730e2297e8d42f/variants/s3-linux-desktop/trace.jsonl",
+      "meta": "captures/agent-s/3e33403aa9c21b7926fd19a9ae730e2297e8d42f/variants/s3-linux-desktop/meta.json"
     },
     {
       "agent_id": "agent-s",
@@ -121235,6 +121382,27 @@
     {
       "agent_id": "openevolve",
       "agent": "OpenEvolve",
+      "version": "3ea5d19d5a9a4198d5e8295f1e58411b84aabbd7",
+      "variant_id": "function-minimization",
+      "variant_label": "Official function-minimization example",
+      "variant_dimensions": {
+        "entry": "official example / native controller",
+        "iterations": "1",
+        "model": "native weighted Gemini ensemble"
+      },
+      "observed": {
+        "model": "gemini-2.5-flash-lite"
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-22T10:33:19.389476+00:00",
+      "prompt": "captures/openevolve/3ea5d19d5a9a4198d5e8295f1e58411b84aabbd7/variants/function-minimization/prompt.md",
+      "trace": "captures/openevolve/3ea5d19d5a9a4198d5e8295f1e58411b84aabbd7/variants/function-minimization/trace.jsonl",
+      "meta": "captures/openevolve/3ea5d19d5a9a4198d5e8295f1e58411b84aabbd7/variants/function-minimization/meta.json"
+    },
+    {
+      "agent_id": "openevolve",
+      "agent": "OpenEvolve",
       "version": "ac5f8f5e39b7bffb707def97039076bb2135e992",
       "variant_id": "function-minimization",
       "variant_label": "Official function-minimization example",
@@ -121317,6 +121485,28 @@
       "prompt": "captures/deer-flow/92d884b6d7f57e066c66e700f3c8d733eb36ff98/variants/embedded-openai/prompt.md",
       "trace": "captures/deer-flow/92d884b6d7f57e066c66e700f3c8d733eb36ff98/variants/embedded-openai/trace.jsonl",
       "meta": "captures/deer-flow/92d884b6d7f57e066c66e700f3c8d733eb36ff98/variants/embedded-openai/meta.json"
+    },
+    {
+      "agent_id": "deer-flow",
+      "agent": "DeerFlow",
+      "version": "53e6042c290dd37759efc7535fa9fcef02ad64d3",
+      "variant_id": "embedded-openai",
+      "variant_label": "Configured embedded SDK · OpenAI",
+      "variant_dimensions": {
+        "entry": "DeerFlowClient.chat",
+        "model": "gpt-4.1",
+        "config": "complete official example with one enabled model"
+      },
+      "observed": {
+        "model": "gpt-4.1",
+        "tool_count": 16
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-22T10:33:38.849036+00:00",
+      "prompt": "captures/deer-flow/53e6042c290dd37759efc7535fa9fcef02ad64d3/variants/embedded-openai/prompt.md",
+      "trace": "captures/deer-flow/53e6042c290dd37759efc7535fa9fcef02ad64d3/variants/embedded-openai/trace.jsonl",
+      "meta": "captures/deer-flow/53e6042c290dd37759efc7535fa9fcef02ad64d3/variants/embedded-openai/meta.json"
     },
     {
       "agent_id": "deer-flow",
@@ -121663,6 +121853,28 @@
       "prompt": "captures/cowagent/bcc36de52ca17b45d1132f388a04b7a456bd3f95/variants/bridge-api/prompt.md",
       "trace": "captures/cowagent/bcc36de52ca17b45d1132f388a04b7a456bd3f95/variants/bridge-api/trace.jsonl",
       "meta": "captures/cowagent/bcc36de52ca17b45d1132f388a04b7a456bd3f95/variants/bridge-api/meta.json"
+    },
+    {
+      "agent_id": "cowagent",
+      "agent": "CowAgent",
+      "version": "a37cac80c8ab47404aebe9fd4d3a9bf8bd47e9d1",
+      "variant_id": "bridge-api",
+      "variant_label": "Native Bridge API · default agent profile",
+      "variant_dimensions": {
+        "entry": "Bridge.fetch_agent_reply",
+        "model": "native DeepSeek default",
+        "config": "complete config template with fake credential"
+      },
+      "observed": {
+        "model": "deepseek-flash",
+        "tool_count": 18
+      },
+      "capture_status": "captured",
+      "published_at": "",
+      "captured_at": "2026-11-22T10:33:46.781559+00:00",
+      "prompt": "captures/cowagent/a37cac80c8ab47404aebe9fd4d3a9bf8bd47e9d1/variants/bridge-api/prompt.md",
+      "trace": "captures/cowagent/a37cac80c8ab47404aebe9fd4d3a9bf8bd47e9d1/variants/bridge-api/trace.jsonl",
+      "meta": "captures/cowagent/a37cac80c8ab47404aebe9fd4d3a9bf8bd47e9d1/variants/bridge-api/meta.json"
     }
   ]
 }
