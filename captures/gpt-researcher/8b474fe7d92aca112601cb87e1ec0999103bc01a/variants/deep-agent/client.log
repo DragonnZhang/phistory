@@ -1,0 +1,37 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:45051
+[claude-tap] CA cert: /tmp/phistory-home-5ihhuxt5/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/gpt-researcher/8b474fe7d92aca112601cb87e1ec0999103bc01a/variants/deep-agent/.tap/2026-11-23/trace_113944.jsonl
+
+[claude-tap] launching python: python -c 
+import asyncio
+import os
+os.chdir(os.environ["PHISTORY_SOURCE_ROOT"])
+from deep_agents.main import run_research_task
+task = "Reply with one short sentence."
+asyncio.run(run_research_task(task, {
+    "query": task, "max_sections": 3, "source": "web",
+    "follow_guidelines": False, "verbose": False,
+}))
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:45051
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-5ihhuxt5/.local/share/claude-tap/ca.pem
+Output directory: /tmp/phistory-home-5ihhuxt5/source/deep_agents/outputs/run_22181770
+
+No report.md was produced - check the run output above.
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/gpt-researcher/8b474fe7d92aca112601cb87e1ec0999103bc01a/variants/deep-agent/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/gpt-researcher/8b474fe7d92aca112601cb87e1ec0999103bc01a/variants/deep-agent/.tap/2026-11-23/trace_113944.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/gpt-researcher/8b474fe7d92aca112601cb87e1ec0999103bc01a/variants/deep-agent/.tap/2026-11-23/trace_113944.log
+  view:         /home/runner/work/phistory/phistory/captures/gpt-researcher/8b474fe7d92aca112601cb87e1ec0999103bc01a/variants/deep-agent/.tap/2026-11-23/trace_113944.html
+  prompt:       /home/runner/work/phistory/phistory/captures/gpt-researcher/8b474fe7d92aca112601cb87e1ec0999103bc01a/variants/deep-agent/prompt.md
+
+stderr:
+[claude-tap] warning: 

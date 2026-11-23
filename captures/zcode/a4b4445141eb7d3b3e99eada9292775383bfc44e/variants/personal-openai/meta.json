@@ -1,0 +1,91 @@
+{
+  "agent_id": "zcode",
+  "agent": "ZCode",
+  "package": "zai-org/ZCode",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": [
+      [
+        "npx",
+        "--yes",
+        "pnpm@10.33.2",
+        "install",
+        "--frozen-lockfile"
+      ],
+      [
+        "npx",
+        "--yes",
+        "pnpm@10.33.2",
+        "--filter",
+        "@zcode/cli...",
+        "build"
+      ]
+    ]
+  },
+  "version": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+  "variant": {
+    "id": "personal-openai",
+    "label": "Source CLI · configured personal OpenAI",
+    "dimensions": {
+      "entry": "official Linux source CLI --prompt",
+      "model": "gpt-4.1",
+      "features": "native defaults",
+      "permission_mode": "native prompt yolo"
+    }
+  },
+  "requested": {
+    "entry": "official Linux source CLI --prompt",
+    "model": "gpt-4.1",
+    "features": "native defaults",
+    "permission_mode": "native prompt yolo"
+  },
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 24
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/zai-org/ZCode/archive/a4b4445141eb7d3b3e99eada9292775383bfc44e.tar.gz",
+  "binary_version": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+  "captured_at": "2026-11-23T11:39:33.860336+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45162168971",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45162168971"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 137.5,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nfrom pathlib import Path\nos.environ[\"ZCODE_HTTP_PROXY\"] = os.environ[\"HTTP_PROXY\"]\nos.environ[\"ZCODE_AGENT_CA_CERT\"] = os.environ[\"SSL_CERT_FILE\"]\npath = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"]) / \"apps/zcode-cli/packages/cli/dist/zcode.cjs\"\nos.execvp(\"node\", [\"node\", str(path), \"--prompt\", \"Reply with one short sentence.\", \"--cwd\", str(Path.cwd()), \"--json\"])\n"
+  ]
+}

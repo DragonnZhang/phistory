@@ -1,0 +1,153 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:40679
+[claude-tap] CA cert: /tmp/phistory-home-acrpf_f9/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/cuga-agent/0.4.6/variants/hello-tools-api/.tap/2026-11-23/trace_111940.jsonl
+
+[claude-tap] launching python: python /tmp/phistory-home-acrpf_f9/cuga-hello-tools.py
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:40679
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-acrpf_f9/.local/share/claude-tap/ca.pem
+📁 Using file system assets (embedded assets disabled)
+captured
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/cuga-agent/0.4.6/variants/hello-tools-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    4
+  trace:        /home/runner/work/phistory/phistory/captures/cuga-agent/0.4.6/variants/hello-tools-api/.tap/2026-11-23/trace_111940.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/cuga-agent/0.4.6/variants/hello-tools-api/.tap/2026-11-23/trace_111940.log
+  view:         /home/runner/work/phistory/phistory/captures/cuga-agent/0.4.6/variants/hello-tools-api/.tap/2026-11-23/trace_111940.html
+  prompt:       /home/runner/work/phistory/phistory/captures/cuga-agent/0.4.6/variants/hello-tools-api/prompt.md
+
+stderr:
+[claude-tap] warning: 
+[32m2026-11-23 11:19:42.917[0m | [1mINFO    [0m | [36mcuga.config[0m:[36m<module>[0m:[36m306[0m - [1mRunning cuga in *balanced* mode[0m
+[32m2026-11-23 11:19:42.917[0m | [33m[1mWARNING [0m | [36mcuga.config[0m:[36m<module>[0m:[36m310[0m - [33m[1mtracker disabled - logs and trajectory data will not be saved[0m
+[32m2026-11-23 11:19:42.917[0m | [1mINFO    [0m | [36mcuga.config[0m:[36m<module>[0m:[36m318[0m - [1msandbox_mode='native' requires macOS; current platform is 'linux'. Falling back to sandbox_mode='local'.[0m
+[32m2026-11-23 11:19:42.917[0m | [1mINFO    [0m | [36mcuga.config[0m:[36m<module>[0m:[36m331[0m - [1mloaded llm settings *settings.openai.toml*[0m
+[32m2026-11-23 11:19:42.917[0m | [1mINFO    [0m | [36mcuga.config[0m:[36m<module>[0m:[36m337[0m - [1mModels config path: /home/runner/work/phistory/phistory/.phistory-cache/installs/cuga-agent/0.4.6/lib/python3.12/site-packages/cuga/configurations/models/settings.openai.toml[0m
+[32m2026-11-23 11:19:42.917[0m | [1mINFO    [0m | [36mcuga.config[0m:[36m<module>[0m:[36m338[0m - [1mMode config path:   /home/runner/work/phistory/phistory/.phistory-cache/installs/cuga-agent/0.4.6/lib/python3.12/site-packages/cuga/configurations/modes/balanced.toml[0m
+[32m2026-11-23 11:19:45.220[0m | [33m[1mWARNING [0m | [36mcuga.backend.activity_tracker.tracker[0m:[36m<module>[0m:[36m29[0m - [33m[1mIgnoring agent analytics[0m
+[32m2026-11-23 11:19:46.658[0m | [1mINFO    [0m | [36mcuga.sdk[0m:[36m__init__[0m:[36m2189[0m - [1mCreated DirectLangChainToolsProvider with 2 tools[0m
+[32m2026-11-23 11:19:47.153[0m | [1mINFO    [0m | [36mcuga.backend.llm.models[0m:[36m_get_model_name[0m:[36m689[0m - [1mNo model_name specified, using default: gpt-4o[0m
+[32m2026-11-23 11:19:47.153[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_get_base_url[0m:[36m962[0m - [34m[1mNo base URL specified, using OpenAI default endpoint[0m
+[32m2026-11-23 11:19:47.153[0m | [1mINFO    [0m | [36mcuga.backend.llm.models[0m:[36m_get_model_name[0m:[36m689[0m - [1mNo model_name specified, using default: gpt-4o[0m
+[32m2026-11-23 11:19:47.153[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_get_base_url[0m:[36m962[0m - [34m[1mNo base URL specified, using OpenAI default endpoint[0m
+[32m2026-11-23 11:19:47.153[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36mget_model[0m:[36m1624[0m - [34m[1mCreating new model: openai/gpt-4o (api_version=None, base_url=None)[0m
+[32m2026-11-23 11:19:47.153[0m | [1mINFO    [0m | [36mcuga.backend.llm.models[0m:[36m_get_model_name[0m:[36m689[0m - [1mNo model_name specified, using default: gpt-4o[0m
+[32m2026-11-23 11:19:47.154[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_get_base_url[0m:[36m962[0m - [34m[1mNo base URL specified, using OpenAI default endpoint[0m
+[32m2026-11-23 11:19:47.154[0m | [1mINFO    [0m | [36mcuga.backend.llm.models[0m:[36m_create_llm_instance[0m:[36m1129[0m - [1mSampling config for openai/gpt-4o: temperature=0.1, top_p=1.0, max_tokens=16000[0m
+[32m2026-11-23 11:19:48.176[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m406[0m - [34m[1mUpdating model temperature: 0.1[0m
+[32m2026-11-23 11:19:48.176[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m408[0m - [34m[1mModel keys: dict_keys([])[0m
+[32m2026-11-23 11:19:48.176[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m409[0m - [34m[1mModel instance: <class 'cuga.backend.llm.models._get_reasoning_chat_openai.<locals>.ReasoningChatOpenAI'>[0m
+[32m2026-11-23 11:19:48.176[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m448[0m - [34m[1mUpdated model parameters: temperature=0.1, max_tokens=16000, max_completion_tokens=16000[0m
+[32m2026-11-23 11:19:48.176[0m | [1mINFO    [0m | [36mcuga.sdk[0m:[36m__init__[0m:[36m2212[0m - [1mUsing default model: ReasoningChatOpenAI[0m
+[32m2026-11-23 11:19:48.234[0m | [33m[1mWARNING [0m | [36mcuga.backend.cuga_graph.nodes.shared.base_agent[0m:[36m<module>[0m:[36m16[0m - [33m[1mLangchain Google GenAI not installed, using OpenAI instead[0m
+[32m2026-11-23 11:19:53.264[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.nodes.cuga_lite.providers.langchain[0m:[36minitialize[0m:[36m75[0m - [1mInitializing DirectLangChainToolsProvider with 2 tools[0m
+[32m2026-11-23 11:19:53.265[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.nodes.cuga_lite.providers.langchain[0m:[36minitialize[0m:[36m81[0m - [34m[1m  - convert_units: Convert a value between km/miles, kg/lb, or C/F.[0m
+[32m2026-11-23 11:19:53.265[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.nodes.cuga_lite.providers.langchain[0m:[36minitialize[0m:[36m81[0m - [34m[1m  - days_between: Number of days from start_date to end_date (both YYYY-MM-DD).[0m
+[32m2026-11-23 11:19:53.536[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.policy.configurable[0m:[36m_initialize[0m:[36m247[0m - [1mInitializing policy system with:[0m
+[32m2026-11-23 11:19:53.537[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.policy.configurable[0m:[36m_initialize[0m:[36m248[0m - [1m  Collection: cuga_policies[0m
+[32m2026-11-23 11:19:53.537[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.policy.configurable[0m:[36m_initialize[0m:[36m249[0m - [1m  Embedding: provider=local, dim=384[0m
+[0;93m2026-11-23 11:19:53.902084432 [W:onnxruntime:Default, device_discovery.cc:95 GetPciBusId] Skipping pci_bus_id for PCI path at "/sys/devices/LNXSYSTM:00/LNXSYBUS:00/ACPI0004:00/MSFT1000:00/5620e0c7-8062-4dce-aeb7-520c7ef76171" because filename "5620e0c7-8062-4dce-aeb7-520c7ef76171" did not match expected pattern of [0-9a-f]+:[0-9a-f]+:[0-9a-f]+[.][0-9a-f]+[m
+[32m2026-11-23 11:19:53.992[0m | [1mINFO    [0m | [36mcuga.backend.storage.embedding.embedding_service[0m:[36mget_shared_text_embedding[0m:[36m149[0m - [1mLoading local embedding model: BAAI/bge-small-en-v1.5[0m
+[32m2026-11-23 11:19:54.043[0m | [31m[1mERROR   [0m | [36mcuga.backend.storage.embedding.embedding_service[0m:[36m_create_local[0m:[36m176[0m - [31m[1mFailed to create local embedding function: string indices must be integers, not 'str'[0m
+[32m2026-11-23 11:19:54.043[0m | [31m[1mERROR   [0m | [36mcuga.backend.cuga_graph.policy.storage[0m:[36m_initialize_embedding_function[0m:[36m100[0m - [31m[1mFailed to initialize embedding function. Please ensure:
+  1. For 'local' provider: Install 'fastembed' package
+  2. For 'openai' provider: Set OPENAI_API_KEY or storage.embedding.api_key
+  3. For 'auto' provider: Either install 'fastembed' or set OPENAI_API_KEY[0m
+[32m2026-11-23 11:19:54.043[0m | [31m[1mERROR   [0m | [36mcuga.backend.cuga_graph.policy.storage[0m:[36m_initialize_embedding_function[0m:[36m106[0m - [31m[1mFailed to initialize embedding function: Failed to initialize embedding function. Please ensure:
+  1. For 'local' provider: Install 'fastembed' package
+  2. For 'openai' provider: Set OPENAI_API_KEY or storage.embedding.api_key
+  3. For 'auto' provider: Either install 'fastembed' or set OPENAI_API_KEY[0m
+[32m2026-11-23 11:19:54.043[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.policy.configurable[0m:[36m_initialize[0m:[36m268[0m - [1mPolicyStorage initialized with embedding function[0m
+[32m2026-11-23 11:19:54.044[0m | [33m[1mWARNING [0m | [36mcuga.backend.cuga_graph.policy.configurable[0m:[36m_initialize[0m:[36m282[0m - [33m[1m⚠️  No embedding function available - vector search will be disabled[0m
+[32m2026-11-23 11:19:54.044[0m | [1mINFO    [0m | [36mcuga.backend.llm.models[0m:[36m_get_model_name[0m:[36m689[0m - [1mNo model_name specified, using default: gpt-4o[0m
+[32m2026-11-23 11:19:54.044[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_get_base_url[0m:[36m962[0m - [34m[1mNo base URL specified, using OpenAI default endpoint[0m
+[32m2026-11-23 11:19:54.044[0m | [1mINFO    [0m | [36mcuga.backend.llm.models[0m:[36m_get_model_name[0m:[36m689[0m - [1mNo model_name specified, using default: gpt-4o[0m
+[32m2026-11-23 11:19:54.044[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_get_base_url[0m:[36m962[0m - [34m[1mNo base URL specified, using OpenAI default endpoint[0m
+[32m2026-11-23 11:19:54.044[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36mget_model[0m:[36m1610[0m - [34m[1mReturning cached model: openai/gpt-4o (api_version=None, base_url=None)[0m
+[32m2026-11-23 11:19:54.044[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m406[0m - [34m[1mUpdating model temperature: 0.1[0m
+[32m2026-11-23 11:19:54.044[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m408[0m - [34m[1mModel keys: dict_keys([])[0m
+[32m2026-11-23 11:19:54.044[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m409[0m - [34m[1mModel instance: <class 'cuga.backend.llm.models._get_reasoning_chat_openai.<locals>.ReasoningChatOpenAI'>[0m
+[32m2026-11-23 11:19:54.044[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m448[0m - [34m[1mUpdated model parameters: temperature=0.1, max_tokens=16000, max_completion_tokens=16000[0m
+[32m2026-11-23 11:19:54.044[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.policy.configurable[0m:[36m_initialize[0m:[36m290[0m - [1mLLM initialized for policy matching[0m
+[32m2026-11-23 11:19:54.044[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.policy.configurable[0m:[36m_initialize[0m:[36m302[0m - [1mPolicyAgent initialized[0m
+[32m2026-11-23 11:19:54.044[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.policy.configurable[0m:[36m_initialize[0m:[36m305[0m - [1m✅ Policy system fully initialized[0m
+[32m2026-11-23 11:19:54.046[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36m_ensure_policy_system[0m:[36m318[0m - [34m[1mInitialized filesystem sync for .cuga[0m
+[32m2026-11-23 11:19:54.046[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36m_ensure_policy_system[0m:[36m345[0m - [34m[1mChecking for policy folder: .cuga[0m
+[32m2026-11-23 11:19:54.046[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36m_ensure_policy_system[0m:[36m346[0m - [34m[1m  Current working directory: /tmp/phistory-work-c9ifuhxj[0m
+[32m2026-11-23 11:19:54.046[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36m_ensure_policy_system[0m:[36m347[0m - [34m[1m  Resolved absolute path: /tmp/phistory-work-c9ifuhxj/.cuga[0m
+[32m2026-11-23 11:19:54.047[0m | [33m[1mWARNING [0m | [36mcuga.sdk[0m:[36m_ensure_policy_system[0m:[36m405[0m - [33m[1mPolicy folder not found: .cuga (resolved: /tmp/phistory-work-c9ifuhxj/.cuga)[0m
+[32m2026-11-23 11:19:54.047[0m | [33m[1mWARNING [0m | [36mcuga.sdk[0m:[36m_ensure_policy_system[0m:[36m408[0m - [33m[1m  Current directory: /tmp/phistory-work-c9ifuhxj[0m
+[32m2026-11-23 11:19:54.047[0m | [33m[1mWARNING [0m | [36mcuga.sdk[0m:[36m_ensure_policy_system[0m:[36m409[0m - [33m[1m  Skipping auto-load[0m
+[32m2026-11-23 11:19:54.047[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36minvoke[0m:[36m3099[0m - [34m[1mPolicy system auto-initialized during first invoke()[0m
+[32m2026-11-23 11:19:54.079[0m | [32m[1mSUCCESS [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m100[0m - [32m[1m📋 Instructions configuration loaded successfully[0m
+[32m2026-11-23 11:19:54.079[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m101[0m - [1m   📁 Config file: configurations/instructions/instructions.toml[0m
+[32m2026-11-23 11:19:54.079[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m102[0m - [1m   📏 File size: 183 bytes[0m
+[32m2026-11-23 11:19:54.084[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m109[0m - [1m   🔑 Instruction sections: 2[0m
+[32m2026-11-23 11:19:54.084[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m113[0m - [1m   🔗 Key mappings available: 1[0m
+[32m2026-11-23 11:19:54.085[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m116[0m - [1m   🏷️  Mappings: FinalAnswerAgent→answer[0m
+[32m2026-11-23 11:19:54.085[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m141[0m - [1m   📝 Inline instructions: 1[0m
+[32m2026-11-23 11:19:54.085[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m142[0m - [1m   📄 File-based instructions: 1[0m
+[32m2026-11-23 11:19:54.085[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m143[0m - [1m   📊 Total content length: 0 characters[0m
+[32m2026-11-23 11:19:54.085[0m | [1mINFO    [0m | [36mcuga.configurations.instructions_manager[0m:[36m_log_initialization_summary[0m:[36m148[0m - [1m   🏷️  Available keys: PLAN, ANSWER[0m
+[32m2026-11-23 11:19:54.881[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36m_build_callbacks[0m:[36m2278[0m - [34m[1mBuilt callbacks: TokenUsageTracker only[0m
+[32m2026-11-23 11:19:54.904[0m | [33m[1mWARNING [0m | [36mcuga.configurations.instructions_manager[0m:[36mget_all_instructions_formatted[0m:[36m306[0m - [33m[1mNo markdown sections found[0m
+[32m2026-11-23 11:19:54.922[0m | [1mINFO    [0m | [36mcuga.backend.llm.models[0m:[36m_get_model_name[0m:[36m689[0m - [1mNo model_name specified, using default: gpt-4o[0m
+[32m2026-11-23 11:19:54.922[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_get_base_url[0m:[36m962[0m - [34m[1mNo base URL specified, using OpenAI default endpoint[0m
+[32m2026-11-23 11:19:54.922[0m | [1mINFO    [0m | [36mcuga.backend.llm.models[0m:[36m_get_model_name[0m:[36m689[0m - [1mNo model_name specified, using default: gpt-4o[0m
+[32m2026-11-23 11:19:54.922[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_get_base_url[0m:[36m962[0m - [34m[1mNo base URL specified, using OpenAI default endpoint[0m
+[32m2026-11-23 11:19:54.922[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36mget_model[0m:[36m1610[0m - [34m[1mReturning cached model: openai/gpt-4o (api_version=None, base_url=None)[0m
+[32m2026-11-23 11:19:54.922[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m406[0m - [34m[1mUpdating model temperature: 0.1[0m
+[32m2026-11-23 11:19:54.922[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m408[0m - [34m[1mModel keys: dict_keys([])[0m
+[32m2026-11-23 11:19:54.922[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m409[0m - [34m[1mModel instance: <class 'cuga.backend.llm.models._get_reasoning_chat_openai.<locals>.ReasoningChatOpenAI'>[0m
+[32m2026-11-23 11:19:54.922[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.llm.models[0m:[36m_update_model_parameters[0m:[36m448[0m - [34m[1mUpdated model parameters: temperature=0.1, max_tokens=16000, max_completion_tokens=16000[0m
+[32m2026-11-23 11:19:54.926[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36m_create_hitl_wrapper_graph[0m:[36m2619[0m - [34m[1mCreated HITL wrapper graph with SuggestHumanActions and WaitForResponse[0m
+[32m2026-11-23 11:19:54.926[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36m_create_graph[0m:[36m2462[0m - [34m[1mCreated CugaLite graph with HITL wrapper[0m
+[32m2026-11-23 11:19:54.928[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36mgraph[0m:[36m2768[0m - [34m[1mCompiled graph with checkpointer and HITL support[0m
+[32m2026-11-23 11:19:54.929[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36minvoke[0m:[36m3250[0m - [34m[1mAuto-generated thread_id: sdk_69e97ddb[0m
+[32m2026-11-23 11:19:54.929[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36minvoke[0m:[36m3344[0m - [34m[1mCreated new state for thread_id: sdk_69e97ddb[0m
+[32m2026-11-23 11:19:54.929[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36m_build_callbacks[0m:[36m2278[0m - [34m[1mBuilt callbacks: TokenUsageTracker only[0m
+[32m2026-11-23 11:19:54.931[0m | [34m[1mDEBUG   [0m | [36mcuga.sdk[0m:[36minvoke[0m:[36m3365[0m - [34m[1mInvoking agent with 1 total message(s) in conversation[0m
+[32m2026-11-23 11:19:54.938[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.nodes.cuga_lite.adapter.prepare_node[0m:[36mprepare_tools_and_apps[0m:[36m142[0m - [34m[1m[APPROVAL DEBUG] prepare_tools_and_apps received cuga_lite_metadata: {'policy_decisions': []}[0m
+[32m2026-11-23 11:19:54.938[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.enactment[0m:[36mcheck_and_enact[0m:[36m86[0m - [34m[1mPolicyEnactment: Got policy system: <cuga.backend.cuga_graph.policy.configurable.PolicyConfigurable object at 0x7da11c8e3d40>[0m
+[32m2026-11-23 11:19:54.939[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.enactment[0m:[36mcheck_and_enact[0m:[36m93[0m - [34m[1mPolicyEnactment: Created context with user_input_len=73, inferred target='intent'[0m
+[32m2026-11-23 11:19:54.939[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36mmatch_policy[0m:[36m1012[0m - [34m[1m🔍 Starting policy matching for target: 'intent'[0m
+[32m2026-11-23 11:19:54.939[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36mmatch_policy[0m:[36m1019[0m - [34m[1m  - Filtering by policy types: [<PolicyType.INTENT_GUARD: 'intent_guard'>, <PolicyType.PLAYBOOK: 'playbook'>, <PolicyType.TOOL_GUIDE: 'tool_guide'>][0m
+[32m2026-11-23 11:19:54.939[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36mmatch_policy[0m:[36m1021[0m - [34m[1m  - user_input_len=73, chat_messages=1[0m
+[32m2026-11-23 11:19:54.939[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_keyword_triggered_policies[0m:[36m716[0m - [34m[1m🔍 Evaluating keyword-triggered policies for target: 'intent'[0m
+[32m2026-11-23 11:19:54.955[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_keyword_triggered_policies[0m:[36m743[0m - [34m[1mNo policies with keyword triggers for target 'intent'[0m
+[32m2026-11-23 11:19:54.955[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_natural_language_policies[0m:[36m800[0m - [34m[1m🔍 Evaluating natural language policies for target: 'intent'[0m
+[32m2026-11-23 11:19:54.955[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_natural_language_policies[0m:[36m832[0m - [34m[1mNo policies with NL triggers for target 'intent'[0m
+[32m2026-11-23 11:19:54.956[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.enactment[0m:[36mcheck_and_enact[0m:[36m100[0m - [34m[1mPolicyEnactment: Policy match result: matched=False, reasoning=No policies matched the current context[0m
+[32m2026-11-23 11:19:54.956[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36mcheck_tool_guide_policies[0m:[36m1315[0m - [34m[1mChecking Tool Guide policies[0m
+[32m2026-11-23 11:19:54.956[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36mcheck_tool_guide_policies[0m:[36m1322[0m - [34m[1mFound 0 enabled Tool Guide policies[0m
+[32m2026-11-23 11:19:54.956[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.enactment[0m:[36mcheck_and_enact[0m:[36m109[0m - [34m[1mPolicyEnactment: Found 0 Tool Guide policies[0m
+[32m2026-11-23 11:19:54.956[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.nodes.cuga_lite.adapter.prepare_node[0m:[36mprepare_tools_and_apps[0m:[36m293[0m - [34m[1mBundled MCP few-shots (prompts/find_tools_few_shot_examples.json) not loaded: find_tools is off (total_tool_count=2 <= shortlisting_tool_threshold=35). Lower the threshold via configurable or add apps/tools.[0m
+[32m2026-11-23 11:19:54.956[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.nodes.cuga_lite.adapter.prepare_node[0m:[36mprepare_tools_and_apps[0m:[36m354[0m - [34m[1mNo tool guides found in metadata[0m
+[32m2026-11-23 11:19:54.976[0m | [33m[1mWARNING [0m | [36mcuga.backend.evolve.integration[0m:[36mget_guidelines_with_attribution[0m:[36m142[0m - [33m[1mEvolve attributed guideline retrieval failed (non-fatal): Evolve requires a configured service instance ID[0m
+[32m2026-11-23 11:19:54.976[0m | [33m[1mWARNING [0m | [36mcuga.backend.evolve.integration[0m:[36mget_guidelines[0m:[36m107[0m - [33m[1mEvolve get_guidelines failed (non-fatal): Evolve requires a configured service instance ID[0m
+[32m2026-11-23 11:19:55.877[0m | [33m[1mWARNING [0m | [36mcuga.backend.server.main[0m:[36m<module>[0m:[36m538[0m - [33m[1mFailed to import agent_analytics: No module named 'agent_analytics'[0m
+[32m2026-11-23 11:19:55.952[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.nodes.cuga_lite.adapter.prepare_node[0m:[36mprepare_tools_and_apps[0m:[36m827[0m - [1mPrepared CugaLite prompt: enable_find_tools=False few_shot_message_turns=0 few_shots_as_messages=False prompt_chars=17941[0m
+[32m2026-11-23 11:19:55.953[0m | [1mINFO    [0m | [36mcuga.backend.llm.context_window[0m:[36mresolve_context_window[0m:[36m143[0m - [1mContext window for gpt-4o: 128000 tokens (source: litellm-map)[0m
+[32m2026-11-23 11:19:55.953[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.utils.context_summarizer[0m:[36m_setup_model_profile[0m:[36m93[0m - [1mSet model profile: max_input_tokens=128000 for gpt-4o[0m
+[32m2026-11-23 11:19:55.958[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.utils.context_summarizer[0m:[36m_init_middleware[0m:[36m80[0m - [1mContext summarization initialized: trigger=('fraction', 0.7), keep=('messages', 10), model=gpt-4o[0m
+[32m2026-11-23 11:19:55.958[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.utils.token_counter[0m:[36mcount_total_context_tokens[0m:[36m644[0m - [34m[1mTotal context tokens: 4747 (messages: 23, tools: 0, prompt: 4721, overhead: 3)[0m
+[32m2026-11-23 11:19:55.958[0m | [1mINFO    [0m | [36mcuga.backend.cuga_graph.nodes.cuga_agent_core.graph.shared_nodes[0m:[36mcall_model[0m:[36m215[0m - [1mcall_model: 2 messages → model (CugaLite)[0m
+[32m2026-11-23 11:19:56.049[0m | [1mINFO    [0m | [36mcuga.sdk[0m:[36msdk_callback_node[0m:[36m2530[0m - [1mSDK callback node - processing subgraph results[0m
+[32m2026-11-23 11:19:56.050[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.enactment[0m:[36mcheck_and_enact[0m:[36m86[0m - [34m[1mPolicyEnactment: Got policy system: <cuga.backend.cuga_graph.policy.configurable.PolicyConfigurable object at 0x7da11c8e3d40>[0m
+[32m2026-11-23 11:19:56.051[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.enactment[0m:[36mcheck_and_enact[0m:[36m93[0m - [34m[1mPolicyEnactment: Created context with user_input_len=73, inferred target='agent_response'[0m
+[32m2026-11-23 11:19:56.051[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36mmatch_policy[0m:[36m1012[0m - [34m[1m🔍 Starting policy matching for target: 'agent_response'[0m
+[32m2026-11-23 11:19:56.051[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36mmatch_policy[0m:[36m1019[0m - [34m[1m  - Filtering by policy types: [<PolicyType.OUTPUT_FORMATTER: 'output_formatter'>][0m
+[32m2026-11-23 11:19:56.051[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36mmatch_policy[0m:[36m1021[0m - [34m[1m  - user_input_len=73, chat_messages=2[0m
+[32m2026-11-23 11:19:56.051[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_keyword_triggered_policies[0m:[36m716[0m - [34m[1m🔍 Evaluating keyword-triggered policies for target: 'agent_response'[0m
+[32m2026-11-23 11:19:56.051[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_keyword_triggered_policies[0m:[36m743[0m - [34m[1mNo policies with keyword triggers for target 'agent_response'[0m
+[32m2026-11-23 11:19:56.051[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_natural_language_policies[0m:[36m800[0m - [34m[1m🔍 Evaluating natural language policies for target: 'agent_response'[0m
+[32m2026-11-23 11:19:56.052[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_natural_language_policies[0m:[36m832[0m - [34m[1mNo policies with NL triggers for target 'agent_response'[0m
+[32m2026-11-23 11:19:56.052[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.agent[0m:[36m_evaluate_always_triggered_policies[0m:[36m976[0m - [34m[1mNo always-triggered output formatters for target 'agent_response'[0m
+[32m2026-11-23 11:19:56.052[0m | [34m[1mDEBUG   [0m | [36mcuga.backend.cuga_graph.policy.enactment[0m:[36mcheck_and_enact[0m:[36m100[0m - [34m[1mPolicyEnactment: Policy match result: matched=False, reasoning=No policies matched the current context[0m
+[32m2026-11-23 11:19:56.052[0m | [1mINFO    [0m | [36mcuga.sdk[0m:[36msdk_callback_node[0m:[36m2581[0m - [1mRouting to FinalAnswerAgent with answer: captured[0m

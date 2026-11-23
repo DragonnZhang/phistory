@@ -1,0 +1,67 @@
+{
+  "agent_id": "cuga-agent",
+  "agent": "CUGA",
+  "package": "cuga",
+  "python_runtime": "3.12",
+  "version": "0.4.6",
+  "variant": {
+    "id": "hello-tools-api",
+    "label": "Official hello-tools SDK example · codeact",
+    "dimensions": {
+      "entry": "official v0.4.4 hello_tools example on current PyPI package",
+      "execution_mode": "native codeact",
+      "tool_scope": "two official example tools"
+    }
+  },
+  "requested": {
+    "entry": "official v0.4.4 hello_tools example on current PyPI package",
+    "execution_mode": "native codeact",
+    "tool_scope": "two official example tools"
+  },
+  "observed": {
+    "model": "gpt-4o"
+  },
+  "published_at": "2026-11-22T12:18:07.201481Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/66/54/38c384a7a95ac81c24c3b4ef485a654a2f21b4c9bfc381e06aaf1d986a7c/cuga-0.4.6-py3-none-any.whl",
+  "binary_version": "0.4.6",
+  "captured_at": "2026-11-23T11:19:57.671314+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45162168971",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45162168971"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 39.127,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "$PHISTORY_HOME/cuga-hello-tools.py"
+  ],
+  "capture_environment": {
+    "AGENT_SETTING_CONFIG": "settings.openai.toml",
+    "PHISTORY_CUGA_EXAMPLE_SOURCE": "https://raw.githubusercontent.com/cuga-project/cuga-agent/v0.4.4/docs/examples/hello_tools/main.py",
+    "PHISTORY_CUGA_EXAMPLE_SHA256": "2c1d5e0edc4336ee30b7cee61fbfab2a02389b007a0bb5db9250f165ddf7e16f"
+  }
+}
