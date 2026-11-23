@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "jcode",
+  "agent": "Jcode",
+  "repository": "1jehuang/jcode",
+  "snapshot": "e7ad7cb7982287522a0d",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:20.751681+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "2e8684ec7bb4903be542b55363af7e2243621e94",
+      "path": "crates/jcode-app-core/src/tool/codemode.rs",
+      "sha256": "d7ff885658124edc513bdfd80358a89929d236db2c09bb3e9cc6788e49b57829",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/2e8684ec7bb4903be542b55363af7e2243621e94/crates/jcode-app-core/src/tool/codemode.rs",
+      "url": "https://github.com/1jehuang/jcode/blob/2e8684ec7bb4903be542b55363af7e2243621e94/crates/jcode-app-core/src/tool/codemode.rs"
+    },
+    {
+      "commit": "2e8684ec7bb4903be542b55363af7e2243621e94",
+      "path": "crates/jcode-app-core/src/tool/mod.rs",
+      "sha256": "2416aff2da21b9a91bf1796f19d9112dd84960bdb032057c4c18755c13edc955",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/2e8684ec7bb4903be542b55363af7e2243621e94/crates/jcode-app-core/src/tool/mod.rs",
+      "url": "https://github.com/1jehuang/jcode/blob/2e8684ec7bb4903be542b55363af7e2243621e94/crates/jcode-app-core/src/tool/mod.rs"
+    },
+    {
+      "commit": "2e8684ec7bb4903be542b55363af7e2243621e94",
+      "path": "crates/jcode-base/src/prompt/system_prompt.md",
+      "sha256": "febeec3c1a4c9aa79634d79b042d79154392f100b27ed135e18f66d060480240",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/2e8684ec7bb4903be542b55363af7e2243621e94/crates/jcode-base/src/prompt/system_prompt.md",
+      "url": "https://github.com/1jehuang/jcode/blob/2e8684ec7bb4903be542b55363af7e2243621e94/crates/jcode-base/src/prompt/system_prompt.md"
+    }
+  ]
+}

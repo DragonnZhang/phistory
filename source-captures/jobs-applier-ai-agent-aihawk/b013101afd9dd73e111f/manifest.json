@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "jobs-applier-ai-agent-aihawk",
+  "agent": "Jobs_Applier_AI_Agent_AIHawk",
+  "repository": "feder-cr/Jobs_Applier_AI_Agent_AIHawk",
+  "snapshot": "b013101afd9dd73e111f",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:24.255779+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "6e57771c79d371745055a0e8f0ce40b8da4c8506",
+      "path": "src/aihawk/apply.py",
+      "sha256": "a586737ff4ca4516dde949c39dfb67a70da68d6fb026eb3c70b1c948d1b08b78",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/6e57771c79d371745055a0e8f0ce40b8da4c8506/src/aihawk/apply.py",
+      "url": "https://github.com/feder-cr/Jobs_Applier_AI_Agent_AIHawk/blob/6e57771c79d371745055a0e8f0ce40b8da4c8506/src/aihawk/apply.py"
+    }
+  ]
+}

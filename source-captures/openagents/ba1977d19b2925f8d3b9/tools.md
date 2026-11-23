@@ -1,0 +1,1407 @@
+# openagents — Toolset source
+
+Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.
+
+Source tool declarations and registration code; enabled runtime tool schemas are not inferred.
+
+## coax/lib/microcoder/action.coax
+
+Source: https://github.com/OpenAgentsInc/openagents/blob/ff7aef3452208a63db93a09dc9255b15cffc3d80/coax/lib/microcoder/action.coax
+
+SHA-256: `ca9b78b1201665e236053bd7531101ed32c89439b1bfc4762a9aeaaf39bfa9fa`
+
+```
+// The action (docs/coder/microcoder.md, "The action"): each step is one
+// model call with a strict JSON schema, and the reply is this object:
+//
+//   { "rationale": "why this step, for the log; never shown as the reply",
+//     "edits":     [{"path": "a.txt", "old": "exact text", "new": "its replacement"}],
+//     "commands":  ["shell commands to run, in order"],
+//     "view":      ["files to show in full in the next step"],
+//     "finished":  false,
+//     "reply":     "on the finishing step, the answer addressed to the user",
+//     "ask":       "none | question" }
+//
+// The old NextAction without freeze_tests and expand. mc_action_parse holds
+// a reply to the schema and to its meaning: finished and ask: question each
+// need a reply.
+//
+// A run that asks for it (docs/coder/microcoder.md, "Compiler questions and
+// working memory"; GitHub #13444, #13445) gets more members, and mc_schema
+// writes the schema that has them. Off, the schema is MC_SCHEMA and a reply
+// is read exactly as before.
+//   with the compiler:  "questions": ["defines NAME", "check FILE", ...]   up to 16
+//                       and on each edit "seen" (the hash the model read, "" for none)
+//                       and "name" ("" or a declaration to replace whole)
+//   with the memory:    "notes": ["a finding to keep", "PATH:A-B a finding about those lines"]   up to 8
+
+#load "state.coax";
+
+MC_SCHEMA_NAME :: "next_action";
+MC_SCHEMA :: "{\"type\":\"object\",\"properties\":{\"rationale\":{\"type\":\"string\"},\"edits\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"old\":{\"type\":\"string\"},\"new\":{\"type\":\"string\"}},\"required\":[\"path\",\"old\",\"new\"],\"additionalProperties\":false}},\"commands\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"view\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"finished\":{\"type\":\"boolean\"},\"reply\":{\"type\":\"string\"},\"ask\":{\"type\":\"string\",\"enum\":[\"none\",\"question\"]},\"todos\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"},\"status\":{\"type\":\"string\",\"enum\":[\"pending\",\"in_progress\",\"completed\"]}},\"required\":[\"id\",\"content\",\"status\"],\"additionalProperties\":false}}},\"required\":[\"rationale\",\"edits\",\"commands\",\"view\",\"finished\",\"reply\",\"ask\"],\"additionalProperties\":false}";
+
+// The schema with every added member: what mc_schema writes with both modes on.
+MC_SCHEMA_AWARE :: "{\"type\":\"object\",\"properties\":{\"rationale\":{\"type\":\"string\"},\"notes\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"edits\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"old\":{\"type\":\"string\"},\"new\":{\"type\":\"string\"},\"seen\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"}},\"required\":[\"path\",\"old\",\"new\",\"seen\",\"name\"],\"additionalProperties\":false}},\"questions\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"commands\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"view\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"finished\":{\"type\":\"boolean\"},\"reply\":{\"type\":\"string\"},\"ask\":{\"type\":\"string\",\"enum\":[\"none\",\"question\"]},\"todos\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"},\"status\":{\"type\":\"string\",\"enum\":[\"pending\",\"in_progress\",\"completed\"]}},\"required\":[\"id\",\"content\",\"status\"],\"additionalProperties\":false}}},\"required\":[\"rationale\",\"notes\",\"edits\",\"questions\",\"commands\",\"view\",\"finished\",\"reply\",\"ask\"],\"additionalProperties\":false}";
+
+MC_MAX_COMMANDS :: 32;
+MC_MAX_VIEWS :: 16;
+MC_MAX_EDITS :: 16;
+MC_MAX_QUESTIONS :: 16;
+MC_MAX_NOTES :: 8;
+MC_MAX_DELEGATES :: 6;
+MC_MAX_TODOS :: 24;
+
+// A run whose owner runs sub-agents (GitHub #13655) gets one more member, delegate: up to 6
+// tasks, each with a level (hydrogen, carbon or neon). mc_schema_delegate adds it to a run's schema.
+// An owner that also runs Claude Code sub-agents (GitHub #13660) has four more levels, one for
+// each Claude model: haiku, sonnet, opus and fable (MC_SCHEMA_DELEGATE_CLAUDE).
+MC_SCHEMA_DELEGATE :: ",\"delegate\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"level\":{\"type\":\"string\",\"enum\":[\"hydrogen\",\"carbon\",\"neon\"]},\"task\":{\"type\":\"string\"},\"resume\":{\"type\":\"integer\"},\"stop\":{\"type\":\"boolean\"}},\"required\":[\"level\",\"task\"],\"additionalProperties\":false}}";
+MC_SCHEMA_DELEGATE_CLAUDE :: ",\"delegate\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"level\":{\"type\":\"string\",\"enum\":[\"hydrogen\",\"carbon\",\"neon\",\"haiku\",\"sonnet\",\"opus\",\"fable\"]},\"task\":{\"type\":\"string\"},\"resume\":{\"type\":\"integer\"},\"stop\":{\"type\":\"boolean\"}},\"required\":[\"level\",\"task\"],\"additionalProperties\":false}}";
+// An owner with an OpenRouter model for sub-agents has one more level, openrouter (after the
+// Claude levels when both are on). mc_schema_delegate writes the enum from these pieces.
+MC_SCHEMA_DELEGATE_HEAD :: ",\"delegate\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"level\":{\"type\":\"string\",\"enum\":[\"hydrogen\",\"carbon\",\"neon\"";
+MC_SCHEMA_DELEGATE_CLAUDE_LEVELS :: ",\"haiku\",\"sonnet\",\"opus\",\"fable\"";
+MC_SCHEMA_DELEGATE_OPENROUTER_LEVEL :: ",\"openrouter\"";
+MC_SCHEMA_DELEGATE_INKLING_LEVEL :: ",\"inkling\"";
+MC_SCHEMA_DELEGATE_TAIL :: "]},\"task\":{\"type\":\"string\"},\"resume\":{\"type\":\"integer\"},\"stop\":{\"type\":\"boolean\"}},\"required\":[\"level\",\"task\"],\"additionalProperties\":false}}";
+MC_SCHEMA_RATIONALE :: "\"rationale\":{\"type\":\"string\"}";
+MC_SCHEMA_REQUIRED :: "\"required\":[\"rationale\"";
+mc_schema_find :: (text: string, needle: string) -> int {
+  i := 0;
+  while i + needle.count <= text.count { if cast(string) text[i..<i + needle.count] == needle { return i; } i += 1; }
+  return -1;
+}
+// schema (mc_schema's, any modes) with the delegate member after rationale, and required. Into
+// out; "" when it doesn't fit or schema is not one of mc_schema's. claude: with the Claude levels;
+// openrouter: with the openrouter level; inkling: with the free local inkling level.
+mc_schema_delegate :: (schema: string, out: [] u8, claude: bool, openrouter: bool) -> string {
+  return mc_schema_delegate_all(schema, out, claude, openrouter, false);
+}
+mc_schema_delegate_all :: (schema: string, out: [] u8, claude: bool, openrouter: bool, inkling: bool) -> string {
+  a := mc_schema_find(schema, MC_SCHEMA_RATIONALE); b := mc_schema_find(schema, MC_SCHEMA_REQUIRED);
+  if a < 0 || b < a { return ""; }
+  a += MC_SCHEMA_RATIONALE.count; b += MC_SCHEMA_REQUIRED.count;
+  n := json_raw(out, 0, cast(string) schema[0..<a]); n = json_raw(out, n, MC_SCHEMA_DELEGATE_HEAD);
+  if claude { n = json_raw(out, n, MC_SCHEMA_DELEGATE_CLAUDE_LEVELS); }
+  if openrouter { n = json_raw(out, n, MC_SCHEMA_DELEGATE_OPENROUTER_LEVEL); }
+  if inkling { n = json_raw(out, n, MC_SCHEMA_DELEGATE_INKLING_LEVEL); }
+  n = json_raw(out, n, MC_SCHEMA_DELEGATE_TAIL);
+  n = json_raw(out, n, cast(string) schema[a..<b]); n = json_raw(out, n, ",\"delegate\""); n = json_raw(out, n, cast(string) schema[b..<schema.count]);
+  if n < 0 { return ""; }
+  return cast(string) out[0..<n];
+}
+// schema with ask restricted to ["none"] so the model cannot emit ask: question (GitHub #13701).
+MC_SCHEMA_ASK_ANY :: "\"ask\":{\"type\":\"string\",\"enum\":[\"none\",\"question\"]}";
+MC_SCHEMA_ASK_NONE :: "\"ask\":{\"type\":\"string\",\"enum\":[\"none\"]}";
+mc_schema_no_ask :: (schema: string, out: [] u8) -> string {
+  a := mc_schema_find(schema, MC_SCHEMA_ASK_ANY);
+  if a < 0 { return ""; }
+  n := json_raw(out, 0, cast(string) schema[0..<a]);
+  n = json_raw(out, n, MC_SCHEMA_ASK_NONE);
+  n = json_raw(out, n, cast(string) schema[a + MC_SCHEMA_ASK_ANY.count..<schema.count]);
+  if n < 0 { return ""; }
+  return cast(string) out[0..<n];
+}
+
+// The schema for a run: MC_SCHEMA, with questions and each edit's seen and name when intel is
+// on, and notes when memory is on. Into out; "" when it doesn't fit. Each member is where the
+// step uses it: notes (what the last results taught) first, then edits, questions, commands, view.
+mc_schema :: (out: [] u8, intel: bool, memory: bool) -> string {
+  str := "{\"type\":\"string\"}"; list := "{\"type\":\"array\",\"items\":{\"type\":\"string\"}}";
+  n := json_raw(out, 0, "{\"type\":\"object\",\"properties\":{\"rationale\":"); n = json_raw(out, n, str);
+  if memory { n = json_raw(out, n, ",\"notes\":"); n = json_raw(out, n, list); }
+  n = json_raw(out, n, ",\"edits\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":"); n = json_raw(out, n, str);
+  n = json_raw(out, n, ",\"old\":"); n = json_raw(out, n, str); n = json_raw(out, n, ",\"new\":"); n = json_raw(out, n, str);
+  if intel { n = json_raw(out, n, ",\"seen\":"); n = json_raw(out, n, str); n = json_raw(out, n, ",\"name\":"); n = json_raw(out, n, str); }
+  n = json_raw(out, n, "},\"required\":[\"path\",\"old\",\"new\"");
+  if intel { n = json_raw(out, n, ",\"seen\",\"name\""); }
+  n = json_raw(out, n, "],\"additionalProperties\":false}}");
+  if intel { n = json_raw(out, n, ",\"questions\":"); n = json_raw(out, n, list); }
+  n = json_raw(out, n, ",\"commands\":"); n = json_raw(out, n, list); n = json_raw(out, n, ",\"view\":"); n = json_raw(out, n, list);
+  n = json_raw(out, n, ",\"finished\":{\"type\":\"boolean\"},\"reply\":"); n = json_raw(out, n, str);
+  n = json_raw(out, n, ",\"ask\":{\"type\":\"string\",\"enum\":[\"none\",\"question\"]},\"todos\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"},\"status\":{\"type\":\"string\",\"enum\":[\"pending\",\"in_progress\",\"completed\"]}},\"required\":[\"id\",\"content\",\"status\"],\"additionalProperties\":false}}},\"required\":[\"rationale\"");
+  if memory { n = json_raw(out, n, ",\"notes\""); }
+  n = json_raw(out, n, ",\"edits\"");
+  if intel { n = json_raw(out, n, ",\"questions\""); }
+  n = json_raw(out, n, ",\"commands\",\"view\",\"finished\",\"reply\",\"ask\"],\"additionalProperties\":false}");
+  if n < 0 { return ""; }
+  return cast(string) out[0..<n];
+}
+
+// An exact edit (GitHub #13231): old, which must appear in path exactly once, becomes new; an
+// empty old writes new as the whole file. Applied by the loop's tools, not a shell, so no quoting.
+// With the compiler's mode on, an edit may be tied to what the model read: seen is the hash a
+// view or a show gave (12 hex digits or more; "" for none), and name, when not "", is a
+// declaration in path that text replaces whole (old is then not used).
+McEdit :: struct { path: string; old: string; text: string; seen: string; name: string; }   // text: the "new" field
+
+// A task handed to a sub-agent, and its level: hydrogen, carbon, neon, or a Claude model (haiku, sonnet, opus, fable).
+// resume (GitHub #13676): the number of a paused sub-agent this task lets go on, with the task as a
+// note to it; 0 or less for a new sub-agent. A running one it waits for; an ended one gives its
+// result again (GitHub #13766).
+// stop (GitHub #13766): with resume, stop that sub-agent instead (the task is then not read): the
+// run tells its owner at once (MR_STOP_AGENT) and does not wait on it.
+McDelegate :: struct { level: string; task: string; resume: int; stop: bool; }
+
+// A checklist item reported by the agent on multi-step tasks (pending, in_progress, completed).
+McTodo :: struct { id: string; content: string; status: string; }
+
+McAction :: struct {
+  rationale: string;
+  delegates: [MC_MAX_DELEGATES] McDelegate; nd: int;   // read only by a run whose owner runs sub-agents (mc_action_delegates)
+  edits: [MC_MAX_EDITS] McEdit; ne: int;
+  commands: [MC_MAX_COMMANDS] string; nc: int;
+  view: [MC_MAX_VIEWS] string; nv: int;
+  finished: bool;
+  reply: string;
+  asks: bool;                    // ask: question
+  questions: [MC_MAX_QUESTIONS] string; nq: int;   // compiler questions (read only with more)
+  notes: [MC_MAX_NOTES] string; nn: int;           // findings to keep (read only with more)
+  todos: [MC_MAX_TODOS] McTodo; nt: int;           // optional live task checklist
+  has_todos: bool;                                 // true when the reply included a todos member
+}
+
+// The reply as an action, its strings decoded into ar (they live as long as
+// text and ar). What's wrong with it, or "".
+mc_action_parse :: (ar: [] ClArena, text: string, a: [] McAction) -> string { return mc_action_parse_as(ar, text, a, false); }
+// The same; with more, the reply's questions, notes and each edit's seen and name are read too
+// (each may be missing: a gateway without strict schemas leaves members out).
+mc_action_parse_as :: (ar: [] ClArena, text: string, a: [] McAction, more: bool) -> string {
+  a[0] = McAction.{};
+  if !cl_root(text).ok { return "the reply is not JSON"; }
+  if !cl_valid(text, "s:rationale a:commands s:commands.* a:view s:view.* b:finished s:reply s:ask=none|question") {
+    return "the reply does not match the next_action schema";
+  }
+  if !cl_valid(text, "?a:edits ?o:edits.* ?s:edits.*.path ?s:edits.*.old ?s:edits.*.new") { return "the reply's edits do not match the next_action schema"; }
+  if !cl_valid(text, "?a:todos ?o:todos.* ?s:todos.*.id ?s:todos.*.content ?s:todos.*.status=pending|in_progress|completed") { return "the reply's todos do not match the next_action schema"; }
+  if more && !cl_valid(text, "?a:questions ?s:questions.* ?a:notes ?s:notes.* ?s:edits.*.seen ?s:edits.*.name") { return "the reply's questions, notes or an edit's seen or name do not match the next_action schema"; }
+  a[0].rationale = cl_str(ar, text, "rationale");
+  eds := cl_raw(text, "edits");
+  ne := ifx eds.count > 0 then cl_count(eds) else 0;
+  if ne > MC_MAX_EDITS { return "the reply has more than 16 edits"; }
+  for i: 0..<ne {
+    e := cl_json(eds, cl_item(eds, i));
+    a[0].edits[i] = McEdit.{path = cl_str(ar, e, "path"), old = cl_str(ar, e, "old"), text = cl_str(ar, e, "new")};
+    if more { a[0].edits[i].seen = cl_str(ar, e, "seen"); a[0].edits[i].name = cl_str(ar, e, "name"); }
+    if a[0].edits[i].path.count == 0 { return "an edit has no path"; }
+  }
+  a[0].ne = ne;
+  if more {
+    qs := cl_raw(text, "questions");
+    nq := ifx qs.count > 0 then cl_count(qs) else 0;
+    if nq > MC_MAX_QUESTIONS { return "the reply has more than 16 questions"; }
+    for i: 0..<nq { a[0].questions[i] = cl_text(ar, qs, cl_item(qs, i)); if a[0].questions[i].count == 0 { return "a question is empty"; } }
+    a[0].nq = nq;
+    ns := cl_raw(text, "notes");
+    nn := ifx ns.count > 0 then cl_count(ns) else 0;
+    if nn > MC_MAX_NOTES { return "the reply has more than 8 notes"; }
+    for i: 0..<nn { a[0].notes[i] = cl_text(ar, ns, cl_item(ns, i)); if a[0].notes[i].count == 0 { return "a note is empty"; } }
+    a[0].nn = nn;
+  }
+  cmds := cl_raw(text, "commands");
+  nc := cl_count(cmds);
+  if nc > MC_MAX_COMMANDS { return "the reply has more than 32 commands"; }
+  for i: 0..<nc { a[0].commands[i] = cl_text(ar, cmds, cl_item(cmds, i)); }
+  a[0].nc = nc;
+  views := cl_raw(text, "view");
+  nv := cl_count(views);
+  if nv > MC_MAX_VIEWS { return "the reply asks to view more than 16 files"; }
+  for i: 0..<nv { a[0].view[i] = cl_text(ar, views, cl_item(views, i)); }
+  a[0].nv = nv;
+  a[0].finished = cl_bool(text, "finished").value;
+  a[0].reply = cl_str(ar, text, "reply");
+  a[0].asks = cl_str(ar, text, "ask") == "question";
+  tds := cl_raw(text, "todos");
+  if tds.count > 0 {
+    a[0].has_todos = true;
+    nt := cl_count(tds);
+    if nt > MC_MAX_TODOS { return "the reply has more than 24 todos"; }
+    for i: 0..<nt {
+      td := cl_json(tds, cl_item(tds, i));
+      a[0].todos[i] = McTodo.{id = cl_str(ar, td, "id"), content = cl_str(ar, td, "content"), status = cl_str(ar, td, "status")};
+      if a[0].todos[i].content.count == 0 { return "a todo has no content"; }
+    }
+    a[0].nt = nt;
+  }
+  if ar[0].full { return "the reply does not fit its buffer"; }
+  if a[0].finished && a[0].reply.count == 0 { return "finished is true but reply is empty"; }
+  if a[0].asks && a[0].reply.count == 0 { return "ask is question but reply is empty"; }
+  for i: 0..<nc { if a[0].commands[i].count == 0 { return "a command is empty"; } }
+  return "";
+}
+
+// The reply's delegate member read into a (a run whose owner runs sub-agents; after
+// mc_action_parse_as, which leaves nd 0). The member may be missing. What's wrong with it, or "".
+// claude: the Claude levels are allowed too; openrouter: the openrouter level.
+mc_action_delegates :: (ar: [] ClArena, text: string, a: [] McAction, claude: bool, openrouter: bool) -> string {
+  return mc_action_delegates_all(ar, text, a, claude, openrouter, false);
+}
+mc_action_delegates_all :: (ar: [] ClArena, text: string, a: [] McAction, claude: bool, openrouter: bool, inkling: bool) -> string {
+  a[0].nd = 0;
+  spec: [192] u8;
+  ns := json_raw(spec[..], 0, "?a:delegate ?o:delegate.* ?s:delegate.*.level=hydrogen|carbon|neon");
+  if claude { ns = json_raw(spec[..], ns, "|haiku|sonnet|opus|fable"); }
+  if openrouter { ns = json_raw(spec[..], ns, "|openrouter"); }
+  if inkling { ns = json_raw(spec[..], ns, "|inkling"); }
+  ns = json_raw(spec[..], ns, " ?s:delegate.*.task");
+  if !cl_valid(text, cast(string) spec[0..<ns]) { return "the reply's delegate does not match the next_action schema"; }
+  ds := cl_raw(text, "delegate");
+  nd := ifx ds.count > 0 then cl_count(ds) else 0; // mutant: equivalent
+  if nd > MC_MAX_DELEGATES { return "the reply delegates more than 6 tasks"; }
+  for i: 0..<nd {
+    d := cl_json(ds, cl_item(ds, i));
+    resume := cl_int(d, "resume"); stop := cl_bool(d, "stop");
+    a[0].delegates[i] = McDelegate.{level = cl_str(ar, d, "level"), task = cl_str(ar, d, "task"), resume = ifx resume.ok then resume.value else 0,
+                                    stop = stop.ok && stop.value && resume.ok && resume.value > 0};
+    // with resume an empty task only waits for that sub-agent: no note (GitHub #13776)
+    if a[0].delegates[i].task.count == 0 && !a[0].delegates[i].stop && a[0].delegates[i].resume <= 0 { return "a delegated task is empty"; }
+  }
+  if ar[0].full { return "the reply does not fit its buffer"; }
+  a[0].nd = nd;
+  return "";
+}
+
+// A compiler question, one line: the word that says what is asked, then one or two arguments.
+//   defines NAME        uses NAME [FILE]     exports FILE     show NAME [FILE]     check FILE
+//   explain CODE        vocab NAME           effects FILE [PROC]                   depends FILE
+MC_Q_DEFINES :: 0; MC_Q_USES :: 1; MC_Q_EXPORTS :: 2; MC_Q_SHOW :: 3; MC_Q_CHECK :: 4;
+MC_Q_EXPLAIN :: 5; MC_Q_VOCAB :: 6; MC_Q_EFFECTS :: 7; MC_Q_DEPENDS :: 8;
+MC_Q_OPS :: [9] string.["defines", "uses", "exports", "show", "check", "explain", "vocab", "effects", "depends"];
+MC_Q_MOST :: [9] int.[1, 2, 1, 2, 1, 1, 1, 2, 1];       // arguments each takes at most (each takes one at least)
+MC_Q_FORMS :: "defines NAME, uses NAME [FILE], exports FILE, show NAME [FILE], check FILE, explain CODE, vocab NAME, effects FILE [PROC], depends FILE";
+
+// op: MC_Q_*, or -1 with why. a and b are parts of q.
+McQuestion :: struct { op: int = -1; a: string; b: string; why: string; }
+mc_question :: (q: string) -> McQuestion {
+  w: [4] string; n := 0; i := 0;
+  while i < q.count {
+    while i < q.count && (q[i] == ' ' || q[i] == 9) { i += 1; }
+    e := i;
+    while e < q.count && q[e] != ' ' && q[e] != 9 { e += 1; }
+    if e > i { if n < 4 { w[n] = cast(string) q[i..<e]; } n += 1; }
+    i = e;
+  }
+  r := McQuestion.{};
+  if n == 0 { r.why = "an empty question"; return r; }
+  for o, k: MC_Q_OPS { if o == w[0] { r.op = k; } }
+  if r.op < 0 { r.why = "no such question"; return r; }
+  if n < 2 { r.op = -1; r.why = "the question names nothing"; return r; }
+  if n - 1 > MC_Q_MOST[r.op] { r.op = -1; r.why = "the question has too many words"; return r; }
+  r.a = w[1];
+  if n > 2 { r.b = w[2]; }
+  return r;
+}
+
+// ---------------------------------------------------------------- checks
+
+#test "the delegate member: in the schema of any modes, read from a reply, refused when wrong" {
+  b: [4096] u8; d: [4096] u8;
+  s := mc_schema_delegate(MC_SCHEMA, d[..], false, false);
+  #assert json_valid(s) && cl_raw(s, "properties.delegate.items.properties.level.enum").count > 0 && cl_count(cl_raw(s, "required")) == 8;
+  #assert cl_count(cl_raw(s, "properties.edits.items.required")) == 3 && s.count == MC_SCHEMA.count + MC_SCHEMA_DELEGATE.count + 11;
+  s = mc_schema_delegate(mc_schema(b[..], true, true), d[..], true, false);
+  #assert json_valid(s) && cl_count(cl_raw(s, "required")) == 10 && cl_raw(s, "properties.notes").count > 0 && cl_raw(s, "properties.delegate").count > 0;
+  #assert mc_schema_delegate("{}", d[..], false, false) == "" && mc_schema_delegate(MC_SCHEMA, d[0..<64], false, false) == "";
+  ab: [2048] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  whole := "{\"rationale\":\"split\",\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"count the files\"},{\"level\":\"carbon\",\"task\":\"find the bug\"}],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  #assert mc_action_parse(ar[..], whole, a[..]) == "" && a[0].nd == 0;
+  #assert mc_action_delegates(ar[..], whole, a[..], false, false) == "" && a[0].nd == 2 && a[0].delegates[0].level == "hydrogen" && a[0].delegates[0].task == "count the files" && a[0].delegates[1].level == "carbon";
+  // the schema written from pieces is the old constants; openrouter joins the enum only when on
+  #assert mc_schema_delegate(MC_SCHEMA, d[..], false, false).count == MC_SCHEMA.count + MC_SCHEMA_DELEGATE.count + 11;
+  #assert mc_schema_delegate(MC_SCHEMA, d[..], true, false).count == MC_SCHEMA.count + MC_SCHEMA_DELEGATE_CLAUDE.count + 11;
+  s = mc_schema_delegate(MC_SCHEMA, d[..], true, true);
+  #assert json_valid(s) && cl_count(cl_raw(s, "properties.delegate.items.properties.level.enum")) == 8;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"openrouter\",\"task\":\"t\"}]}", a[..], false, true) == "" && a[0].delegates[0].level == "openrouter";
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"openrouter\",\"task\":\"t\"}]}", a[..], true, false) != "";
+  // neon is a Gemini level: read with or without the Claude levels
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"neon\",\"task\":\"ship it\"}]}", a[..], false, false) == "" && a[0].nd == 1 && a[0].delegates[0].level == "neon";
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"neon\",\"task\":\"ship it\"}]}", a[..], true, false) == "" && a[0].nd == 1;
+  // the Claude levels are read only for an owner that runs Claude Code
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"opus\",\"task\":\"x\"}]}", a[..], false, false) != "";
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"opus\",\"task\":\"x\"},{\"level\":\"fable\",\"task\":\"y\"}]}", a[..], true, false) == "" && a[0].nd == 2 && a[0].delegates[0].level == "opus" && a[0].delegates[1].level == "fable";
+  #assert mc_action_delegates(ar[..], "{\"rationale\":\"x\"}", a[..], false, false) == "" && a[0].nd == 0;
+  // resume names a paused sub-agent by its number; left out, zero or less, the task is a new sub-agent's
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"write it now\",\"resume\":3},{\"level\":\"carbon\",\"task\":\"y\",\"resume\":0},{\"level\":\"carbon\",\"task\":\"z\",\"resume\":-2}]}", a[..], false, false) == "" && a[0].nd == 3;
+  #assert a[0].delegates[0].resume == 3 && a[0].delegates[1].resume == 0 && a[0].delegates[2].resume == -2;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"z\"}]}", a[..], false, false) == "" && a[0].delegates[0].resume == 0 && !a[0].delegates[0].stop;
+  // stop with resume stops that sub-agent (its task may be empty); stop with no number is no stop
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"\",\"resume\":2,\"stop\":true},{\"level\":\"carbon\",\"task\":\"w\",\"stop\":true}]}", a[..], false, false) == "" && a[0].nd == 2;
+  #assert a[0].delegates[0].stop && a[0].delegates[0].resume == 2 && !a[0].delegates[1].stop;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"\",\"stop\":true}]}", a[..], false, false) == "a delegated task is empty";
+  // resume with an empty task only waits for that sub-agent (#13776)
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"\",\"resume\":2}]}", a[..], false, false) == "" && a[0].delegates[0].resume == 2 && !a[0].delegates[0].stop;
+  #assert cl_raw(mc_schema_delegate(MC_SCHEMA, d[..], false, false), "properties.delegate.items.properties.stop.type") == "\"boolean\"";
+  // six tasks are the most
+  six := "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"a\"},{\"level\":\"carbon\",\"task\":\"b\"},{\"level\":\"carbon\",\"task\":\"c\"},{\"level\":\"carbon\",\"task\":\"d\"},{\"level\":\"carbon\",\"task\":\"e\"},{\"level\":\"carbon\",\"task\":\"f\"}]}";
+  seven := "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"a\"},{\"level\":\"carbon\",\"task\":\"b\"},{\"level\":\"carbon\",\"task\":\"c\"},{\"level\":\"carbon\",\"task\":\"d\"},{\"level\":\"carbon\",\"task\":\"e\"},{\"level\":\"carbon\",\"task\":\"f\"},{\"level\":\"carbon\",\"task\":\"g\"}]}";
+  #assert mc_action_delegates(ar[..], six, a[..], false, false) == "" && a[0].nd == 6 && a[0].delegates[5].task == "f";
+  #assert mc_action_delegates(ar[..], seven, a[..], false, false) == "the reply delegates more than 6 tasks" && a[0].nd == 0;
+  #assert cl_raw(mc_schema_delegate(MC_SCHEMA, d[..], false, false), "properties.delegate.items.properties.resume.type") == "\"integer\"" && cl_count(cl_raw(mc_schema_delegate(MC_SCHEMA, d[..], true, false), "properties.delegate.items.required")) == 2;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"hard\",\"task\":\"x\"}]}", a[..], false, false) != "" && a[0].nd == 0;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"\"}]}", a[..], false, false) == "a delegated task is empty";
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"}]}", a[..], false, false) == "the reply delegates more than 6 tasks";
+}
+
+#test "the schema a run sends: MC_SCHEMA with nothing on, the added members with each mode" {
+  b: [4096] u8;
+  #assert mc_schema(b[..], false, false) == MC_SCHEMA;
+  #assert mc_schema(b[..], true, true) == MC_SCHEMA_AWARE && json_valid(MC_SCHEMA_AWARE);
+  s := mc_schema(b[..], true, false);
+  #assert json_valid(s) && cl_raw(s, "properties.questions").count > 0 && cl_raw(s, "properties.notes").count == 0 && cl_raw(s, "properties.edits.items.properties.seen").count > 0;
+  #assert cl_count(cl_raw(s, "required")) == 8 && cl_count(cl_raw(s, "properties.edits.items.required")) == 5;
+  s = mc_schema(b[..], false, true);
+  #assert json_valid(s) && cl_raw(s, "properties.questions").count == 0 && cl_raw(s, "properties.notes").count > 0 && cl_raw(s, "properties.edits.items.properties.seen").count == 0;
+  #assert cl_count(cl_raw(s, "required")) == 8 && cl_count(cl_raw(s, "properties.edits.items.required")) == 3;
+  #assert mc_schema(b[0..<100], true, true) == "";
+}
+
+#test "with more, questions, notes and an edit's seen and name parse; without, they are not read" {
+  ab: [4096] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  whole := "{\"rationale\":\"fix\",\"notes\":[\"shapes.coax:4-4 area multiplies w by h\",\"a guess\"],\"edits\":[{\"path\":\"shapes.coax\",\"old\":\"\",\"new\":\"area :: () {}\",\"seen\":\"0123456789ab\",\"name\":\"area\"},{\"path\":\"a.txt\",\"old\":\"x\",\"new\":\"y\",\"seen\":\"\",\"name\":\"\"}],\"questions\":[\"defines area\",\"check shapes.coax\"],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  why := mc_action_parse_as(ar[..], whole, a[..], true);
+  #assert why == "" && a[0].nq == 2 && a[0].questions[0] == "defines area" && a[0].questions[1] == "check shapes.coax" && a[0].nn == 2 && a[0].notes[1] == "a guess";
+  #assert a[0].ne == 2 && a[0].edits[0].seen == "0123456789ab" && a[0].edits[0].name == "area" && a[0].edits[1].seen == "" && a[0].edits[1].name == "" && a[0].edits[1].text == "y";
+  // the same reply read the old way: an action, with none of them
+  why = mc_action_parse(ar[..], whole, a[..]);
+  #assert why == "" && a[0].nq == 0 && a[0].nn == 0 && a[0].ne == 2 && a[0].edits[0].seen == "" && a[0].edits[0].name == "";
+  // a reply without the added members is still an action
+  why = mc_action_parse_as(ar[..], "{\"rationale\":\"x\",\"edits\":[{\"path\":\"a\",\"old\":\"b\",\"new\":\"c\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..], true);
+  #assert why == "" && a[0].nq == 0 && a[0].nn == 0 && a[0].ne == 1 && a[0].edits[0].seen == "";
+}
+
+#test "with more, bad questions and notes are refused with a reason" {
+  ab: [8192] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  head := "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",";
+  b: [2048] u8;
+  n := json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"questions\":[1]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "the reply's questions, notes or an edit's seen or name do not match the next_action schema";
+  #assert mc_action_parse(ar[..], cast(string) b[0..<n], a[..]) == "";          // not read without more
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"notes\":\"one\"}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) != "";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"edits\":[{\"path\":\"a\",\"old\":\"\",\"new\":\"\",\"seen\":7}]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) != "";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"questions\":[\"defines a\",\"\"]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "a question is empty";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"notes\":[\"\"]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "a note is empty";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"questions\":[");
+  for i: 0..<17 { n = json_raw(b[..], n, ifx i > 0 then ",\"vocab a\"" else "\"vocab a\""); }
+  n = json_raw(b[..], n, "]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "the reply has more than 16 questions";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"notes\":[");
+  for i: 0..<9 { n = json_raw(b[..], n, ifx i > 0 then ",\"n\"" else "\"n\""); }
+  n = json_raw(b[..], n, "]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "the reply has more than 8 notes";
+}
+
+#test "a question is a word and one or two arguments; anything else says why" {
+  q := mc_question("defines area");
+  #assert q.op == MC_Q_DEFINES && q.a == "area" && q.b == "" && q.why == "";
+  q = mc_question("  uses   area \t shapes.coax ");
+  #assert q.op == MC_Q_USES && q.a == "area" && q.b == "shapes.coax";
+  q = mc_question("effects main.coax timed");
+  #assert q.op == MC_Q_EFFECTS && q.a == "main.coax" && q.b == "timed";
+  #assert mc_question("show area").op == MC_Q_SHOW && mc_question("show area shapes.coax").b == "shapes.coax" && mc_question("exports a.coax").op == MC_Q_EXPORTS;
+  #assert mc_question("check a.coax").op == MC_Q_CHECK && mc_question("explain E0325").op == MC_Q_EXPLAIN && mc_question("vocab rp_put").op == MC_Q_VOCAB && mc_question("depends a.coax").op == MC_Q_DEPENDS && mc_question("effects a.coax").op == MC_Q_EFFECTS;
+  q = mc_question("where is area");
+  #assert q.op == -1 && q.why == "no such question";
+  q = mc_question("defines");
+  #assert q.op == -1 && q.why == "the question names nothing";
+  q = mc_question("defines a b");
+  #assert q.op == -1 && q.why == "the question has too many words";
+  #assert mc_question("uses a b c").op == -1 && mc_question("").why == "an empty question" && mc_question("   ").op == -1;
+  #assert MC_Q_OPS.count == MC_Q_MOST.count;
+}
+
+#test "the schema is JSON, and a plain answer parses as finished with no commands" {
+  #assert json_valid(MC_SCHEMA);
+  ab: [1024] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  why := mc_action_parse(ar[..], "{\"rationale\":\"arithmetic\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"none\"}", a[..]);
+  #assert why == "" && a[0].finished && a[0].reply == "4" && a[0].nc == 0 && a[0].nv == 0 && !a[0].asks;
+  why = mc_action_parse(ar[..], "{\"rationale\":\"look\",\"commands\":[\"ls *.swift | wc -l\",\"echo \\\"hi\\\"\"],\"view\":[\"README.md\"],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]);
+  #assert why == "" && a[0].nc == 2 && a[0].commands[1] == "echo \"hi\"" && a[0].view[0] == "README.md" && !a[0].finished;
+}
+
+#test "edits: exact replacements parse; a reply without them is still an action; bad ones are refused" {
+  ab: [2048] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  why := mc_action_parse(ar[..], "{\"rationale\":\"fix\",\"edits\":[{\"path\":\"a.c\",\"old\":\"x = 1;\",\"new\":\"x = \\\"2\\\";\"},{\"path\":\"new.md\",\"old\":\"\",\"new\":\"# hi\\n\"}],\"commands\":[\"make\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]);
+  #assert why == "" && a[0].ne == 2 && a[0].edits[0].path == "a.c" && a[0].edits[0].text == "x = \"2\";" && a[0].edits[1].old == "" && a[0].edits[1].text == "# hi\n" && a[0].nc == 1;
+  why = mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"none\"}", a[..]);
+  #assert why == "" && a[0].ne == 0;
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"edits\":[{\"path\":\"a\",\"old\":1,\"new\":\"\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]) != "";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"edits\":[{\"path\":\"\",\"old\":\"\",\"new\":\"\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]) == "an edit has no path";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"edits\":\"no\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]) != "";
+}
+
+#test "replies that fail the schema or its meaning are refused with a reason" {
+  ab: [1024] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  #assert mc_action_parse(ar[..], "4", a[..]) == "the reply does not match the next_action schema";
+  #assert mc_action_parse(ar[..], "The answer is 4.", a[..]) == "the reply is not JSON";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\"}", a[..]) != "";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[1],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"none\"}", a[..]) != "";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"maybe\"}", a[..]) != "";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"\",\"ask\":\"none\"}", a[..]) == "finished is true but reply is empty";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"question\"}", a[..]) == "ask is question but reply is empty";
+}
+
+#test "optional todos parse, validate status, and leave has_todos false when omitted" {
+  ab: [8192] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  base := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  #assert mc_action_parse(ar[..], base, a[..]) == "" && !a[0].has_todos && a[0].nt == 0;
+  with_todos := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",\"todos\":[{\"id\":\"1\",\"content\":\"Read code\",\"status\":\"completed\"},{\"id\":\"2\",\"content\":\"Write tests\",\"status\":\"in_progress\"}]}";
+  #assert mc_action_parse(ar[..], with_todos, a[..]) == "" && a[0].has_todos && a[0].nt == 2;
+  #assert a[0].todos[0].id == "1" && a[0].todos[0].content == "Read code" && a[0].todos[0].status == "completed";
+  #assert a[0].todos[1].id == "2" && a[0].todos[1].content == "Write tests" && a[0].todos[1].status == "in_progress";
+  empty_todos := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",\"todos\":[]}";
+  #assert mc_action_parse(ar[..], empty_todos, a[..]) == "" && a[0].has_todos && a[0].nt == 0;
+  bad_status := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",\"todos\":[{\"id\":\"1\",\"content\":\"x\",\"status\":\"done\"}]}";
+  #assert mc_action_parse(ar[..], bad_status, a[..]) != "";
+  empty_content := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",\"todos\":[{\"id\":\"1\",\"content\":\"\",\"status\":\"pending\"}]}";
+  #assert mc_action_parse(ar[..], empty_content, a[..]) == "a todo has no content";
+}
+
+```
+
+## coax/lib/microcoder/tools.coax
+
+Source: https://github.com/OpenAgentsInc/openagents/blob/ff7aef3452208a63db93a09dc9255b15cffc3d80/coax/lib/microcoder/tools.coax
+
+SHA-256: `945e94e26237b2a83c833d5b7db7cafabf90904ba971b23eac8f13e8cefacdd7`
+
+```
+// Microcoder's tools in v1 (docs/coder/microcoder.md, "Tools in v1"):
+//   commands  run by /bin/sh in the working directory through
+//             coax/platform/process-native.c (link it), 30 s each; past it the
+//             whole process group is killed and the command recorded as timed
+//             out. stdout and stderr are kept as a head and a tail, and, when
+//             the run has a spill folder, whole in a file there (McOutput.spill).
+//   view      files under the working directory, or the run's spill folder: "path" or
+//             "path:A-B", shown as numbered lines, 300 of them (or the range asked
+//             for, 800 at most) and a line saying which are left (GitHub #13325).
+// Nothing else: no network tool, no editing outside the working directory;
+// writes happen through commands, so they show in the transcript. With
+// route.local_work under 0.5 the loop refuses commands before they reach
+// here (loop.coax). mc_run_tools runs a pending action's commands and views
+// into the loop.
+
+#load "loop.coax";
+#load "git-guard.coax";
+#load "executor-guard.coax";
+#load "../agent/native-profile.coax";
+#load "../sys/fs.coax";
+#load "../repo/lines.coax";
+cxproc_platform :: ()->int #foreign #effects(all);
+cxproc_flush_timeout :: (h:int,ms:int)->int #foreign #effects(all);
+
+MC_COMMAND_SECONDS :: MC_COMMAND_DEFAULT;
+MC_VIEW_BYTES :: 65536;
+MC_VIEW_BINARY :: "[a binary file: not shown]";
+MC_KEEP_HEAD :: 3000;            // with the tail and the gap line, under the state's 3,200 + 3,200 cut
+MC_KEEP_TAIL :: 3000;
+MC_VIEW_LINES :: 150;            // lines a view shows when it names no range (GitHub #13325, #13830)
+MC_VIEW_RANGE_MOST :: 800;       // lines a ranged view shows at most
+MC_VIEW_SHOW :: 12288;           // bytes a view shows at most, before the step's budget
+MC_VIEW_RAW :: 524288;           // bytes of a file a view reads
+MC_VIEW_MIN :: 600;              // a view with less room than this left in the step's budget is held back
+MC_EDIT_SHOW :: 3072;            // bytes an edit's result shows: its new text, or the nearest region
+MC_SPILL_SHOW :: 4096;           // bytes of a long output the state shows when its whole text is saved
+MC_SPILL_MOST :: 16777216;       // bytes of one output a spill file keeps
+
+// What one command printed: its head, and a ring of its latest bytes.
+McOutput :: struct {
+  head: [MC_KEEP_HEAD] u8; nh: int;
+  tail: [MC_KEEP_TAIL] u8; nt: int; at: int;    // ring: nt bytes held, at the next write
+  dropped: int;                  // bytes between head and tail left out
+  text: [12100] u8; ntext: int;  // assembled by mc_output_text
+  total: int; lines: int; esc: int;   // bytes printed, line ends among them, their escaped size in JSON
+  // The whole output for a spill file: the caller sets all (a buffer) and spill (the file's path) before a
+  // command, and clears them after. A chunk goes to the file each time all fills; mc_output_spill ends it.
+  all: [] u8; nall: int; spill: string; written: int; spill_failed: bool;
+}
+
+mc_output_reset :: (o: [] McOutput) {
+  o[0].nh = 0; o[0].nt = 0; o[0].at = 0; o[0].dropped = 0;
+  o[0].total = 0; o[0].lines = 0; o[0].esc = 0; o[0].nall = 0; o[0].written = 0; o[0].spill_failed = false;
+}
+
+mc_output_flush :: (o: [] McOutput) {
+  if o[0].nall == 0 { return; }
+  if o[0].written + o[0].nall > MC_SPILL_MOST { o[0].nall = 0; return; }   // past what a spill file keeps
+  chunk := cast(string) o[0].all[0..<o[0].nall];
+  ok := ifx o[0].written == 0 then fs_write(o[0].spill, chunk) else fs_append(o[0].spill, chunk);
+  if !ok { o[0].spill_failed = true; }
+  o[0].written += o[0].nall; o[0].nall = 0;
+}
+
+// Ends the spill file: true when the whole output (its first 16 MB) is in it.
+mc_output_spill :: (o: [] McOutput) -> bool {
+  if o[0].spill.count == 0 || o[0].all.count == 0 { return false; }
+  mc_output_flush(o);
+  return !o[0].spill_failed && o[0].written > 0;
+}
+
+mc_output_byte :: (o: [] McOutput, c: u8) {
+  o[0].total += 1; o[0].esc += mc_esc_byte(c);
+  if c == '\n' { o[0].lines += 1; }
+  if o[0].all.count > 0 {
+    if o[0].nall < o[0].all.count { o[0].all[o[0].nall] = c; o[0].nall += 1; }
+    if o[0].nall == o[0].all.count && o[0].spill.count > 0 { mc_output_flush(o); }
+  }
+  if o[0].nh < MC_KEEP_HEAD { o[0].head[o[0].nh] = c; o[0].nh += 1; return; }
+  if o[0].nt == MC_KEEP_TAIL { o[0].dropped += 1; } else { o[0].nt += 1; }
+  o[0].tail[o[0].at] = c;
+  o[0].at = (o[0].at + 1) % MC_KEEP_TAIL;
+}
+
+mc_output_text :: (o: [] McOutput) -> string {
+  n := 0;
+  for i: 0..<o[0].nh { o[0].text[n] = o[0].head[i]; n += 1; }
+  if o[0].dropped > 0 {
+    num: [24] u8;
+    k := json_write_int(num[..], 0, o[0].dropped);
+    for c: "\n[... " { o[0].text[n] = c; n += 1; }
+    for i: 0..<k { o[0].text[n] = num[i]; n += 1; }
+    for c: " bytes left out ...]\n" { o[0].text[n] = c; n += 1; }
+  }
+  start := ifx o[0].nt == MC_KEEP_TAIL then o[0].at else 0;
+  for i: 0..<o[0].nt { o[0].text[n] = o[0].tail[(start + i) % MC_KEEP_TAIL]; n += 1; }
+  o[0].ntext = n;
+  return cast(string) o[0].text[0..<n];
+}
+
+mc_put :: (out: [] u8, n: int, s: string) -> int { return rp_put(out, n, s); }
+mc_put_int :: (out: [] u8, n: int, v: int) -> int { return rp_put_int(out, n, v); }
+mc_line_ends :: (s: string) -> int { k := 0; for c: s { if c == '\n' { k += 1; } } return k; }
+
+// What the state shows of a long output whose whole text is saved at path (GitHub #13325): its head
+// and tail in about show escaped bytes, and a line in between naming the file and the lines left out,
+// so they can be viewed by range. With no room for either, the line alone.
+mc_output_shown :: (o: [] McOutput, show: int, path: string, out: [] u8) -> string {
+  tl: [MC_KEEP_TAIL] u8;
+  start := ifx o[0].nt == MC_KEEP_TAIL then o[0].at else 0;
+  for i: 0..<o[0].nt { tl[i] = o[0].tail[(start + i) % MC_KEEP_TAIL]; }
+  head := cast(string) o[0].head[0..<o[0].nh]; tail := cast(string) tl[0..<o[0].nt];
+  half := (show - 260 - 2 * path.count) / 2;
+  if half < 0 { half = 0; }
+  h := mc_fit_head(head, half);
+  t := mc_fit_tail(tail, half);
+  if half == 0 { h = 0; t = tail.count; }
+  gap := o[0].total - h - (tail.count - t);
+  first := mc_line_ends(cast(string) head[0..<h]) + 1;
+  last := o[0].lines - mc_line_ends(cast(string) tail[t..<tail.count]);
+  if last < first { last = first; }
+  ends := ifx o[0].total > 0 && o[0].total == o[0].nh + o[0].nt + o[0].dropped && tail.count > 0 && tail[tail.count - 1] != '\n' then o[0].lines + 1 else o[0].lines;
+  n := mc_put(out, 0, cast(string) head[0..<h]);
+  if h > 0 && head[h - 1] != '\n' { n = mc_put(out, n, "\n"); }
+  if h == 0 && t == tail.count {
+    n = mc_put(out, n, "[the output, "); n = mc_put_int(out, n, o[0].total); n = mc_put(out, n, " bytes in "); n = mc_put_int(out, n, ends);
+    n = mc_put(out, n, " lines, is held back: this step's results reached their 32 KB. It is saved whole: view "); n = mc_put(out, n, path); n = mc_put(out, n, ":1-");
+    n = mc_put_int(out, n, MC_VIEW_LINES); n = mc_put(out, n, "]\n");
+  } else {
+    n = mc_put(out, n, "[... "); n = mc_put_int(out, n, gap); n = mc_put(out, n, " bytes (lines "); n = mc_put_int(out, n, first); n = mc_put(out, n, "-");
+    n = mc_put_int(out, n, last); n = mc_put(out, n, ") left out. The whole output, "); n = mc_put_int(out, n, ends); n = mc_put(out, n, " lines, is saved: view ");
+    n = mc_put(out, n, path); n = mc_put(out, n, ":"); n = mc_put_int(out, n, first); n = mc_put(out, n, "-");
+    n = mc_put_int(out, n, ifx last < first + MC_VIEW_LINES - 1 then last else first + MC_VIEW_LINES - 1); n = mc_put(out, n, " to read them]\n");
+  }
+  n = mc_put(out, n, cast(string) tail[t..<tail.count]);
+  return cast(string) out[0..<n];
+}
+
+McCommandResult :: struct {
+  exit: int;                     // -1 when killed (timed_out) or it could not start
+  timed_out: bool;
+  output: string;                // in the McOutput given
+}
+
+mc_proc_arg :: (h: int, field: int, s: string) -> bool {
+  for c: s { if c == 0 || cxproc_push(h, field, cast(int) c) != 0 { return false; } }
+  return cxproc_end(h, field) == 0;
+}
+
+// Runs command by /bin/sh -c in cwd, stdin closed, for at most seconds.
+mc_run_command :: (cwd:string,command:string,seconds:int,o:[]McOutput)->McCommandResult {
+  return mc_run_command_profile(cwd,command,seconds,o,"danger-full-access");
+}
+mc_run_command_profile :: (cwd: string, command: string, seconds: int, o: [] McOutput, profile:string) -> McCommandResult {
+  p: [1] McCommandProc;
+  mc_cmd_start(p[..], cwd, command, seconds, o, profile);
+  while !mc_cmd_step(p[..], o, 1000000) {}
+  return mc_cmd_result(p[..], o);
+}
+
+// A command that runs while its owner does other things (GitHub #13750): mc_cmd_start spawns it,
+// mc_cmd_step reads what it printed so far, waiting at most wait_ms (0: only what is there), and
+// says when it is done; mc_cmd_stop kills it (its whole process group) at once; mc_cmd_result gives
+// the result and frees the process. mc_run_command_profile is the same, waited for.
+McCommandProc :: struct {
+  h: int;                        // the process, -1 when none is held
+  seconds: int; deadline: int;   // its time limit, and when it runs out
+  eof_at: int;                   // when its output ended (it then has MC_EXIT_MS to exit), -1 before
+  exit: int;                     // -1 when killed (timed_out, stopped) or it could not start
+  timed_out: bool;
+  stopped: bool;                 // its owner stopped it (mc_cmd_stop)
+  done: bool;
+}
+MC_EXIT_MS :: 5000;
+MC_PROC_RUNNING :: -2;           // cxproc_wait: still running at its timeout              // how long a command whose output ended has to exit
+MC_STEP_LINES :: 4096;           // lines one mc_cmd_step takes at most, so a loud command can't hold its owner
+
+mc_cmd_say :: (o: [] McOutput, s: string) { for c: s { mc_output_byte(o, c); } }
+
+// Why the shared-checkout guard refuses command in cwd (git-guard.coax mc_gg_refuse), into out; "" when it runs.
+mc_git_refusal :: (cwd: string, command: string, out: [] u8) -> string {
+  hb: [4096] u8;
+  return mc_gg_refuse(cwd, command, cl_getenv("HOME", hb[..]), out);
+}
+
+// Spawns command; done at once (with why in the output) when it could not start, or when the
+// shared-checkout guard refuses it (exit 126, as a refused command's, GitHub #13758).
+mc_cmd_start :: (p: [] McCommandProc, cwd: string, command: string, seconds: int, o: [] McOutput, profile: string) {
+  mc_output_reset(o);
+  p[0] = McCommandProc.{h = -1, seconds = seconds, eof_at = -1, exit = -1};
+  rb: [2048] u8; refused := mc_git_refusal(cwd, command, rb[..]);
+  if refused.count > 0 { mc_cmd_say(o, refused); p[0].exit = 126; p[0].done = true; return; }
+  h := cxproc_new();
+  if h < 0 { mc_cmd_say(o, "no process slot is free"); p[0].done = true; return; }
+  ok:=mc_profile_args(h,cwd,profile);
+  ok = ok && mc_proc_arg(h, CL_FIELD_ARG, "/bin/sh") && mc_proc_arg(h, CL_FIELD_ARG, "-c") && mc_proc_arg(h, CL_FIELD_ARG, command);
+  if cwd.count > 0 { ok = ok && mc_proc_arg(h, CL_FIELD_CWD, cwd); }
+  if !ok || cxproc_spawn(h) != 0 {
+    x := cxproc_release(h);
+    mc_cmd_say(o, "the command could not start"); p[0].done = true; return;
+  }
+  if !mc_profile_input(h,profile) {k:=cxproc_kill(h,9);x:=cxproc_release(h);mc_cmd_say(o, "sandbox setup failed");p[0].done = true;return;}
+  x := cxproc_close_stdin(h);
+  p[0].h = h;
+  p[0].deadline = cxproc_now_ms() + seconds * 1000;
+}
+
+// Reads what the command printed (waiting at most wait_ms for a line); true once it is done: it
+// exited, or ran past its time and was killed.
+mc_cmd_step :: (p: [] McCommandProc, o: [] McOutput, wait_ms: int) -> bool {
+  if p[0].done { return true; }
+  h := p[0].h;
+  if p[0].eof_at < 0 {
+    for guard: 0..<MC_STEP_LINES {
+      left := p[0].deadline - cxproc_now_ms();
+      if left <= 0 { p[0].timed_out = true; break; }
+      n := cxproc_read_line(h, ifx wait_ms < left then wait_ms else left);
+      if n == CL_TIMEOUT {
+        if wait_ms >= left { p[0].timed_out = true; break; }
+        return false;
+      }
+      if n == CL_TOO_LONG { mc_cmd_say(o, "[a line too long to keep]"); mc_output_byte(o, '\n'); continue; }
+      if n < 0 { p[0].eof_at = cxproc_now_ms(); break; }
+      for i: 0..<n { mc_output_byte(o, cast(u8) cxproc_line_byte(h, i)); }
+      mc_output_byte(o, '\n');
+    }
+    if !p[0].timed_out && p[0].eof_at < 0 { return false; }     // more lines wait: the next step reads them
+  }
+  if p[0].timed_out {
+    k := cxproc_kill(h, 9);
+    w := cxproc_wait(h, 2000);
+    p[0].done = true;
+    return true;
+  }
+  // its output ended: it has MC_EXIT_MS to exit, else it is killed as timed out
+  left := p[0].eof_at + MC_EXIT_MS - cxproc_now_ms();
+  status := cxproc_wait(h, ifx left <= 0 then 0 else ifx wait_ms < left then wait_ms else left);
+  if status == MC_PROC_RUNNING && cxproc_now_ms() < p[0].eof_at + MC_EXIT_MS { return false; }
+  if status < 0 { k := cxproc_kill(h, 9); p[0].exit = -1; p[0].timed_out = true; }
+  else { p[0].exit = status; }
+  p[0].done = true;
+  return true;
+}
+
+// Stops a running command: its whole process group is killed now.
+mc_cmd_stop :: (p: [] McCommandProc) {
+  if p[0].done || p[0].h < 0 { return; }
+  k := cxproc_kill(p[0].h, 9);
+  w := cxproc_wait(p[0].h, 2000);
+  p[0].exit = -1; p[0].stopped = true; p[0].done = true;
+}
+
+// A done command's result (its stderr after its stdout, and how it ended); the process is freed.
+mc_cmd_result :: (p: [] McCommandProc, o: [] McOutput) -> McCommandResult {
+  if p[0].h >= 0 {
+    // stderr after stdout, as it would read in a terminal when they don't interleave
+    ne := cxproc_stderr_count(p[0].h);
+    for i: 0..<ne { mc_output_byte(o, cast(u8) cxproc_stderr_byte(p[0].h, i)); }
+    y := cxproc_release(p[0].h);
+    p[0].h = -1;
+  }
+  if p[0].timed_out {
+    msg: [64] u8;
+    m := json_raw(msg[..], 0, "\n[killed after ");
+    m = json_write_int(msg[..], m, p[0].seconds);
+    m = json_raw(msg[..], m, " s]");
+    for i: 0..<m { mc_output_byte(o, msg[i]); }
+  }
+  if p[0].stopped { mc_cmd_say(o, "\n[stopped]"); }
+  return McCommandResult.{exit = p[0].exit, timed_out = p[0].timed_out, output = mc_output_text(o)};
+}
+
+// Whether path stays under the working directory: relative with no ".."
+// part, or absolute under cwd.
+mc_path_inside :: (cwd: string, path: string) -> bool {
+  if path.count == 0 { return false; }
+  p := path;
+  if p[0] == '/' {
+    if cwd.count == 0 || p.count <= cwd.count + 1 || p[0..<cwd.count] != cwd || p[cwd.count] != '/' { return false; }
+    p = cast(string) p[cwd.count + 1..<p.count];
+  }
+  start := 0;
+  for i: 0..<p.count + 1 {
+    if i == p.count || p[i] == '/' {
+      if i - start == 2 && p[start] == '.' && p[start + 1] == '.' { return false; }
+      start = i + 1;
+    }
+  }
+  for c: p { if c == 0 { return false; } }
+  return true;
+}
+
+McViewResult :: struct {
+  found: bool;
+  content: string;               // the file, or why it isn't shown
+}
+
+// head(1) for a view. Inside a sandbox profile /usr/bin/head is there (bubblewrap links /usr/bin
+// on NixOS); outside one, NixOS has no /usr/bin/head, so its system profile's (GitHub #13231:
+// every view on this machine came back "not found").
+mc_head :: (profile: string, usr_bin_head: bool) -> string {
+  if profile != "danger-full-access" || usr_bin_head { return "/usr/bin/head"; }
+  return "/run/current-system/sw/bin/head";
+}
+
+// A file's bytes as read for a view: n of them in the buffer given; more when the file goes on past
+// them; why when it was not read.
+McRead :: struct { ok: bool; n: int; more: bool; binary: bool; why: string; }
+
+// Whether profile can run here: danger-full-access everywhere; read-only and workspace-write only
+// on Linux, where bwrap confines them (mc_profile_args). Elsewhere a view under them could not
+// start head(1), and said only "could not read it" (GitHub #13732: a worker run's views never
+// reached the working memory's reads, because the run's profile could not read on macOS).
+mc_profile_here :: (profile: string) -> bool { return mc_profile_runs(profile, cxproc_platform() == 3); }
+mc_profile_runs :: (profile: string, linux: bool) -> bool { return profile == "danger-full-access" || (linux && (profile == "workspace-write" || profile == "read-only")); }
+MC_PROFILE_NOT_HERE :: "not shown: this run's sandbox profile needs Linux bwrap, so it can't read files on this computer";
+
+// Reads path under cwd (limit bytes at most, and at most buf's) into buf, through head(1), in profile's sandbox.
+mc_read_profile :: (cwd: string, path: string, limit: int, buf: [] u8, profile: string) -> McRead {
+  if !mc_path_inside(cwd, path) { return McRead.{why = "not shown: the path leaves the working directory"}; }
+  if !mc_profile_here(profile) { return McRead.{why = MC_PROFILE_NOT_HERE}; }
+  h := cxproc_new();
+  if h < 0 { return McRead.{why = "not shown: no process slot is free"}; }
+  most := ifx limit < buf.count then limit else buf.count;
+  num: [24] u8;
+  nn := json_write_int(num[..], 0, most + 1);
+  ok := mc_profile_args(h,cwd,profile) && mc_proc_arg(h, CL_FIELD_ARG, mc_head(profile, fs_exists("/usr/bin/head"))) && mc_proc_arg(h, CL_FIELD_ARG, "-c") && mc_proc_arg(h, CL_FIELD_ARG, cast(string) num[0..<nn]);
+  ok = ok && mc_proc_arg(h, CL_FIELD_ARG, "--") && mc_proc_arg(h, CL_FIELD_ARG, path);
+  if cwd.count > 0 { ok = ok && mc_proc_arg(h, CL_FIELD_CWD, cwd); }
+  if !ok || cxproc_spawn(h) != 0 { x := cxproc_release(h); return McRead.{why = "not shown: could not read it"}; }
+  if !mc_profile_input(h,profile) {k:=cxproc_kill(h,9);x:=cxproc_release(h);return McRead.{why="not shown: sandbox setup failed"};}
+  x := cxproc_close_stdin(h);
+  n := 0; cut := false; binary := false; lines := 0;
+  while true {
+    k := cxproc_read_line(h, 10000);
+    if k < 0 && k != CL_TOO_LONG { break; }
+    if k == CL_TOO_LONG { cut = true; continue; }
+    if lines > 0 { if n < most { buf[n] = '\n'; n += 1; } else { cut = true; } }
+    for i: 0..<k {
+      c := cast(u8) cxproc_line_byte(h, i);
+      if c == 0 { binary = true; }
+      if n < most { buf[n] = c; n += 1; } else { cut = true; }
+    }
+    lines += 1;
+  }
+  status := cxproc_wait(h, 5000);
+  y := cxproc_release(h);
+  if status != 0 { return McRead.{why = "not shown: no such file, or it can't be read"}; }
+  return McRead.{ok = true, n = n, more = cut, binary = binary};
+}
+
+// Reads path under cwd (64 KB at most) into buf, through head(1): the file's text as it is, cut with a
+// line that says where. (Views go through mc_view_lines; this stays for the checks of the sandbox.)
+mc_view_file :: (cwd:string,path:string,buf:[]u8)->McViewResult {
+  return mc_view_file_profile(cwd,path,buf,"danger-full-access");
+}
+mc_view_file_profile :: (cwd: string, path: string, buf: [] u8, profile:string) -> McViewResult {
+  r := mc_read_profile(cwd, path, MC_VIEW_BYTES, buf, profile);
+  if !r.ok { return McViewResult.{content = r.why}; }
+  if r.binary { return McViewResult.{found = true, content = MC_VIEW_BINARY}; }
+  n := r.n;
+  if r.more && n > 0 {
+    // say where it was cut, so the rest is asked for and not guessed
+    k := ifx n > MC_VIEW_BYTES - 96 then MC_VIEW_BYTES - 96 else n;
+    while k > 0 && (buf[k] & 0xC0) == 0x80 { k -= 1; }
+    m := json_raw(buf, k, "\n[... cut here at ");
+    m = json_write_int(buf, m, k);
+    m = json_raw(buf, m, " bytes: view a range of it, PATH:A-B]");
+    if m > 0 { return McViewResult.{found = true, content = cast(string) buf[0..<m]}; }
+  }
+  return McViewResult.{found = true, content = cast(string) buf[0..<n]};
+}
+
+// A view entry: "path", or "path:A-B" (lines A to B), "path:A-" or "path:A" (from line A on). A
+// suffix that is not such a range is part of the path.
+McViewSpec :: struct { path: string; from: int; to: int; ranged: bool; }
+mc_view_spec :: (entry: string) -> McViewSpec {
+  s := McViewSpec.{path = entry};
+  c := -1;
+  for i: 0..<entry.count { if entry[i] == ':' { c = i; } }
+  if c <= 0 || c + 1 >= entry.count { return s; }
+  tail := cast(string) entry[c + 1..<entry.count];
+  d := -1;
+  for i: 0..<tail.count {
+    if tail[i] == '-' { if d >= 0 { return s; } d = i; }
+    else if tail[i] < '0' || tail[i] > '9' { return s; }
+  }
+  a := rp_number(ifx d >= 0 then cast(string) tail[0..<d] else tail);
+  b := 0;
+  if d >= 0 && d + 1 < tail.count { b = rp_number(cast(string) tail[d + 1..<tail.count]); }
+  if a < 1 || b < 0 { return s; }
+  if b > 0 && b < a { x := a; a = b; b = x; }
+  return McViewSpec.{path = cast(string) entry[0..<c], from = a, to = b, ranged = true};
+}
+
+// A view of text (a file's bytes, or its first ones when more) for spec into out: numbered lines in at
+// most cap bytes, and, unless the whole file is shown, a last line saying which lines these are and how
+// to ask for the next ones.
+mc_view_text :: (text: string, spec: McViewSpec, more: bool, cap: int, out: [] u8) -> string {
+  if rp_binary(text) { return MC_VIEW_BINARY; }
+  lines := rp_lines(text);
+  if lines == 0 { return "[an empty file]"; }
+  from := ifx spec.from >= 1 then spec.from else 1;
+  room := (ifx cap < out.count then cap else out.count) - 200 - 2 * spec.path.count;
+  if room < 0 { room = 0; }
+  n := 0;
+  if from > lines {
+    n = mc_put(out, 0, "[the file has "); n = mc_put_int(out, n, lines); n = mc_put(out, n, ifx more then " lines or more" else " lines");
+    n = mc_put(out, n, ": nothing from line "); n = mc_put_int(out, n, from); n = mc_put(out, n, "]");
+    return cast(string) out[0..<n];
+  }
+  most := ifx spec.ranged then MC_VIEW_RANGE_MOST else MC_VIEW_LINES;
+  to := ifx spec.to > 0 then spec.to else from + most - 1;
+  if to - from + 1 > most { to = from + most - 1; }
+  if to > lines { to = lines; }
+  r := rp_numbered(text, from, to, out, 0, room);
+  last := ifx r.cut then r.next - 1 else to;
+  n = r.n;
+  if from == 1 && last == lines && !more { return cast(string) out[0..<n]; }
+  if last < from {
+    n = mc_put(out, n, "[line "); n = mc_put_int(out, n, from); n = mc_put(out, n, " is longer than this view can show: read it with a command such as cut -c1-2000]");
+    return cast(string) out[0..<n];
+  }
+  n = mc_put(out, n, "[lines "); n = mc_put_int(out, n, from); n = mc_put(out, n, "-"); n = mc_put_int(out, n, last);
+  n = mc_put(out, n, " of "); n = mc_put_int(out, n, lines); n = mc_put(out, n, ifx more then " or more" else "");
+  if r.cut { n = mc_put(out, n, ", cut to fit"); }
+  if last < lines || more {
+    n = mc_put(out, n, "; next: view "); n = mc_put(out, n, spec.path); n = mc_put(out, n, ":"); n = mc_put_int(out, n, last + 1);
+    n = mc_put(out, n, "-"); n = mc_put_int(out, n, last + MC_VIEW_LINES);
+  }
+  n = mc_put(out, n, "]");
+  return cast(string) out[0..<n];
+}
+
+// Whether path is a file in the run's spill folder (an absolute path under it, no ".." part).
+mc_spill_inside :: (spill: string, path: string) -> bool {
+  return spill.count > 0 && path.count > 0 && path[0] == '/' && mc_path_inside(spill, path);
+}
+
+// A view entry (path or path:A-B) under cwd, or of a saved output in the run's spill folder (spill;
+// "" when it has none), as numbered lines in at most room escaped bytes (and MC_VIEW_SHOW). The file
+// is read into b.src, the view written to b.view.
+mc_view_lines :: (cwd: string, entry: string, profile: string, spill: string, room: int, b: [] McToolBuffers) -> McViewResult {
+  spec := mc_view_spec(entry);
+  r: McRead;
+  if mc_spill_inside(spill, spec.path) {
+    k := fs_read_at(spec.path, 0, b[0].src[..]);
+    if k < 0 { return McViewResult.{content = "not shown: no such saved output"}; }
+    r = McRead.{ok = true, n = k, more = fs_size(spec.path) > k};
+  } else {
+    r = mc_read_profile(cwd, spec.path, MC_VIEW_RAW, b[0].src[..], profile);
+  }
+  if !r.ok { return McViewResult.{content = r.why}; }
+  if r.binary { return McViewResult.{found = true, content = MC_VIEW_BINARY}; }
+  text := cast(string) b[0].src[0..<r.n];
+  cap := ifx room < MC_VIEW_SHOW then room else MC_VIEW_SHOW;
+  v := mc_view_text(text, spec, r.more, cap, b[0].view[..]);
+  for guard: 0..<4 {
+    e := mc_escaped_size(v);
+    if e <= room || cap < 400 { break; }
+    cap = cap * room / e - 64;
+    v = mc_view_text(text, spec, r.more, cap, b[0].view[..]);
+  }
+  return McViewResult.{found = true, content = v};
+}
+
+MC_EDIT_BYTES :: 524288;         // a file an edit can change, at most
+
+McToolBuffers :: struct {
+  out: [1] McOutput;
+  view: [65536] u8;
+  src: [MC_EDIT_BYTES] u8;       // an edited file before
+  dst: [MC_EDIT_BYTES] u8;       // and after
+  path: [4096] u8;
+  shown: [MC_EDIT_SHOW + 512] u8; // an edit's result: the new text or the nearest region, numbered
+  whyb: [600] u8;
+  replay: [96] u8;               // Ch 234 replay-verification pill from compiled Class-E guard (#13924)
+  replay_n: int;
+}
+
+// An edit's result (GitHub #13325, #13924): applied, with lines from..to of the file now numbered in shown;
+// or why not, with the region of the file nearest the old text numbered in shown ("" when none).
+// replay carries the compiled W2.2 Class-E verification pill ("[E] replay verified · sha256:...").
+McEditResult :: struct { ok: bool; why: string; shown: string; from: int; to: int; replay: string; exec_code: McExecCode; delta: int; new_lines: int; digest: [32] u8; }
+
+// Count logical lines of an edit chunk (0 when empty; newlines + 1 when not ending in '\n').
+mc_edit_line_count :: (s: string) -> int {
+  if s.count == 0 { return 0; }
+  n := 0;
+  for c: s { if c == '\n' { n += 1; } }
+  return ifx s[s.count - 1] != '\n' then n + 1 else n;
+}
+
+// Pre-verify a structured edit against the compiled W2.2 Class-E dense F64 weight cores
+// (oa-exec-json-schema then oa-exec-diff-verify) before touching disk (#13924).
+McEditPrecheck :: struct { ok: bool; found: McFound; verdict: McExecVerdict; pill: string; }
+mc_edit_precheck :: (e: McEdit, text: string, out_pill: [] u8) -> McEditPrecheck {
+  sv := mc_exec_check_schema(ifx e.path.count > 0 then 1 else 0, e.path.count, MC_EXEC_MAX_PATH, 1, e.old.count, 1, e.text.count, MC_EDIT_BYTES);
+  if !sv.ok {
+    return McEditPrecheck.{ok = false, verdict = sv, pill = mc_exec_format_pill(false, sv.label, sv.digest, out_pill)};
+  }
+  if e.old.count == 0 {
+    dv := mc_exec_check_diff(1, 0, 1, mc_edit_line_count(e.text), 0, 0, 0);
+    return McEditPrecheck.{ok = dv.ok, verdict = dv, pill = mc_exec_format_pill(dv.ok, dv.label, dv.digest, out_pill)};
+  }
+  f := mc_find_all(text, e.old);
+  file_lines := rp_lines(text);
+  old_cnt := mc_edit_line_count(e.old);
+  new_cnt := mc_edit_line_count(e.text);
+  old_start := ifx f.count == 1 then mc_line_at(text, f.at) else 1;
+  dv := mc_exec_check_diff(old_start, old_cnt, old_start, new_cnt, file_lines, f.count, 1);
+  return McEditPrecheck.{ok = dv.ok, found = f, verdict = dv, pill = mc_exec_format_pill(dv.ok, dv.label, dv.digest, out_pill)};
+}
+
+// The line of text that byte at is on, from 1.
+mc_line_at :: (text: string, at: int) -> int {
+  k := 1;
+  for i: 0..<(ifx at < text.count then at else text.count) { if text[i] == '\n' { k += 1; } }
+  return k;
+}
+
+// Lines from..to of text, numbered, in about MC_EDIT_SHOW bytes; when cut, a line naming the rest.
+mc_edit_lines :: (text: string, path: string, from: int, to: int, out: [] u8) -> string {
+  r := rp_numbered(text, from, to, out, 0, MC_EDIT_SHOW);
+  n := r.n;
+  if r.cut {
+    n = mc_put(out, n, "[lines "); n = mc_put_int(out, n, r.next); n = mc_put(out, n, "-"); n = mc_put_int(out, n, to);
+    n = mc_put(out, n, " not shown: view "); n = mc_put(out, n, cast(string) path[0..<ifx path.count > 300 then 300 else path.count]);
+    n = mc_put(out, n, ":"); n = mc_put_int(out, n, r.next); n = mc_put(out, n, "-"); n = mc_put_int(out, n, to); n = mc_put(out, n, "]");
+  }
+  return cast(string) out[0..<n];
+}
+
+// The trimmed line (no spaces, tabs or carriage returns at either end).
+mc_trim :: (s: string) -> string {
+  a := 0; b := s.count;
+  while a < b && (s[a] == ' ' || s[a] == '\t' || s[a] == '\r') { a += 1; }
+  while b > a && (s[b - 1] == ' ' || s[b - 1] == '\t' || s[b - 1] == '\r') { b -= 1; }
+  return cast(string) s[a..<b];
+}
+
+// Where old most likely was meant to be in text: the line where old's first line that is in text
+// (trimmed, 3 bytes or more; one found once first) would put old's start; 0 when none of them is.
+McNear :: struct { line: int; count: int; }
+mc_nearest :: (text: string, old: string) -> McNear {
+  for pass: 0..<2 {
+    k := 0; i := 0;
+    while i < old.count {
+      e := i;
+      while e < old.count && old[e] != '\n' { e += 1; }
+      t := mc_trim(cast(string) old[i..<e]);
+      if t.count >= 3 {
+        f := mc_find_all(text, t);
+        if (pass == 0 && f.count == 1) || (pass == 1 && f.count > 1) {
+          at := mc_line_at(text, f.at) - k;
+          return McNear.{line = ifx at < 1 then 1 else at, count = mc_line_ends(old) + 1};
+        }
+      }
+      k += 1; i = e + 1;
+    }
+  }
+  return McNear.{};
+}
+
+// Where old is in text: its first place and how many times it appears (0 when never).
+McFound :: struct { at: int; count: int; }
+mc_find_all :: (text: string, old: string) -> McFound {
+  f := McFound.{at = -1};
+  if old.count == 0 || old.count > text.count { return f; }
+  i := 0;
+  while i + old.count <= text.count {
+    if text[i] == old[0] && cast(string) text[i..<i + old.count] == old {
+      if f.count == 0 { f.at = i; }
+      f.count += 1; i += old.count;
+    } else { i += 1; }
+  }
+  return f;
+}
+
+// text with its one old replaced by new into out: the new length, or -1 when it doesn't fit.
+mc_splice :: (text: string, at: int, old_count: int, new_text: string, out: [] u8) -> int {
+  total := text.count - old_count + new_text.count;
+  if total > out.count { return -1; }
+  for i: 0..<at { out[i] = text[i]; }
+  for c, i: new_text { out[at + i] = c; }
+  for i: at + old_count..<text.count { out[i - old_count + new_text.count] = text[i]; }
+  return total;
+}
+
+// One exact edit (action.coax McEdit) of a file under cwd: old, which must appear exactly once,
+// becomes text; an empty old writes text as the whole file. Not through a shell: nothing to quote.
+// A read-only profile edits nothing.
+mc_edit_file :: (cwd: string, e: McEdit, profile: string, b: [] McToolBuffers) -> McEditResult {
+  b[0].replay_n = 0;
+  if profile == "read-only" { return McEditResult.{why = "this run may not change files"}; }
+  if !mc_path_inside(cwd, e.path) { return McEditResult.{why = "the path leaves the working directory"}; }
+  // Pre-verify structured edit arguments through compiled Class-E oa-exec-json-schema weights (#13924).
+  sv := mc_exec_check_schema(ifx e.path.count > 0 then 1 else 0, e.path.count, MC_EXEC_MAX_PATH, 1, e.old.count, 1, e.text.count, MC_EDIT_BYTES);
+  if !sv.ok {
+    rp := mc_exec_format_pill(false, sv.label, sv.digest, b[0].replay[..]);
+    b[0].replay_n = rp.count;
+    why := ifx sv.code == McExecCode.path_too_long then "the path is too long" else "the edit arguments exceed the verified 512 KB cap";
+    return McEditResult.{why = why, replay = rp, exec_code = sv.code, digest = sv.digest};
+  }
+  n := 0;
+  if e.path[0] != '/' { n = json_raw(b[0].path[..], 0, cwd); n = json_raw(b[0].path[..], n, "/"); }
+  n = json_raw(b[0].path[..], n, e.path);
+  if n < 0 { return McEditResult.{why = "the path is too long"}; }
+  full := cast(string) b[0].path[0..<n];
+  if e.old.count == 0 {
+    pre := mc_edit_precheck(e, "", b[0].replay[..]);
+    b[0].replay_n = pre.pill.count;
+    if !pre.ok {
+      return McEditResult.{why = mc_exec_code_text(pre.verdict.code), replay = pre.pill, exec_code = pre.verdict.code, digest = pre.verdict.digest};
+    }
+    if !fs_write(full, e.text) { return McEditResult.{why = "could not write the file: does its folder exist?", replay = pre.pill, exec_code = pre.verdict.code, digest = pre.verdict.digest}; }
+    to := rp_lines(e.text);
+    return McEditResult.{ok = true, from = 1, to = to, shown = ifx to > 0 then mc_edit_lines(e.text, e.path, 1, to, b[0].shown[..]) else "", replay = pre.pill, exec_code = pre.verdict.code, delta = pre.verdict.out2, new_lines = pre.verdict.out1, digest = pre.verdict.digest};
+  }
+  k := fs_read(full, b[0].src[..]);
+  if k < 0 { return McEditResult.{why = ifx fs_exists(full) then "the file is over 512 KB: change it with a command" else "no such file (an empty old writes a new one)"}; }
+  text := cast(string) b[0].src[0..<k];
+  // Pre-verify hunk bounds & context uniqueness through compiled Class-E oa-exec-diff-verify weights (#13924).
+  pre := mc_edit_precheck(e, text, b[0].replay[..]);
+  b[0].replay_n = pre.pill.count;
+  f := pre.found;
+  if !pre.ok {
+    if f.count == 0 {
+      why := "the old text is not in the file: copy it exactly, with its whitespace, from a view or the file";
+      near := mc_nearest(text, e.old);
+      if near.line == 0 { return McEditResult.{why = why, replay = pre.pill, exec_code = pre.verdict.code, digest = pre.verdict.digest}; }
+      lines := rp_lines(text);
+      from := ifx near.line > 3 then near.line - 3 else 1;
+      to := near.line + near.count + 2;
+      if to > lines { to = lines; }
+      return McEditResult.{why = "the old text is not in the file: copy it exactly, with its whitespace; the nearest lines are these, as the file is now", shown = mc_edit_lines(text, e.path, from, to, b[0].shown[..]), from = from, to = to, replay = pre.pill, exec_code = pre.verdict.code, digest = pre.verdict.digest};
+    }
+    if f.count > 1 {
+      // where each is, so the model can widen old around the one it means
+      w := mc_put(b[0].whyb[..], 0, "the old text is in the file "); w = mc_put_int(b[0].whyb[..], w, f.count); w = mc_put(b[0].whyb[..], w, " times (at lines ");
+      i := 0; seen := 0;
+      while i + e.old.count <= text.count && seen < 8 {
+        if text[i] == e.old[0] && cast(string) text[i..<i + e.old.count] == e.old {
+          if seen > 0 { w = mc_put(b[0].whyb[..], w, ", "); }
+          w = mc_put_int(b[0].whyb[..], w, mc_line_at(text, i)); seen += 1; i += e.old.count;
+        } else { i += 1; }
+      }
+      if f.count > seen { w = mc_put(b[0].whyb[..], w, ", ..."); }
+      w = mc_put(b[0].whyb[..], w, "): include more of the lines around it so it is unique");
+      return McEditResult.{why = cast(string) b[0].whyb[0..<w], replay = pre.pill, exec_code = pre.verdict.code, digest = pre.verdict.digest};
+    }
+    return McEditResult.{why = mc_exec_code_text(pre.verdict.code), replay = pre.pill, exec_code = pre.verdict.code, digest = pre.verdict.digest};
+  }
+  m := mc_splice(text, f.at, e.old.count, e.text, b[0].dst[..]);
+  if m < 0 { return McEditResult.{why = "the edited file would be over 512 KB: change it with a command", replay = pre.pill, exec_code = McExecCode.body_over_cap, digest = pre.verdict.digest}; }
+  now := cast(string) b[0].dst[0..<m];
+  if !fs_write(full, now) { return McEditResult.{why = "could not write the file", replay = pre.pill, exec_code = pre.verdict.code, digest = pre.verdict.digest}; }
+  // the new text and two lines around it, numbered as the file is now
+  first := mc_line_at(now, f.at);
+  last := mc_line_at(now, ifx e.text.count > 0 then f.at + e.text.count - 1 else f.at);
+  lines := rp_lines(now);
+  from := ifx first > 2 then first - 2 else 1;
+  to := last + 2;
+  if to > lines { to = lines; }
+  if lines == 0 { return McEditResult.{ok = true, replay = pre.pill, exec_code = pre.verdict.code, delta = pre.verdict.out2, new_lines = pre.verdict.out1, digest = pre.verdict.digest}; }
+  return McEditResult.{ok = true, from = from, to = to, shown = mc_edit_lines(now, e.path, from, to, b[0].shown[..]), replay = pre.pill, exec_code = pre.verdict.code, delta = pre.verdict.out2, new_lines = pre.verdict.out1, digest = pre.verdict.digest};
+}
+
+// Runs the pending action's edits, then its commands in order, then its views, into the
+// loop; then mc_tools_done. Each command and file is recorded as it ends.
+// A command that fails does not stop the ones after it.
+mc_run_tools :: (l: [] McLoop, cwd: string, b: [] McToolBuffers) -> int {
+  a := mc_pending(l);
+  for i: 0..<a.ne {
+    e := mc_edit_file(cwd, a.edits[i], "danger-full-access", b);
+    mc_edited_shown(l, a.edits[i].path, e.ok, e.why, e.from, e.to, e.shown);
+  }
+  for i: 0..<a.nc {
+    r := mc_run_command(cwd, a.commands[i], MC_COMMAND_SECONDS, b[0].out[..]);
+    mc_command(l, a.commands[i], r.exit, r.timed_out, r.output);
+  }
+  for i: 0..<a.nv {
+    room := mc_result_room(l[0].st[..], a.view[i]);
+    if room < MC_VIEW_MIN { mc_file_held(l[0].st[..], a.view[i]); continue; }
+    v := mc_view_lines(cwd, a.view[i], "danger-full-access", "", room, b);
+    mc_view(l, a.view[i], v.found, v.content);
+  }
+  return mc_tools_done(l);
+}
+
+// ---------------------------------------------------------------- what a run leaves
+
+// The commit a run starts from (GitHub #13351): git rev-parse HEAD in cwd, into out; "" outside a
+// git checkout or before its first commit. Read-only, so not journaled as an effect.
+mc_git_head :: (cwd: string, profile: string, o: [] McOutput, out: [] u8) -> string {
+  r := mc_run_command_profile(cwd, "git rev-parse --verify -q HEAD", 10, o, profile);
+  t := r.output;
+  while t.count > 0 && (t[t.count - 1] == '\n' || t[t.count - 1] == ' ') { t = cast(string) t[0..<t.count - 1]; }
+  if r.exit != 0 || t.count < 7 || t.count > out.count { return ""; }
+  for c: t { if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) { return ""; } }
+  for i: 0..<t.count { out[i] = t[i]; }
+  return cast(string) out[0..<t.count];
+}
+
+// s at out[n..], cut with a note when it doesn't fit (room keeps space for what follows).
+mc_work_put :: (out: [] u8, n: int, s: string, room: int) -> int {
+  if n < 0 { return n; }
+  left := out.count - room - n;
+  if s.count <= left { return json_raw(out, n, s); }
+  note := "\n[... cut]";
+  if left < note.count { return n; }
+  k := mc_back(s, left - note.count);
+  m := json_raw(out, n, cast(string) s[0..<k]);
+  return json_raw(out, m, note);
+}
+
+// The ending's text when a run ends failed (a limit, or the journal): why, then the commits the run
+// made and the files it left changed or untracked, so the caller does not take a half-done tree
+// for a result. ok false: that git command failed, and its output says why.
+mc_work_text :: (why: string, commits: string, commits_ok: bool, status: string, status_ok: bool, out: [] u8) -> string {
+  n := mc_work_put(out, 0, why, 2048);
+  n = json_raw(out, n, "\nCommits this run made (git log):");
+  n = mc_work_put(out, n, ifx !commits_ok then " could not be listed: " else ifx commits.count == 0 then " none" else "\n", 1024);
+  n = mc_work_put(out, n, commits, 1024);
+  n = json_raw(out, n, ifx commits.count > 0 && commits[commits.count - 1] == '\n' then "" else "\n");
+  n = json_raw(out, n, "Files left changed or untracked (git status --short):");
+  n = mc_work_put(out, n, ifx !status_ok then " could not be listed: " else ifx status.count == 0 then " none" else "\n", 0);
+  n = mc_work_put(out, n, status, 0);
+  while n > 0 && out[n - 1] == '\n' { n -= 1; }
+  return ifx n < 0 then why else cast(string) out[0..<n];
+}
+
+// mc_work_text from git in cwd: the commits since start (the last 40; all of them when start is
+// ""), and git status. Outside a git checkout, why alone.
+mc_work_list :: (cwd: string, start: string, profile: string, o: [] McOutput, why: string, out: [] u8) -> string {
+  sb: [8192] u8;
+  st := mc_run_command_profile(cwd, "git status --short --untracked-files=all", 10, o, profile);
+  if st.exit != 0 { return why; }
+  ns := ifx st.output.count < sb.count then st.output.count else sb.count;
+  for i: 0..<ns { sb[i] = st.output[i]; }
+  cb: [160] u8;
+  c := json_raw(cb[..], 0, "git log --oneline --no-decorate -n 40");
+  if start.count > 0 { c = json_raw(cb[..], c, " "); c = json_raw(cb[..], c, start); c = json_raw(cb[..], c, "..HEAD"); }
+  if c < 0 { return why; }
+  lg := mc_run_command_profile(cwd, cast(string) cb[0..<c], 10, o, profile);
+  return mc_work_text(why, lg.output, lg.exit == 0, cast(string) sb[0..<ns], true, out);
+}
+
+// ---------------------------------------------------------------- checks
+
+#test "a failed run's text: why, then its commits and the files it left, or none, or why they could not be listed" {
+  b: [8192] u8;
+  #assert mc_work_text("command limit reached: a run has 128 commands and edits", "abc1234 Fix x\ndef5678 Add y\n", true, " M a.c\n?? b.c\n", true, b[..]) == "command limit reached: a run has 128 commands and edits\nCommits this run made (git log):\nabc1234 Fix x\ndef5678 Add y\nFiles left changed or untracked (git status --short):\n M a.c\n?? b.c";
+  #assert mc_work_text("time limit reached: a run has 15 minutes", "", true, "", true, b[..]) == "time limit reached: a run has 15 minutes\nCommits this run made (git log): none\nFiles left changed or untracked (git status --short): none";
+  #assert mc_work_text("w", "fatal: bad revision", false, "", true, b[..]) == "w\nCommits this run made (git log): could not be listed: fatal: bad revision\nFiles left changed or untracked (git status --short): none";
+  // a long status is cut, and the text stays in its buffer with the commits whole
+  big: [20000] u8; for i: 0..<big.count { big[i] = ifx i % 10 == 9 then '\n' else 'x'; }
+  t := mc_work_text("w", "abc1234 Fix x", true, cast(string) big[..], true, b[..]);
+  #assert t.count <= b.count && ps_count(t, "abc1234 Fix x\nFiles left") == 1 && ps_count(t, "[... cut]") == 1;
+}
+
+#test "output keeps a head and a tail and says how much it left out" {
+  o: [1] McOutput;
+  for i: 0..<20000 { mc_output_byte(o[..], cast(u8) ('a' + i % 26)); }
+  t := mc_output_text(o[..]);
+  #assert o[0].dropped == 20000 - MC_KEEP_HEAD - MC_KEEP_TAIL;
+  #assert t.count < 12000 && t[0] == 'a' && t[t.count - 1] == cast(u8) ('a' + 19999 % 26);
+  o[0] = McOutput.{};
+  for c: "short\n" { mc_output_byte(o[..], c); }
+  #assert mc_output_text(o[..]) == "short\n";
+}
+
+#test "a view's head(1): /usr/bin/head where there is one or a sandbox links it, else NixOS's" {
+  #assert mc_head("danger-full-access", true) == "/usr/bin/head" && mc_head("workspace-write", false) == "/usr/bin/head" && mc_head("read-only", false) == "/usr/bin/head";
+  #assert mc_head("danger-full-access", false) == "/run/current-system/sw/bin/head";
+}
+
+#test "a sandbox profile runs only where bwrap confines it; elsewhere a view says why (GitHub #13732)" {
+  #assert mc_profile_runs("danger-full-access", false) && mc_profile_runs("danger-full-access", true);
+  #assert !mc_profile_runs("workspace-write", false) && !mc_profile_runs("read-only", false);
+  #assert mc_profile_runs("workspace-write", true) && mc_profile_runs("read-only", true) && !mc_profile_runs("bogus", true);
+}
+
+#test "an edit finds its old text once, splices, and says why when it can't" {
+  #assert mc_find_all("a b a b", "a b").count == 2 && mc_find_all("a b a b", "b a").at == 2 && mc_find_all("aaa", "aa").count == 1;
+  #assert mc_find_all("abc", "").count == 0 && mc_find_all("ab", "abc").count == 0 && mc_find_all("xyz", "q").at == -1;
+  out: [32] u8;
+  n := mc_splice("let x = 1;", 4, 1, "count", out[..]);
+  #assert cast(string) out[0..<n] == "let count = 1;";
+  #assert mc_splice("abc", 0, 3, "", out[..]) == 0 && mc_splice("abc", 1, 1, "0123456789012345678901234567890123", out[..]) == -1;
+  b: [1] McToolBuffers;
+  #assert mc_edit_file("/w", McEdit.{path = "../x", old = "a", text = "b"}, "danger-full-access", b[..]).why == "the path leaves the working directory";
+  #assert mc_edit_file("/w", McEdit.{path = "x", old = "a", text = "b"}, "read-only", b[..]).why == "this run may not change files";
+  // Compiled W2.2 Class-E pre-edit verification (oa-exec-json-schema + oa-exec-diff-verify) + Ch 234 replay (#13924)
+  pb: [96] u8;
+  pre_ok := mc_edit_precheck(McEdit.{path = "a.coax", old = "x := 1;\n", text = "x := 1;\ny := 2;\n"}, "head\nx := 1;\ntail\n", pb[..]);
+  #assert pre_ok.ok && pre_ok.verdict.code == McExecCode.ok && pre_ok.verdict.out1 == 4 && pre_ok.verdict.out2 == 1 && cast(string) pre_ok.pill[0..<30] == "[E] replay verified · sha256:";
+  di := [7] int.[2, 1, 2, 2, 3, 1, 1];
+  #assert mc_exec_verify_replay(MC_EXEC_MOD_DIFF, di[..], pre_ok.verdict.digest);
+  pre_mis := mc_edit_precheck(McEdit.{path = "a.coax", old = "missing\n", text = "new\n"}, "head\nx := 1;\ntail\n", pb[..]);
+  #assert !pre_mis.ok && pre_mis.verdict.code == McExecCode.context_mismatch && cast(string) pre_mis.pill[0..<29] == "[E] replay refused · sha256:";
+  pre_amb := mc_edit_precheck(McEdit.{path = "a.coax", old = "dup\n", text = "one\n"}, "dup\ndup\n", pb[..]);
+  #assert !pre_amb.ok && pre_amb.verdict.code == McExecCode.ambiguous_match;
+}
+
+#test "paths stay under the working directory" {
+  #assert mc_path_inside("/tmp/demo", "a.swift") && mc_path_inside("/tmp/demo", "src/x/y.txt") && mc_path_inside("/tmp/demo", "/tmp/demo/a.swift");
+  #assert !mc_path_inside("/tmp/demo", "../etc/passwd") && !mc_path_inside("/tmp/demo", "src/../../x") && !mc_path_inside("/tmp/demo", "/etc/passwd");
+  #assert !mc_path_inside("/tmp/demo", "/tmp/demox/a") && !mc_path_inside("/tmp/demo", "") && mc_path_inside("/tmp/demo", "..hidden");
+}
+
+// There is no fallback from a selected workspace profile. Only public
+// runtime directories and this canonical workspace are mounted. The filter
+// arrives over the owned child's stdin before bubblewrap execs the tool.
+mc_profile_args :: (h:int,cwd:string,profile:string)->bool {
+  if profile=="danger-full-access" {return true;}
+  if profile!="workspace-write" && profile!="read-only" {return false;}
+  if cxproc_platform()!=3 {return false;}
+  rootbuf:[4096]u8;root:=fs_realpath(cwd,rootbuf[..]);
+  hb:[4096]u8;home:=cl_getenv("HOME",hb[..]);
+  if root!=cwd || !np_root(root,home) {return false;}
+  overridebuf:[4096]u8;override:=cl_getenv("CODER_HOME",overridebuf[..]);
+  if override.count>0 {
+    canonicalbuf:[4096]u8;canonical:=fs_realpath(override,canonicalbuf[..]);
+    if !np_root(root,canonical) {return false;}
+  }
+  trusted:=ifx fs_kind("/nix/store")==FS_DIR then "/run/current-system/sw/bin/bwrap" else "/usr/bin/bwrap";
+  limitexe:=ifx fs_kind("/nix/store")==FS_DIR then "/run/current-system/sw/bin/prlimit" else "/usr/bin/prlimit";
+  limits:=[7]string.[limitexe,"--as=2147483648","--cpu=30","--fsize=16777216","--nofile=128","--",""];
+  for arg:limits[0..<6] {if !mc_proc_arg(h,CL_FIELD_ARG,arg) {return false;}}
+  args:=[21]string.[trusted,"--unshare-all","--unshare-user","--disable-userns","--die-with-parent","--new-session","--clearenv",
+    "--proc","/proc","--dev","/dev","--tmpfs","/tmp","--dir","/home/agent","--setenv","HOME","/home/agent","--seccomp","0",""];
+  for arg:args[0..<20] {if !mc_proc_arg(h,CL_FIELD_ARG,arg) {return false;}}
+  if fs_kind("/nix/store")==FS_DIR {
+    nix:=[18]string.["--ro-bind","/nix/store","/nix/store","--ro-bind","/run/current-system/sw","/run/current-system/sw",
+      "--symlink","/run/current-system/sw/bin","/usr/bin","--symlink","/run/current-system/sw/bin","/bin",
+      "--setenv","PATH","/run/current-system/sw/bin:/bin:/usr/bin","--dir","/etc",""];
+    for arg:nix[0..<17] {if !mc_proc_arg(h,CL_FIELD_ARG,arg) {return false;}}
+  } else {
+    runtime:=[15]string.["--ro-bind","/usr","/usr","--ro-bind","/bin","/bin","--ro-bind-try","/lib","/lib",
+      "--ro-bind-try","/lib64","/lib64","--setenv","PATH","/usr/bin:/bin"];
+    for arg:runtime {if !mc_proc_arg(h,CL_FIELD_ARG,arg) {return false;}}
+  }
+  tail:=[7]string.[ifx profile=="read-only" then "--ro-bind" else "--bind",root,root,"--chdir",root,"--",""];
+  for arg:tail[0..<6] {if !mc_proc_arg(h,CL_FIELD_ARG,arg) {return false;}}
+  return true;
+}
+mc_profile_input :: (h:int,profile:string)->bool {
+  if profile=="danger-full-access" {return true;}
+  filter:[NP_FILTER_BYTES]u8;n:=np_filter(filter[..]);
+  if n==0 {return false;}
+  for i:0..<n {if cxproc_write(h,cast(int)filter[i])!=0 {return false;}}
+  return cxproc_flush_timeout(h,1000)==0;
+}
+
+#test "a view entry is a path or a path with a line range; anything else after a colon is the path's" {
+  s := mc_view_spec("a/b.coax:10-40");
+  #assert s.path == "a/b.coax" && s.from == 10 && s.to == 40 && s.ranged;
+  s = mc_view_spec("a.c:7"); #assert s.path == "a.c" && s.from == 7 && s.to == 0 && s.ranged;
+  s = mc_view_spec("a.c:7-"); #assert s.path == "a.c" && s.from == 7 && s.to == 0;
+  s = mc_view_spec("a.c:40-10"); #assert s.from == 10 && s.to == 40;
+  s = mc_view_spec("a.c"); #assert s.path == "a.c" && !s.ranged && s.from == 0;
+  for e: [6] string.["a.c:", "a.c:x-2", "a.c:0-3", "a.c:1-2-3", ":4", "C:\\x"] { s = mc_view_spec(e); #assert s.path == e && !s.ranged; }
+  s = mc_view_spec("a:b.c:3-4"); #assert s.path == "a:b.c" && s.from == 3;
+}
+
+McViewTest :: struct { text: [40000] u8; out: [65536] u8; }
+
+#test "a view numbers its lines: the whole of a short file, else 150 lines or the range, and says what is next" {
+  t: [1] McViewTest;
+  #assert mc_view_text("one\ntwo\n", McViewSpec.{path = "a"}, false, 4000, t[0].out[..]) == "     1\tone\n     2\ttwo\n";
+  n := 0;
+  for i: 1..<1001 { n = rp_put_int(t[0].text[..], n, i); t[0].text[n] = '\n'; n += 1; }
+  text := cast(string) t[0].text[0..<n];
+  v := mc_view_text(text, McViewSpec.{path = "f.txt"}, false, MC_VIEW_SHOW, t[0].out[..]);
+  #assert rp_lines(v) == MC_VIEW_LINES + 1 && mc_line_ends(v) == MC_VIEW_LINES;
+  #assert ps_count(v, "   150\t150\n[lines 1-150 of 1000; next: view f.txt:151-300]") == 1 && ps_count(v, "\t151\n") == 0;
+  v = mc_view_text(text, mc_view_spec("f.txt:990-1200"), false, MC_VIEW_SHOW, t[0].out[..]);
+  #assert v == "   990\t990\n   991\t991\n   992\t992\n   993\t993\n   994\t994\n   995\t995\n   996\t996\n   997\t997\n   998\t998\n   999\t999\n  1000\t1000\n[lines 990-1000 of 1000]";
+  v = mc_view_text(text, mc_view_spec("f.txt:1-1000"), false, MC_VIEW_SHOW, t[0].out[..]);
+  #assert ps_count(v, "[lines 1-800 of 1000; next: view f.txt:801-950]") == 1;      // a range shows 800 lines at most
+  v = mc_view_text(text, mc_view_spec("f.txt:1-1000"), false, 2000, t[0].out[..]);
+  #assert v.count <= 2000 && ps_count(v, ", cut to fit; next: view f.txt:") == 1;
+  v = mc_view_text(text, mc_view_spec("f.txt:2000"), false, 2000, t[0].out[..]);
+  #assert v == "[the file has 1000 lines: nothing from line 2000]";
+  v = mc_view_text(text, mc_view_spec("f.txt:5-6"), true, 2000, t[0].out[..]);
+  #assert v == "     5\t5\n     6\t6\n[lines 5-6 of 1000 or more; next: view f.txt:7-156]";
+  #assert ps_count(MC_SYSTEM, "the first 150 or the range asked for") == 1 && MC_VIEW_LINES == 150;      // what the prompt says is so
+  #assert mc_view_text("a\0b", McViewSpec.{path = "x"}, false, 100, t[0].out[..]) == MC_VIEW_BINARY && mc_view_text("", McViewSpec.{path = "x"}, false, 100, t[0].out[..]) == "[an empty file]";
+}
+
+#test "a saved output's file is the only place outside the working directory a view reaches" {
+  #assert mc_spill_inside("/h/.openagents/coder/sessions/w.out", "/h/.openagents/coder/sessions/w.out/1-2-1.txt");
+  #assert !mc_spill_inside("", "/x/1.txt") && !mc_spill_inside("/h/s", "1.txt") && !mc_spill_inside("/h/s", "/h/s/../t/a") && !mc_spill_inside("/h/s", "/h/sx/a");
+}
+
+#test "a long output's head and tail around a line naming its saved file and the lines left out" {
+  o: [1] McOutput; out: [16384] u8;
+  for i: 0..<2000 { for c: "line of output\n" { mc_output_byte(o[..], c); } }
+  #assert o[0].total == 30000 && o[0].lines == 2000 && o[0].esc == 32000;
+  v := mc_output_shown(o[..], MC_SPILL_SHOW, "/s/1-2-1.txt", out[..]);
+  #assert mc_escaped_size(v) <= MC_SPILL_SHOW && cast(string) v[0..<15] == "line of output\n" && cast(string) v[v.count - 15..<v.count] == "line of output\n";
+  #assert ps_count(v, ") left out. The whole output, 2000 lines, is saved: view /s/1-2-1.txt:") == 1;
+  first := mc_line_ends(cast(string) v[0..<ps_find(v, "[... ")]) + 1;
+  nb: [64] u8; k := rp_put(nb[..], 0, "(lines "); k = rp_put_int(nb[..], k, first); k = rp_put(nb[..], k, "-");
+  #assert ps_count(v, cast(string) nb[0..<k]) == 1;
+  v = mc_output_shown(o[..], 100, "/s/1-2-1.txt", out[..]);
+  #assert v == "[the output, 30000 bytes in 2000 lines, is held back: this step's results reached their 32 KB. It is saved whole: view /s/1-2-1.txt:1-150]\n";
+}
+
+ps_find :: (text: string, needle: string) -> int {
+  for i: 0..<text.count - needle.count + 1 { if cast(string) text[i..<i + needle.count] == needle { return i; } }
+  return -1;
+}
+
+#test "a failed edit's nearest region: where old's first line found once would put it" {
+  text := "fn a() {\n  x := 1;\n  y := 2;\n}\nfn b() {\n  y := 2;\n}\n";
+  n := mc_nearest(text, "  x := 1;\n  y := 3;\n");
+  #assert n.line == 2 && n.count == 3;
+  n = mc_nearest(text, "  y := 2;\n  z := 9;\n");       // y := 2 is there twice: the first place it is
+  #assert n.line == 3;
+  n = mc_nearest(text, "  w;\n  y := 2;\n");               // a short first line is passed over
+  #assert n.line == 2;
+  #assert mc_nearest(text, "nothing like it\n").line == 0 && mc_line_at(text, 0) == 1 && mc_line_at(text, 9) == 2 && mc_trim(" \tab \r") == "ab";
+  b: [1] McToolBuffers;
+  #assert mc_edit_lines(text, "a.c", 2, 3, b[0].shown[..]) == "     2\t  x := 1;\n     3\t  y := 2;\n";
+}
+
+```

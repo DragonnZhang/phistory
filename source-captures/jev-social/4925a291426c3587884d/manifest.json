@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "jev-social",
+  "agent": "jev-social",
+  "repository": "socai-io/jev-social",
+  "snapshot": "4925a291426c3587884d",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:31.000989+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "024e96f0d8bb0ba43a9233ac30e2f803dbecee2d",
+      "path": "src/actions.js",
+      "sha256": "c4757a67dab04ce4f1cbd9b0cb5089e4410cbb7f88ffa0bbd3f3d510a1ad598e",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/024e96f0d8bb0ba43a9233ac30e2f803dbecee2d/src/actions.js",
+      "url": "https://github.com/socai-io/jev-social/blob/024e96f0d8bb0ba43a9233ac30e2f803dbecee2d/src/actions.js"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "gpt-researcher",
+  "agent": "gpt-researcher",
+  "repository": "assafelovic/gpt-researcher",
+  "snapshot": "19abc31ba3d85982ec91",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:21.632967+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "8b474fe7d92aca112601cb87e1ec0999103bc01a",
+      "path": "deep_agents/agent.py",
+      "sha256": "323c88c80d609a910bdd3599a6922558fe73a27c976a364fb50f12afe3a3302b",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/8b474fe7d92aca112601cb87e1ec0999103bc01a/deep_agents/agent.py",
+      "url": "https://github.com/assafelovic/gpt-researcher/blob/8b474fe7d92aca112601cb87e1ec0999103bc01a/deep_agents/agent.py"
+    },
+    {
+      "commit": "8b474fe7d92aca112601cb87e1ec0999103bc01a",
+      "path": "deep_agents/tools.py",
+      "sha256": "43ec85b58ce50b1f897fa6dc2061d5e7331c25d5ccd804ca732871c1709a323a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/8b474fe7d92aca112601cb87e1ec0999103bc01a/deep_agents/tools.py",
+      "url": "https://github.com/assafelovic/gpt-researcher/blob/8b474fe7d92aca112601cb87e1ec0999103bc01a/deep_agents/tools.py"
+    }
+  ]
+}

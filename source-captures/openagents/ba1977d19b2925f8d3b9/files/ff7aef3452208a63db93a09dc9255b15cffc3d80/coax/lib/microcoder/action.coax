@@ -1,0 +1,455 @@
+// The action (docs/coder/microcoder.md, "The action"): each step is one
+// model call with a strict JSON schema, and the reply is this object:
+//
+//   { "rationale": "why this step, for the log; never shown as the reply",
+//     "edits":     [{"path": "a.txt", "old": "exact text", "new": "its replacement"}],
+//     "commands":  ["shell commands to run, in order"],
+//     "view":      ["files to show in full in the next step"],
+//     "finished":  false,
+//     "reply":     "on the finishing step, the answer addressed to the user",
+//     "ask":       "none | question" }
+//
+// The old NextAction without freeze_tests and expand. mc_action_parse holds
+// a reply to the schema and to its meaning: finished and ask: question each
+// need a reply.
+//
+// A run that asks for it (docs/coder/microcoder.md, "Compiler questions and
+// working memory"; GitHub #13444, #13445) gets more members, and mc_schema
+// writes the schema that has them. Off, the schema is MC_SCHEMA and a reply
+// is read exactly as before.
+//   with the compiler:  "questions": ["defines NAME", "check FILE", ...]   up to 16
+//                       and on each edit "seen" (the hash the model read, "" for none)
+//                       and "name" ("" or a declaration to replace whole)
+//   with the memory:    "notes": ["a finding to keep", "PATH:A-B a finding about those lines"]   up to 8
+
+#load "state.coax";
+
+MC_SCHEMA_NAME :: "next_action";
+MC_SCHEMA :: "{\"type\":\"object\",\"properties\":{\"rationale\":{\"type\":\"string\"},\"edits\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"old\":{\"type\":\"string\"},\"new\":{\"type\":\"string\"}},\"required\":[\"path\",\"old\",\"new\"],\"additionalProperties\":false}},\"commands\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"view\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"finished\":{\"type\":\"boolean\"},\"reply\":{\"type\":\"string\"},\"ask\":{\"type\":\"string\",\"enum\":[\"none\",\"question\"]},\"todos\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"},\"status\":{\"type\":\"string\",\"enum\":[\"pending\",\"in_progress\",\"completed\"]}},\"required\":[\"id\",\"content\",\"status\"],\"additionalProperties\":false}}},\"required\":[\"rationale\",\"edits\",\"commands\",\"view\",\"finished\",\"reply\",\"ask\"],\"additionalProperties\":false}";
+
+// The schema with every added member: what mc_schema writes with both modes on.
+MC_SCHEMA_AWARE :: "{\"type\":\"object\",\"properties\":{\"rationale\":{\"type\":\"string\"},\"notes\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"edits\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"old\":{\"type\":\"string\"},\"new\":{\"type\":\"string\"},\"seen\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"}},\"required\":[\"path\",\"old\",\"new\",\"seen\",\"name\"],\"additionalProperties\":false}},\"questions\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"commands\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"view\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"finished\":{\"type\":\"boolean\"},\"reply\":{\"type\":\"string\"},\"ask\":{\"type\":\"string\",\"enum\":[\"none\",\"question\"]},\"todos\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"},\"status\":{\"type\":\"string\",\"enum\":[\"pending\",\"in_progress\",\"completed\"]}},\"required\":[\"id\",\"content\",\"status\"],\"additionalProperties\":false}}},\"required\":[\"rationale\",\"notes\",\"edits\",\"questions\",\"commands\",\"view\",\"finished\",\"reply\",\"ask\"],\"additionalProperties\":false}";
+
+MC_MAX_COMMANDS :: 32;
+MC_MAX_VIEWS :: 16;
+MC_MAX_EDITS :: 16;
+MC_MAX_QUESTIONS :: 16;
+MC_MAX_NOTES :: 8;
+MC_MAX_DELEGATES :: 6;
+MC_MAX_TODOS :: 24;
+
+// A run whose owner runs sub-agents (GitHub #13655) gets one more member, delegate: up to 6
+// tasks, each with a level (hydrogen, carbon or neon). mc_schema_delegate adds it to a run's schema.
+// An owner that also runs Claude Code sub-agents (GitHub #13660) has four more levels, one for
+// each Claude model: haiku, sonnet, opus and fable (MC_SCHEMA_DELEGATE_CLAUDE).
+MC_SCHEMA_DELEGATE :: ",\"delegate\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"level\":{\"type\":\"string\",\"enum\":[\"hydrogen\",\"carbon\",\"neon\"]},\"task\":{\"type\":\"string\"},\"resume\":{\"type\":\"integer\"},\"stop\":{\"type\":\"boolean\"}},\"required\":[\"level\",\"task\"],\"additionalProperties\":false}}";
+MC_SCHEMA_DELEGATE_CLAUDE :: ",\"delegate\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"level\":{\"type\":\"string\",\"enum\":[\"hydrogen\",\"carbon\",\"neon\",\"haiku\",\"sonnet\",\"opus\",\"fable\"]},\"task\":{\"type\":\"string\"},\"resume\":{\"type\":\"integer\"},\"stop\":{\"type\":\"boolean\"}},\"required\":[\"level\",\"task\"],\"additionalProperties\":false}}";
+// An owner with an OpenRouter model for sub-agents has one more level, openrouter (after the
+// Claude levels when both are on). mc_schema_delegate writes the enum from these pieces.
+MC_SCHEMA_DELEGATE_HEAD :: ",\"delegate\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"level\":{\"type\":\"string\",\"enum\":[\"hydrogen\",\"carbon\",\"neon\"";
+MC_SCHEMA_DELEGATE_CLAUDE_LEVELS :: ",\"haiku\",\"sonnet\",\"opus\",\"fable\"";
+MC_SCHEMA_DELEGATE_OPENROUTER_LEVEL :: ",\"openrouter\"";
+MC_SCHEMA_DELEGATE_INKLING_LEVEL :: ",\"inkling\"";
+MC_SCHEMA_DELEGATE_TAIL :: "]},\"task\":{\"type\":\"string\"},\"resume\":{\"type\":\"integer\"},\"stop\":{\"type\":\"boolean\"}},\"required\":[\"level\",\"task\"],\"additionalProperties\":false}}";
+MC_SCHEMA_RATIONALE :: "\"rationale\":{\"type\":\"string\"}";
+MC_SCHEMA_REQUIRED :: "\"required\":[\"rationale\"";
+mc_schema_find :: (text: string, needle: string) -> int {
+  i := 0;
+  while i + needle.count <= text.count { if cast(string) text[i..<i + needle.count] == needle { return i; } i += 1; }
+  return -1;
+}
+// schema (mc_schema's, any modes) with the delegate member after rationale, and required. Into
+// out; "" when it doesn't fit or schema is not one of mc_schema's. claude: with the Claude levels;
+// openrouter: with the openrouter level; inkling: with the free local inkling level.
+mc_schema_delegate :: (schema: string, out: [] u8, claude: bool, openrouter: bool) -> string {
+  return mc_schema_delegate_all(schema, out, claude, openrouter, false);
+}
+mc_schema_delegate_all :: (schema: string, out: [] u8, claude: bool, openrouter: bool, inkling: bool) -> string {
+  a := mc_schema_find(schema, MC_SCHEMA_RATIONALE); b := mc_schema_find(schema, MC_SCHEMA_REQUIRED);
+  if a < 0 || b < a { return ""; }
+  a += MC_SCHEMA_RATIONALE.count; b += MC_SCHEMA_REQUIRED.count;
+  n := json_raw(out, 0, cast(string) schema[0..<a]); n = json_raw(out, n, MC_SCHEMA_DELEGATE_HEAD);
+  if claude { n = json_raw(out, n, MC_SCHEMA_DELEGATE_CLAUDE_LEVELS); }
+  if openrouter { n = json_raw(out, n, MC_SCHEMA_DELEGATE_OPENROUTER_LEVEL); }
+  if inkling { n = json_raw(out, n, MC_SCHEMA_DELEGATE_INKLING_LEVEL); }
+  n = json_raw(out, n, MC_SCHEMA_DELEGATE_TAIL);
+  n = json_raw(out, n, cast(string) schema[a..<b]); n = json_raw(out, n, ",\"delegate\""); n = json_raw(out, n, cast(string) schema[b..<schema.count]);
+  if n < 0 { return ""; }
+  return cast(string) out[0..<n];
+}
+// schema with ask restricted to ["none"] so the model cannot emit ask: question (GitHub #13701).
+MC_SCHEMA_ASK_ANY :: "\"ask\":{\"type\":\"string\",\"enum\":[\"none\",\"question\"]}";
+MC_SCHEMA_ASK_NONE :: "\"ask\":{\"type\":\"string\",\"enum\":[\"none\"]}";
+mc_schema_no_ask :: (schema: string, out: [] u8) -> string {
+  a := mc_schema_find(schema, MC_SCHEMA_ASK_ANY);
+  if a < 0 { return ""; }
+  n := json_raw(out, 0, cast(string) schema[0..<a]);
+  n = json_raw(out, n, MC_SCHEMA_ASK_NONE);
+  n = json_raw(out, n, cast(string) schema[a + MC_SCHEMA_ASK_ANY.count..<schema.count]);
+  if n < 0 { return ""; }
+  return cast(string) out[0..<n];
+}
+
+// The schema for a run: MC_SCHEMA, with questions and each edit's seen and name when intel is
+// on, and notes when memory is on. Into out; "" when it doesn't fit. Each member is where the
+// step uses it: notes (what the last results taught) first, then edits, questions, commands, view.
+mc_schema :: (out: [] u8, intel: bool, memory: bool) -> string {
+  str := "{\"type\":\"string\"}"; list := "{\"type\":\"array\",\"items\":{\"type\":\"string\"}}";
+  n := json_raw(out, 0, "{\"type\":\"object\",\"properties\":{\"rationale\":"); n = json_raw(out, n, str);
+  if memory { n = json_raw(out, n, ",\"notes\":"); n = json_raw(out, n, list); }
+  n = json_raw(out, n, ",\"edits\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":"); n = json_raw(out, n, str);
+  n = json_raw(out, n, ",\"old\":"); n = json_raw(out, n, str); n = json_raw(out, n, ",\"new\":"); n = json_raw(out, n, str);
+  if intel { n = json_raw(out, n, ",\"seen\":"); n = json_raw(out, n, str); n = json_raw(out, n, ",\"name\":"); n = json_raw(out, n, str); }
+  n = json_raw(out, n, "},\"required\":[\"path\",\"old\",\"new\"");
+  if intel { n = json_raw(out, n, ",\"seen\",\"name\""); }
+  n = json_raw(out, n, "],\"additionalProperties\":false}}");
+  if intel { n = json_raw(out, n, ",\"questions\":"); n = json_raw(out, n, list); }
+  n = json_raw(out, n, ",\"commands\":"); n = json_raw(out, n, list); n = json_raw(out, n, ",\"view\":"); n = json_raw(out, n, list);
+  n = json_raw(out, n, ",\"finished\":{\"type\":\"boolean\"},\"reply\":"); n = json_raw(out, n, str);
+  n = json_raw(out, n, ",\"ask\":{\"type\":\"string\",\"enum\":[\"none\",\"question\"]},\"todos\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"content\":{\"type\":\"string\"},\"status\":{\"type\":\"string\",\"enum\":[\"pending\",\"in_progress\",\"completed\"]}},\"required\":[\"id\",\"content\",\"status\"],\"additionalProperties\":false}}},\"required\":[\"rationale\"");
+  if memory { n = json_raw(out, n, ",\"notes\""); }
+  n = json_raw(out, n, ",\"edits\"");
+  if intel { n = json_raw(out, n, ",\"questions\""); }
+  n = json_raw(out, n, ",\"commands\",\"view\",\"finished\",\"reply\",\"ask\"],\"additionalProperties\":false}");
+  if n < 0 { return ""; }
+  return cast(string) out[0..<n];
+}
+
+// An exact edit (GitHub #13231): old, which must appear in path exactly once, becomes new; an
+// empty old writes new as the whole file. Applied by the loop's tools, not a shell, so no quoting.
+// With the compiler's mode on, an edit may be tied to what the model read: seen is the hash a
+// view or a show gave (12 hex digits or more; "" for none), and name, when not "", is a
+// declaration in path that text replaces whole (old is then not used).
+McEdit :: struct { path: string; old: string; text: string; seen: string; name: string; }   // text: the "new" field
+
+// A task handed to a sub-agent, and its level: hydrogen, carbon, neon, or a Claude model (haiku, sonnet, opus, fable).
+// resume (GitHub #13676): the number of a paused sub-agent this task lets go on, with the task as a
+// note to it; 0 or less for a new sub-agent. A running one it waits for; an ended one gives its
+// result again (GitHub #13766).
+// stop (GitHub #13766): with resume, stop that sub-agent instead (the task is then not read): the
+// run tells its owner at once (MR_STOP_AGENT) and does not wait on it.
+McDelegate :: struct { level: string; task: string; resume: int; stop: bool; }
+
+// A checklist item reported by the agent on multi-step tasks (pending, in_progress, completed).
+McTodo :: struct { id: string; content: string; status: string; }
+
+McAction :: struct {
+  rationale: string;
+  delegates: [MC_MAX_DELEGATES] McDelegate; nd: int;   // read only by a run whose owner runs sub-agents (mc_action_delegates)
+  edits: [MC_MAX_EDITS] McEdit; ne: int;
+  commands: [MC_MAX_COMMANDS] string; nc: int;
+  view: [MC_MAX_VIEWS] string; nv: int;
+  finished: bool;
+  reply: string;
+  asks: bool;                    // ask: question
+  questions: [MC_MAX_QUESTIONS] string; nq: int;   // compiler questions (read only with more)
+  notes: [MC_MAX_NOTES] string; nn: int;           // findings to keep (read only with more)
+  todos: [MC_MAX_TODOS] McTodo; nt: int;           // optional live task checklist
+  has_todos: bool;                                 // true when the reply included a todos member
+}
+
+// The reply as an action, its strings decoded into ar (they live as long as
+// text and ar). What's wrong with it, or "".
+mc_action_parse :: (ar: [] ClArena, text: string, a: [] McAction) -> string { return mc_action_parse_as(ar, text, a, false); }
+// The same; with more, the reply's questions, notes and each edit's seen and name are read too
+// (each may be missing: a gateway without strict schemas leaves members out).
+mc_action_parse_as :: (ar: [] ClArena, text: string, a: [] McAction, more: bool) -> string {
+  a[0] = McAction.{};
+  if !cl_root(text).ok { return "the reply is not JSON"; }
+  if !cl_valid(text, "s:rationale a:commands s:commands.* a:view s:view.* b:finished s:reply s:ask=none|question") {
+    return "the reply does not match the next_action schema";
+  }
+  if !cl_valid(text, "?a:edits ?o:edits.* ?s:edits.*.path ?s:edits.*.old ?s:edits.*.new") { return "the reply's edits do not match the next_action schema"; }
+  if !cl_valid(text, "?a:todos ?o:todos.* ?s:todos.*.id ?s:todos.*.content ?s:todos.*.status=pending|in_progress|completed") { return "the reply's todos do not match the next_action schema"; }
+  if more && !cl_valid(text, "?a:questions ?s:questions.* ?a:notes ?s:notes.* ?s:edits.*.seen ?s:edits.*.name") { return "the reply's questions, notes or an edit's seen or name do not match the next_action schema"; }
+  a[0].rationale = cl_str(ar, text, "rationale");
+  eds := cl_raw(text, "edits");
+  ne := ifx eds.count > 0 then cl_count(eds) else 0;
+  if ne > MC_MAX_EDITS { return "the reply has more than 16 edits"; }
+  for i: 0..<ne {
+    e := cl_json(eds, cl_item(eds, i));
+    a[0].edits[i] = McEdit.{path = cl_str(ar, e, "path"), old = cl_str(ar, e, "old"), text = cl_str(ar, e, "new")};
+    if more { a[0].edits[i].seen = cl_str(ar, e, "seen"); a[0].edits[i].name = cl_str(ar, e, "name"); }
+    if a[0].edits[i].path.count == 0 { return "an edit has no path"; }
+  }
+  a[0].ne = ne;
+  if more {
+    qs := cl_raw(text, "questions");
+    nq := ifx qs.count > 0 then cl_count(qs) else 0;
+    if nq > MC_MAX_QUESTIONS { return "the reply has more than 16 questions"; }
+    for i: 0..<nq { a[0].questions[i] = cl_text(ar, qs, cl_item(qs, i)); if a[0].questions[i].count == 0 { return "a question is empty"; } }
+    a[0].nq = nq;
+    ns := cl_raw(text, "notes");
+    nn := ifx ns.count > 0 then cl_count(ns) else 0;
+    if nn > MC_MAX_NOTES { return "the reply has more than 8 notes"; }
+    for i: 0..<nn { a[0].notes[i] = cl_text(ar, ns, cl_item(ns, i)); if a[0].notes[i].count == 0 { return "a note is empty"; } }
+    a[0].nn = nn;
+  }
+  cmds := cl_raw(text, "commands");
+  nc := cl_count(cmds);
+  if nc > MC_MAX_COMMANDS { return "the reply has more than 32 commands"; }
+  for i: 0..<nc { a[0].commands[i] = cl_text(ar, cmds, cl_item(cmds, i)); }
+  a[0].nc = nc;
+  views := cl_raw(text, "view");
+  nv := cl_count(views);
+  if nv > MC_MAX_VIEWS { return "the reply asks to view more than 16 files"; }
+  for i: 0..<nv { a[0].view[i] = cl_text(ar, views, cl_item(views, i)); }
+  a[0].nv = nv;
+  a[0].finished = cl_bool(text, "finished").value;
+  a[0].reply = cl_str(ar, text, "reply");
+  a[0].asks = cl_str(ar, text, "ask") == "question";
+  tds := cl_raw(text, "todos");
+  if tds.count > 0 {
+    a[0].has_todos = true;
+    nt := cl_count(tds);
+    if nt > MC_MAX_TODOS { return "the reply has more than 24 todos"; }
+    for i: 0..<nt {
+      td := cl_json(tds, cl_item(tds, i));
+      a[0].todos[i] = McTodo.{id = cl_str(ar, td, "id"), content = cl_str(ar, td, "content"), status = cl_str(ar, td, "status")};
+      if a[0].todos[i].content.count == 0 { return "a todo has no content"; }
+    }
+    a[0].nt = nt;
+  }
+  if ar[0].full { return "the reply does not fit its buffer"; }
+  if a[0].finished && a[0].reply.count == 0 { return "finished is true but reply is empty"; }
+  if a[0].asks && a[0].reply.count == 0 { return "ask is question but reply is empty"; }
+  for i: 0..<nc { if a[0].commands[i].count == 0 { return "a command is empty"; } }
+  return "";
+}
+
+// The reply's delegate member read into a (a run whose owner runs sub-agents; after
+// mc_action_parse_as, which leaves nd 0). The member may be missing. What's wrong with it, or "".
+// claude: the Claude levels are allowed too; openrouter: the openrouter level.
+mc_action_delegates :: (ar: [] ClArena, text: string, a: [] McAction, claude: bool, openrouter: bool) -> string {
+  return mc_action_delegates_all(ar, text, a, claude, openrouter, false);
+}
+mc_action_delegates_all :: (ar: [] ClArena, text: string, a: [] McAction, claude: bool, openrouter: bool, inkling: bool) -> string {
+  a[0].nd = 0;
+  spec: [192] u8;
+  ns := json_raw(spec[..], 0, "?a:delegate ?o:delegate.* ?s:delegate.*.level=hydrogen|carbon|neon");
+  if claude { ns = json_raw(spec[..], ns, "|haiku|sonnet|opus|fable"); }
+  if openrouter { ns = json_raw(spec[..], ns, "|openrouter"); }
+  if inkling { ns = json_raw(spec[..], ns, "|inkling"); }
+  ns = json_raw(spec[..], ns, " ?s:delegate.*.task");
+  if !cl_valid(text, cast(string) spec[0..<ns]) { return "the reply's delegate does not match the next_action schema"; }
+  ds := cl_raw(text, "delegate");
+  nd := ifx ds.count > 0 then cl_count(ds) else 0; // mutant: equivalent
+  if nd > MC_MAX_DELEGATES { return "the reply delegates more than 6 tasks"; }
+  for i: 0..<nd {
+    d := cl_json(ds, cl_item(ds, i));
+    resume := cl_int(d, "resume"); stop := cl_bool(d, "stop");
+    a[0].delegates[i] = McDelegate.{level = cl_str(ar, d, "level"), task = cl_str(ar, d, "task"), resume = ifx resume.ok then resume.value else 0,
+                                    stop = stop.ok && stop.value && resume.ok && resume.value > 0};
+    // with resume an empty task only waits for that sub-agent: no note (GitHub #13776)
+    if a[0].delegates[i].task.count == 0 && !a[0].delegates[i].stop && a[0].delegates[i].resume <= 0 { return "a delegated task is empty"; }
+  }
+  if ar[0].full { return "the reply does not fit its buffer"; }
+  a[0].nd = nd;
+  return "";
+}
+
+// A compiler question, one line: the word that says what is asked, then one or two arguments.
+//   defines NAME        uses NAME [FILE]     exports FILE     show NAME [FILE]     check FILE
+//   explain CODE        vocab NAME           effects FILE [PROC]                   depends FILE
+MC_Q_DEFINES :: 0; MC_Q_USES :: 1; MC_Q_EXPORTS :: 2; MC_Q_SHOW :: 3; MC_Q_CHECK :: 4;
+MC_Q_EXPLAIN :: 5; MC_Q_VOCAB :: 6; MC_Q_EFFECTS :: 7; MC_Q_DEPENDS :: 8;
+MC_Q_OPS :: [9] string.["defines", "uses", "exports", "show", "check", "explain", "vocab", "effects", "depends"];
+MC_Q_MOST :: [9] int.[1, 2, 1, 2, 1, 1, 1, 2, 1];       // arguments each takes at most (each takes one at least)
+MC_Q_FORMS :: "defines NAME, uses NAME [FILE], exports FILE, show NAME [FILE], check FILE, explain CODE, vocab NAME, effects FILE [PROC], depends FILE";
+
+// op: MC_Q_*, or -1 with why. a and b are parts of q.
+McQuestion :: struct { op: int = -1; a: string; b: string; why: string; }
+mc_question :: (q: string) -> McQuestion {
+  w: [4] string; n := 0; i := 0;
+  while i < q.count {
+    while i < q.count && (q[i] == ' ' || q[i] == 9) { i += 1; }
+    e := i;
+    while e < q.count && q[e] != ' ' && q[e] != 9 { e += 1; }
+    if e > i { if n < 4 { w[n] = cast(string) q[i..<e]; } n += 1; }
+    i = e;
+  }
+  r := McQuestion.{};
+  if n == 0 { r.why = "an empty question"; return r; }
+  for o, k: MC_Q_OPS { if o == w[0] { r.op = k; } }
+  if r.op < 0 { r.why = "no such question"; return r; }
+  if n < 2 { r.op = -1; r.why = "the question names nothing"; return r; }
+  if n - 1 > MC_Q_MOST[r.op] { r.op = -1; r.why = "the question has too many words"; return r; }
+  r.a = w[1];
+  if n > 2 { r.b = w[2]; }
+  return r;
+}
+
+// ---------------------------------------------------------------- checks
+
+#test "the delegate member: in the schema of any modes, read from a reply, refused when wrong" {
+  b: [4096] u8; d: [4096] u8;
+  s := mc_schema_delegate(MC_SCHEMA, d[..], false, false);
+  #assert json_valid(s) && cl_raw(s, "properties.delegate.items.properties.level.enum").count > 0 && cl_count(cl_raw(s, "required")) == 8;
+  #assert cl_count(cl_raw(s, "properties.edits.items.required")) == 3 && s.count == MC_SCHEMA.count + MC_SCHEMA_DELEGATE.count + 11;
+  s = mc_schema_delegate(mc_schema(b[..], true, true), d[..], true, false);
+  #assert json_valid(s) && cl_count(cl_raw(s, "required")) == 10 && cl_raw(s, "properties.notes").count > 0 && cl_raw(s, "properties.delegate").count > 0;
+  #assert mc_schema_delegate("{}", d[..], false, false) == "" && mc_schema_delegate(MC_SCHEMA, d[0..<64], false, false) == "";
+  ab: [2048] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  whole := "{\"rationale\":\"split\",\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"count the files\"},{\"level\":\"carbon\",\"task\":\"find the bug\"}],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  #assert mc_action_parse(ar[..], whole, a[..]) == "" && a[0].nd == 0;
+  #assert mc_action_delegates(ar[..], whole, a[..], false, false) == "" && a[0].nd == 2 && a[0].delegates[0].level == "hydrogen" && a[0].delegates[0].task == "count the files" && a[0].delegates[1].level == "carbon";
+  // the schema written from pieces is the old constants; openrouter joins the enum only when on
+  #assert mc_schema_delegate(MC_SCHEMA, d[..], false, false).count == MC_SCHEMA.count + MC_SCHEMA_DELEGATE.count + 11;
+  #assert mc_schema_delegate(MC_SCHEMA, d[..], true, false).count == MC_SCHEMA.count + MC_SCHEMA_DELEGATE_CLAUDE.count + 11;
+  s = mc_schema_delegate(MC_SCHEMA, d[..], true, true);
+  #assert json_valid(s) && cl_count(cl_raw(s, "properties.delegate.items.properties.level.enum")) == 8;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"openrouter\",\"task\":\"t\"}]}", a[..], false, true) == "" && a[0].delegates[0].level == "openrouter";
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"openrouter\",\"task\":\"t\"}]}", a[..], true, false) != "";
+  // neon is a Gemini level: read with or without the Claude levels
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"neon\",\"task\":\"ship it\"}]}", a[..], false, false) == "" && a[0].nd == 1 && a[0].delegates[0].level == "neon";
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"neon\",\"task\":\"ship it\"}]}", a[..], true, false) == "" && a[0].nd == 1;
+  // the Claude levels are read only for an owner that runs Claude Code
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"opus\",\"task\":\"x\"}]}", a[..], false, false) != "";
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"opus\",\"task\":\"x\"},{\"level\":\"fable\",\"task\":\"y\"}]}", a[..], true, false) == "" && a[0].nd == 2 && a[0].delegates[0].level == "opus" && a[0].delegates[1].level == "fable";
+  #assert mc_action_delegates(ar[..], "{\"rationale\":\"x\"}", a[..], false, false) == "" && a[0].nd == 0;
+  // resume names a paused sub-agent by its number; left out, zero or less, the task is a new sub-agent's
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"write it now\",\"resume\":3},{\"level\":\"carbon\",\"task\":\"y\",\"resume\":0},{\"level\":\"carbon\",\"task\":\"z\",\"resume\":-2}]}", a[..], false, false) == "" && a[0].nd == 3;
+  #assert a[0].delegates[0].resume == 3 && a[0].delegates[1].resume == 0 && a[0].delegates[2].resume == -2;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"z\"}]}", a[..], false, false) == "" && a[0].delegates[0].resume == 0 && !a[0].delegates[0].stop;
+  // stop with resume stops that sub-agent (its task may be empty); stop with no number is no stop
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"\",\"resume\":2,\"stop\":true},{\"level\":\"carbon\",\"task\":\"w\",\"stop\":true}]}", a[..], false, false) == "" && a[0].nd == 2;
+  #assert a[0].delegates[0].stop && a[0].delegates[0].resume == 2 && !a[0].delegates[1].stop;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"\",\"stop\":true}]}", a[..], false, false) == "a delegated task is empty";
+  // resume with an empty task only waits for that sub-agent (#13776)
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"\",\"resume\":2}]}", a[..], false, false) == "" && a[0].delegates[0].resume == 2 && !a[0].delegates[0].stop;
+  #assert cl_raw(mc_schema_delegate(MC_SCHEMA, d[..], false, false), "properties.delegate.items.properties.stop.type") == "\"boolean\"";
+  // six tasks are the most
+  six := "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"a\"},{\"level\":\"carbon\",\"task\":\"b\"},{\"level\":\"carbon\",\"task\":\"c\"},{\"level\":\"carbon\",\"task\":\"d\"},{\"level\":\"carbon\",\"task\":\"e\"},{\"level\":\"carbon\",\"task\":\"f\"}]}";
+  seven := "{\"delegate\":[{\"level\":\"carbon\",\"task\":\"a\"},{\"level\":\"carbon\",\"task\":\"b\"},{\"level\":\"carbon\",\"task\":\"c\"},{\"level\":\"carbon\",\"task\":\"d\"},{\"level\":\"carbon\",\"task\":\"e\"},{\"level\":\"carbon\",\"task\":\"f\"},{\"level\":\"carbon\",\"task\":\"g\"}]}";
+  #assert mc_action_delegates(ar[..], six, a[..], false, false) == "" && a[0].nd == 6 && a[0].delegates[5].task == "f";
+  #assert mc_action_delegates(ar[..], seven, a[..], false, false) == "the reply delegates more than 6 tasks" && a[0].nd == 0;
+  #assert cl_raw(mc_schema_delegate(MC_SCHEMA, d[..], false, false), "properties.delegate.items.properties.resume.type") == "\"integer\"" && cl_count(cl_raw(mc_schema_delegate(MC_SCHEMA, d[..], true, false), "properties.delegate.items.required")) == 2;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"hard\",\"task\":\"x\"}]}", a[..], false, false) != "" && a[0].nd == 0;
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"\"}]}", a[..], false, false) == "a delegated task is empty";
+  #assert mc_action_delegates(ar[..], "{\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"hydrogen\",\"task\":\"a\"}]}", a[..], false, false) == "the reply delegates more than 6 tasks";
+}
+
+#test "the schema a run sends: MC_SCHEMA with nothing on, the added members with each mode" {
+  b: [4096] u8;
+  #assert mc_schema(b[..], false, false) == MC_SCHEMA;
+  #assert mc_schema(b[..], true, true) == MC_SCHEMA_AWARE && json_valid(MC_SCHEMA_AWARE);
+  s := mc_schema(b[..], true, false);
+  #assert json_valid(s) && cl_raw(s, "properties.questions").count > 0 && cl_raw(s, "properties.notes").count == 0 && cl_raw(s, "properties.edits.items.properties.seen").count > 0;
+  #assert cl_count(cl_raw(s, "required")) == 8 && cl_count(cl_raw(s, "properties.edits.items.required")) == 5;
+  s = mc_schema(b[..], false, true);
+  #assert json_valid(s) && cl_raw(s, "properties.questions").count == 0 && cl_raw(s, "properties.notes").count > 0 && cl_raw(s, "properties.edits.items.properties.seen").count == 0;
+  #assert cl_count(cl_raw(s, "required")) == 8 && cl_count(cl_raw(s, "properties.edits.items.required")) == 3;
+  #assert mc_schema(b[0..<100], true, true) == "";
+}
+
+#test "with more, questions, notes and an edit's seen and name parse; without, they are not read" {
+  ab: [4096] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  whole := "{\"rationale\":\"fix\",\"notes\":[\"shapes.coax:4-4 area multiplies w by h\",\"a guess\"],\"edits\":[{\"path\":\"shapes.coax\",\"old\":\"\",\"new\":\"area :: () {}\",\"seen\":\"0123456789ab\",\"name\":\"area\"},{\"path\":\"a.txt\",\"old\":\"x\",\"new\":\"y\",\"seen\":\"\",\"name\":\"\"}],\"questions\":[\"defines area\",\"check shapes.coax\"],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  why := mc_action_parse_as(ar[..], whole, a[..], true);
+  #assert why == "" && a[0].nq == 2 && a[0].questions[0] == "defines area" && a[0].questions[1] == "check shapes.coax" && a[0].nn == 2 && a[0].notes[1] == "a guess";
+  #assert a[0].ne == 2 && a[0].edits[0].seen == "0123456789ab" && a[0].edits[0].name == "area" && a[0].edits[1].seen == "" && a[0].edits[1].name == "" && a[0].edits[1].text == "y";
+  // the same reply read the old way: an action, with none of them
+  why = mc_action_parse(ar[..], whole, a[..]);
+  #assert why == "" && a[0].nq == 0 && a[0].nn == 0 && a[0].ne == 2 && a[0].edits[0].seen == "" && a[0].edits[0].name == "";
+  // a reply without the added members is still an action
+  why = mc_action_parse_as(ar[..], "{\"rationale\":\"x\",\"edits\":[{\"path\":\"a\",\"old\":\"b\",\"new\":\"c\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..], true);
+  #assert why == "" && a[0].nq == 0 && a[0].nn == 0 && a[0].ne == 1 && a[0].edits[0].seen == "";
+}
+
+#test "with more, bad questions and notes are refused with a reason" {
+  ab: [8192] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  head := "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",";
+  b: [2048] u8;
+  n := json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"questions\":[1]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "the reply's questions, notes or an edit's seen or name do not match the next_action schema";
+  #assert mc_action_parse(ar[..], cast(string) b[0..<n], a[..]) == "";          // not read without more
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"notes\":\"one\"}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) != "";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"edits\":[{\"path\":\"a\",\"old\":\"\",\"new\":\"\",\"seen\":7}]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) != "";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"questions\":[\"defines a\",\"\"]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "a question is empty";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"notes\":[\"\"]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "a note is empty";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"questions\":[");
+  for i: 0..<17 { n = json_raw(b[..], n, ifx i > 0 then ",\"vocab a\"" else "\"vocab a\""); }
+  n = json_raw(b[..], n, "]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "the reply has more than 16 questions";
+  n = json_raw(b[..], 0, head); n = json_raw(b[..], n, "\"notes\":[");
+  for i: 0..<9 { n = json_raw(b[..], n, ifx i > 0 then ",\"n\"" else "\"n\""); }
+  n = json_raw(b[..], n, "]}");
+  #assert mc_action_parse_as(ar[..], cast(string) b[0..<n], a[..], true) == "the reply has more than 8 notes";
+}
+
+#test "a question is a word and one or two arguments; anything else says why" {
+  q := mc_question("defines area");
+  #assert q.op == MC_Q_DEFINES && q.a == "area" && q.b == "" && q.why == "";
+  q = mc_question("  uses   area \t shapes.coax ");
+  #assert q.op == MC_Q_USES && q.a == "area" && q.b == "shapes.coax";
+  q = mc_question("effects main.coax timed");
+  #assert q.op == MC_Q_EFFECTS && q.a == "main.coax" && q.b == "timed";
+  #assert mc_question("show area").op == MC_Q_SHOW && mc_question("show area shapes.coax").b == "shapes.coax" && mc_question("exports a.coax").op == MC_Q_EXPORTS;
+  #assert mc_question("check a.coax").op == MC_Q_CHECK && mc_question("explain E0325").op == MC_Q_EXPLAIN && mc_question("vocab rp_put").op == MC_Q_VOCAB && mc_question("depends a.coax").op == MC_Q_DEPENDS && mc_question("effects a.coax").op == MC_Q_EFFECTS;
+  q = mc_question("where is area");
+  #assert q.op == -1 && q.why == "no such question";
+  q = mc_question("defines");
+  #assert q.op == -1 && q.why == "the question names nothing";
+  q = mc_question("defines a b");
+  #assert q.op == -1 && q.why == "the question has too many words";
+  #assert mc_question("uses a b c").op == -1 && mc_question("").why == "an empty question" && mc_question("   ").op == -1;
+  #assert MC_Q_OPS.count == MC_Q_MOST.count;
+}
+
+#test "the schema is JSON, and a plain answer parses as finished with no commands" {
+  #assert json_valid(MC_SCHEMA);
+  ab: [1024] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  why := mc_action_parse(ar[..], "{\"rationale\":\"arithmetic\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"none\"}", a[..]);
+  #assert why == "" && a[0].finished && a[0].reply == "4" && a[0].nc == 0 && a[0].nv == 0 && !a[0].asks;
+  why = mc_action_parse(ar[..], "{\"rationale\":\"look\",\"commands\":[\"ls *.swift | wc -l\",\"echo \\\"hi\\\"\"],\"view\":[\"README.md\"],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]);
+  #assert why == "" && a[0].nc == 2 && a[0].commands[1] == "echo \"hi\"" && a[0].view[0] == "README.md" && !a[0].finished;
+}
+
+#test "edits: exact replacements parse; a reply without them is still an action; bad ones are refused" {
+  ab: [2048] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  why := mc_action_parse(ar[..], "{\"rationale\":\"fix\",\"edits\":[{\"path\":\"a.c\",\"old\":\"x = 1;\",\"new\":\"x = \\\"2\\\";\"},{\"path\":\"new.md\",\"old\":\"\",\"new\":\"# hi\\n\"}],\"commands\":[\"make\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]);
+  #assert why == "" && a[0].ne == 2 && a[0].edits[0].path == "a.c" && a[0].edits[0].text == "x = \"2\";" && a[0].edits[1].old == "" && a[0].edits[1].text == "# hi\n" && a[0].nc == 1;
+  why = mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"none\"}", a[..]);
+  #assert why == "" && a[0].ne == 0;
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"edits\":[{\"path\":\"a\",\"old\":1,\"new\":\"\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]) != "";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"edits\":[{\"path\":\"\",\"old\":\"\",\"new\":\"\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]) == "an edit has no path";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"edits\":\"no\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}", a[..]) != "";
+}
+
+#test "replies that fail the schema or its meaning are refused with a reason" {
+  ab: [1024] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  #assert mc_action_parse(ar[..], "4", a[..]) == "the reply does not match the next_action schema";
+  #assert mc_action_parse(ar[..], "The answer is 4.", a[..]) == "the reply is not JSON";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\"}", a[..]) != "";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[1],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"none\"}", a[..]) != "";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"maybe\"}", a[..]) != "";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"\",\"ask\":\"none\"}", a[..]) == "finished is true but reply is empty";
+  #assert mc_action_parse(ar[..], "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"question\"}", a[..]) == "ask is question but reply is empty";
+}
+
+#test "optional todos parse, validate status, and leave has_todos false when omitted" {
+  ab: [8192] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  a: [1] McAction;
+  base := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  #assert mc_action_parse(ar[..], base, a[..]) == "" && !a[0].has_todos && a[0].nt == 0;
+  with_todos := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",\"todos\":[{\"id\":\"1\",\"content\":\"Read code\",\"status\":\"completed\"},{\"id\":\"2\",\"content\":\"Write tests\",\"status\":\"in_progress\"}]}";
+  #assert mc_action_parse(ar[..], with_todos, a[..]) == "" && a[0].has_todos && a[0].nt == 2;
+  #assert a[0].todos[0].id == "1" && a[0].todos[0].content == "Read code" && a[0].todos[0].status == "completed";
+  #assert a[0].todos[1].id == "2" && a[0].todos[1].content == "Write tests" && a[0].todos[1].status == "in_progress";
+  empty_todos := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",\"todos\":[]}";
+  #assert mc_action_parse(ar[..], empty_todos, a[..]) == "" && a[0].has_todos && a[0].nt == 0;
+  bad_status := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",\"todos\":[{\"id\":\"1\",\"content\":\"x\",\"status\":\"done\"}]}";
+  #assert mc_action_parse(ar[..], bad_status, a[..]) != "";
+  empty_content := "{\"rationale\":\"work\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\",\"todos\":[{\"id\":\"1\",\"content\":\"\",\"status\":\"pending\"}]}";
+  #assert mc_action_parse(ar[..], empty_content, a[..]) == "a todo has no content";
+}

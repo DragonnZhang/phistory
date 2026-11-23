@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "kilocode",
+  "agent": "kilocode",
+  "repository": "Kilo-Org/kilocode",
+  "snapshot": "515819438649ad8d81d7",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:25.549220+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "bfdec5496922452222223c01b4cc6c89305b0279",
+      "path": "packages/core/src/tool-output-store.ts",
+      "sha256": "3eea248408c62f7ce4c56433dabdbabf8507095dda812b41a1e1168b713536b2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/bfdec5496922452222223c01b4cc6c89305b0279/packages/core/src/tool-output-store.ts",
+      "url": "https://github.com/Kilo-Org/kilocode/blob/bfdec5496922452222223c01b4cc6c89305b0279/packages/core/src/tool-output-store.ts"
+    },
+    {
+      "commit": "bfdec5496922452222223c01b4cc6c89305b0279",
+      "path": "packages/core/src/tool/registry.ts",
+      "sha256": "cf2f73a4c6ed6ede7ba1cac30dac9bdf004142461d5bbcc8d55421cb2def7254",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/bfdec5496922452222223c01b4cc6c89305b0279/packages/core/src/tool/registry.ts",
+      "url": "https://github.com/Kilo-Org/kilocode/blob/bfdec5496922452222223c01b4cc6c89305b0279/packages/core/src/tool/registry.ts"
+    },
+    {
+      "commit": "bfdec5496922452222223c01b4cc6c89305b0279",
+      "path": "packages/opencode/src/session/prompt.ts",
+      "sha256": "b180b92cd8af2af4d9c01da855ace8d753ea32576c10647679f7eb8970497b3f",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/bfdec5496922452222223c01b4cc6c89305b0279/packages/opencode/src/session/prompt.ts",
+      "url": "https://github.com/Kilo-Org/kilocode/blob/bfdec5496922452222223c01b4cc6c89305b0279/packages/opencode/src/session/prompt.ts"
+    },
+    {
+      "commit": "bfdec5496922452222223c01b4cc6c89305b0279",
+      "path": "packages/opencode/src/session/prompt/default.txt",
+      "sha256": "432fa50e0f0c5fe4403c94e14bad8dc1627278962678933bf98d7195bc493d22",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/bfdec5496922452222223c01b4cc6c89305b0279/packages/opencode/src/session/prompt/default.txt",
+      "url": "https://github.com/Kilo-Org/kilocode/blob/bfdec5496922452222223c01b4cc6c89305b0279/packages/opencode/src/session/prompt/default.txt"
+    },
+    {
+      "commit": "bfdec5496922452222223c01b4cc6c89305b0279",
+      "path": "packages/opencode/src/tool/registry.ts",
+      "sha256": "ea84d8bccd501701b6d6ba5d99c45e4903ff0df38557c2dd1d49bfe204ff45f9",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/bfdec5496922452222223c01b4cc6c89305b0279/packages/opencode/src/tool/registry.ts",
+      "url": "https://github.com/Kilo-Org/kilocode/blob/bfdec5496922452222223c01b4cc6c89305b0279/packages/opencode/src/tool/registry.ts"
+    },
+    {
+      "commit": "bfdec5496922452222223c01b4cc6c89305b0279",
+      "path": "packages/opencode/src/tool/task.ts",
+      "sha256": "4edc35786c15daa950937cb1317f540418c008e00f9cb632fe62d1740b6ba779",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/bfdec5496922452222223c01b4cc6c89305b0279/packages/opencode/src/tool/task.ts",
+      "url": "https://github.com/Kilo-Org/kilocode/blob/bfdec5496922452222223c01b4cc6c89305b0279/packages/opencode/src/tool/task.ts"
+    }
+  ]
+}

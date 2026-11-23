@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "gemini-cli",
+  "agent": "gemini-cli",
+  "repository": "google-gemini/gemini-cli",
+  "snapshot": "5736ac6de33f28c04c26",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:25.012457+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "eecccfcd5aff25de5e78135ca20f7abe3f566955",
+      "path": "packages/core/src/config/config.ts",
+      "sha256": "b98029ab2671d6a1cbffceb23958f1de4cb5c3bab228c1dc024e6efc0bf652d3",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/eecccfcd5aff25de5e78135ca20f7abe3f566955/packages/core/src/config/config.ts",
+      "url": "https://github.com/google-gemini/gemini-cli/blob/eecccfcd5aff25de5e78135ca20f7abe3f566955/packages/core/src/config/config.ts"
+    },
+    {
+      "commit": "eecccfcd5aff25de5e78135ca20f7abe3f566955",
+      "path": "packages/core/src/prompts/snippets.ts",
+      "sha256": "b2cccbd0cf68e33d057f33938e457fe3c781cc7e65c593f7a3974d70c5c68fe7",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/eecccfcd5aff25de5e78135ca20f7abe3f566955/packages/core/src/prompts/snippets.ts",
+      "url": "https://github.com/google-gemini/gemini-cli/blob/eecccfcd5aff25de5e78135ca20f7abe3f566955/packages/core/src/prompts/snippets.ts"
+    },
+    {
+      "commit": "eecccfcd5aff25de5e78135ca20f7abe3f566955",
+      "path": "packages/core/src/scheduler/tool-executor.ts",
+      "sha256": "93b377450f08526301d18630831d1eb079676c60d712f3aa783428d9cf0afc18",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/eecccfcd5aff25de5e78135ca20f7abe3f566955/packages/core/src/scheduler/tool-executor.ts",
+      "url": "https://github.com/google-gemini/gemini-cli/blob/eecccfcd5aff25de5e78135ca20f7abe3f566955/packages/core/src/scheduler/tool-executor.ts"
+    },
+    {
+      "commit": "eecccfcd5aff25de5e78135ca20f7abe3f566955",
+      "path": "packages/core/src/tools/exit-plan-mode.ts",
+      "sha256": "1e1589584223a824c817a24be784cf84922fc67785c544ec99e10dfe1e889435",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/eecccfcd5aff25de5e78135ca20f7abe3f566955/packages/core/src/tools/exit-plan-mode.ts",
+      "url": "https://github.com/google-gemini/gemini-cli/blob/eecccfcd5aff25de5e78135ca20f7abe3f566955/packages/core/src/tools/exit-plan-mode.ts"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "prime-agent",
+  "agent": "Prime Agent",
+  "repository": "PrimeIntellect-ai/prime-agent",
+  "snapshot": "fd1d7b64efb73a3d196a",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:29.040164+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/prompts/layers.rs",
+      "sha256": "1c52702395ed59de2086d77ee207a23b7c909923da1d582922a7a695fe5c25d1",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers.rs",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers.rs"
+    },
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/prompts/layers/bash-over-subprocess.md",
+      "sha256": "57dc725fb844f8fedd6e3bbb7cbc0d07ade54dff46467eb9cf0a7676ea6bfcc0",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/bash-over-subprocess.md",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/bash-over-subprocess.md"
+    },
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/prompts/layers/core.md",
+      "sha256": "cfb5d4ca597cd2c99a9f07cddbe6724820d9562d8d05523aec78887a1f46cea8",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/core.md",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/core.md"
+    },
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/prompts/layers/model_prompts.toml",
+      "sha256": "d71ca2223e7f24347166bf851dc80d2edc2c90c09046b6250b9c7ea38abfaa9e",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/model_prompts.toml",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/model_prompts.toml"
+    },
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/prompts/layers/opinionated.md",
+      "sha256": "abbaee40052f08ddc566f071721ca4b3ea3450f390b84e8e0838efd881eb936c",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/opinionated.md",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/opinionated.md"
+    },
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/prompts/layers/usage.md",
+      "sha256": "73eb19f85697d1c128fbc7040d0060b5e1d5d7ed97d0d97dad45a30fa0c78c78",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/usage.md",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/layers/usage.md"
+    },
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/prompts/model_prompts.rs",
+      "sha256": "96f18257013dbc22f638203e6eaef658249129ca960044d1943891953c8a746f",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/model_prompts.rs",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/model_prompts.rs"
+    },
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/prompts/system_prompt.rs",
+      "sha256": "986839d2e4452f22673ad71381cc428819bd4444fec4a663687dc5a9605e33a1",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/system_prompt.rs",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/prompts/system_prompt.rs"
+    },
+    {
+      "commit": "798d97032a3ec6d70142cc75c0420cb2b260f194",
+      "path": "crates/pa-core/src/tools/ipython.rs",
+      "sha256": "b7f7616fceaff16198d93f173ec866c167e7f92a258f40a68576a866b5fb101a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/tools/ipython.rs",
+      "url": "https://github.com/PrimeIntellect-ai/prime-agent/blob/798d97032a3ec6d70142cc75c0420cb2b260f194/crates/pa-core/src/tools/ipython.rs"
+    }
+  ]
+}

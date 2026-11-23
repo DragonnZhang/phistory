@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "autogpt",
+  "agent": "AutoGPT",
+  "repository": "Significant-Gravitas/AutoGPT",
+  "snapshot": "fca4c52e2046328e99f7",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:30.585351+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "dd0b5f73266ea5f3dfab37ebccd93049af58e106",
+      "path": "autogpt_platform/backend/backend/copilot/baseline/service.py",
+      "sha256": "8019e61ea56724fb438f4580d8e6254930d88b96a32a99a2ad0b101e92afa392",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/baseline/service.py",
+      "url": "https://github.com/Significant-Gravitas/AutoGPT/blob/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/baseline/service.py"
+    },
+    {
+      "commit": "dd0b5f73266ea5f3dfab37ebccd93049af58e106",
+      "path": "autogpt_platform/backend/backend/copilot/prompting.py",
+      "sha256": "cf03823d0da6fd9f0fbc96d0f731f663ce049393c3d66d575a890e257c102017",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/prompting.py",
+      "url": "https://github.com/Significant-Gravitas/AutoGPT/blob/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/prompting.py"
+    },
+    {
+      "commit": "dd0b5f73266ea5f3dfab37ebccd93049af58e106",
+      "path": "autogpt_platform/backend/backend/copilot/sdk/e2b_file_tools.py",
+      "sha256": "2101b2c935b491d4af4c8749fc43dafefe0fe9e202b1acf5c98ea8ea65db462a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/sdk/e2b_file_tools.py",
+      "url": "https://github.com/Significant-Gravitas/AutoGPT/blob/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/sdk/e2b_file_tools.py"
+    },
+    {
+      "commit": "dd0b5f73266ea5f3dfab37ebccd93049af58e106",
+      "path": "autogpt_platform/backend/backend/copilot/tools/bash_exec.py",
+      "sha256": "250a803cc4bb9bee4fa5c0e1e0ae5035e324b3318b5e2ca7773610b356fa15e5",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/tools/bash_exec.py",
+      "url": "https://github.com/Significant-Gravitas/AutoGPT/blob/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/tools/bash_exec.py"
+    },
+    {
+      "commit": "dd0b5f73266ea5f3dfab37ebccd93049af58e106",
+      "path": "autogpt_platform/backend/backend/copilot/tools/find_capability.py",
+      "sha256": "5bdc595f522c08c88e9788a11385f8b9e261a9a8a2e60869d7e760091d60e9fd",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/tools/find_capability.py",
+      "url": "https://github.com/Significant-Gravitas/AutoGPT/blob/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/tools/find_capability.py"
+    },
+    {
+      "commit": "dd0b5f73266ea5f3dfab37ebccd93049af58e106",
+      "path": "autogpt_platform/backend/backend/copilot/tools/run_sub_session.py",
+      "sha256": "2a541d63f0d8aa482bc844fe0aacfad510662bf6ce877433ca86a66cd2506501",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/tools/run_sub_session.py",
+      "url": "https://github.com/Significant-Gravitas/AutoGPT/blob/dd0b5f73266ea5f3dfab37ebccd93049af58e106/autogpt_platform/backend/backend/copilot/tools/run_sub_session.py"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "agenticseek",
+  "agent": "agenticSeek",
+  "repository": "Fosowl/agenticSeek",
+  "snapshot": "20dc0bbc225e19e87f7b",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:24.638941+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "8f705be8ca625e9549389f188b1e37f700d3ed34",
+      "path": "prompts/base/coder_agent.txt",
+      "sha256": "34a7cd61d9b73b21aa2837e59cf0bf8a39c8e9151c3ef654ee8f8b0ef6d3c135",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/8f705be8ca625e9549389f188b1e37f700d3ed34/prompts/base/coder_agent.txt",
+      "url": "https://github.com/Fosowl/agenticSeek/blob/8f705be8ca625e9549389f188b1e37f700d3ed34/prompts/base/coder_agent.txt"
+    },
+    {
+      "commit": "8f705be8ca625e9549389f188b1e37f700d3ed34",
+      "path": "sources/agents/code_agent.py",
+      "sha256": "ae5d322ca9e6687e2ee651f2b781f1224b568b4deba9ddd4b4170e76163ff63f",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/8f705be8ca625e9549389f188b1e37f700d3ed34/sources/agents/code_agent.py",
+      "url": "https://github.com/Fosowl/agenticSeek/blob/8f705be8ca625e9549389f188b1e37f700d3ed34/sources/agents/code_agent.py"
+    }
+  ]
+}

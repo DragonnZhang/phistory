@@ -1,0 +1,612 @@
+// Copyright 2026 Muvon Un Limited
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//! Provider abstraction layer - now powered by octolib
+//!
+//! This module serves as an adapter between Octomind and the octolib provider system.
+//! It maintains backward compatibility while leveraging the self-sufficient octolib crate.
+
+use crate::config::Config;
+use crate::session::Message;
+use tokio::sync::watch;
+
+// Re-export octolib types with compatibility aliases
+pub use octolib::llm::{
+	AiProvider, AmazonBedrockProvider, AnthropicProvider, CloudflareWorkersAiProvider, DeepSeekProvider,
+	GenericToolCall, GoogleVertexProvider, OpenAiProvider, OpenRouterProvider, ProviderFactory,
+	StructuredOutputRequest,
+};
+
+// Re-export some octolib types directly
+pub use octolib::llm::{ModelPricing, ProviderExchange, ThinkingBlock, TokenUsage};
+
+// Define Octomind-specific ProviderResponse that uses McpToolCall
+#[derive(Debug, Clone)]
+pub struct ProviderResponse {
+	pub content: String,
+	pub exchange: ProviderExchange,
+	pub tool_calls: Option<Vec<crate::mcp::McpToolCall>>,
+	pub thinking: Option<ThinkingBlock>,
+	pub finish_reason: Option<String>,
+	pub response_id: Option<String>,
+	pub structured_output: Option<serde_json::Value>,
+}
+
+/// The header carrying [`ModelPurpose`] to the octohub proxy.
+pub const MODEL_PURPOSE_HEADER: &str = "X-Model-Purpose";
+
+/// Where in octomind a model call originates. Sent on every completion as the
+/// `X-Model-Purpose` header so octohub's virtual `auto` model can route each
+/// purpose to a different real model; providers that aren't octohub ignore it.
+///
+/// This set is a CONTRACT with the control plane. Internal mechanics sharing a
+/// profile also share one purpose, so a proxy cannot silently reintroduce
+/// per-mechanic model routing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ModelPurpose {
+	/// The session's own conversation turns — also cache keepalive pings,
+	/// which must hit the same model they are keeping warm.
+	#[default]
+	Main,
+	/// Gate, resolve, plan, and tool-output condensation.
+	Supervisor,
+	/// Conversation-compression decisions and summaries.
+	Compression,
+}
+
+impl ModelPurpose {
+	pub fn as_str(&self) -> &'static str {
+		match self {
+			Self::Main => "main",
+			Self::Supervisor => "supervisor",
+			Self::Compression => "compression",
+		}
+	}
+}
+
+// Keep the original ChatCompletionParams for backward compatibility
+/// Parameters for chat completion requests (Octomind version)
+///
+/// This struct maintains the original Octomind API while adapting to octolib internally.
+#[derive(Clone)]
+pub struct ChatCompletionParams<'a> {
+	/// Array of conversation messages
+	pub messages: &'a [Message],
+	/// Model identifier (e.g., "claude-3-5-sonnet", "gpt-4")
+	pub model: &'a str,
+	/// Maximum tokens to generate (0 = no limit)
+	pub max_tokens: u32,
+	/// Maximum retry attempts on failure
+	pub max_retries: u32,
+	/// Base timeout for exponential backoff retry logic
+	pub retry_timeout: std::time::Duration,
+	/// Total deadline per HTTP or WebSocket request attempt. None disables it.
+	pub request_timeout: Option<std::time::Duration>,
+	/// SSE/WebSocket response inactivity limit. None disables it.
+	pub stream_timeout: Option<std::time::Duration>,
+	/// Persistent-connection transport for octohub and chatgpt; other providers ignore it.
+	pub request_transport: crate::config::RequestTransportConfig,
+	/// Configuration object
+	pub config: &'a Config,
+	/// Cancellation token for request abortion
+	pub cancellation_token: Option<watch::Receiver<bool>>,
+	/// Optional JSON schema for structured output
+	pub schema: Option<serde_json::Value>,
+	/// Optional reasoning effort override (falls back to `config.reasoning_effort`)
+	pub reasoning_effort: Option<crate::config::ReasoningEffortConfig>,
+	/// Attach MCP tools to the request (default true). Text-only internal
+	/// calls (compression, learning extraction) disable this: the model never
+	/// calls tools there, the definitions waste input tokens, and their
+	/// presence blocks schema enforcement on proxy providers.
+	pub tools: bool,
+	/// Send image attachments (default true). Callers clear this for models that
+	/// cannot read images: history keeps tool-result screenshots and images from
+	/// earlier vision models, and a text-only model rejects the whole request.
+	pub vision: bool,
+	/// Where this call originates (main | supervisor | compression) — becomes
+	/// the `X-Model-Purpose` header. Defaults to Main.
+	pub purpose: ModelPurpose,
+	/// Cache pre-warm request (keepalive): refresh the prompt cache TTL without
+	/// generating output. Only providers with a keepalive policy honor it.
+	pub cache_prewarm: bool,
+}
+
+impl<'a> ChatCompletionParams<'a> {
+	/// Create new chat completion parameters
+	pub fn new(messages: &'a [Message], model: &'a str, max_tokens: u32, config: &'a Config) -> Self {
+		Self {
+			messages,
+			model,
+			max_tokens,
+			max_retries: config.max_retries,
+			retry_timeout: std::time::Duration::from_secs(config.retry_timeout),
+			request_timeout: match config.request_timeout_seconds {
+				0 => None,
+				n => Some(std::time::Duration::from_secs(n)),
+			},
+			stream_timeout: match config.stream_timeout_seconds {
+				0 => None,
+				n => Some(std::time::Duration::from_secs(n)),
+			},
+			request_transport: config.request_transport,
+			config,
+			cancellation_token: None,
+			schema: None,
+			reasoning_effort: None,
+			tools: true,
+			vision: true,
+			purpose: ModelPurpose::default(),
+			cache_prewarm: false,
+		}
+	}
+
+	/// Set maximum retry attempts
+	pub fn with_max_retries(mut self, max_retries: u32) -> Self {
+		self.max_retries = max_retries;
+		self
+	}
+
+	pub fn with_retry_timeout(mut self, retry_timeout: std::time::Duration) -> Self {
+		self.retry_timeout = retry_timeout;
+		self
+	}
+
+	pub fn with_request_timeout(mut self, request_timeout: Option<std::time::Duration>) -> Self {
+		self.request_timeout = request_timeout;
+		self
+	}
+
+	pub fn with_stream_timeout(mut self, stream_timeout: Option<std::time::Duration>) -> Self {
+		self.stream_timeout = stream_timeout;
+		self
+	}
+
+	pub fn with_request_transport(mut self, request_transport: crate::config::RequestTransportConfig) -> Self {
+		self.request_transport = request_transport;
+		self
+	}
+
+	/// Set cancellation token
+	pub fn with_cancellation_token(mut self, token: watch::Receiver<bool>) -> Self {
+		self.cancellation_token = Some(token);
+		self
+	}
+
+	/// Set JSON schema for structured output
+	pub fn with_schema(mut self, schema: serde_json::Value) -> Self {
+		self.schema = Some(schema);
+		self
+	}
+
+	/// Override reasoning effort for this call (otherwise inherits from config).
+	pub fn with_reasoning_effort(mut self, effort: crate::config::ReasoningEffortConfig) -> Self {
+		self.reasoning_effort = Some(effort);
+		self
+	}
+
+	/// Don't attach MCP tools — for text-only calls (compression, learning).
+	pub fn without_tools(mut self) -> Self {
+		self.tools = false;
+		self
+	}
+
+	/// Whether the target model can read image attachments.
+	pub fn with_vision(mut self, vision: bool) -> Self {
+		self.vision = vision;
+		self
+	}
+
+	/// Tag this call's origin for purpose-based routing (octohub `auto`).
+	pub fn with_purpose(mut self, purpose: ModelPurpose) -> Self {
+		self.purpose = purpose;
+		self
+	}
+
+	/// Send as a cache pre-warm: bills the cache read only, no output.
+	pub fn with_cache_prewarm(mut self) -> Self {
+		self.cache_prewarm = true;
+		self
+	}
+
+	/// Convert to octolib ChatCompletionParams with MCP tools
+	pub async fn to_octolib_params(
+		&self,
+		provider_name: &str,
+	) -> Result<octolib::llm::ChatCompletionParams, octolib::MessageError> {
+		let octolib_messages: Result<Vec<octolib::llm::Message>, _> =
+			self.messages.iter().map(convert_message_to_octolib).collect();
+
+		let mut octolib_messages = octolib_messages?;
+
+		if !self.vision {
+			for message in &mut octolib_messages {
+				message.images = None;
+			}
+		}
+
+		// Long cache TTL on system message — always enabled (Anthropic 1h cache).
+		if let Some(sys_msg) = octolib_messages.iter_mut().find(|m| m.role == "system" && m.cached) {
+			sys_msg.cache_ttl = Some("1h".to_string());
+		}
+
+		// Some providers (e.g. Gemini, Mistral) require the last message to be from the user.
+		// After conversation compression the last message can be an assistant summary, which
+		// causes those providers to return an error.  Appending a lightweight "Please continue."
+		// user message is the safest fix: it satisfies the constraint without altering session
+		// state and is semantically neutral (the model simply continues from where it left off).
+		let last_non_system_is_assistant = octolib_messages
+			.iter()
+			.rev()
+			.find(|m| m.role != "system")
+			.map(|m| m.role == "assistant")
+			.unwrap_or(false);
+
+		if last_non_system_is_assistant {
+			crate::log_debug!(
+				"Last message is assistant after compression - appending synthetic user message to satisfy provider requirements"
+			);
+			let synthetic = octolib::llm::MessageBuilder::user("Please continue.")
+				.build()
+				.map_err(|_| octolib::MessageError::InvalidRole {
+					role: "synthetic_user".to_string(),
+				})?;
+			octolib_messages.push(synthetic);
+		}
+
+		let mut params = octolib::llm::ChatCompletionParams::new(&octolib_messages, self.model, self.max_tokens)
+			.with_max_retries(self.max_retries)
+			.with_retry_timeout(self.retry_timeout)
+			.with_request_timeout(self.request_timeout)
+			.with_stream_timeout(self.stream_timeout)
+			.with_long_cache(true)
+			.with_cache_prewarm(self.cache_prewarm)
+			.with_reasoning_effort(
+				self.reasoning_effort
+					.unwrap_or(self.config.reasoning_effort)
+					.to_octolib(),
+			)
+			// Sent on every request: only the octohub proxy interprets it (for the
+			// virtual `auto` model); other providers ignore an unknown X- header.
+			.with_extra_headers(std::collections::HashMap::from([(
+				MODEL_PURPOSE_HEADER.to_string(),
+				self.purpose.as_str().to_string(),
+			)]));
+
+		if provider_name == "chatgpt" {
+			params = params.with_chatgpt_transport(self.request_transport.to_chatgpt());
+		}
+
+		if provider_name == "octohub" {
+			params = params.with_octohub_transport(self.request_transport.to_octohub());
+		}
+
+		if let Some(token) = &self.cancellation_token {
+			params = params.with_cancellation_token(token.clone());
+		}
+
+		let session_id = crate::session::context::current_session_id();
+
+		// A failing provider is retried with backoff sleeps that add up to minutes;
+		// tell the user each one instead of going silent. Routed like MCP
+		// notifications — the session's WebSocket, or the CLI drain (spinner
+		// line, stderr, JSONL) — with the session captured here because the call
+		// may run outside the task-local scope.
+		let retry_session_id = session_id.clone();
+		let retry_provider = provider_name.to_string();
+		let retry_model = self.model.to_string();
+		let retry_purpose = self.purpose;
+		params = params.with_retry_observer(octolib::llm::RetryObserver::new(move |event| {
+			tracing::warn!(
+				"{} model {}:{} request failed ({}), retry {}/{} in {:?}",
+				retry_purpose.as_str(),
+				retry_provider,
+				retry_model,
+				event.reason,
+				event.attempt,
+				event.max_retries,
+				event.delay
+			);
+			crate::mcp::process::send_notification_message_for(
+				crate::websocket::ServerMessage::retry(
+					event,
+					&retry_provider,
+					&retry_model,
+					retry_purpose,
+					retry_session_id.clone(),
+				),
+				retry_session_id.as_ref(),
+			);
+		}));
+
+		// OpenAI-family providers route prompt caching by this key; without it the
+		// turns of one session miss the cache (0 of 11 turns hit on chatgpt).
+		if let Some(session_id) = session_id {
+			params = params.with_prompt_cache_key(session_id);
+		}
+
+		// Fetch and add MCP tools if MCP is configured
+		if self.tools && !self.config.mcp.servers.is_empty() {
+			let mcp_functions = crate::mcp::get_model_functions(self.config).await;
+			if !mcp_functions.is_empty() {
+				// Convert MCP functions to octolib FunctionDefinitions
+				let mut octolib_tools: Vec<octolib::llm::FunctionDefinition> = mcp_functions
+					.into_iter()
+					.map(|f| octolib::llm::FunctionDefinition {
+						name: f.name,
+						description: f.description,
+						parameters: f.parameters,
+						cache_control: None, // Will be set below if needed
+					})
+					.collect();
+
+				// Add cache control to the LAST tool if system message is cached
+				// This matches the old Anthropic provider behavior
+				let system_cached = self.messages.iter().any(|m| m.role == "system" && m.cached);
+				if system_cached && !octolib_tools.is_empty() {
+					if let Some(last_tool) = octolib_tools.last_mut() {
+						last_tool.cache_control = Some(serde_json::json!({
+							"type": "ephemeral",
+							"ttl": "1h"
+						}));
+					}
+				}
+
+				params = params.with_tools(octolib_tools);
+			}
+		}
+
+		// Apply structured output schema if provided
+		if let Some(ref schema) = self.schema {
+			params =
+				params.with_structured_output(StructuredOutputRequest::json_schema(schema.clone()).with_strict_mode());
+		}
+
+		Ok(params)
+	}
+}
+
+/// Convert Octomind Message to octolib Message with proper error handling
+fn convert_message_to_octolib(msg: &Message) -> Result<octolib::llm::Message, octolib::MessageError> {
+	let mut builder = match msg.role.as_str() {
+		"user" => octolib::llm::MessageBuilder::user(&msg.content),
+		"assistant" => {
+			let mut builder = octolib::llm::MessageBuilder::assistant(&msg.content);
+			// CRITICAL: Convert tool_calls to unified GenericToolCall format.
+			// Malformed shapes return a typed error (see convert_to_generic_tool_calls)
+			// rather than panicking, so a misbehaving model fails the request
+			// cleanly instead of bringing the whole process down.
+			if let Some(ref tool_calls) = msg.tool_calls {
+				let generic_calls = convert_to_generic_tool_calls(tool_calls)?;
+				if !generic_calls.is_empty() {
+					builder = builder.with_tool_calls(generic_calls);
+				}
+			}
+			builder
+		}
+		"system" => octolib::llm::MessageBuilder::system(&msg.content),
+		"tool" => {
+			let tool_call_id = msg
+				.tool_call_id
+				.as_deref()
+				.ok_or_else(|| octolib::MessageError::MissingToolField {
+					field: "tool_call_id".to_string(),
+				})?;
+			let name = msg
+				.name
+				.as_deref()
+				.ok_or_else(|| octolib::MessageError::MissingToolField {
+					field: "name".to_string(),
+				})?;
+			octolib::llm::MessageBuilder::tool(msg.content.clone(), tool_call_id.to_string(), name.to_string())
+		}
+		_ => return Err(octolib::MessageError::InvalidRole { role: msg.role.clone() }),
+	};
+
+	// Set timestamp
+	builder = builder.timestamp(msg.timestamp);
+
+	// Set message ID if present (for assistant messages with tool calls)
+	if let Some(ref id) = msg.id {
+		builder = builder.id(id);
+	}
+
+	// Set cache marker and TTL if needed
+	if msg.cached {
+		builder = builder.cached();
+		if let Some(ref ttl) = msg.cache_ttl {
+			builder = builder.cache_ttl(ttl);
+		}
+	}
+
+	// Convert images if present
+	if let Some(images) = &msg.images {
+		let octolib_images: Vec<octolib::llm::ImageAttachment> = images.iter().map(convert_image_to_octolib).collect();
+		builder = builder.with_images(octolib_images);
+	}
+
+	// Convert videos if present
+	if let Some(videos) = &msg.videos {
+		let octolib_videos: Vec<octolib::llm::VideoAttachment> = videos.iter().map(convert_video_to_octolib).collect();
+		builder = builder.with_videos(octolib_videos);
+	}
+
+	// CRITICAL FIX: Convert thinking field for Moonshot and other thinking models
+	// Moonshot requires reasoning_content for assistant messages with tool_calls
+	// The thinking field is stored as serde_json::Value, convert to ThinkingBlock
+	if let Some(ref thinking_value) = msg.thinking {
+		match serde_json::from_value::<octolib::ThinkingBlock>(thinking_value.clone()) {
+			Ok(thinking_block) => {
+				builder = builder.thinking(thinking_block);
+			}
+			Err(e) => {
+				// Only log failures - success is expected and too verbose
+				crate::log_debug!(
+					"Failed to deserialize thinking field for {} message: {}. Value: {:?}",
+					msg.role,
+					e,
+					thinking_value
+				);
+			}
+		}
+	}
+
+	let mut message = builder.build()?;
+	message.provider_items.clone_from(&msg.provider_items);
+	Ok(message)
+}
+
+/// Convert Octomind ImageAttachment to octolib ImageAttachment
+fn convert_image_to_octolib(img: &crate::session::image::ImageAttachment) -> octolib::llm::ImageAttachment {
+	let data = match &img.data {
+		crate::session::image::ImageData::Base64(data) => octolib::llm::ImageData::Base64(data.clone()),
+		crate::session::image::ImageData::Url(url) => octolib::llm::ImageData::Url(url.clone()),
+	};
+
+	let source_type = match &img.source_type {
+		crate::session::image::SourceType::File(path) => octolib::llm::SourceType::File(path.clone()),
+		crate::session::image::SourceType::Clipboard => octolib::llm::SourceType::Clipboard,
+		crate::session::image::SourceType::Url => octolib::llm::SourceType::Url,
+	};
+
+	octolib::llm::ImageAttachment {
+		data,
+		media_type: img.media_type.clone(),
+		source_type,
+		dimensions: img.dimensions,
+		size_bytes: img.size_bytes,
+	}
+}
+
+/// Convert Octomind VideoAttachment to octolib VideoAttachment
+fn convert_video_to_octolib(video: &crate::session::video::VideoAttachment) -> octolib::llm::VideoAttachment {
+	let data = match &video.data {
+		crate::session::video::VideoData::Base64(data) => octolib::llm::VideoData::Base64(data.clone()),
+		crate::session::video::VideoData::Url(url) => octolib::llm::VideoData::Url(url.clone()),
+	};
+
+	let source_type = match &video.source_type {
+		crate::session::video::SourceType::File(path) => octolib::llm::SourceType::File(path.clone()),
+		crate::session::video::SourceType::Clipboard => octolib::llm::SourceType::Clipboard,
+		crate::session::video::SourceType::Url => octolib::llm::SourceType::Url,
+	};
+
+	octolib::llm::VideoAttachment {
+		data,
+		media_type: video.media_type.clone(),
+		source_type,
+		dimensions: video.dimensions,
+		size_bytes: video.size_bytes,
+		duration_secs: video.duration_secs,
+	}
+}
+
+/// Convert tool_calls from session format to unified GenericToolCall format.
+///
+/// Session loading reconstructs tool_calls in OpenAI format. This function converts
+/// them to the unified GenericToolCall format that octolib requires. Hostile or
+/// buggy model output that doesn't match an expected shape returns a typed error
+/// so the request fails cleanly — it must NOT crash the long-running process.
+pub(crate) fn convert_to_generic_tool_calls(
+	tool_calls: &serde_json::Value,
+) -> Result<Vec<octolib::llm::GenericToolCall>, octolib::MessageError> {
+	// Check if it's already in unified GenericToolCall format
+	if let Ok(calls) = serde_json::from_value::<Vec<octolib::llm::GenericToolCall>>(tool_calls.clone()) {
+		return Ok(calls);
+	}
+
+	// Handle OpenAI format (array with "type": "function") - from session loading
+	if let Some(calls_array) = tool_calls.as_array() {
+		let mut generic_calls = Vec::new();
+		for call in calls_array {
+			let function = call
+				.get("function")
+				.ok_or_else(|| octolib::MessageError::MissingToolField {
+					field: "function".to_string(),
+				})?;
+
+			let (id, name, args_str) = match (
+				call.get("id").and_then(|v| v.as_str()),
+				function.get("name").and_then(|v| v.as_str()),
+				function.get("arguments").and_then(|v| v.as_str()),
+			) {
+				(Some(id), Some(name), Some(args)) => (id, name, args),
+				_ => {
+					return Err(octolib::MessageError::MissingToolField {
+						field: "function.{id|name|arguments}".to_string(),
+					})
+				}
+			};
+
+			// Parse arguments string to JSON. `ToolCallsError` wraps the
+			// underlying serde_json::Error via `#[from]`, surfacing the
+			// exact parse failure to the caller.
+			let arguments = if args_str.trim().is_empty() {
+				serde_json::json!({})
+			} else {
+				serde_json::from_str::<serde_json::Value>(args_str)?
+			};
+
+			// Root-level meta, preserved exactly like the unified-format
+			// branch above; absent or non-object meta stays None.
+			let meta = call.get("meta").and_then(|m| m.as_object()).cloned();
+
+			generic_calls.push(octolib::llm::GenericToolCall {
+				id: id.to_string(),
+				name: name.to_string(),
+				arguments,
+				meta,
+			});
+		}
+		return Ok(generic_calls);
+	}
+
+	Err(octolib::MessageError::MissingToolField {
+		field: "tool_calls (root must be Vec<GenericToolCall> or OpenAI array)".to_string(),
+	})
+}
+
+/// Convert octolib ProviderResponse to Octomind ProviderResponse
+pub fn convert_response_from_octolib(response: octolib::llm::ProviderResponse) -> ProviderResponse {
+	// Convert tool calls if present
+	let tool_calls = response.tool_calls.map(|calls| {
+		calls
+			.into_iter()
+			.map(|call| crate::mcp::McpToolCall {
+				tool_name: call.name,
+				tool_id: call.id,
+				parameters: call.arguments,
+			})
+			.collect()
+	});
+
+	ProviderResponse {
+		content: response.content,
+		exchange: response.exchange,
+		tool_calls,
+		thinking: response.thinking,
+		finish_reason: response.finish_reason,
+		response_id: response.id,
+		structured_output: response.structured_output,
+	}
+}
+
+// Keep the retry module for backward compatibility
+pub mod retry {
+	pub use octolib::llm::retry::*;
+}
+
+#[cfg(test)]
+#[path = "providers_tests.rs"]
+mod tests;

@@ -1,0 +1,666 @@
+import { rmSync } from "node:fs";
+import { INTERRUPTED_BY_USER } from "@/constants";
+import {
+  consumeWorkingDirectoryRecovery,
+  getCurrentWorkingDirectory,
+} from "@/runtime-context";
+import { resolveForegroundYieldMs } from "@/tools/foreground-yield";
+import {
+  captureSecretRedactions,
+  createSecretStreamScrubber,
+  scrubSecretsFromString,
+} from "@/tools/secret-substitution";
+import {
+  addToMessageQueue,
+  isQueueBridgeConnected,
+} from "@/utils/message-queue-bridge.js";
+import {
+  formatTaskNotification,
+  resolveNotificationScope,
+} from "@/utils/task-notifications.js";
+import { noteExpectedWorktreeForLauncher } from "@/websocket/listener/worktree-ownership";
+import {
+  commandRunsForegroundSleep,
+  FOREGROUND_SLEEP_BLOCKED_MESSAGE,
+} from "./foreground-sleep.js";
+import {
+  appendBackgroundProcessOutput,
+  appendToOutputFile,
+  assertBackgroundProcessCapacity,
+  type BackgroundProcess,
+  backgroundProcesses,
+  createBackgroundOutputFile,
+  getNextBashId,
+  notifyBackgroundProcessStateChanged,
+  scheduleBackgroundProcessCleanup,
+  scrubCompletedBackgroundOutput,
+} from "./process_manager.js";
+import {
+  findSelfMatchingPgrepPattern,
+  selfMatchingPgrepMessage,
+} from "./self-matching-pgrep.js";
+import { getShellEnv } from "./shell-env.js";
+import {
+  buildShellLaunchers,
+  selectAvailableShellLauncher,
+  withStrictShellPrelude,
+} from "./shell-launchers.js";
+import {
+  FORCE_KILL_GRACE_MS,
+  type ShellExecutionError,
+  spawnWithLauncher,
+  startShellProcess,
+} from "./shell-runner.js";
+import { applyShellSandbox } from "./shell-sandbox.js";
+import { LIMITS, truncateByChars } from "./truncation.js";
+import { validateRequiredParams } from "./validation.js";
+import { assertSafeWindowsCommand } from "./windows-command-safety.js";
+
+let cachedWorkingLauncher: string[] | null = null;
+
+const NON_YIELDING_DEFAULT_TIMEOUT_MS = 120_000;
+const MAX_FOREGROUND_TIMEOUT_MS = 600_000;
+
+type ShellProcessStarter = typeof startShellProcess;
+let shellProcessStarter: ShellProcessStarter = startShellProcess;
+
+export function __setShellProcessStarterForTests(
+  starter: ShellProcessStarter | null,
+): void {
+  shellProcessStarter = starter ?? startShellProcess;
+}
+
+function rebuildCachedLauncher(
+  command: string,
+  secretEnv?: Record<string, string>,
+): string[] | null {
+  if (!cachedWorkingLauncher) return null;
+  const cachedExecutable = cachedWorkingLauncher[0]?.toLowerCase();
+  if (!cachedExecutable) return null;
+
+  const launchers = buildShellLaunchers(command, {
+    powershellEnvAliases: secretEnv ? Object.keys(secretEnv) : undefined,
+  });
+  return (
+    launchers.find(
+      (launcher) => launcher[0]?.toLowerCase() === cachedExecutable,
+    ) ?? null
+  );
+}
+
+export function getBackgroundLauncher(
+  command: string,
+  env: NodeJS.ProcessEnv,
+  secretEnv?: Record<string, string>,
+): string[] {
+  const cachedLauncher = rebuildCachedLauncher(command, secretEnv);
+  if (cachedLauncher) return cachedLauncher;
+
+  const launchers = buildShellLaunchers(command, {
+    powershellEnvAliases: secretEnv ? Object.keys(secretEnv) : undefined,
+  });
+  return selectAvailableShellLauncher(launchers, env) || [];
+}
+
+export async function spawnCommand(
+  command: string,
+  options: {
+    cwd: string;
+    env: NodeJS.ProcessEnv;
+    timeout: number;
+    signal?: AbortSignal;
+    onOutput?: (chunk: string, stream: "stdout" | "stderr") => void;
+    secretEnv?: Record<string, string>;
+  },
+): Promise<{ stdout: string; stderr: string; exitCode: number | null }> {
+  assertSafeWindowsCommand(command, {
+    cwd: options.cwd,
+    env: options.secretEnv
+      ? { ...options.env, ...options.secretEnv }
+      : options.env,
+  });
+  const env = options.secretEnv
+    ? { ...options.env, ...options.secretEnv }
+    : options.env;
+  const commandToRun = withStrictShellPrelude(command, env);
+
+  if (process.platform !== "win32") {
+    const executable = process.platform === "darwin" ? "/bin/zsh" : "bash";
+    const innerLauncher = [executable, "-c", commandToRun];
+    const sandboxed = applyShellSandbox(innerLauncher, options.cwd, env);
+    if (sandboxed.backend) {
+      noteExpectedWorktreeForLauncher(innerLauncher, options.cwd);
+    }
+    return spawnWithLauncher(sandboxed.launcher, {
+      cwd: options.cwd,
+      env: sandboxed.env,
+      timeoutMs: options.timeout,
+      sourceCommand: command,
+      signal: options.signal,
+      onOutput: options.onOutput,
+    });
+  }
+
+  if (cachedWorkingLauncher) {
+    const newLauncher = rebuildCachedLauncher(commandToRun, options.secretEnv);
+    if (newLauncher) {
+      try {
+        const result = await spawnWithLauncher(newLauncher, {
+          cwd: options.cwd,
+          env,
+          timeoutMs: options.timeout,
+          sourceCommand: command,
+          signal: options.signal,
+          onOutput: options.onOutput,
+        });
+        return result;
+      } catch (error) {
+        const err = error as ShellExecutionError;
+        if (err.code !== "ENOENT" || err.reason === "cwd_missing") {
+          throw error;
+        }
+        cachedWorkingLauncher = null;
+      }
+    }
+  }
+
+  const launchers = buildShellLaunchers(commandToRun, {
+    powershellEnvAliases: options.secretEnv
+      ? Object.keys(options.secretEnv)
+      : undefined,
+  });
+  if (launchers.length === 0) {
+    throw new Error("No shell launchers available");
+  }
+
+  const tried: string[] = [];
+  let lastError: Error | null = null;
+
+  for (const launcher of launchers) {
+    try {
+      const result = await spawnWithLauncher(launcher, {
+        cwd: options.cwd,
+        env,
+        timeoutMs: options.timeout,
+        sourceCommand: command,
+        signal: options.signal,
+        onOutput: options.onOutput,
+      });
+      cachedWorkingLauncher = launcher;
+      return result;
+    } catch (error) {
+      const err = error as ShellExecutionError;
+      if (err.code === "ENOENT" && err.reason !== "cwd_missing") {
+        tried.push(launcher[0] || "unknown");
+        lastError = err;
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  const suffix = tried.filter(Boolean).join(", ");
+  const reason = lastError?.message || "Shell unavailable";
+  throw new Error(suffix ? `${reason} (tried: ${suffix})` : reason);
+}
+
+const NOTIFICATION_TAIL_LINES = 50;
+
+function formatStreamTail(
+  label: "stdout" | "stderr",
+  retainedLines: string[],
+  totalLines: number,
+): string | undefined {
+  if (retainedLines.length === 0) {
+    return undefined;
+  }
+  const tail = retainedLines.slice(-NOTIFICATION_TAIL_LINES);
+  const header =
+    tail.length < totalLines
+      ? `[${label} - last ${tail.length} of ${totalLines} lines]`
+      : `[${label}]`;
+  return `${header}\n${tail.join("\n")}`;
+}
+
+function formatBackgroundOutputTail(bgProcess: BackgroundProcess): string {
+  const sections = [
+    formatStreamTail(
+      "stdout",
+      bgProcess.stdout ?? [],
+      bgProcess.totalStdoutLines ?? bgProcess.stdout?.length ?? 0,
+    ),
+    formatStreamTail(
+      "stderr",
+      bgProcess.stderr ?? [],
+      bgProcess.totalStderrLines ?? bgProcess.stderr?.length ?? 0,
+    ),
+  ].filter(Boolean);
+
+  return sections.length > 0 ? sections.join("\n\n") : "(no output)";
+}
+
+function notifyBackgroundCompletion(params: {
+  bashId: string;
+  description?: string;
+  outputFile: string;
+  bgProcess: BackgroundProcess;
+  scope: ReturnType<typeof resolveNotificationScope>;
+  status: "completed" | "failed";
+  detail: string;
+}): void {
+  const { bashId, description, outputFile, bgProcess, scope, status, detail } =
+    params;
+  if (bgProcess.completionNotificationSuppressed) {
+    return;
+  }
+
+  const label = description?.trim() || bgProcess.command;
+  const durationMs = bgProcess.startTime
+    ? Math.max(0, Date.now() - bgProcess.startTime.getTime())
+    : undefined;
+
+  const { content: result } = truncateByChars(
+    scrubSecretsFromString(
+      [`$ ${bgProcess.command}`, detail, formatBackgroundOutputTail(bgProcess)]
+        .filter(Boolean)
+        .join("\n\n"),
+      bgProcess.secrets ?? {},
+    ),
+    LIMITS.BASH_NOTIFICATION_CHARS,
+    "Bash",
+    { useMiddleTruncation: true },
+  );
+
+  addToMessageQueue({
+    kind: "task_notification",
+    text: formatTaskNotification({
+      taskId: bashId,
+      status,
+      summary: `Background command "${label}" ${status}`,
+      result,
+      outputFile,
+      usage: durationMs === undefined ? undefined : { durationMs },
+    }),
+    ...scope,
+  });
+}
+
+interface BashArgs {
+  command: string;
+  timeout?: number;
+  description?: string;
+  run_in_background?: boolean;
+  signal?: AbortSignal;
+  onOutput?: (chunk: string, stream: "stdout" | "stderr") => void;
+  secretEnv?: Record<string, string>;
+  variableEnv?: Record<string, string>;
+  parentScope?: { agentId: string; conversationId: string };
+  foregroundYieldMs?: number;
+}
+
+interface BashResult {
+  content: Array<{
+    type: string;
+    text: string;
+  }>;
+  status: "success" | "error";
+}
+
+export async function bash(args: BashArgs): Promise<BashResult> {
+  validateRequiredParams(args, ["command"], "Bash");
+  const {
+    command,
+    timeout,
+    description,
+    run_in_background = false,
+    signal,
+    onOutput,
+    secretEnv: invocationSecrets,
+    parentScope,
+    foregroundYieldMs = resolveForegroundYieldMs(),
+  } = args;
+  const secretEnv = { ...args.variableEnv, ...invocationSecrets };
+  const userCwd = getCurrentWorkingDirectory();
+  assertSafeWindowsCommand(command, {
+    cwd: userCwd,
+    env: secretEnv ? { ...getShellEnv(), ...secretEnv } : getShellEnv(),
+  });
+  const redactions = captureSecretRedactions(
+    parentScope?.agentId,
+    invocationSecrets ?? {},
+  );
+  const sanitizeOutput = (text: string) =>
+    scrubSecretsFromString(text, redactions);
+  const streamScrubbers = {
+    stdout: createSecretStreamScrubber(redactions),
+    stderr: createSecretStreamScrubber(redactions),
+  };
+
+  if (command === "/bg") {
+    const processes = Array.from(backgroundProcesses.entries());
+    if (processes.length === 0) {
+      return {
+        content: [{ type: "text", text: "(no content)" }],
+        status: "success",
+      };
+    }
+    let output = "";
+    for (const [id, proc] of processes) {
+      const runtime = proc.startTime
+        ? `${Math.floor((Date.now() - proc.startTime.getTime()) / 1000)}s`
+        : "unknown";
+      output += `${id}: ${proc.command} (${proc.status}, runtime: ${runtime})\n`;
+    }
+    return {
+      content: [{ type: "text", text: output.trim() }],
+      status: "success",
+    };
+  }
+
+  if (!run_in_background && commandRunsForegroundSleep(command)) {
+    return {
+      content: [{ type: "text", text: FOREGROUND_SLEEP_BLOCKED_MESSAGE }],
+      status: "error",
+    };
+  }
+
+  const selfMatchingPattern = findSelfMatchingPgrepPattern(command);
+  if (selfMatchingPattern !== null) {
+    return {
+      content: [
+        { type: "text", text: selfMatchingPgrepMessage(selfMatchingPattern) },
+      ],
+      status: "error",
+    };
+  }
+
+  const recoveredFrom = consumeWorkingDirectoryRecovery();
+  const recoveryNote = recoveredFrom
+    ? `Note: working directory ${recoveredFrom} no longer exists; running in ${userCwd} instead.\n`
+    : "";
+
+  try {
+    assertBackgroundProcessCapacity();
+  } catch (error) {
+    return {
+      content: [
+        {
+          type: "text",
+          text: error instanceof Error ? error.message : String(error),
+        },
+      ],
+      status: "error",
+    };
+  }
+
+  const bgEnv = secretEnv ? { ...getShellEnv(), ...secretEnv } : getShellEnv();
+  const bgCommand = withStrictShellPrelude(command, bgEnv);
+  const bashId = getNextBashId();
+  const outputFile = createBackgroundOutputFile(bashId);
+  const launcher = getBackgroundLauncher(bgCommand, bgEnv, secretEnv);
+  const [executable] = launcher;
+  if (!executable) {
+    return {
+      content: [{ type: "text", text: "No shell available" }],
+      status: "error",
+    };
+  }
+  noteExpectedWorktreeForLauncher(launcher, userCwd);
+  const sandboxed = applyShellSandbox(launcher, userCwd, bgEnv);
+  let bgProcess: BackgroundProcess;
+  let outputWriteFailed = false;
+  const foregroundOutput = { stdout: "", stderr: "" };
+  const canYield = !run_in_background && isQueueBridgeConnected();
+  const effectiveTimeout = run_in_background
+    ? timeout !== undefined && timeout > 0
+      ? timeout
+      : 0
+    : timeout !== undefined
+      ? Math.min(Math.max(timeout, 1), MAX_FOREGROUND_TIMEOUT_MS)
+      : canYield
+        ? 0
+        : NON_YIELDING_DEFAULT_TIMEOUT_MS;
+  const runningProcess = shellProcessStarter(sandboxed.launcher, {
+    cwd: userCwd,
+    env: sandboxed.env,
+    timeoutMs: effectiveTimeout,
+    sourceCommand: command,
+    signal: run_in_background ? undefined : signal,
+    waitForProcessGroupOnClose: !run_in_background,
+    captureOutput: false,
+    onOutput(text, stream) {
+      const sanitizedText = streamScrubbers[stream].push(text);
+      if (!run_in_background) {
+        foregroundOutput[stream] += text;
+        onOutput?.(text, stream);
+      }
+      if (!sanitizedText) return;
+      appendBackgroundProcessOutput(bgProcess, stream, sanitizedText);
+      const wrote = appendToOutputFile(
+        outputFile,
+        stream === "stderr" ? `[stderr] ${sanitizedText}` : sanitizedText,
+      );
+      if (!wrote && bgProcess.status === "running") {
+        outputWriteFailed = true;
+        appendBackgroundProcessOutput(
+          bgProcess,
+          "stderr",
+          "[output file write failed; output may be incomplete]",
+        );
+        bgProcess.status = "failed";
+        try {
+          runningProcess.process.kill("SIGTERM");
+        } catch {}
+      }
+    },
+  });
+  bgProcess = {
+    process: runningProcess.process,
+    completion: runningProcess.completion,
+    terminate: runningProcess.terminate,
+    foregroundBash: !run_in_background,
+    command,
+    stdout: [],
+    stderr: [],
+    status: "running",
+    exitCode: null,
+    startTime: new Date(),
+    outputFile,
+    totalStdoutLines: 0,
+    totalStderrLines: 0,
+    runtimeScope: parentScope,
+    secrets: redactions,
+  };
+  backgroundProcesses.set(bashId, bgProcess);
+
+  const notificationScope = resolveNotificationScope(parentScope);
+  const flushStreamScrubbers = () => {
+    for (const stream of ["stdout", "stderr"] as const) {
+      const rest = streamScrubbers[stream].flush();
+      if (!rest) continue;
+      appendBackgroundProcessOutput(bgProcess, stream, rest);
+      appendToOutputFile(
+        outputFile,
+        stream === "stderr" ? `[stderr] ${rest}` : rest,
+      );
+    }
+  };
+  const settled = runningProcess.completion.then(
+    ({ exitCode }) => {
+      flushStreamScrubbers();
+      bgProcess.status =
+        exitCode === 0 && !outputWriteFailed ? "completed" : "failed";
+      bgProcess.exitCode = exitCode;
+      appendToOutputFile(outputFile, `\n[exit code: ${exitCode}]\n`);
+      scrubCompletedBackgroundOutput(bgProcess);
+      return {
+        status:
+          exitCode === 0 && !outputWriteFailed
+            ? ("completed" as const)
+            : ("failed" as const),
+        detail: outputWriteFailed
+          ? "Output file write failed; output may be incomplete"
+          : exitCode === null
+            ? "Terminated by signal before exiting"
+            : `Exit code: ${exitCode}`,
+        exitCode,
+      };
+    },
+    (error: unknown) => {
+      flushStreamScrubbers();
+      const err = error as Error & { killed?: boolean };
+      const message = sanitizeOutput(
+        err.killed
+          ? `Command timed out after ${effectiveTimeout}ms`
+          : err.message,
+      );
+      bgProcess.status = "failed";
+      appendBackgroundProcessOutput(bgProcess, "stderr", message);
+      appendToOutputFile(
+        outputFile,
+        err.killed
+          ? `\n[timeout after ${effectiveTimeout}ms]\n`
+          : `\n[error] ${message}\n`,
+      );
+      scrubCompletedBackgroundOutput(bgProcess);
+      return {
+        status: "failed" as const,
+        detail: err.killed ? message : `Error: ${message}`,
+        error: err,
+      };
+    },
+  );
+
+  const notifyWhenSettled = () => {
+    void settled.then(({ status, detail }) => {
+      notifyBackgroundCompletion({
+        bashId,
+        description,
+        outputFile,
+        bgProcess,
+        scope: notificationScope,
+        status,
+        detail,
+      });
+      if (bgProcess.completionNotificationSuppressed) {
+        notifyBackgroundProcessStateChanged(bgProcess.runtimeScope);
+      } else {
+        queueMicrotask(() =>
+          notifyBackgroundProcessStateChanged(bgProcess.runtimeScope),
+        );
+      }
+      scheduleBackgroundProcessCleanup(bashId);
+    });
+  };
+
+  if (!run_in_background) {
+    const settledOutcome = settled.then((result) => ({
+      type: "settled" as const,
+      result,
+    }));
+    const outcome = canYield
+      ? await Promise.race([
+          settledOutcome,
+          new Promise<{ type: "yield" }>((resolve) => {
+            const timer = setTimeout(
+              () => resolve({ type: "yield" }),
+              Math.max(0, foregroundYieldMs),
+            );
+            if (
+              typeof timer === "object" &&
+              timer !== null &&
+              "unref" in timer
+            ) {
+              timer.unref();
+            }
+          }),
+        ])
+      : await settledOutcome;
+
+    if (outcome.type === "settled") {
+      backgroundProcesses.delete(bashId);
+      rmSync(outputFile, { force: true });
+      const { result } = outcome;
+      const output = [foregroundOutput.stdout, foregroundOutput.stderr]
+        .filter(Boolean)
+        .join("\n");
+      const failed = result.status === "failed";
+      const { content: truncatedOutput } = truncateByChars(
+        output || "(Command completed with no output)",
+        failed ? LIMITS.BASH_FAILURE_OUTPUT_CHARS : LIMITS.BASH_OUTPUT_CHARS,
+        "Bash",
+        {
+          workingDirectory: userCwd,
+          secrets: redactions,
+          ...(failed
+            ? { useMiddleTruncation: true }
+            : { previewChars: LIMITS.OVERFLOW_PREVIEW_CHARS }),
+        },
+      );
+      if (failed) {
+        const isAbort =
+          signal?.aborted ||
+          ("error" in result &&
+            (result.error.name === "AbortError" ||
+              (result.error as NodeJS.ErrnoException).code === "ABORT_ERR"));
+        return {
+          content: [
+            {
+              type: "text",
+              text: isAbort
+                ? INTERRUPTED_BY_USER
+                : `${recoveryNote}${result.detail}\n${truncatedOutput}`,
+            },
+          ],
+          status: "error",
+        };
+      }
+      return {
+        content: [{ type: "text", text: `${recoveryNote}${truncatedOutput}` }],
+        status: "success",
+      };
+    }
+
+    bgProcess.foregroundBash = false;
+    notifyWhenSettled();
+    return {
+      content: [
+        {
+          type: "text",
+          text: `${recoveryNote}Command is still running with task ID: ${bashId}\nOutput file: ${outputFile}\nYou will be notified when it completes. Do not poll unless you need intermediate output.`,
+        },
+      ],
+      status: "success",
+    };
+  }
+
+  notifyWhenSettled();
+  return {
+    content: [
+      {
+        type: "text",
+        text: `${recoveryNote}Command running in background with ID: ${bashId}\nOutput file: ${outputFile}`,
+      },
+    ],
+    status: "success",
+  };
+}
+
+export async function waitForForegroundBashCleanup(): Promise<void> {
+  const active = [...backgroundProcesses.values()].filter(
+    (entry) => entry.foregroundBash,
+  );
+  if (active.length === 0) return;
+  for (const entry of active) entry.terminate?.();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      Promise.allSettled(active.map((entry) => entry.completion)),
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, FORCE_KILL_GRACE_MS + 250);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}

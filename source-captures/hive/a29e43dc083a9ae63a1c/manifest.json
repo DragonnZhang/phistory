@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "hive",
+  "agent": "Hive",
+  "repository": "aden-hive/hive",
+  "snapshot": "a29e43dc083a9ae63a1c",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:20.758505+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "6703b4343a123469288b1100855a80de90e35536",
+      "path": "core/framework/agents/queen/nodes/__init__.py",
+      "sha256": "0a40e195c4bfac9f583f31821f1f8f02c3f2d18d9a9d4a607d6d9c7e0b51bf1a",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/6703b4343a123469288b1100855a80de90e35536/core/framework/agents/queen/nodes/__init__.py",
+      "url": "https://github.com/aden-hive/hive/blob/6703b4343a123469288b1100855a80de90e35536/core/framework/agents/queen/nodes/__init__.py"
+    },
+    {
+      "commit": "6703b4343a123469288b1100855a80de90e35536",
+      "path": "core/framework/agents/queen/queen_tools_defaults.py",
+      "sha256": "aa3655a02521f80c88ebb5e081f886d9440b2e370946746e82b101b4bb95339b",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/6703b4343a123469288b1100855a80de90e35536/core/framework/agents/queen/queen_tools_defaults.py",
+      "url": "https://github.com/aden-hive/hive/blob/6703b4343a123469288b1100855a80de90e35536/core/framework/agents/queen/queen_tools_defaults.py"
+    }
+  ]
+}

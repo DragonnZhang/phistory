@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "bambooai",
+  "agent": "BambooAI",
+  "repository": "pgalko/BambooAI",
+  "snapshot": "7cdfbb1202895e650123",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:29.020154+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "6de4f3c6466f3d2f4455ac36209676c9f0c031aa",
+      "path": "analyst/contract.md",
+      "sha256": "97c103bf0733d900634227f23529c22384452e581419b9ce54e80e91a7317c92",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/6de4f3c6466f3d2f4455ac36209676c9f0c031aa/analyst/contract.md",
+      "url": "https://github.com/pgalko/BambooAI/blob/6de4f3c6466f3d2f4455ac36209676c9f0c031aa/analyst/contract.md"
+    }
+  ]
+}

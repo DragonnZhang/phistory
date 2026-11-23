@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "markus",
+  "agent": "markus",
+  "repository": "markus-global/markus",
+  "snapshot": "664004f7b25849c09342",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:27.180034+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "91f7b21c90987863dc296fedec8ff78e4f98ef20",
+      "path": "packages/core/src/agent-manager.ts",
+      "sha256": "acd7ce781f1107694267715679ca8de87b94cf2945e1c6a8c88b3c37c21675be",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/agent-manager.ts",
+      "url": "https://github.com/markus-global/markus/blob/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/agent-manager.ts"
+    },
+    {
+      "commit": "91f7b21c90987863dc296fedec8ff78e4f98ef20",
+      "path": "packages/core/src/context-engine.ts",
+      "sha256": "1fccd6fb97a7aaede0e6790e503aaaf219f2206bfd7f6fe43d1bb42697145807",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/context-engine.ts",
+      "url": "https://github.com/markus-global/markus/blob/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/context-engine.ts"
+    },
+    {
+      "commit": "91f7b21c90987863dc296fedec8ff78e4f98ef20",
+      "path": "packages/core/src/tools/builtin.ts",
+      "sha256": "e938433f6064a3215adabff5bc526900d04d7050292627ee37f974ffe6e44df9",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/tools/builtin.ts",
+      "url": "https://github.com/markus-global/markus/blob/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/tools/builtin.ts"
+    },
+    {
+      "commit": "91f7b21c90987863dc296fedec8ff78e4f98ef20",
+      "path": "packages/core/src/tools/session.ts",
+      "sha256": "b1d99dd04e97df332a69713489487a593dfb83fd59f10201bb2fa82147840ff0",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/tools/session.ts",
+      "url": "https://github.com/markus-global/markus/blob/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/tools/session.ts"
+    },
+    {
+      "commit": "91f7b21c90987863dc296fedec8ff78e4f98ef20",
+      "path": "packages/core/src/tools/subagent.ts",
+      "sha256": "448551a56794e9704130fb6be57189a9609f3d8721b116ef45ef6dfc4ef7afc2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/tools/subagent.ts",
+      "url": "https://github.com/markus-global/markus/blob/91f7b21c90987863dc296fedec8ff78e4f98ef20/packages/core/src/tools/subagent.ts"
+    }
+  ]
+}

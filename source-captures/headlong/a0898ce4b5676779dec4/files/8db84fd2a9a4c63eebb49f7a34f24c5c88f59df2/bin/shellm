@@ -1,0 +1,3686 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shellm — Recursive LM in Bash
+# An LLM that operates inside a bash shell, generating and executing code
+# to process context and solve tasks recursively.
+
+# Load .env files, layered: cwd's .env, then the config directory's fills
+# whatever is still missing. Each fills in only vars that are NOT already
+# set: the real environment (an inline SHELLM_MODEL=..., an identity shell,
+# a parent shellm run) always wins over files — same semantics as
+# thinkers/_lib/common.sh:_load_env_defaults. Values are extracted by
+# sourcing the file in a subshell so quoting behaves like a plain `source`.
+# Preserve endpoint values from the original process separately: the two
+# endpoint names are aliases, so a process LLM_API_URL must also beat a
+# SHELLM_API_URL subsequently loaded from a file (and vice versa).
+_shellm_process_shellm_api_url_set=0
+_shellm_process_llm_api_url_set=0
+if [[ -n "${SHELLM_API_URL+x}" ]]; then
+    _shellm_process_shellm_api_url_set=1
+    _shellm_process_shellm_api_url="$SHELLM_API_URL"
+fi
+if [[ -n "${LLM_API_URL+x}" ]]; then
+    _shellm_process_llm_api_url_set=1
+    _shellm_process_llm_api_url="$LLM_API_URL"
+fi
+
+_shellm_load_env() {
+    local envfile="$1"
+    [[ -f "$envfile" ]] || return 1
+    local key val
+    while IFS= read -r key; do
+        [[ -n "$key" ]] || continue
+        [[ -n "${!key+x}" ]] && continue
+        # shellcheck disable=SC1090  # sourcing the user's own env file
+        val=$(set -a; . "$envfile" >/dev/null 2>&1; printf '%s' "${!key}") || { printf '%s: warning: could not read %s; ignoring it\n' "${0##*/}" "$envfile" >&2; return 0; }
+        export "$key=$val"
+    done < <(sed -n 's/^[[:space:]]*\(export[[:space:]]\{1,\}\)\{0,1\}\([A-Za-z_][A-Za-z0-9_]*\)[[:space:]]*=.*/\2/p' "$envfile")
+    return 0
+}
+_SHELLM_SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]:-$0}" 2>/dev/null || printf '%s\n' "${BASH_SOURCE[0]:-$0}")
+_shellm_load_env ".env" || true
+# State home: HEADLONG_HOME (framework) or SHELLM_HOME (tool-level; the
+# thinkers dispatcher exports it per-identity) if set; else ~/.headlong.
+_shellm_home="${HEADLONG_HOME:-${SHELLM_HOME:-$HOME/.headlong}}"
+_shellm_load_env "${SHELLM_CONF_DIR:-$_shellm_home}/.env" || true
+SHELLM_TRAJ_DIR="${SHELLM_TRAJ_DIR:-${TRAJ_DIR:-$_shellm_home/trajectories}}"
+SHELLM_ENVS_DIR="${SHELLM_ENVS_DIR:-$_shellm_home/envs}"
+SHELLM_WORKDIRS_DIR="${SHELLM_WORKDIRS_DIR:-$_shellm_home/workdirs}"
+SHELLM_BROKER_DIR="${SHELLM_BROKER_DIR:-$_shellm_home/docker-broker}"
+SHELLM_CONF_DIR="${SHELLM_CONF_DIR:-$_shellm_home}"
+
+# ---------------------------------------------------------------------------
+# Config & defaults
+# ---------------------------------------------------------------------------
+
+# Default model: pick for whichever provider has an API key set, matching
+# llm's own fallback order. With no key at all, leave the Anthropic default
+# so llm's key error names the missing variable.
+if [[ -z "${SHELLM_MODEL:-}" ]]; then
+    if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+        SHELLM_MODEL="claude-opus-4-7"
+    elif [[ -n "${OPENAI_API_KEY:-}" ]]; then
+        SHELLM_MODEL="gpt-5.5"
+    elif [[ -n "${GEMINI_API_KEY:-}" ]]; then
+        SHELLM_MODEL="gemini-3.5-flash"
+    elif [[ -n "${OPENROUTER_API_KEY:-}" ]]; then
+        SHELLM_MODEL="anthropic/claude-sonnet-4.5"
+    elif [[ -n "${OPENCODE_API_KEY:-}" ]]; then
+        # One env var covers both OpenCode plans; default to the Go
+        # subscription (flat-rate). Zen models: SHELLM_MODEL=opencode/<model>.
+        SHELLM_MODEL="opencode-go/deepseek-v4-flash"
+    else
+        SHELLM_MODEL="claude-opus-4-7"
+    fi
+fi
+SHELLM_MAX_ITERATIONS="${SHELLM_MAX_ITERATIONS:-}"
+# Spin/stall guard: abort a run that is failing without making progress instead
+# of looping forever (a malformed model whose output cannot be turned into a
+# working command burns tokens and inflates context until something else kills
+# it). Two triggers, either fires; set to 0 to disable that trigger.
+#   CONSECUTIVE: N non-zero-exit iterations in a row (flailing).
+#   REPEAT:      the exact same command submitted and failed N times (stuck).
+SHELLM_MAX_CONSECUTIVE_FAILURES="${SHELLM_MAX_CONSECUTIVE_FAILURES:-10}"
+SHELLM_MAX_REPEAT_FAILURES="${SHELLM_MAX_REPEAT_FAILURES:-3}"
+SHELLM_TRUNCATE="${SHELLM_TRUNCATE:-2000}"
+if [[ "$_shellm_process_shellm_api_url_set" -eq 1 ]]; then
+    SHELLM_API_URL="$_shellm_process_shellm_api_url"
+elif [[ "$_shellm_process_llm_api_url_set" -eq 1 ]]; then
+    SHELLM_API_URL="$_shellm_process_llm_api_url"
+else
+    SHELLM_API_URL="${SHELLM_API_URL:-${LLM_API_URL:-}}"
+fi
+unset _shellm_process_shellm_api_url_set _shellm_process_shellm_api_url \
+    _shellm_process_llm_api_url_set _shellm_process_llm_api_url 2>/dev/null || true
+# Clear any inherited LLM_API_URL so llm uses per-provider defaults
+unset LLM_API_URL 2>/dev/null || true
+if [[ -n "$SHELLM_API_URL" ]]; then
+    export LLM_API_URL="$SHELLM_API_URL"
+fi
+SHELLM_MAX_TOKENS="${SHELLM_MAX_TOKENS:-}"
+SHELLM_EFFORT="${SHELLM_EFFORT:-high}"
+# The loop runs the first fenced block of a response and drops the rest, so
+# llm may stop reading the stream the moment that block closes
+# (LLM_STOP_AFTER_CODE_BLOCK in bin/llm). A model that keeps writing after
+# its command, or loops that way until the transfer times out, then costs
+# nothing past the block. 0 reads every response to the end as before.
+SHELLM_STOP_AFTER_CODE_BLOCK="${SHELLM_STOP_AFTER_CODE_BLOCK:-1}"
+# What the model sees of the trajectory on each call. "traj" (default): the
+# trajectory's head and tail, so a --traj/--resume run continues the earlier
+# conversation. "run": only this run's own steps, with its prompt pinned
+# whole, for a caller whose prompt already carries the history it wants
+# (the monolith: its wakeup prompt has the recent stream and life summary,
+# and earlier runs' raw commands only pull the model toward repeating them).
+SHELLM_CONTEXT_SCOPE="${SHELLM_CONTEXT_SCOPE:-traj}"
+# Run scope window: how many trajectory rows the render reads back (the run's
+# own steps within them), and the block the window's start moves in. Cached
+# input costs a quarter of the full rate, and a call's prefix only matches the
+# previous call's while nothing before the newest step changes, so the window
+# is wide enough that a normal run never slides (400 rows is ~200 iterations)
+# and, when it must, it moves in blocks so the prefix changes once per block
+# rather than on every call.
+SHELLM_CONTEXT_RUN_TAIL="${SHELLM_CONTEXT_RUN_TAIL:-400}"
+SHELLM_CONTEXT_RUN_TAIL_BLOCK="${SHELLM_CONTEXT_RUN_TAIL_BLOCK:-50}"
+# Rows in the newest block(s) of the window render their fields whole up to
+# BLOCK_LIMIT bytes; older rows fall back to SHELLM_STDOUT_PROMPT_LIMIT (2K,
+# head and tail with the middle cut). A 2K cut on every output made the mind
+# re-read files in slices: 273 of 313 outputs in one run were cut and 45% of
+# its reads were repeats (Audel, 2026-09-03). The band follows the block grid
+# so a row shrinks once, when the window start would move anyway.
+SHELLM_CONTEXT_BLOCK_LIMIT="${SHELLM_CONTEXT_BLOCK_LIMIT:-8192}"
+SHELLM_CONTEXT_WHOLE_BLOCKS="${SHELLM_CONTEXT_WHOLE_BLOCKS:-1}"
+# Whether the image was chosen for this run (environment here, --docker-image
+# below) rather than defaulted. A resume inherits the trajectory's image only
+# when it was not, so resuming never silently overrides what the caller asked
+# for, and never silently defaults away from what the run actually used.
+_SHELLM_DOCKER_IMAGE_EXPLICIT=0
+[[ -n "${SHELLM_DOCKER_IMAGE:-}" ]] && _SHELLM_DOCKER_IMAGE_EXPLICIT=1
+SHELLM_DOCKER_IMAGE="${SHELLM_DOCKER_IMAGE:-ubuntu:latest}"
+SHELLM_DOCKER_ACCESS="${SHELLM_DOCKER_ACCESS:-none}"
+SHELLM_DOCKER_BROKER_TRANSPORT="${SHELLM_DOCKER_BROKER_TRANSPORT:-auto}"
+SHELLM_DOCKER_SOCKET="${SHELLM_DOCKER_SOCKET:-/var/run/docker.sock}"
+SHELLM_ALLOW_NESTED_DOCKER="${SHELLM_ALLOW_NESTED_DOCKER:-0}"
+SHELLM_REQUIRE_DOCKER="${SHELLM_REQUIRE_DOCKER:-0}"
+SHELLM_TEMP_DOCKER="${SHELLM_TEMP_DOCKER:-0}"
+SHELLM_INACTIVITY_TIMEOUT="${SHELLM_INACTIVITY_TIMEOUT:-30}"
+SHELLM_INACTIVITY_MAX="${SHELLM_INACTIVITY_MAX:-900}"
+# Kill a command whose output file grows past this many bytes, even while it is
+# actively producing output (a runaway loop resets the inactivity counter every
+# check, so silence-based watchdogs never catch it). 0 disables the guard.
+# 10 MB: the model reads about 8K of a block's output, and every stage after
+# the kill works on what is left behind.
+SHELLM_MAX_OUTPUT_SIZE="${SHELLM_MAX_OUTPUT_SIZE:-10485760}"
+# The progress echo shows at most this many new lines per poll, and a block
+# killed for output size keeps this many bytes from each end of its output.
+STREAM_MAX_LINES=200
+OUTPUT_KEEP_BYTES=131072
+# Kill a block that has run this many seconds, however it behaves. A command
+# that prints a heartbeat while it waits on something that never finishes
+# passes every other guard (Audel 2026-09-25: a scan blocked 3.5 h reading a
+# fifo behind an `echo; sleep 5` loop). 0 disables the guard.
+SHELLM_MAX_EXEC_TIME="${SHELLM_MAX_EXEC_TIME:-3600}"
+SHELLM_BEACON_INTERVAL="${SHELLM_BEACON_INTERVAL:-5}"
+VERBOSE=0
+QUIET=0
+
+# Internal state (not user-configurable)
+_SHELLM_DOCKER_MODE=0
+_SHELLM_CONTAINER=""
+_SHELLM_WORKDIR_USER=""
+_SHELLM_DOCKER_BROKER_DIR=""
+_SHELLM_DOCKER_BROKER_TRANSPORT=""
+_SHELLM_TOOL_MOUNTS_VERSION=2
+_SHELLM_EXTRA_VARS=()
+_SHELLM_EXTRA_BINS=()
+
+# ---------------------------------------------------------------------------
+# Utility functions
+# ---------------------------------------------------------------------------
+
+die() { echo "shellm: error: $*" >&2; exit 1; }
+
+# A local model bound to the Docker host is usually configured as localhost
+# for thinkers and other llm calls that run on that host. Code executed in a
+# shellm sandbox needs Docker's hostname for the same server. The rewrite
+# touches ONLY a loopback authority host — a substring replace would mangle
+# hosts like mylocalhost.dev or path segments containing the name, and
+# redirect a Bearer-keyed request to a host nobody configured. The same
+# helpers exist in tools/headlong-init (this repo duplicates small helpers
+# rather than sharing a lib; keep the copies identical).
+
+# _shellm_url_host <url> — the authority's host, IPv6 brackets stripped.
+_shellm_url_host() {
+    local rest="${1#*://}"
+    local authority="${rest%%[/?#]*}"
+    local hostport="${authority##*@}"
+    case "$hostport" in
+        \[*\]*) hostport="${hostport#\[}"; printf '%s' "${hostport%%]*}" ;;
+        *)      printf '%s' "${hostport%%:*}" ;;
+    esac
+}
+
+# _shellm_url_host_swap <url> <newhost> — replace only the authority's host.
+_shellm_url_host_swap() {
+    local url="$1" newhost="$2"
+    local rest="${url#*://}" scheme=""
+    [[ "$rest" == "$url" ]] || scheme="${url%%://*}://"
+    local authority="${rest%%[/?#]*}"
+    local tail="${rest#"$authority"}"
+    local userinfo=""
+    case "$authority" in
+        *@*) userinfo="${authority%@*}@" ;;
+    esac
+    local hostport="${authority##*@}" port=""
+    case "$hostport" in
+        \[*\]:*) port=":${hostport##*:}" ;;
+        \[*\])   port="" ;;
+        *:*)     port=":${hostport##*:}" ;;
+    esac
+    printf '%s%s%s%s%s' "$scheme" "$userinfo" "$newhost" "$port" "$tail"
+}
+
+# _shellm_url_is_loopback <url> — does the host name this machine's loopback?
+_shellm_url_is_loopback() {
+    case "$(_shellm_url_host "$1")" in
+        localhost|127.*|0.0.0.0|::1) return 0 ;;
+    esac
+    return 1
+}
+
+_shellm_container_api_url() {
+    local url="$1"
+    if _shellm_url_is_loopback "$url"; then
+        url=$(_shellm_url_host_swap "$url" host.docker.internal)
+    fi
+    printf '%s' "$url"
+}
+
+banner() {
+    [[ "$QUIET" -eq 1 ]] && return
+    [[ "${SHELLM_NO_BANNER:-0}" -eq 1 ]] && return
+    local -a _b_lines=(
+'███      █████ ██  ██ █████ ██ ██    ███   ███'
+'  ███    ██    ██  ██ ██    ██ ██    ██ ███ ██'
+'    ███  █████ ██▀▀██ ████  ██ ██    ██  █  ██'
+'  ███       ██ ██  ██ ██    ██ █████ ██     ██'
+'███      █████ ██  ██ █████ ████████'
+    )
+    # Cyan-to-blue ramp on a tty, plain otherwise
+    local -a _b_ramp=(51 45 39 33 27)
+    local _b_i
+    echo >&2
+    for _b_i in 0 1 2 3 4; do
+        if [[ -t 2 ]]; then
+            printf '\033[38;5;%sm%s\033[0m\n' "${_b_ramp[$_b_i]}" "${_b_lines[$_b_i]}" >&2
+        else
+            printf '%s\n' "${_b_lines[$_b_i]}" >&2
+        fi
+    done
+    if [[ -t 2 ]]; then
+        printf '\033[90m%s\033[0m\n' 'the model writes bash. the shell is the tool loop.' >&2
+    fi
+    echo >&2
+}
+
+# Dim gray for debug, bold for status, colors for code/output
+progress() { [[ "$QUIET" -eq 1 ]] && return; echo -e "\033[1;34m▶ $*\033[0m" >&2; }
+progress_dim() { [[ "$QUIET" -eq 1 ]] && return; echo -e "\033[90m  $*\033[0m" >&2; }
+
+debug() {
+    if [[ "$VERBOSE" -eq 1 ]]; then
+        echo -e "\033[90m[shellm debug] $*\033[0m" >&2
+    fi
+}
+
+usage_text() {
+    cat <<'EOF'
+Usage:
+  shellm [options] context...                      Inline context (quotes optional)
+  shellm [options] -f FILE [-f FILE...] context... Add file context
+  echo data | shellm [options] context...          Add stdin context
+  shellm [options] --prompt-file FILE              Read the prompt from FILE
+
+Options:
+  -f FILE              Load context from file (can be repeated)
+  --prompt-file FILE   Read the prompt (the task text) from FILE instead of
+                       the command line. Use for big prompts: Linux caps one
+                       argv string at 128KB and a thinker's wakeup prompt can
+                       pass that.
+  -v, --verbose        Verbose/debug mode
+  -q, --quiet          Suppress all progress/streaming output (stderr), keep only final answer
+  -h, --help           Show this help
+  -m, --model MODEL    Model to use (default: claude-opus-4-7)
+  --max-iterations N   Max loop iterations (default: unlimited)
+  --max-tokens N       Max tokens per response (default: model's max output cap)
+  --effort LEVEL       Thinking effort: low, medium, high, xhigh, max (default: high)
+  --workdir DIR        Working directory for generated code (default: a
+                       fresh per-run directory under <state-home>/workdirs)
+  --here               Shorthand for --workdir "$PWD": work on the project
+                       in the current directory
+  --env NAME           Use/create a named env (Docker container or local)
+  --new-env            Force creation of a new env (cannot combine with --env)
+  --temp-docker        Teardown Docker container on exit (default: persist)
+  -s, --system-prompt TEXT  Override the default system prompt with inline text
+  --system-prompt-file FILE Override the default system prompt with contents of FILE
+  --docker-image IMAGE Docker image to use (default: ubuntu:latest)
+  --docker-access MODE Docker access for generated code: none, broker, socket, dind
+  --traj TRAJ_ID         Write steps to an existing trajectory (no child traj or fork)
+  --resume               Shorthand for --traj with the most recent trajectory
+  --context-scope SCOPE  What the model sees of the trajectory: "traj" (default,
+                         earlier steps included) or "run" (only this run's
+                         steps, prompt pinned whole)
+  --traj-dir DIR         Trajectory directory (default: <state-home>/trajectories,
+                         where the state home is ~/.headlong)
+  --var NAME=VALUE       Set env var for generated code (repeatable)
+  --var NAME             Forward NAME from the current environment. Use this for
+                         secrets: the value stays off every command line
+  --bin PATH             Make binary available on PATH (repeatable)
+  --print-system-prompt Print the system prompt and exit
+
+Environment:
+  <PROVIDER>_API_KEY      Key for SHELLM_MODEL's provider (ANTHROPIC_API_KEY
+                          for claude-*, OPENROUTER_API_KEY for vendor/model, ...)
+  SHELLM_MODEL            Model to use
+  SHELLM_FAST_MODEL       Cheap model class for utility calls (summaries,
+                          mem search); defaults to SHELLM_MODEL's provider
+  SHELLM_MAX_ITERATIONS   Max loop iterations
+  SHELLM_MAX_TOKENS       Max tokens per response
+  SHELLM_STOP_AFTER_CODE_BLOCK
+                          1 (default): stop reading a response once its first
+                          code block closes; only that block runs anyway.
+                          0 reads to the end.
+  SHELLM_CONTEXT_SCOPE    traj (default) or run; see --context-scope
+  SHELLM_CONTEXT_RUN_TAIL Rows the run-scope window reads back (default 400)
+  SHELLM_CONTEXT_RUN_TAIL_BLOCK
+                          Rows the run-scope window start moves in (default
+                          50), so the cached prefix survives between moves
+  SHELLM_CONTEXT_BLOCK_LIMIT
+                          Bytes a field may fill before it is cut, for rows in
+                          the newest block of the window (default 8192); older
+                          rows keep SHELLM_STDOUT_PROMPT_LIMIT (2048)
+  SHELLM_CONTEXT_WHOLE_BLOCKS
+                          How many newest blocks get the larger limit (default
+                          1); in traj scope, the newest N rows
+  SHELLM_EMPTY_RESPONSE_RETRIES
+                          Empty-response retries before the run dies
+                          (default 8; set empty for unlimited)
+  SHELLM_EFFORT           Thinking effort level (low/medium/high/xhigh/max)
+  SHELLM_SYSTEM_PROMPT    Override the default system prompt text
+  SHELLM_TRAJ_DIR         Trajectory directory
+  SHELLM_ENVS_DIR         Env/container state directory
+  SHELLM_WORKDIRS_DIR     Working directories base
+  SHELLM_BROKER_DIR       Docker broker state directory
+  SHELLM_CONF_DIR         Config directory (for .env file)
+  SHELLM_DOCKER_IMAGE     Docker image to use
+  SHELLM_DOCKER_ACCESS    Docker access mode: none, broker, socket, dind
+  SHELLM_DOCKER_BROKER_TRANSPORT  Broker transport: auto, socket, filesystem
+  SHELLM_DOCKER_SOCKET    Docker socket for socket mode (default: /var/run/docker.sock)
+  SHELLM_ALLOW_NESTED_DOCKER  Set to 1 to allow shellm-in-Docker to use Docker
+  SHELLM_REQUIRE_DOCKER   Set to 1 to fail instead of falling back to the host
+                          when no Docker daemon is reachable
+  SHELLM_ENV              Named env (execution environment)
+  SHELLM_TEMP_DOCKER      Set to 1 to teardown Docker container on exit
+  SHELLM_INACTIVITY_TIMEOUT  Seconds before killing idle execution (default: 30)
+  SHELLM_INACTIVITY_MAX   Seconds before killing execution that is silent but
+                          has a live nested shellm run (default: 900)
+  SHELLM_MAX_OUTPUT_SIZE  Bytes of output before killing a command that keeps
+                          producing output (default: 10485760; 0 disables)
+  SHELLM_MAX_EXEC_TIME    Seconds before killing a block no matter what it is
+                          doing (default: 3600; 0 disables)
+  SHELLM_BEACON_INTERVAL  Seconds between activity beacon touches (default: 5)
+  SHELLM_WORKDIR          (Internal) Working directory for current run
+
+Context is passed to generated code as environment variables:
+  $CONTEXT          Contains stdin data (if piped)
+  $FILE_CONTEXT1    Contents of first -f file
+  $FILE_CONTEXT2    Contents of second -f file (etc.)
+
+Signal completion from generated code by setting:
+  FINAL="answer"    Set final answer as a string
+  FINAL_FILE=path   Set final answer from a file
+EOF
+}
+
+usage() {
+    QUIET=0 SHELLM_NO_BANNER=0 banner
+    echo >&2
+    usage_text
+    exit 0
+}
+
+truncate_output() {
+    local input="$1"
+    local max="$SHELLM_TRUNCATE"
+    if [[ "${#input}" -gt "$max" ]]; then
+        local half=$(( max / 2 ))
+        local skipped=$(( ${#input} - max ))
+        echo "${input:0:$half}"
+        echo "[... truncated $skipped chars ...]"
+        echo "${input: -$half}"
+    else
+        echo "$input"
+    fi
+}
+
+redact_sensitive() {
+    local input="$1"
+    local output="$input"
+
+    if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+        output="${output//${ANTHROPIC_API_KEY}/<redacted-anthropic-key>}"
+    fi
+
+    # LLM_API_KEY (openai-compatible endpoints) has no vendor prefix to
+    # pattern-match, so only value-based masking can catch it.
+    if [[ -n "${LLM_API_KEY:-}" ]]; then
+        output="${output//${LLM_API_KEY}/<redacted-api-key>}"
+    fi
+
+    # Preserve exact masking of every nonempty configured provider value,
+    # including short credentials. Quoting makes glob characters literal.
+    local _key_var _key_val v
+    for _key_var in OPENAI_API_KEY OPENROUTER_API_KEY GEMINI_API_KEY OPENCODE_API_KEY; do
+        v="${!_key_var:-}"
+        if [[ -n "$v" ]]; then
+            output="${output//"$v"/<redacted-api-key>}"
+        fi
+    done
+
+    # Other credential variables retain the minimum length to avoid matching
+    # short placeholder values in ordinary prose.
+    for _key_var in GITHUB_TOKEN GH_TOKEN HOMEBREW_GITHUB_API_TOKEN GITHUB_PAT \
+                    GOOGLE_API_KEY SLACK_BOT_TOKEN SLACK_APP_TOKEN SLACK_USER_TOKEN \
+                    SLACK_TOKEN TELEGRAM_BOT_TOKEN HF_TOKEN HUGGING_FACE_HUB_TOKEN \
+                    AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_ACCESS_KEY_ID \
+                    STRIPE_SECRET_KEY SENDGRID_API_KEY TWILIO_AUTH_TOKEN \
+                    DATABASE_URL REDIS_URL; do
+        _key_val="${!_key_var:-}"
+        if [[ -n "$_key_val" && ${#_key_val} -ge 8 ]]; then
+            v="$_key_val"
+            output="${output//"$v"/<redacted:value>}"
+        fi
+    done
+
+    # Shape pass for credentials that arrived as text and so have no env var to
+    # match against. The sk-ant- rule stays first and keeps its marker: it is
+    # the one shape a reader can attribute to a provider, and
+    # tests/test_redact_sensitive.sh asserts on that exact string.
+    printf '%s' "$output" | LC_ALL=C sed -E \
+        -e 's/sk-ant-[A-Za-z0-9._-]+/<redacted-anthropic-key>/g' \
+        -e 's/(^|[^A-Za-z0-9])(sk-[A-Za-z0-9_.=-]{12,})/\1<redacted:api-key>/g' \
+        -e 's/(^|[^A-Za-z0-9])(gh[pousr]_[A-Za-z0-9]{12,})/\1<redacted:github-token>/g' \
+        -e 's/(^|[^A-Za-z0-9])(github_pat_[A-Za-z0-9_]{12,})/\1<redacted:github-token>/g' \
+        -e 's/(^|[^A-Za-z0-9])(xox[a-z]-[A-Za-z0-9_.-]{8,})/\1<redacted:slack-token>/g' \
+        -e 's/(^|[^A-Za-z0-9])(hf_[A-Za-z0-9]{12,})/\1<redacted:hf-token>/g' \
+        -e 's/AIza[A-Za-z0-9_-]{25,}/<redacted:google-key>/g' \
+        -e 's/(AKIA|ASIA)[A-Z0-9]{16}/<redacted:aws-key>/g' \
+        -e 's/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/<redacted:jwt>/g' \
+        -e 's#://[^/@[:space:]]+:[^/@[:space:]]+@#://<redacted:basic-auth>@#g' \
+        -e '/-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/,/-----END [A-Z0-9 ]*PRIVATE KEY-----/c\
+<redacted:private-key>' \
+        -e 's#"auth"[[:space:]]*:[[:space:]]*"[A-Za-z0-9+/=]{16,}"#"auth": "<redacted:docker-auth>"#g' \
+        -e 's/(^|[^A-Za-z0-9])((sk|rk)_live_[A-Za-z0-9]{8,})/\1<redacted:stripe-key>/g' \
+        -e 's/(^|[^A-Za-z0-9])(whsec_[A-Za-z0-9]{8,})/\1<redacted:stripe-hook>/g' \
+        -e 's/(^|[^A-Za-z0-9])(npm_[A-Za-z0-9]{20,})/\1<redacted:npm-token>/g' \
+        -e 's/(^|[^A-Za-z0-9])(glpat-[A-Za-z0-9_-]{10,})/\1<redacted:gitlab-token>/g' \
+        -e 's/(^|[^A-Za-z0-9])(dckr_pat-[A-Za-z0-9_.-]{10,})/\1<redacted:docker-token>/g' \
+        -e 's/(^|[^A-Za-z0-9])(SG\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})/\1<redacted:sendgrid-key>/g' \
+        -e 's/(^|[^A-Za-z0-9])(SK[0-9a-f]{32})/\1<redacted:twilio-key>/g' \
+        -e 's/(^|[^A-Za-z0-9])(key-[A-Za-z0-9]{20,})/\1<redacted:mailgun-key>/g' \
+        -e 's/((aws|AWS)_secret_access_key)[[:space:]]*[=:][[:space:]]*[^[:space:]]+/\1=<redacted:aws-secret>/g'
+}
+
+# ---------------------------------------------------------------------------
+# Trajectory helpers
+# ---------------------------------------------------------------------------
+
+extract_reasoning() {
+    local response="$1"
+    printf '%s\n' "$response" | awk '
+        # Emit only the text before the opening code fence. Keep reading after
+        # it so a large response cannot give printf SIGPIPE under pipefail.
+        # The fence may be a lone ``` line OR a tagged ```bash/```sh appended
+        # to the end of a prose sentence (some models, e.g. grok, do the
+        # latter). In the appended case, emit the prose that precedes the fence
+        # on that line, then stop — so the reasoning shows the words, not code.
+        # Bare and shell-tagged line-start fences end the reasoning, trailing
+        # text included; a non-shell fence (```json etc.) does NOT — a model
+        # showing a JSON example mid-reasoning keeps its subsequent prose.
+        in_code { next }
+        /^```(bash|shell|sh)?([[:space:]].*)?$/ { in_code = 1; next }
+        match($0, /```(bash|shell|sh)[[:space:]]*$/) {
+            pre = substr($0, 1, RSTART - 1)
+            sub(/[[:space:]]+$/, "", pre)
+            if (pre ~ /[^[:space:]]/) print pre
+            in_code = 1
+            next
+        }
+        { print }
+    '
+}
+
+_find_latest_traj() {
+    local traj_dir="$1"
+    local latest
+    # pipefail OFF (subshell): `head -1` closes after one line while `sort`
+    # still has lines to write → SIGPIPE to sort, which under `set -o pipefail`
+    # would make this assignment exit 141. See design/monolith_run_health.md.
+    # Portable mtime: `stat -f` is BSD/macOS, `stat -c` is GNU/Linux (where
+    # `-f` means file-system status and this silently found nothing, so
+    # `--resume` of the latest trajectory never worked on Linux).
+    local _mt_fmt
+    if stat -f '%m' /dev/null >/dev/null 2>&1; then _mt_fmt=(-f '%m %N'); else _mt_fmt=(-c '%Y %n'); fi
+    latest=$( set +o pipefail; find "$traj_dir" -maxdepth 2 -name 'trajectory.jsonl' \
+        -exec stat "${_mt_fmt[@]}" {} \; 2>/dev/null \
+        | sort -rn | head -1 | cut -d' ' -f2- )
+    [[ -n "$latest" ]] || return 1
+    head -1 "$latest" | jq -r '.step_id // empty' 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
+# Interactive prompt detection
+# ---------------------------------------------------------------------------
+
+# The parent run's watchdog kills a bash block that produces no output for
+# SHELLM_INACTIVITY_TIMEOUT seconds. A nested shellm run is silent for exactly
+# as long as its own model call is thinking, so real delegation was being
+# killed at 30s (2026-08-18 RLM usage analysis). The parent hands every block a
+# beacon path; a nested run stamps it while it works, which lets the watchdog
+# tell "a sub-run is thinking" apart from "this block is waiting on stdin".
+_SHELLM_BEACON_PID=""
+start_activity_beacon() {
+    local beacon="${SHELLM_ACTIVITY_FILE:-}"
+    [[ -n "$beacon" ]] || return 0
+    [[ -d "$(dirname "$beacon")" && -w "$(dirname "$beacon")" ]] || return 0
+    local owner=$$
+    (
+        # Exit with the run that started us, so an orphaned beacon can never
+        # hold a parent block open forever.
+        while kill -0 "$owner" 2>/dev/null; do
+            date +%s > "$beacon" 2>/dev/null || exit 0
+            sleep "$SHELLM_BEACON_INTERVAL"
+        done
+    ) &
+    _SHELLM_BEACON_PID=$!
+}
+
+stop_activity_beacon() {
+    [[ -n "$_SHELLM_BEACON_PID" ]] || return 0
+    kill "$_SHELLM_BEACON_PID" 2>/dev/null || true
+    _SHELLM_BEACON_PID=""
+}
+
+detect_interactive_prompt() {
+    local tail_bytes="$1"
+    # Normalize: lowercase, collapse whitespace
+    local normalized
+    normalized=$(printf '%s' "$tail_bytes" | tr '[:upper:]' '[:lower:]' | tr -s '[:space:]' ' ')
+
+    case "$normalized" in
+        *password:*|*passphrase:*)
+            echo "password_prompt" ;;
+        *"[y/n]"*|*"[yes/no]"*|*"are you sure"*|*"continue?"*|*"proceed?"*)
+            echo "confirmation_prompt" ;;
+        *username:*|*"login:"*)
+            echo "login_prompt" ;;
+        *"enter "*|*"type "*|*"provide "*|*"input "*|*"specify "*)
+            echo "input_prompt" ;;
+        *"press "*"to continue"*|*"press "*"to "*|*"hit "*"to continue"*)
+            echo "keypress_prompt" ;;
+        *)
+            # Check for generic prompt: short trailing text ending with ": " or "? "
+            # Extract last line (may not have newline)
+            local last_line
+            last_line=$(printf '%s' "$tail_bytes" | tr '\r' '\n' | grep -v '^$' | tail -1 || true)
+            if [[ -n "$last_line" && ${#last_line} -lt 120 ]]; then
+                case "$last_line" in
+                    *": "|*":"|*"? ")
+                        echo "generic_prompt" ; return ;;
+                esac
+            fi
+            echo "unknown"
+            ;;
+    esac
+}
+
+build_inactivity_feedback() {
+    local output="$1"
+    local prompt_type="$2"
+    local timeout="$3"
+    local reason="${4:-idle}"
+    local had_nested="${5:-0}"
+
+    local last_output
+    last_output=$(truncate_output "$output")
+
+    # A runaway command that kept producing output was not idle and not at a
+    # prompt, so none of the interactive/nested advice below applies.
+    if [[ "$reason" == "wall" ]]; then
+        printf 'Execution was KILLED after running for %s seconds, the limit for one block\n' "$timeout"
+        printf '(it was still producing output, so something in it was waiting forever or\n'
+        printf 'the work is too big for one block).\n'
+        printf '\nLast output before the kill:\n%s\n' "$last_output"
+        printf '\nCheck what the block was waiting on (a pipe, a fifo, a lock, the network)\n'
+        printf 'and bound it with timeout. Split long work across steps: start it in the\n'
+        printf 'background with output in a file, then check the file in a later step.\n'
+        return 0
+    fi
+
+    if [[ "$reason" == "output" ]]; then
+        printf 'Execution was KILLED after its output grew past %s bytes\n' "$timeout"
+        printf '(a command producing unbounded output, e.g. an infinite loop).\n'
+        printf '\nLast output before the kill:\n%s\n' "$last_output"
+        printf '\nBound the output: add a limit (head -c, timeout, a loop guard),\n'
+        printf 'fix the loop condition, or redirect bulk output to a file.\n'
+        return 0
+    fi
+
+    # A block that ran a nested shellm run was not sitting at a prompt, so the
+    # interactive-input advice below would send the model looking for a flag
+    # that does not exist. Say what actually happened instead.
+    if [[ "$reason" == "nested" || "$had_nested" -eq 1 ]]; then
+        if [[ "$reason" == "nested" ]]; then
+            printf 'Execution was KILLED after %s seconds with no output\n' "$timeout"
+            printf 'A nested shellm run was still alive, so this was not an interactive\n'
+            printf 'prompt. The sub-run either wedged or needed longer than the ceiling.\n'
+        else
+            printf 'Execution was KILLED after %s seconds of inactivity\n' "$timeout"
+            printf 'A nested shellm run was alive in this block but stopped reporting,\n'
+            printf 'so it probably died rather than hung.\n'
+        fi
+        printf '\nLast output before timeout:\n%s\n' "$last_output"
+        printf '\nTo run sub-work that takes longer, give the sub-run a smaller task,\n'
+        printf 'cap it with --max-iterations, or split it across several sub-runs.\n'
+        printf 'Background each sub-run with its output redirected to a file, then read\n'
+        printf 'the files in a later step instead of waiting inside this one.\n'
+        return 0
+    fi
+
+    local advice=""
+    case "$prompt_type" in
+        password_prompt)
+            advice="DETECTED: Password/passphrase prompt. Use token-based auth, SSH keys, or credential files instead of interactive passwords." ;;
+        confirmation_prompt)
+            advice="DETECTED: Confirmation prompt. Retry with --yes, -y, --force, --assume-yes, --non-interactive, or equivalent flag." ;;
+        login_prompt)
+            advice="DETECTED: Login/username prompt. Use environment variables, config files, or --user flags instead of interactive login." ;;
+        input_prompt)
+            advice="DETECTED: Input prompt. Provide the value via command-line arguments, environment variables, or pipe (echo 'value' | command)." ;;
+        keypress_prompt)
+            advice="DETECTED: Keypress prompt. Use --batch, --non-interactive, or pipe input to bypass." ;;
+        generic_prompt)
+            advice="DETECTED: Likely interactive prompt (line ending with ':' or '?'). Use non-interactive flags or pipe input." ;;
+        unknown)
+            advice="Could not detect a specific prompt pattern. The process may be waiting for stdin, a network response, or is simply slow. Try non-interactive flags or investigate the command's batch mode." ;;
+    esac
+
+    printf 'Execution was KILLED after %s seconds of inactivity\n' "$timeout"
+    printf '(likely waiting for interactive input that will never arrive).\n'
+    printf 'stdin is connected to /dev/null — interactive prompts get immediate EOF.\n'
+    printf '\nLast output before timeout:\n%s\n' "$last_output"
+    printf '\n%s\n' "$advice"
+}
+
+# ---------------------------------------------------------------------------
+# Docker functions
+# ---------------------------------------------------------------------------
+
+should_use_docker() {
+    # Already inside Docker — never nest unless explicitly requested.
+    if [[ -f /.dockerenv && "$SHELLM_ALLOW_NESTED_DOCKER" != "1" ]]; then
+        debug "Inside Docker container, using local execution"
+        return 1
+    fi
+    # Check daemon
+    if docker info >/dev/null 2>&1; then
+        debug "Docker daemon available"
+        return 0
+    else
+        debug "Docker daemon not available, using local execution"
+        return 1
+    fi
+}
+
+validate_docker_config() {
+    case "$SHELLM_DOCKER_ACCESS" in
+        none|broker|socket|dind) ;;
+        *) die "Invalid --docker-access: $SHELLM_DOCKER_ACCESS (expected none, broker, socket, or dind)" ;;
+    esac
+    case "$SHELLM_DOCKER_BROKER_TRANSPORT" in
+        auto|socket|filesystem) ;;
+        *) die "Invalid SHELLM_DOCKER_BROKER_TRANSPORT: $SHELLM_DOCKER_BROKER_TRANSPORT (expected auto, socket, or filesystem)" ;;
+    esac
+    case "$SHELLM_ALLOW_NESTED_DOCKER" in
+        0|1) ;;
+        *) die "Invalid SHELLM_ALLOW_NESTED_DOCKER: $SHELLM_ALLOW_NESTED_DOCKER (expected 0 or 1)" ;;
+    esac
+    case "$SHELLM_REQUIRE_DOCKER" in
+        0|1) ;;
+        *) die "Invalid SHELLM_REQUIRE_DOCKER: $SHELLM_REQUIRE_DOCKER (expected 0 or 1)" ;;
+    esac
+}
+
+docker_socket_path() {
+    local socket="$SHELLM_DOCKER_SOCKET"
+    if [[ -S "$socket" ]]; then
+        printf '%s\n' "$socket"
+        return 0
+    fi
+    if [[ -L "$socket" ]]; then
+        local resolved
+        resolved=$(realpath "$socket" 2>/dev/null || true)
+        if [[ -n "$resolved" && -S "$resolved" ]]; then
+            printf '%s\n' "$resolved"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+docker_socket_gid() {
+    local socket="$1"
+    stat -c '%g' "$socket" 2>/dev/null || stat -f '%g' "$socket" 2>/dev/null || true
+}
+
+docker_broker_select_transport() {
+    case "$SHELLM_DOCKER_BROKER_TRANSPORT" in
+        socket)
+            command -v socat >/dev/null 2>&1 || die "Broker socket transport requires socat on the host"
+            printf 'socket\n'
+            ;;
+        filesystem)
+            printf 'filesystem\n'
+            ;;
+        auto)
+            if [[ "$(uname -s)" == "Linux" ]] && command -v socat >/dev/null 2>&1; then
+                printf 'socket\n'
+            else
+                printf 'filesystem\n'
+            fi
+            ;;
+    esac
+}
+
+tool_sibling_path() {
+    local shellm_path="$1"
+    local tool="$2"
+    local dir
+    dir=$(dirname "$shellm_path")
+    printf '%s/%s\n' "$dir" "$tool"
+}
+
+resolve_shellm_tool_path() {
+    local shellm_path="$1"
+    local tool="$2"
+    local path
+
+    path=$(tool_sibling_path "$shellm_path" "$tool")
+    if [[ -x "$path" ]]; then
+        realpath "$path"
+        return 0
+    fi
+
+    # Non-core tools live in tools/ next to bin/ in a checkout.
+    path=$(dirname "$shellm_path")/../tools/$tool
+    if [[ -x "$path" ]]; then
+        realpath "$path"
+        return 0
+    fi
+
+    if command -v "$tool" >/dev/null 2>&1; then
+        realpath "$(command -v "$tool")"
+        return 0
+    fi
+
+    return 1
+}
+
+docker_prepare_container_tools() {
+    local shellm_path="$1"
+    [[ "${_SHELLM_DOCKER_MODE:-0}" -eq 1 ]] || return 0
+
+    local tool tool_path
+    for tool in llm traj context; do
+        tool_path=$(resolve_shellm_tool_path "$shellm_path" "$tool" || true)
+        [[ -n "$tool_path" ]] || continue
+        local dest="/usr/local/bin/$tool"
+        if ! docker exec -w / "$_SHELLM_CONTAINER" test -x "$dest" >/dev/null 2>&1; then
+            docker cp "$tool_path" "$_SHELLM_CONTAINER:$dest" >/dev/null 2>&1 || \
+                die "Could not install $tool in shellm container"
+            docker exec --user 0:0 -w / "$_SHELLM_CONTAINER" chmod 0755 "$dest" >/dev/null 2>&1 || \
+                die "Could not make $tool executable in shellm container"
+        fi
+    done
+
+    # Install --bin binaries
+    for _bin_path in "${_SHELLM_EXTRA_BINS[@]+"${_SHELLM_EXTRA_BINS[@]}"}"; do
+        local _bin_name
+        _bin_name=$(basename "$_bin_path")
+        local _dest="/usr/local/bin/$_bin_name"
+        if ! docker exec -w / "$_SHELLM_CONTAINER" test -x "$_dest" >/dev/null 2>&1; then
+            docker cp "$_bin_path" "$_SHELLM_CONTAINER:$_dest" >/dev/null 2>&1 || \
+                die "Could not install $_bin_name in shellm container"
+            docker exec --user 0:0 -w / "$_SHELLM_CONTAINER" chmod 0755 "$_dest" >/dev/null 2>&1 || \
+                die "Could not make $_bin_name executable in shellm container"
+        fi
+    done
+}
+
+docker_container_has_unusable_tool_mounts() {
+    local container_id="$1"
+    local tool dest
+    for tool in llm traj context; do
+        dest="/usr/local/bin/$tool"
+        if docker exec -w / "$container_id" sh -c "mount | grep -F ' on $dest ' >/dev/null 2>&1" >/dev/null 2>&1; then
+            if ! docker exec -w / "$container_id" test -x "$dest" >/dev/null 2>&1; then
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+docker_broker_start() {
+    local env_name="$1"
+    local workspace="$2"
+    local shellm_path="$3"
+
+    [[ "$SHELLM_DOCKER_ACCESS" == "broker" ]] || return 0
+
+    local broker_path
+    broker_path=$(resolve_shellm_tool_path "$shellm_path" "shellm-docker-broker" || true)
+    [[ -x "$broker_path" ]] || die "Broker mode requires shellm-docker-broker next to shellm or on PATH"
+
+    local broker_dir="$SHELLM_BROKER_DIR/$env_name"
+    local env_dir="$SHELLM_ENVS_DIR/$env_name"
+    mkdir -p "$broker_dir" "$env_dir"
+
+    "$broker_path" start \
+        --env "$env_name" \
+        --workdir "$workspace" \
+        --dir "$broker_dir" \
+        --transport "$_SHELLM_DOCKER_BROKER_TRANSPORT" \
+        --pid-file "$env_dir/broker_pid" \
+        --log "$broker_dir/broker.log"
+
+    _SHELLM_DOCKER_BROKER_DIR="$broker_dir"
+    progress "Docker broker ready ($_SHELLM_DOCKER_BROKER_TRANSPORT transport)"
+}
+
+docker_broker_prepare_container() {
+    local shellm_path="$1"
+    [[ "$SHELLM_DOCKER_ACCESS" == "broker" ]] || return 0
+    [[ -n "${_SHELLM_CONTAINER:-}" ]] || return 0
+
+    local client_path
+    client_path=$(resolve_shellm_tool_path "$shellm_path" "shellm-docker" || true)
+    [[ -x "$client_path" ]] || die "Broker mode requires shellm-docker next to shellm or in ../tools"
+
+    docker exec --user 0:0 -w / "$_SHELLM_CONTAINER" sh -c '
+        if [ -x /usr/local/bin/shellm-docker ] && [ ! -e /usr/local/bin/docker ]; then
+            ln -s /usr/local/bin/shellm-docker /usr/local/bin/docker
+        fi
+    ' >/dev/null 2>&1 || die "Could not install docker facade in broker container"
+    docker exec -w / "$_SHELLM_CONTAINER" test -x /usr/local/bin/docker >/dev/null 2>&1 || \
+        die "Broker mode requires an executable docker facade in the container"
+}
+
+docker_broker_stop() {
+    local env_name="$1"
+    local shellm_path="${2:-}"
+    local env_dir="$SHELLM_ENVS_DIR/$env_name"
+    local broker_path=""
+
+    if [[ -n "$shellm_path" ]]; then
+        broker_path=$(resolve_shellm_tool_path "$shellm_path" "shellm-docker-broker" || true)
+    elif command -v shellm-docker-broker >/dev/null 2>&1; then
+        broker_path=$(realpath "$(command -v shellm-docker-broker)")
+    fi
+
+    if [[ -x "$broker_path" ]]; then
+        "$broker_path" stop --pid-file "$env_dir/broker_pid" >/dev/null 2>&1 || true
+    elif [[ -f "$env_dir/broker_pid" ]]; then
+        local pid
+        pid=$(cat "$env_dir/broker_pid" 2>/dev/null || true)
+        [[ -n "$pid" ]] && kill "$pid" >/dev/null 2>&1 || true
+        rm -f "$env_dir/broker_pid"
+    fi
+}
+
+docker_metadata_value() {
+    local env_name="$1"
+    local key="$2"
+    local file="$SHELLM_ENVS_DIR/$env_name/$key"
+    [[ -f "$file" ]] && cat "$file" || true
+}
+
+_compute_var_mounts() {
+    for _ev in "${_SHELLM_EXTRA_VARS[@]+"${_SHELLM_EXTRA_VARS[@]}"}"; do
+        local _val="${_ev#*=}"
+        [[ -d "$_val" ]] || continue
+        local _abs
+        _abs=$(cd "$_val" && pwd) || continue
+        printf '%s\n' "$_abs"
+    done | sort
+}
+
+env_metadata_matches() {
+    local env_name="$1"
+    local stored_access
+    stored_access=$(docker_metadata_value "$env_name" docker_access)
+    stored_access="${stored_access:-none}"
+
+    [[ "$stored_access" == "$SHELLM_DOCKER_ACCESS" ]] || return 1
+
+    case "$SHELLM_DOCKER_ACCESS" in
+        broker)
+            local stored_transport
+            stored_transport=$(docker_metadata_value "$env_name" docker_broker_transport)
+            [[ "$stored_transport" == "$_SHELLM_DOCKER_BROKER_TRANSPORT" ]] || return 1
+            ;;
+        socket)
+            local stored_socket
+            stored_socket=$(docker_metadata_value "$env_name" docker_socket)
+            [[ "$stored_socket" == "$SHELLM_DOCKER_SOCKET" ]] || return 1
+            ;;
+        dind)
+            local stored_privileged
+            stored_privileged=$(docker_metadata_value "$env_name" privileged)
+            [[ "$stored_privileged" == "1" ]] || return 1
+            ;;
+    esac
+
+    local stored_type
+    stored_type=$(docker_metadata_value "$env_name" type)
+    if [[ "$stored_type" == "docker" ]]; then
+        local stored_tool_mounts_version
+        stored_tool_mounts_version=$(docker_metadata_value "$env_name" tool_mounts_version)
+        [[ "$stored_tool_mounts_version" == "$_SHELLM_TOOL_MOUNTS_VERSION" ]] || return 1
+        # The image is part of an env's identity, not just provenance. Without
+        # this, a second run asking for a different --docker-image reuses the
+        # container built from the first one: the flag reads as accepted, the
+        # run happens on the old image, and the run record names the image that
+        # was asked for rather than the one that served it. An env from before
+        # the image was recorded has nothing to compare, and reusing it stays
+        # allowed rather than forcing everyone's running envs to be rebuilt.
+        local stored_image
+        stored_image=$(docker_metadata_value "$env_name" image)
+        [[ -z "$stored_image" || "$stored_image" == "$SHELLM_DOCKER_IMAGE" ]] || return 1
+    fi
+
+    # Compare --var directory mounts
+    local _expected_var_mounts
+    _expected_var_mounts=$(_compute_var_mounts)
+    local _stored_var_mounts
+    _stored_var_mounts=$(docker_metadata_value "$env_name" var_mounts)
+    # Normalize: trim trailing newlines for comparison
+    _expected_var_mounts="${_expected_var_mounts%%$'\n'}"
+    _stored_var_mounts="${_stored_var_mounts%%$'\n'}"
+    [[ "$_expected_var_mounts" == "$_stored_var_mounts" ]] || return 1
+
+    # Workdirs mount must match so the container can access new run workdirs
+    local stored_workdirs_dir
+    stored_workdirs_dir=$(docker_metadata_value "$env_name" workdirs_dir)
+    [[ "$stored_workdirs_dir" == "$SHELLM_WORKDIRS_DIR" ]] || return 1
+
+    return 0
+}
+
+env_metadata_mismatch_message() {
+    local env_name="$1"
+    local stored_access
+    stored_access=$(docker_metadata_value "$env_name" docker_access)
+    stored_access="${stored_access:-none}"
+    local stored_type
+    stored_type=$(docker_metadata_value "$env_name" type)
+    if [[ "$stored_type" == "docker" ]]; then
+        local stored_tool_mounts_version
+        stored_tool_mounts_version=$(docker_metadata_value "$env_name" tool_mounts_version)
+        if [[ "$stored_tool_mounts_version" != "$_SHELLM_TOOL_MOUNTS_VERSION" ]]; then
+            printf 'Env %s was created before current shellm tool mounts. Use a different --env or remove %s/%s so shellm can recreate it with llm, shellm-explore, and sibling tools mounted.' \
+                "$env_name" "$SHELLM_ENVS_DIR" "$env_name"
+            return
+        fi
+    fi
+    if [[ "$stored_type" == "docker" ]]; then
+        local stored_image
+        stored_image=$(docker_metadata_value "$env_name" image)
+        if [[ -n "$stored_image" && "$stored_image" != "$SHELLM_DOCKER_IMAGE" ]]; then
+            printf 'Env %s was created from image %s, but this run requested %s. Use --new-env, a different --env, or remove %s/%s so shellm can recreate it from the requested image.' \
+                "$env_name" "$stored_image" "$SHELLM_DOCKER_IMAGE" "$SHELLM_ENVS_DIR" "$env_name"
+            return
+        fi
+    fi
+    # Check --var directory mounts mismatch
+    local _expected_var_mounts
+    _expected_var_mounts=$(_compute_var_mounts)
+    local _stored_var_mounts
+    _stored_var_mounts=$(docker_metadata_value "$env_name" var_mounts)
+    _expected_var_mounts="${_expected_var_mounts%%$'\n'}"
+    _stored_var_mounts="${_stored_var_mounts%%$'\n'}"
+    if [[ "$_expected_var_mounts" != "$_stored_var_mounts" ]]; then
+        printf 'Env %s has different --var directory mounts than this run requires. Use a different --env or remove %s/%s so shellm can recreate it with the correct mounts.' \
+            "$env_name" "$SHELLM_ENVS_DIR" "$env_name"
+        return
+    fi
+    printf 'Env %s was created with docker_access=%s, but this run requested docker_access=%s. Use a different --env, destroy the env, or request the same access mode.' \
+        "$env_name" "$stored_access" "$SHELLM_DOCKER_ACCESS"
+}
+
+# Collapse an absolute path lexically: drop empty and `.` segments, pop one
+# level per `..`, and emit no trailing slash. Purely textual, and deliberately
+# not realpath: these paths are compared as CONTAINER paths, and docker
+# normalizes `..` the same way in both -w and a mount destination (`-w /a/../b`
+# lands on /a/b). Resolving symlinks here would judge the host source instead,
+# so a workdir symlinked into the runs dir but mounted at its own link path
+# would read as covered by a mount that does not contain it.
+#
+# No forks and no word splitting: bin/shellm also runs on macOS bash 3.2, and
+# splitting on IFS=/ would glob a segment containing `*`.
+#
+# Returns via _NORM_PATH, not stdout: a $(...) caller pays two forks per
+# coverage check and, worse, strips trailing newlines — a directory whose
+# name ends in a newline would compare equal to its newline-less sibling
+# and read as covered. (An empty input still normalizes to "/": degenerate
+# but harmless, and pinned by the tests.)
+_norm_path() {
+    local rest="$1" out="" seg
+    [[ -z "$rest" || "$rest" == /* ]] \
+        || die "_norm_path: not an absolute path: $rest"
+    while [[ -n "$rest" ]]; do
+        seg="${rest%%/*}"
+        if [[ "$seg" == "$rest" ]]; then rest=""; else rest="${rest#*/}"; fi
+        case "$seg" in
+            ""|.) ;;
+            ..)   out="${out%/*}" ;;
+            *)    out="$out/$seg" ;;
+        esac
+    done
+    _NORM_PATH="${out:-/}"
+}
+
+# True when `path` is already covered by an existing bind mount rooted at
+# `root`. Both are container-side paths: these decide whether docker_setup
+# still needs a -v for a directory, and inside the container a path is
+# reachable only if it sits under a mount destination.
+#
+# Normalize before comparing, and require a path boundary. A bare prefix test
+# reads a sibling as a child (`/x/workdirs` "covering" `/x/workdirs-scratch`),
+# which cost the sibling its -v while docker still made the -w directory, so
+# the run continued against an empty directory with no error anywhere.
+_path_covered() {
+    local path root
+    _norm_path "$1"; path="$_NORM_PATH"
+    _norm_path "$2"; root="$_NORM_PATH"
+    # ${root%/} so a root of "/" yields the pattern /* rather than //*, which
+    # matches nothing and would leave every path uncovered by the filesystem root.
+    [[ "$path" == "$root" || "$path" == "${root%/}"/* ]]
+}
+
+docker_setup_die() {
+    local message="$1"
+    if [[ -n "${_SHELLM_CONTAINER:-}" ]]; then
+        docker rm -f "$_SHELLM_CONTAINER" >/dev/null 2>&1 || true
+        _SHELLM_CONTAINER=""
+    fi
+    die "$message"
+}
+
+docker_setup() {
+    local workspace="$1"
+    local shellm_path="$2"
+    local env_name="$3"
+    shift 3
+    local context_files=("$@")
+
+    if [[ "$SHELLM_DOCKER_ACCESS" == "broker" ]]; then
+        _SHELLM_DOCKER_BROKER_TRANSPORT=$(docker_broker_select_transport)
+    fi
+
+    if [[ "$SHELLM_DOCKER_ACCESS" == "socket" ]]; then
+        local socket_path
+        socket_path=$(docker_socket_path) || die "Docker socket mode requested, but no Unix socket exists at $SHELLM_DOCKER_SOCKET"
+        SHELLM_DOCKER_SOCKET="$socket_path"
+    fi
+
+    progress "Setting up Docker container (image: $SHELLM_DOCKER_IMAGE, access: $SHELLM_DOCKER_ACCESS)..."
+
+    # Pull image only if not present locally: an unconditional pull adds
+    # latency to every container create, fails offline, and a wedged Docker
+    # pull (no timeout) hangs the run forever — observed with several
+    # concurrent creates racing to pull the same image.
+    if ! docker image inspect "$SHELLM_DOCKER_IMAGE" >/dev/null 2>&1; then
+        if [[ "$VERBOSE" -eq 1 ]]; then
+            docker pull "$SHELLM_DOCKER_IMAGE" >&2
+        else
+            docker pull "$SHELLM_DOCKER_IMAGE" >/dev/null 2>&1
+        fi
+    fi
+
+    # Mount the runs dir (parent of the default workspace) so containers can be
+    # reused across runs without needing new bind mounts.
+    local runs_mount="$SHELLM_WORKDIRS_DIR"
+    mkdir -p "$runs_mount"
+
+    local -a docker_run_flags=(
+        --name "shellm-$$"
+        --user "$(id -u):$(id -g)"
+        -v "$runs_mount:$runs_mount"
+        -v "$shellm_path:/usr/local/bin/shellm:ro"
+        -w "$workspace"
+        -e "HOME=$workspace"
+    )
+    # Add the Docker host mapping when a loopback model URL will be
+    # translated for the sandbox below — the SAME predicate the rewrite in
+    # _shellm_container_api_url uses, so the two can never disagree. Docker
+    # Desktop already defines the name; this keeps Linux equivalent. Note
+    # the mapping routes to the host, so sandboxed code can reach any
+    # service bound to the host's loopback, not just the model server —
+    # documented in docs/install.md (local model server).
+    if _shellm_url_is_loopback "$SHELLM_API_URL"; then
+        docker_run_flags+=(--add-host "host.docker.internal:host-gateway")
+    fi
+    local -a extra_mounts=()
+    local -a seen_dirs=("$runs_mount")
+    local -a install_packages=(jq curl python3 tmux sudo)
+
+    local tool tool_path
+    local -a shellm_tools=(llm traj context shellm-explore headlong skills mem shellm-docker shellm-docker-broker)
+    for tool in "${shellm_tools[@]}"; do
+        tool_path=$(resolve_shellm_tool_path "$shellm_path" "$tool" || true)
+        [[ -n "$tool_path" ]] || continue
+        docker_run_flags+=(-v "$tool_path:/usr/local/bin/$tool:ro")
+    done
+
+    # Make custom workdirs visible when they live outside the state home.
+    if ! _path_covered "$workspace" "$runs_mount"; then
+        extra_mounts+=(-v "$workspace:$workspace")
+        seen_dirs+=("$workspace")
+    fi
+
+    # Mount identity dir so skills, thinkers, etc. are accessible in the container.
+    if [[ -n "${IDENTITY_DIR:-}" && -d "$IDENTITY_DIR" ]]; then
+        local _id_abs
+        _id_abs=$(cd "$IDENTITY_DIR" && pwd)
+        local _id_covered=0
+        for d in "${seen_dirs[@]}"; do
+            _path_covered "$_id_abs" "$d" && { _id_covered=1; break; }
+        done
+        if [[ "$_id_covered" -eq 0 ]]; then
+            extra_mounts+=(-v "$_id_abs:$_id_abs")
+            seen_dirs+=("$_id_abs")
+        fi
+    fi
+
+    # Build mount flags for -f file directories.
+    for f in "${context_files[@]+"${context_files[@]}"}"; do
+        local abs_path abs_dir
+        abs_path=$(realpath "$f")
+        abs_dir=$(dirname "$abs_path")
+        # Skip if under workspace or an already mounted parent.
+        _path_covered "$abs_dir" "$workspace" && continue
+        local already=0
+        for d in "${seen_dirs[@]+"${seen_dirs[@]}"}"; do
+            _path_covered "$abs_dir" "$d" && { already=1; break; }
+        done
+        [[ "$already" -eq 1 ]] && continue
+        seen_dirs+=("$abs_dir")
+        extra_mounts+=(-v "$abs_dir:$abs_dir:ro")
+    done
+
+    # Mount directories referenced by --var values
+    for _ev in "${_SHELLM_EXTRA_VARS[@]+"${_SHELLM_EXTRA_VARS[@]}"}"; do
+        local _val="${_ev#*=}"
+        [[ -d "$_val" ]] || continue
+        local abs_dir
+        abs_dir=$(cd "$_val" && pwd) || continue
+        local already=0
+        for d in "${seen_dirs[@]+"${seen_dirs[@]}"}"; do
+            _path_covered "$abs_dir" "$d" && { already=1; break; }
+        done
+        [[ "$already" -eq 1 ]] && continue
+        seen_dirs+=("$abs_dir")
+        extra_mounts+=(-v "$abs_dir:$abs_dir")
+    done
+
+    # Mount symlink targets: scan all mounted dirs for symlinks pointing outside.
+    # This ensures e.g. identity skill symlinks resolve inside the container.
+    local _symlink_target_dirs=""
+    for _scan_dir in "${seen_dirs[@]}"; do
+        while IFS= read -r -d '' _link; do
+            local _target
+            _target=$(readlink -f "$_link" 2>/dev/null) || continue
+            [[ -e "$_target" ]] || continue
+            local _tdir
+            _tdir=$(dirname "$_target")
+            # Never mount host system directories: they would shadow the
+            # container's own /usr, /bin, etc. and break it (observed: a
+            # venv symlink to /usr/bin/python3 caused macOS /usr/bin to be
+            # mounted over Ubuntu's, killing every exec in the container).
+            case "$_tdir" in
+                /|/usr|/usr/*|/bin|/bin/*|/sbin|/sbin/*|/lib|/lib/*|/libexec|/libexec/*|\
+                /etc|/etc/*|/var|/var/*|/opt|/opt/*|/tmp|/tmp/*|/private|/private/*|\
+                /System|/System/*|/Library|/Library/*|/Applications|/Applications/*|/dev|/dev/*)
+                    continue ;;
+            esac
+            # Skip if already under a mounted dir
+            local _covered=0
+            for _sd in "${seen_dirs[@]}"; do
+                _path_covered "$_tdir" "$_sd" && { _covered=1; break; }
+            done
+            [[ "$_covered" -eq 1 ]] && continue
+            # Skip if already collected
+            case $'\n'"$_symlink_target_dirs"$'\n' in
+                *$'\n'"$_tdir"$'\n'*) continue ;;
+            esac
+            _symlink_target_dirs="${_symlink_target_dirs:+${_symlink_target_dirs}
+}${_tdir}"
+        done < <(find "$_scan_dir" -type l -print0 2>/dev/null)
+    done
+    # Deduplicate: remove subdirs of other target dirs, then mount
+    local _tdir _other _is_sub
+    while IFS= read -r _tdir; do
+        [[ -z "$_tdir" ]] && continue
+        _is_sub=0
+        while IFS= read -r _other; do
+            [[ -z "$_other" || "$_tdir" == "$_other" ]] && continue
+            # Raw boundary test on purpose, not _path_covered: both sides
+            # are readlink -f output here, already canonical.
+            if [[ "$_tdir" == "$_other"/* ]]; then
+                _is_sub=1; break
+            fi
+        done <<< "$_symlink_target_dirs"
+        [[ "$_is_sub" -eq 1 ]] && continue
+        extra_mounts+=(-v "$_tdir:$_tdir:ro")
+        seen_dirs+=("$_tdir")
+    done <<< "$_symlink_target_dirs"
+
+    case "$SHELLM_DOCKER_ACCESS" in
+        broker)
+            local client_path
+            client_path=$(resolve_shellm_tool_path "$shellm_path" "shellm-docker" || true)
+            [[ -x "$client_path" ]] || die "Broker mode requires shellm-docker next to shellm or on PATH"
+            # Also mount as 'docker' facade so tools expecting the docker CLI work
+            docker_run_flags+=(-v "$client_path:/usr/local/bin/docker:ro")
+            if [[ "$_SHELLM_DOCKER_BROKER_TRANSPORT" == "socket" ]]; then
+                install_packages+=(socat)
+            fi
+            ;;
+        socket)
+            local socket_gid
+            socket_gid=$(docker_socket_gid "$SHELLM_DOCKER_SOCKET")
+            [[ -n "$socket_gid" ]] && docker_run_flags+=(--group-add "$socket_gid")
+            docker_run_flags+=(
+                -v "$SHELLM_DOCKER_SOCKET:/var/run/docker.sock"
+                -e "DOCKER_HOST=unix:///var/run/docker.sock"
+            )
+            install_packages+=(docker.io)
+            ;;
+        dind)
+            docker_run_flags+=(
+                --privileged
+                --cgroupns=private
+                -e "DOCKER_HOST=unix:///var/run/docker.sock"
+            )
+            install_packages+=(docker.io)
+            ;;
+    esac
+
+    _SHELLM_CONTAINER=$(docker run -d \
+        "${docker_run_flags[@]}" \
+        "${extra_mounts[@]+"${extra_mounts[@]}"}" \
+        "$SHELLM_DOCKER_IMAGE" \
+        sleep infinity)
+
+    # Install essential tools as root and grant passwordless sudo.
+    progress_dim "Installing tools in container..."
+    local package_list="${install_packages[*]}"
+    if ! docker exec --user 0:0 -w / \
+        -e SHELLM_UID="$(id -u)" \
+        -e SHELLM_GID="$(id -g)" \
+        -e SHELLM_APT_PACKAGES="$package_list" \
+        "$_SHELLM_CONTAINER" \
+        bash -c '
+        apt-get update -qq >/dev/null 2>&1
+        apt-get install -y -qq $SHELLM_APT_PACKAGES >/dev/null 2>&1
+        # Create user for the mapped UID/GID so sudo works
+        if ! getent group "$SHELLM_GID" >/dev/null 2>&1; then
+            groupadd -g "$SHELLM_GID" shellm 2>/dev/null || true
+        fi
+        if ! getent passwd "$SHELLM_UID" >/dev/null 2>&1; then
+            useradd -u "$SHELLM_UID" -g "$SHELLM_GID" -d /tmp -s /bin/bash -M shellm 2>/dev/null || true
+        fi
+        # Grant passwordless sudo to the container user
+        echo "ALL ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/shellm
+        chmod 0440 /etc/sudoers.d/shellm
+        ' >/dev/null 2>&1; then
+        if [[ "$SHELLM_DOCKER_ACCESS" == "none" ]]; then
+            progress "Warning: could not install tools in container"
+        else
+            docker_setup_die "Could not install tools required for Docker access mode '$SHELLM_DOCKER_ACCESS' in container"
+        fi
+    fi
+
+    if [[ "$SHELLM_DOCKER_ACCESS" == "socket" ]]; then
+        docker exec -w / -e DOCKER_HOST=unix:///var/run/docker.sock "$_SHELLM_CONTAINER" \
+            docker info >/dev/null 2>&1 || docker_setup_die "Container could not access Docker through $SHELLM_DOCKER_SOCKET"
+    elif [[ "$SHELLM_DOCKER_ACCESS" == "dind" ]]; then
+        progress_dim "Starting inner Docker daemon..."
+        # storage-driver=vfs avoids overlay-on-overlay failures when the host
+        # FS is already overlayfs (e.g. Docker Desktop on macOS). vfs is slow
+        # but the only driver that works reliably across nesting environments
+        # — fuse-overlayfs mounts cleanly here but runc can't exec from them.
+        docker exec --user 0:0 -w / "$_SHELLM_CONTAINER" bash -c '
+            nohup dockerd --host=unix:///var/run/docker.sock --storage-driver=vfs >/var/log/shellm-dockerd.log 2>&1 &
+        ' >/dev/null 2>&1 || docker_setup_die "Could not start inner Docker daemon"
+        local i
+        for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+            if docker exec --user 0:0 -w / -e DOCKER_HOST=unix:///var/run/docker.sock "$_SHELLM_CONTAINER" docker info >/dev/null 2>&1; then
+                docker exec --user 0:0 -w / "$_SHELLM_CONTAINER" chmod 666 /var/run/docker.sock >/dev/null 2>&1 || true
+                break
+            fi
+            sleep 1
+        done
+        docker exec -w / -e DOCKER_HOST=unix:///var/run/docker.sock "$_SHELLM_CONTAINER" \
+            docker info >/dev/null 2>&1 || docker_setup_die "Inner Docker daemon did not become ready"
+    fi
+
+    # Verify bash is available
+    docker exec -w / "$_SHELLM_CONTAINER" bash --version >/dev/null 2>&1 || \
+        docker_setup_die "Docker image $SHELLM_DOCKER_IMAGE does not have bash"
+
+    _SHELLM_DOCKER_MODE=1
+
+    debug "Docker container started: $_SHELLM_CONTAINER"
+    progress "Docker container ready (${_SHELLM_CONTAINER:0:12})"
+
+    # Write reproducible docker-create.sh script
+    local env_dir="$SHELLM_ENVS_DIR/$env_name"
+    mkdir -p "$env_dir"
+    {
+        printf '#!/usr/bin/env bash\n'
+        printf '# shellm env: %s\n' "$env_name"
+        printf '# Created: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        printf '# Image: %s\n' "$SHELLM_DOCKER_IMAGE"
+        printf '# Access: %s\n\n' "$SHELLM_DOCKER_ACCESS"
+        printf 'set -euo pipefail\n\n'
+        printf 'CONTAINER=$(docker run -d \\\n'
+        for flag in "${docker_run_flags[@]}"; do
+            printf '  %q \\\n' "$flag"
+        done
+        for flag in "${extra_mounts[@]+"${extra_mounts[@]}"}"; do
+            printf '  %q \\\n' "$flag"
+        done
+        printf '  %q \\\n' "$SHELLM_DOCKER_IMAGE"
+        printf '  sleep infinity)\n\n'
+        printf 'echo "Container: $CONTAINER"\n'
+    } > "$env_dir/docker-create.sh"
+    chmod +x "$env_dir/docker-create.sh"
+}
+
+docker_teardown() {
+    if [[ -n "${_SHELLM_CONTAINER:-}" ]]; then
+        debug "Destroying Docker container: $_SHELLM_CONTAINER"
+        docker rm -f "$_SHELLM_CONTAINER" >/dev/null 2>&1 || true
+        _SHELLM_CONTAINER=""
+        _SHELLM_DOCKER_MODE=0
+    fi
+}
+
+docker_attach() {
+    local container_id="$1"
+    local state
+    state=$(docker inspect -f '{{.State.Status}}' "$container_id" 2>/dev/null) || return 1
+    if [[ "$state" != "running" ]]; then
+        docker rm -f "$container_id" >/dev/null 2>&1 || true
+        return 1
+    fi
+    _SHELLM_CONTAINER="$container_id"
+    _SHELLM_DOCKER_MODE=1
+    debug "Reattached to Docker container: $_SHELLM_CONTAINER"
+    progress "Reattached to Docker container (${_SHELLM_CONTAINER:0:12})"
+}
+
+# ---------------------------------------------------------------------------
+# Env management
+# ---------------------------------------------------------------------------
+
+# Create or reattach to a named env.
+# Sets _SHELLM_CONTAINER and _SHELLM_DOCKER_MODE if docker type.
+# Returns 0 on success.
+env_resolve() {
+    local name="$1"
+    local explicit="${2:-0}"
+    local want_workdir="${3:-}"
+    local ws_dir="$SHELLM_ENVS_DIR/$name"
+    mkdir -p "$ws_dir"
+
+    if [[ -f "$ws_dir/container_id" ]]; then
+        if ! env_metadata_matches "$name"; then
+            if [[ "$explicit" -eq 1 ]]; then
+                die "$(env_metadata_mismatch_message "$name")"
+            fi
+            return 1
+        fi
+        local container_id
+        container_id=$(cat "$ws_dir/container_id")
+        if [[ -n "$container_id" ]] && docker_container_has_unusable_tool_mounts "$container_id"; then
+            if [[ "$explicit" -eq 1 ]]; then
+                die "Env $name has stale or unusable shellm tool mounts. Use a different --env or remove $SHELLM_ENVS_DIR/$name so shellm can recreate it."
+            fi
+            progress "Skipping env $name because its shellm tool mounts are stale"
+            return 1
+        fi
+        if [[ -n "$container_id" && -n "$want_workdir" ]] && \
+           ! docker_container_can_reach_path "$container_id" "$want_workdir"; then
+            if [[ "$explicit" -eq 1 ]]; then
+                die "Env $name was created without a mount for this run's workdir ($want_workdir). Use --new-env, a different --env, or remove $SHELLM_ENVS_DIR/$name so shellm can recreate it."
+            fi
+            progress "Skipping env $name because it cannot reach workdir $want_workdir"
+            return 1
+        fi
+        if [[ -n "$container_id" ]] && docker_attach "$container_id"; then
+            return 0
+        fi
+        # Stale — clean up
+        rm -f "$ws_dir/container_id" "$ws_dir/type"
+    fi
+
+    # No live container found
+    return 1
+}
+
+# Find any running shellm env. Prints its name and returns 0, or returns 1.
+# True when the container can reach the given host path at the same path
+# inside: the path must sit under one of the container's mount destinations.
+# Mounts are fixed at container creation, so a container made in another
+# directory can never chdir into this run's workdir.
+docker_container_can_reach_path() {
+    local cid="$1" path="$2" dest
+    while IFS= read -r dest; do
+        [[ -n "$dest" ]] || continue
+        _path_covered "$path" "$dest" && return 0
+    done < <(docker inspect -f '{{range .Mounts}}{{.Destination}}{{"\n"}}{{end}}' "$cid" 2>/dev/null)
+    return 1
+}
+
+# The image a resumed run should use. A run that used a custom image records it
+# in its trajectory; resuming without saying anything would otherwise ask for
+# the default, fail the image check, and build a second container beside the
+# one being resumed. An image the caller did choose always wins, so an explicit
+# --docker-image that disagrees still fails rather than being quietly replaced.
+_resume_docker_image() {   # _resume_docker_image EXPLICIT CHOSEN RECORDED
+    if [[ "$1" -eq 0 && -n "$3" ]]; then printf '%s' "$3"; else printf '%s' "$2"; fi
+}
+
+# Say why a running env was passed over when the reason is the image. Without
+# this, pointing SHELLM_DOCKER_IMAGE somewhere new leaves the old container
+# running and silently creates a second one beside it, with nothing on screen
+# connecting the two. Only reached when the image actually differs, so the
+# docker inspect is not on the common path.
+_env_note_image_skip() {   # _env_note_image_skip NAME ENV_DIR
+    local stored cid
+    stored=$(docker_metadata_value "$1" image)
+    [[ -n "$stored" && "$stored" != "$SHELLM_DOCKER_IMAGE" ]] || return 0
+    cid=$(cat "$2/container_id" 2>/dev/null) || return 0
+    [[ "$(docker inspect -f '{{.State.Status}}' "$cid" 2>/dev/null)" == "running" ]] || return 0
+    progress "Skipping running env $1: built from $stored, this run wants $SHELLM_DOCKER_IMAGE"
+}
+
+env_find_running() {
+    local want_workdir="${1:-}"
+    [[ -d "$SHELLM_ENVS_DIR" ]] || return 1
+    local name
+    for d in "$SHELLM_ENVS_DIR"/*/; do
+        [[ -d "$d" ]] || continue
+        name=$(basename "$d")
+        if ! env_metadata_matches "$name"; then
+            _env_note_image_skip "$name" "$d"
+            continue
+        fi
+        [[ -f "$d/container_id" ]] || continue
+        local cid
+        cid=$(cat "$d/container_id" 2>/dev/null) || continue
+        local state
+        state=$(docker inspect -f '{{.State.Status}}' "$cid" 2>/dev/null) || continue
+        if [[ "$state" == "running" ]]; then
+            docker_container_has_unusable_tool_mounts "$cid" && continue
+            if [[ -n "$want_workdir" ]] && ! docker_container_can_reach_path "$cid" "$want_workdir"; then
+                continue
+            fi
+            printf '%s\n' "$name"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Register an env after docker_setup creates a container.
+env_register() {
+    local name="$1"
+    local ws_dir="$SHELLM_ENVS_DIR/$name"
+    mkdir -p "$ws_dir"
+    printf '%s' "$_SHELLM_CONTAINER" > "$ws_dir/container_id"
+    printf 'docker\n' > "$ws_dir/type"
+    printf '%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$ws_dir/created"
+    printf '%s\n' "$SHELLM_DOCKER_ACCESS" > "$ws_dir/docker_access"
+    printf '%s\n' "${_SHELLM_DOCKER_BROKER_TRANSPORT:-}" > "$ws_dir/docker_broker_transport"
+    printf '%s\n' "${SHELLM_DOCKER_SOCKET:-}" > "$ws_dir/docker_socket"
+    printf '%s\n' "$_SHELLM_TOOL_MOUNTS_VERSION" > "$ws_dir/tool_mounts_version"
+    if [[ "$SHELLM_DOCKER_ACCESS" == "dind" ]]; then
+        printf '1\n' > "$ws_dir/privileged"
+    else
+        printf '0\n' > "$ws_dir/privileged"
+    fi
+
+    # Save image metadata for reproducibility
+    printf '%s\n' "$SHELLM_DOCKER_IMAGE" > "$ws_dir/image"
+    local digest
+    digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$SHELLM_DOCKER_IMAGE" 2>/dev/null || true)
+    [[ -n "$digest" ]] && printf '%s\n' "$digest" > "$ws_dir/image_digest"
+
+    # Save --var directory mounts for reattach validation
+    _compute_var_mounts > "$ws_dir/var_mounts"
+
+    # Save workdirs dir so reattach can verify the mount matches
+    printf '%s\n' "$SHELLM_WORKDIRS_DIR" > "$ws_dir/workdirs_dir"
+}
+
+# Register a local (non-docker) env.
+env_register_local() {
+    local name="$1"
+    local ws_dir="$SHELLM_ENVS_DIR/$name"
+    mkdir -p "$ws_dir"
+    printf 'local\n' > "$ws_dir/type"
+    printf '%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$ws_dir/created"
+    printf 'none\n' > "$ws_dir/docker_access"
+    printf '\n' > "$ws_dir/docker_broker_transport"
+    printf '\n' > "$ws_dir/docker_socket"
+    printf '0\n' > "$ws_dir/privileged"
+    rm -f "$ws_dir/container_id" "$ws_dir/tool_mounts_version"
+    : > "$ws_dir/var_mounts"
+}
+
+# Tear down an env's Docker container and remove its metadata.
+env_destroy() {
+    local name="$1"
+    local ws_dir="$SHELLM_ENVS_DIR/$name"
+    docker_broker_stop "$name" >/dev/null 2>&1 || true
+    if [[ -f "$ws_dir/container_id" ]]; then
+        local container_id
+        container_id=$(cat "$ws_dir/container_id" 2>/dev/null || true)
+        if [[ -n "$container_id" ]]; then
+            docker rm -f "$container_id" >/dev/null 2>&1 || true
+        fi
+    fi
+    rm -rf "$ws_dir"
+}
+
+# Generate an env name from a prompt string.
+make_env_name() {
+    local context="$1"
+    local slug
+    slug=$(printf '%s' "$context" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-' | sed 's/--*/-/g; s/^-//; s/-$//' | cut -c1-40)
+    [[ -z "$slug" ]] && slug="unnamed"
+    local rand
+    rand=$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' \n')
+    echo "${slug}-${rand}"
+}
+
+# ---------------------------------------------------------------------------
+# Code execution
+# ---------------------------------------------------------------------------
+
+# Stop parents before discovering children, so a producer cannot keep forking
+# while we kill its tree. Linux exposes children in /proc (no procps dependency
+# in a minimal container); macOS has ps. Walk all Linux threads, since a worker
+# thread can create children too. This also reaches nested shellm process groups.
+_kill_exec_tree() {
+    local pid="$1" children="" child task
+    kill -STOP "$pid" 2>/dev/null || return 0
+    if [[ -d "/proc/$pid/task" ]]; then
+        for task in /proc/"$pid"/task/*/children; do
+            children=""
+            read -r children < "$task" 2>/dev/null || true
+            for child in $children; do _kill_exec_tree "$child"; done
+        done
+    else
+        children=$(ps -axo pid=,ppid= | awk -v parent="$pid" '$2 == parent {print $1}')
+        for child in $children; do _kill_exec_tree "$child"; done
+    fi
+    kill -KILL "$pid" 2>/dev/null || true
+}
+
+# Only this supervisor gets TERM. Keep it alive until the producer's tree has
+# been killed and the direct child reaped. A Docker supervisor publishes its PID
+# so the host can cancel inside the container, not just disconnect its client.
+_supervise_exec() {
+    local code="$1" control_dir="${2:-}" child="" rc=0 code_file=""
+    _terminate_exec() {
+        trap '' TERM INT HUP
+        if [[ -n "$child" ]]; then
+            _kill_exec_tree "$child"
+            wait "$child" 2>/dev/null || true
+        fi
+        [[ -z "$code_file" ]] || rm -f "$code_file"
+        exit 143
+    }
+    trap _terminate_exec TERM INT HUP
+    if [[ -n "$control_dir" ]]; then
+        mkdir -m 700 "$control_dir" || return 1
+        printf '%s\n' "$$" > "$control_dir/pid"
+    fi
+    # A generated code block can exceed the kernel's per-argument cap
+    # (MAX_ARG_STRLEN, 128KB on Linux). Handing it to `bash -c "$code"` then
+    # fails the exec itself: rc=126 "Argument list too long", the step never
+    # runs, and the wake dies with nothing durable (live 2026-09-26). Above
+    # the threshold, run bash on a script file instead of an argv string.
+    # The mktemp file is mode 600, stricter than an argv string, which any
+    # user can read through ps. Size is measured in bytes: ${#code} counts
+    # characters, so multibyte UTF-8 code could slip past the cap.
+    local code_bytes
+    code_bytes=$(printf '%s' "$code" | wc -c)
+    if [[ "$code_bytes" -gt 65536 ]]; then
+        # Docker cancellation kills the supervisor too; its control directory
+        # is removed by the host afterward, including this script.
+        code_file=$(mktemp "${control_dir:-${TMPDIR:-/tmp}}/shellm-code.XXXXXX") || return 1
+        printf '%s' "$code" > "$code_file"
+        bash -e "$code_file" </dev/null &
+    else
+        bash -e -c "$code" </dev/null &
+    fi
+    child=$!
+    wait "$child" || rc=$?
+    [[ -z "$code_file" ]] || rm -f "$code_file"
+    trap - TERM INT HUP
+    return "$rc"
+}
+
+# execute_code WORKSPACE CODE [NAME=VALUE ...]
+#
+# env_vars carries API keys (the nested-run key, `--var` forwards from the
+# thinkers). Command lines are world-readable (`ps`, /proc/*/cmdline), so the
+# values must never ride on one — not as `env NAME=VALUE ...` and not as
+# `docker exec -e NAME=VALUE`. Both branches export the variables in the
+# execution subprocess; docker gets bare `-e NAME` flags, which the docker
+# CLI fills in from its own environment. Call this function in the background.
+execute_code() {
+    local workspace="$1" wrapped_code="$2"
+    shift 2
+    local env_vars=("$@")
+
+    if [[ "$_SHELLM_DOCKER_MODE" -eq 1 ]]; then
+        # Host PATH is meaningless in the container: drop it, set the
+        # container's own.
+        local -a docker_env_flags=() exports=()
+        local ev
+        for ev in "${env_vars[@]}"; do
+            if [[ "$ev" == PATH=* ]]; then continue; fi
+            exports+=("$ev")
+            docker_env_flags+=(-e "${ev%%=*}")
+        done
+        docker_env_flags+=(-e "PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin")
+        docker_env_flags+=(-e "HOME=$workspace")
+        local control_dir client="" rc=0
+        control_dir=$(mktemp -d "${TMPDIR:-/tmp}/shellm-exec.XXXXXX") || return 1
+        rmdir "$control_dir"
+        control_dir="/tmp/${control_dir##*/}"
+        _terminate_docker_exec() {
+            trap '' TERM INT HUP
+            # The remote wrapper writes its PID before starting generated code.
+            # Allow startup to finish if the watchdog fires during docker exec.
+            # Commands in the sandbox may use sudo. Cancel as container root
+            # so those descendants cannot outlive an unprivileged supervisor.
+            docker exec --user 0:0 "$_SHELLM_CONTAINER" bash -c "$(declare -f _kill_exec_tree)"'
+                for ((i=0; i<100; i++)); do
+                    if [[ -s "$1/pid" ]]; then
+                        read -r pid < "$1/pid"
+                        [[ "$pid" =~ ^[0-9]+$ && "$pid" -gt 1 ]] || exit 1
+                        _kill_exec_tree "$pid"
+                        exit 0
+                    fi
+                    sleep 0.1
+                done
+                exit 1
+            ' _ "$control_dir" || printf 'shellm: could not signal Docker execution\n' >&2
+            # Do not kill the client: its exit confirms the remote supervisor
+            # finished stopping the command. Keep the capture open until then.
+            wait "$client" 2>/dev/null || true
+            docker exec "$_SHELLM_CONTAINER" rm -rf "$control_dir" >/dev/null 2>&1 || true
+            exit 143
+        }
+        trap _terminate_docker_exec TERM INT HUP
+        if [[ ${#exports[@]} -gt 0 ]]; then export "${exports[@]}"; fi
+        # The Docker client also has an argv limit, before the remote
+        # supervisor can move large code to a script. Send code over stdin;
+        # _supervise_exec still gives generated commands /dev/null for stdin.
+        docker exec -i "${docker_env_flags[@]}" -w "$workspace" \
+            "$_SHELLM_CONTAINER" bash -c "$(declare -f _kill_exec_tree _supervise_exec)
+_supervise_exec \"\$(cat)\" \"\$1\"" _ "$control_dir" <<< "$wrapped_code" 2>&1 &
+        client=$!
+        wait "$client" || rc=$?
+        trap - TERM INT HUP
+        docker exec "$_SHELLM_CONTAINER" rm -rf "$control_dir" >/dev/null 2>&1 || true
+        return "$rc"
+    else
+        local _extra_path=""
+        for _bin_path in "${_SHELLM_EXTRA_BINS[@]+"${_SHELLM_EXTRA_BINS[@]}"}"; do
+            local _bin_dir
+            _bin_dir=$(dirname "$_bin_path")
+            [[ ":$_extra_path:" != *":$_bin_dir:"* ]] && _extra_path="${_extra_path:+$_extra_path:}$_bin_dir"
+        done
+        local -a _patched_vars=()
+        local _found_path=0 _ev
+        for _ev in "${env_vars[@]}"; do
+            if [[ -n "$_extra_path" && "$_ev" == PATH=* ]]; then
+                _patched_vars+=("PATH=$_extra_path:${_ev#PATH=}")
+                _found_path=1
+            else
+                _patched_vars+=("$_ev")
+            fi
+        done
+        [[ -n "$_extra_path" && "$_found_path" -eq 0 ]] && _patched_vars+=("PATH=$_extra_path:$PATH")
+        cd "$workspace" || return 1
+        if [[ ${#_patched_vars[@]} -gt 0 ]]; then export "${_patched_vars[@]}"; fi
+        _supervise_exec "$wrapped_code"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# LLM API call (delegates to the `llm` tool)
+# ---------------------------------------------------------------------------
+
+call_llm() {
+    local system_prompt="$1"
+    local messages_json="$2"
+    local thinking_output_file="${3:-}"
+
+    # The message array rides a file, not argv: a long conversation (or the
+    # empty-response retry's fed-back thinking) can exceed the OS's per-argument
+    # cap (128KB on Linux), and exec would die with E2BIG before the call.
+    local messages_file
+    messages_file=$(mktemp)
+    printf '%s' "$messages_json" > "$messages_file"
+
+    local -a args=(-m "$SHELLM_MODEL"
+        --effort "$SHELLM_EFFORT" --thinking --system-prompt "$system_prompt" --messages-file "$messages_file")
+    [[ -n "$SHELLM_MAX_TOKENS" ]] && args+=(-t "$SHELLM_MAX_TOKENS")
+    [[ "${SHELLM_STOP_AFTER_CODE_BLOCK:-1}" == 1 ]] && args+=(--stop-after-code-block)
+
+    local text_file stderr_file
+    text_file=$(mktemp)
+    stderr_file=$(mktemp)
+
+    # Run llm, capturing stdout to text_file and stderr to stderr_file.
+    # When not quiet, also tee stdout to stderr (for live display) and
+    # stderr to the terminal. Use a subshell to capture llm's exit code
+    # despite the pipeline.
+    local llm_exit=0
+    if [[ "$QUIET" -eq 0 ]]; then
+        { llm "${args[@]}" 2>"$stderr_file"; echo $? > "$text_file.rc"; } | tee "$text_file" >&2
+        llm_exit=$(cat "$text_file.rc" 2>/dev/null) || llm_exit=0
+        rm -f "$text_file.rc"
+        # Replay stderr (thinking output + errors) to terminal and thinking file
+        if [[ -s "$stderr_file" ]]; then
+            cat "$stderr_file" >&2
+            [[ -n "$thinking_output_file" ]] && cp "$stderr_file" "$thinking_output_file"
+        fi
+    else
+        llm "${args[@]}" > "$text_file" 2>"$stderr_file" || llm_exit=$?
+        [[ -n "$thinking_output_file" ]] && cp "$stderr_file" "$thinking_output_file"
+    fi
+
+    # A failed llm call must never yield its partial stream as a response:
+    # a truncated code block that still parses would get executed. Stall
+    # timeouts (bin/llm net guards) land here after llm's own retries.
+    if [[ "$llm_exit" -ne 0 ]]; then
+        local _llm_err=""
+        [[ -s "$stderr_file" ]] && _llm_err=$(tail -c 500 "$stderr_file")
+        rm -f "$text_file" "$stderr_file" "$messages_file"
+        die "llm failed (exit $llm_exit): $_llm_err"
+    fi
+
+    # No visible text is not a failure. `llm --thinking` streams reasoning to
+    # stderr, and a run that spends its whole token budget there returns 200,
+    # exits 0 and emits nothing on stdout, which is exactly what run_loop's
+    # empty-response retry feeds back as assistant context. Dying on a
+    # non-empty stderr here made that retry unreachable and printed the
+    # model's reasoning as an error. Real failures exit non-zero and are
+    # caught above.
+
+    cat "$text_file"
+    rm -f "$text_file" "$stderr_file" "$messages_file"
+}
+
+# ---------------------------------------------------------------------------
+# Code extraction from LLM response
+# ---------------------------------------------------------------------------
+
+# script_parses SCRIPT — true when SCRIPT is complete, valid bash. Never runs
+# model code or startup files. Bash 3.2 silently accepts an unclosed heredoc
+# under -n, so an unmatched ) is appended too: if that also parses, the
+# trailer was swallowed as heredoc data and the script is incomplete.
+script_parses() {
+    local diagnostics
+    diagnostics=$(printf '%s\n' "$1" | BASH_ENV='' ENV='' bash --noprofile --norc -n 2>&1) &&
+        [[ -z "$diagnostics" ]] &&
+        ! { printf '%s\n)\n' "$1" | BASH_ENV='' ENV='' bash --noprofile --norc -n 2>/dev/null; }
+}
+
+# strip_markup_suffix — drop tool-call closing markup from the END of a script
+# on stdin: closing-tag lines, one-line extra parameters
+# (<parameter=timeout>30</parameter>), then the closing tags that end the last
+# code line. Only the suffix: a closing tag inside a heredoc or quoted string
+# earlier in the script is literal data.
+strip_markup_suffix() {
+    awk '
+        function blank(s) { return s ~ /^[[:space:]]*$/ }
+        { lines[++n] = $0 }
+        END {
+            close_run = "(<\\/(tool_call|function|parameter|bash|invoke|function_calls)>[[:space:]]*)+$"
+            while (n > 0 && (blank(lines[n]) || lines[n] ~ ("^[[:space:]]*" close_run) ||
+                            lines[n] ~ /^[[:space:]]*<parameter=[A-Za-z_]+>[^<]*<\/parameter>[[:space:]]*$/)) n--
+            if (n > 0 && sub(close_run, "", lines[n]))
+                while (n > 0 && blank(lines[n])) n--
+            for (i = 1; i <= n; i++) print lines[i]
+        }'
+}
+
+# normalize_toolcall_markup RESPONSE — Qwen-family models sometimes answer in
+# their native tool-call markup instead of a fence:
+#   <tool_call>            <tool_call>              <tool_call>
+#   <function=bash>        <function=bash>          set -e
+#   set -e … code …        <parameter=command>      … code …
+#   </function>            … code …                 </tool_call>
+#   </tool_call>           </parameter> …
+# (also the hybrid "<function=bash> … </bash>"). Run as-is, the first line is a
+# bash syntax error and the whole turn is wasted (4 of 46 responses on Custos,
+# 2026-09-09). MiMo writes the same markup inline: the opening tags lead the
+# first code line and the closing tags end the last one, with the command
+# parameter named command, cmd or code, sometimes followed by a one-line
+# <parameter=timeout>…</parameter> (1,642 of 3,272 Audel replies, 09-22 to
+# 09-25, none lifted before). When a response has NO fence but does have this
+# markup, lift the code inside the outer tags into a ```bash fence so it
+# executes, and tell the model on stderr what happened so it learns the
+# fence. Real fences win. Ambiguous wrappers are left alone rather than
+# risking script data becoming commands. Returns 0 when lifted, 2 when lifted
+# but later calls were dropped, 1 when the response is returned unchanged.
+normalize_toolcall_markup() {
+    local response="$1" markup="$1"
+    case "$response" in
+        *"<tool_call>"*|*"<function="*|*"<bash>"*) ;;
+        *) printf '%s' "$response"; return 1 ;;
+    esac
+    # MiMo sometimes glues a stray fence to the markup ("```<tool_call>…",
+    # closed by a lone ``` line). That is markup, not a fence: drop the two
+    # fence marks, but only when no real fence comes before it.
+    case "$markup" in
+        *'```<tool_call>'*|*'```<function=bash>'*)
+            markup=$(printf '%s\n' "$markup" | awk '
+                !seen && /^```<(tool_call|function=bash)>/ { sub(/^```/, ""); glued = 1 }
+                /^```/ { seen = 1 }
+                { lines[++n] = $0 }
+                END {
+                    while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--
+                    if (glued && n > 0 && lines[n] ~ /^```[[:space:]]*$/) n--
+                    for (i = 1; i <= n; i++) print lines[i]
+                }') ;;
+    esac
+    # Consume the whole response: grep -q can give printf SIGPIPE, making a
+    # matching fence look absent under pipefail on larger responses.
+    if printf '%s\n' "$markup" | grep -E '^```|```(bash|shell|sh)[[:space:]]*$' >/dev/null; then
+        printf '%s' "$response"; return 1
+    fi
+    local body lifted first
+    body=$(printf '%s\n' "$markup" | awk -v sq="'" '
+        # Drop the run of opening tags that leads a line; what is left is code.
+        function strip_open(s) {
+            while (match(s, /^[[:space:]]*<(tool_call|function=bash|bash|parameter=(command|cmd|code|commands|script|block))>/))
+                s = substr(s, RSTART + RLENGTH)
+            return s
+        }
+        function blank(s) { return s ~ /^[[:space:]]*$/ }
+        # Shell syntax that means a line is code, not prose.
+        function shellish(s) { return s ~ /[<>|$;&=]/ || index(s, "\\") }
+        BEGIN { started = 0; body = 0; ambiguous = 0; n = 0 }
+        # MiMo also appends the markup to a prose sentence on the same line
+        # ("…look at the evidence first.<tool_call><function=bash>…"). Accept
+        # that only when the prefix ends a sentence and has no shell syntax,
+        # so a quoted or redirected literal tag is never taken for markup.
+        !started && match($0, /<(tool_call|function=bash)>/) && RSTART > 1 {
+            pre = substr($0, 1, RSTART - 1)
+            if (pre ~ /[.:!?][[:space:]]*$/ && !shellish(pre)) $0 = substr($0, RSTART)
+        }
+        !started {
+            if ($0 ~ /^[[:space:]]*<(tool_call|function=bash|bash)>/) {
+                started = 1
+                rest = strip_open($0)
+                if (!blank(rest)) { body = 1; lines[++n] = rest }
+            } else if ((index($0, sq) || $0 ~ /["`\\<>]/) &&
+                       !($0 ~ /[.:!?)][[:space:]]*$/ && !shellish($0))) {
+                # Permit simple prose before the wrapper, but never scan past
+                # a quote, continuation, or redirection into possible data.
+                # A finished sentence with no shell syntax is prose even when
+                # it has an apostrophe or a `backticked` word.
+                ambiguous = 1
+            }
+            next
+        }
+        !body {
+            rest = strip_open($0)
+            if (blank(rest)) next
+            body = 1
+            lines[++n] = rest
+            next
+        }
+        { lines[++n] = $0 }
+        END {
+            if (ambiguous || !started) exit
+            for (i = 1; i <= n; i++) print lines[i]
+        }')
+    # Several calls in one reply: run only the first, as with fenced blocks,
+    # and return 2 so extract_code tells the model the rest was dropped. The
+    # first call ends at the first line closing a call, and only counts when
+    # another call opens after it and the first parses on its own; a cut
+    # inside a heredoc or quoted string never parses.
+    # MiMo usually opens the next call on the same line the last one closes.
+    first=$(printf '%s\n' "$body" | awk '
+        !cut && match($0, /<\/(function|tool_call)>[[:space:]]*<(tool_call|function=bash)>/) {
+            l[++n] = substr($0, 1, RSTART - 1); cut = n; more = 1; next
+        }
+        { l[++n] = $0 }
+        !cut && /<\/(function|tool_call)>[[:space:]]*$/ { cut = n; next }
+        cut && /^[[:space:]]*<(tool_call|function=bash)>/ { more = 1 }
+        END { if (cut && more) for (i = 1; i <= cut; i++) print l[i] }' | strip_markup_suffix)
+    if [[ "$first" =~ [^[:space:]] ]] && script_parses "$first"; then
+        printf '%s' $'```bash\n'"$first"$'\n```'
+        return 2
+    fi
+    lifted=$(printf '%s\n' "$body" | strip_markup_suffix)
+    if [[ "$lifted" =~ [^[:space:]] ]] && script_parses "$lifted"; then
+        printf '%s' $'```bash\n'"$lifted"$'\n```'
+        return 0
+    fi
+    printf '%s' "$response"
+    return 1
+}
+
+extract_code() {
+    local response="$1"
+    local toolcall_lifted=0
+    local _normalized _rc calls_dropped=0
+    _rc=0; _normalized=$(normalize_toolcall_markup "$response") || _rc=$?
+    if [[ "$_rc" -ne 1 ]]; then
+        response="$_normalized"
+        toolcall_lifted=1
+        [[ "$_rc" -eq 2 ]] && calls_dropped=1
+    fi
+
+    # Extract the FIRST fenced code block (```bash, ```sh, or bare ```).
+    # Heredoc-aware: lines like ``` inside an open heredoc do NOT close the
+    # outer code fence.  We track heredoc opens (<<[-]DELIM) and closes
+    # (delimiter alone on a line) so nested markdown fences pass through.
+    # If extra fenced blocks follow the first, awk writes a "TRUNCATED" line
+    # to stderr so we can prepend a notice that the model can see next turn.
+    local truncation_file
+    truncation_file=$(mktemp)
+    local code
+    code=$(printf '%s\n' "$response" | awk -v sq="'" '
+        # ── try_open_heredoc: inspect a line for <<[-]DELIM and push delimiter
+        function try_open_heredoc(line,    rest, delim) {
+            if (!match(line, /<<-?/)) return
+            rest = substr(line, RSTART + RLENGTH)
+            sub(/^[[:space:]]*/, "", rest)
+            if (substr(rest, 1, 1) == "\"") {
+                # <<"DELIM"
+                sub(/^"/, "", rest)
+                if (match(rest, /^[^"]+/)) {
+                    hd_stack[++hd_top] = substr(rest, 1, RLENGTH)
+                }
+            } else if (substr(rest, 1, 1) == sq) {
+                # <<'DELIM' — use string pattern since sq cant go in //
+                sub("^" sq, "", rest)
+                if (match(rest, "^[^" sq "]+")) {
+                    hd_stack[++hd_top] = substr(rest, 1, RLENGTH)
+                }
+            } else if (substr(rest, 1, 1) == "\\") {
+                # <<\DELIM
+                sub(/^\\/, "", rest)
+                if (match(rest, /^[A-Za-z_][A-Za-z_0-9]*/)) {
+                    hd_stack[++hd_top] = substr(rest, 1, RLENGTH)
+                }
+            } else {
+                # <<DELIM (unquoted)
+                if (match(rest, /^[A-Za-z_][A-Za-z_0-9]*/)) {
+                    hd_stack[++hd_top] = substr(rest, 1, RLENGTH)
+                }
+            }
+        }
+
+        BEGIN { in_block = 0; hd_top = 0; first_block_closed = 0 }
+        # CRLF input: a trailing \r would survive into the collected code
+        # and both break the closing-fence check and hand bash a bad line.
+        { sub(/\r$/, "", $0) }
+
+        # After first block closed: look for another opening fence. A tagged
+        # ```bash/```sh fence may be appended to the end of a prose line (see
+        # opener note below); a bare ``` only counts at line start.
+        first_block_closed && !in_block {
+            if ($0 ~ /```(bash|shell|sh)[[:space:]]*$/ || $0 ~ /^```/) {
+                print "TRUNCATED" > "/dev/stderr"
+                exit
+            }
+            next
+        }
+
+        # Before the opening fence — look for ```bash, ```sh, or bare ```.
+        # ```bash/```sh may be appended to the END of a prose line: some models
+        # (e.g. grok) write "…do this now.```bash" instead of putting the fence
+        # on its own line. Matching only /^```bash/ misses that, extract_code
+        # returns empty, and the fallback below then runs the WHOLE prose
+        # response as bash ("do: command not found"). So match tagged fences
+        # at END of line too — but ONLY at end of line: matching anywhere
+        # turns a prose line that merely mentions ```bash (a model quoting
+        # fence syntax) into an opener, collecting the prose after it as
+        # code. A bare ``` still only opens at line start (mid-line bare ```
+        # is ambiguous with a closing fence). The code always begins on the
+        # next line, so discarding the rest of the fence line is correct.
+        !in_block {
+            if ($0 ~ /```(bash|shell|sh)[[:space:]]*$/ || $0 ~ /^```/) { in_block = 1 }
+            next
+        }
+
+        # Inside the code block
+        in_block {
+            # Check for heredoc close (delimiter alone on its own line)
+            if (hd_top > 0) {
+                stripped = $0
+                gsub(/^[[:space:]]+/, "", stripped)
+                gsub(/[[:space:]]+$/, "", stripped)
+                if (stripped == hd_stack[hd_top]) {
+                    hd_top--
+                }
+            }
+
+            # A bare ``` only closes the fence when no heredoc is open
+            if ($0 ~ /^```[[:space:]]*$/ && hd_top == 0) {
+                in_block = 0
+                first_block_closed = 1
+                next
+            }
+
+            # Track heredoc opens inside the code we are collecting
+            try_open_heredoc($0)
+
+            print
+        }
+    ' 2>"$truncation_file")
+
+    local truncation_signal
+    truncation_signal=$(cat "$truncation_file" 2>/dev/null || true)
+    rm -f "$truncation_file"
+
+    # MiMo often opens a real ```bash fence and still ends the code with its
+    # tool-call closing tags ("done</parameter></function></tool_call>"), a
+    # syntax error that killed 263 fenced replies on Audel (09-22 to 09-25).
+    # Strip that suffix only when it turns a broken script into a valid one.
+    if [[ "$toolcall_lifted" -eq 0 && "$code" == *"</"* ]]; then
+        local _trimmed
+        _trimmed=$(printf '%s\n' "$code" | strip_markup_suffix)
+        if [[ "$_trimmed" != "$code" && "$_trimmed" =~ [^[:space:]] ]] &&
+            ! script_parses "$code" && script_parses "$_trimmed"; then
+            code="$_trimmed"
+            toolcall_lifted=1
+        fi
+    fi
+
+    # If no fenced blocks at all, use the whole response as code.
+    # Strip [cmd]/[thought] markers that the model may emit instead of fences.
+    local no_fence=0
+    if [[ -z "$code" ]]; then
+        code=$(printf '%s\n' "$response" | awk '
+            /^[[:space:]]*\[cmd\][[:space:]]*$/ { next }
+            /^[[:space:]]*\[thought\]/ { next }
+            { print }
+        ')
+        # A provenance marker may be literal data in a heredoc or quote.
+        # Cut only when the prefix is a complete script; leave ambiguous
+        # replies intact. Consume all input to avoid SIGPIPE under pipefail.
+        local before_provenance
+        before_provenance=$(printf '%s\n' "$code" | awk '
+            /^\[(served_by|exec_s|exit|stdout|stderr)\]/ { cut = 1 }
+            !cut { print }
+        ')
+        if [[ "$before_provenance" != "$code" ]] && script_parses "$before_provenance"; then
+            code="$before_provenance"
+        fi
+        # A response with no bash block and real content is about to be run as
+        # a shell command. That is almost always the model ending its turn with
+        # a plain sentence (which fails "command not found") or forgetting the
+        # fence. On its own the model sees only the raw shell error, which does
+        # not explain the mechanism, so a weaker model repeats the sentence and
+        # stalls. Flag it so the notice below can say what actually happened.
+        [[ "$code" =~ [^[:space:]] ]] && no_fence=1
+    fi
+
+    # Prepend notices to stderr. Stderr is captured and shown back to the model
+    # on its next turn, so these teach it what shellm did with its last reply.
+    # Prepend rather than append so a notice fires even if the code exits early.
+    if [[ "$truncation_signal" == *TRUNCATED* || "$calls_dropped" -eq 1 ]]; then
+        code=$'echo "[rest of model response truncated after first code block]" >&2\n'"$code"
+    fi
+    if [[ "$toolcall_lifted" -eq 1 ]]; then
+        local toolcall_notice
+        toolcall_notice=$(cat <<'NOTICE'
+printf '%s\n' '[shellm: your reply used tool-call markup (angle-bracket function-call tags). This runtime only reads ```bash fences; it lifted your code into one and ran it this time. Next time put the script inside a ```bash block, nothing else: start the reply with a line that is exactly ```bash and end the block with a line that is exactly ```.]' >&2
+NOTICE
+)
+        code="$toolcall_notice"$'\n'"$code"
+    fi
+    if [[ "$no_fence" -eq 1 ]]; then
+        local nofence_notice
+        nofence_notice=$(cat <<'NOTICE'
+printf '%s\n' '[shellm: your reply had no ```bash code block, so your whole message was run as one shell command and most likely failed. Put commands inside a ```bash block. To END the run, set FINAL="your handoff sentence" inside a ```bash block. Do not finish with a bare sentence outside a block.]' >&2
+NOTICE
+)
+        code="$nofence_notice"$'\n'"$code"
+    fi
+
+    echo "$code"
+}
+
+# ---------------------------------------------------------------------------
+# System prompt
+# ---------------------------------------------------------------------------
+
+build_system_prompt() {
+    local context_info="$1"
+    local docker_active="${2:-0}"
+    local rundir="${3:-}"
+
+    if [[ -n "${SHELLM_SYSTEM_PROMPT:-}" ]]; then
+        printf '%s\n' "$SHELLM_SYSTEM_PROMPT"
+    else
+    cat <<'SYSPROMPT'
+You are running in shellm, headlong's bash agent loop: you solve tasks by generating and executing bash code.
+
+IMPORTANT: End your response with exactly ONE ```bash code block. Your response is NOT streamed — code blocks are not executed until your entire response is complete. Combine multiple steps into a single script. Only the first code block is executed; all others are silently discarded.
+Never use angle-bracket function-call tags (tool-call markup of any form, including single-word pseudo-tags): this runtime is not a tool-calling API and only reads ```bash fences.
+
+CRITICAL — the opening ```bash fence MUST start on its OWN new line. Put a
+newline after your prose, THEN the fence on a line by itself. Never append the
+fence to the end of a sentence. If you attach the fence to prose, your prose
+can be run as shell commands and fail.
+  RIGHT:                          WRONG:
+    Let me inspect the state.        Let me inspect the state.```bash
+    ```bash                          ls -la
+    ls -la                           ```
+    ```
+
+## How you work
+- Do any reasoning you want before generating your shell code
+- When you're ready, end your response with a single ```bash fenced code block — the ```bash opening fence on its own new line, never appended to a sentence
+- Your code is executed in a bash subprocess
+- You see the stdout/stderr output from execution
+- You will be called iteratively until you have the answer, then signal completion
+- You have all typical shell tools at your disposal
+- You have full access to a local filesystem to use as you see fit
+
+## Sub-runs: your most powerful tool
+You can spawn nested shellm instances to parallelize work, explore alternatives, or delegate sub-problems. Each sub-run gets its own context, iteration budget, and (optionally) its own Docker container.
+
+When to use sub-runs:
+- **Explore in parallel**: try 2-3 different approaches simultaneously and pick the winner
+- **Delegate sub-problems**: break complex work into independent pieces that run concurrently
+- **Research without polluting context**: have a sub-run investigate something and report back
+- **Verify your work**: spawn a sub-run to independently check your solution
+
+How to spawn a sub-run:
+```bash
+shellm "Implement approach A: <detailed description>" > /tmp/approach_a.txt 2>&1 &
+shellm "Implement approach B: <detailed description>" > /tmp/approach_b.txt 2>&1 &
+wait
+# Compare results, pick the best
+cat /tmp/approach_a.txt /tmp/approach_b.txt
+```
+
+Always redirect a sub-run's stdout and stderr to a file, as above. A backgrounded sub-run that writes to the pipes it inherited loses its output once the step that started it ends.
+
+A sub-run is silent while its own model call is thinking, and the inactivity watchdog knows about that: while a sub-run is alive the block is treated as working, so waiting on sub-runs does not get you killed at SHELLM_INACTIVITY_TIMEOUT. The limit that still applies is SHELLM_INACTIVITY_MAX (default 900s) of no output at all from the block, so size sub-work to finish inside it. No block may run longer than SHELLM_MAX_EXEC_TIME (default 3600s) even while it prints. For longer work, give each sub-run a smaller task, cap it with `--max-iterations`, or start it in one step and read its output file in a later step rather than waiting here.
+
+Pass context to sub-runs with `-f FILE` or via stdin. Always give sub-runs a clear, self-contained task description — they have no memory of your conversation.
+
+Monitor running sub-runs via their trajectory:
+```bash
+# List child trajectories
+traj list --children all
+# Inspect a sub-run's progress
+traj tail --traj_dir "$TRAJ_DIR" "<child-traj-id>" -n 5
+```
+
+## Never block — background long-running work
+Commands that take a long time (compilation, training, downloads, servers) should run in the background so you can keep thinking and doing other work:
+```bash
+# Start a long build in tmux
+tmux new-session -d -s build "make -j4 > /tmp/build.log 2>&1"
+# Do other work while it builds...
+# Check on it later
+tmux capture-pane -t build -p | tail -5
+```
+
+Don't wait idle for slow commands. Start them, move on to other work, and check back.
+
+## Available tools
+- You have all the standard tools available on Linux/Unix based systems
+- Standard shell: cd, ls, grep, cat, rm, cp, mv, mkdir, echo, curl, find, etc.
+- Text processing: grep, awk, sed, wc, sort, uniq, head, tail, cut, tr, jq, etc.
+- Editing files: check that a replacement matched exactly once before writing it back; write through a temp file and `mv` when a half-written file would matter
+- Recursive self-calling: spawn shellm sub-runs for parallelism and delegation
+
+## Trajectory and context
+The trajectory is the lossless record of this run stored in `$TRAJ_DIR` (identified by `$TRAJ_ID`). Your conversation history is presented as multi-turn messages (your reasoning as assistant, execution output as user) produced by `context`.
+
+The trajectory directory is `$TRAJ_DIR`, trajectory ID is `$TRAJ_ID`. Nested `shellm` calls create child trajectory files; use `traj list` to see parents and children.
+SYSPROMPT
+    # The output budget in numbers, so the model sizes a read to fit instead of
+    # guessing, and the mechanism (middle cut, ends exact), so it fetches the
+    # hole with one command instead of re-reading the file. Before this the
+    # prompt said only "may be truncated": 273 of 313 outputs in one run were
+    # cut and 45% of its reads were repeats (design/output_budget_and_tool_cull.md).
+    local _bl="$SHELLM_CONTEXT_BLOCK_LIMIT" _pl="${SHELLM_STDOUT_PROMPT_LIMIT:-2048}" _band
+    if [[ "$SHELLM_CONTEXT_SCOPE" == "run" ]]; then
+        _band="the outputs of your newest $(( SHELLM_CONTEXT_WHOLE_BLOCKS * SHELLM_CONTEXT_RUN_TAIL_BLOCK / 2 )) or so steps show"
+    elif [[ "$SHELLM_CONTEXT_WHOLE_BLOCKS" -le 1 ]]; then
+        _band="the output of your newest step shows"
+    else
+        _band="the outputs of your newest $(( (SHELLM_CONTEXT_WHOLE_BLOCKS + 1) / 2 )) steps show"
+    fi
+    printf 'Output budget: %s whole up to %s bytes (about %s lines). Size a read to fit that, and prefer one read that fits over several that do not. Older outputs keep only their first and last %s bytes: the middle is what is cut, both ends are exact, and a stub sits where the hole is, naming the byte count and the command that prints the whole output. Fetch it; do not re-read the file to find what you lost.\n\n' \
+        "$_band" "$_bl" "$(( (_bl / 55 + 5) / 10 * 10 ))" "$(( _pl / 2 ))"
+    cat <<'SYSPROMPT'
+When you see a truncation stub like `[... truncated: N bytes total. ...]`, you can retrieve the full content:
+- `traj show <step_id> --full` — show a step with full untruncated output
+- `traj show <step_id> --field stdout` — emit just the stdout bytes (pipe to head/tail/grep)
+- `traj search "<pattern>"` — search across all steps (includes spilled blobs)
+- `traj search "<pattern>" --field stdout -i` — search stdout only, case-insensitive
+- `traj tail -n 5` — show last 5 raw trajectory records
+
+You can also re-render context with different options:
+- `context --tail 100` — see more history
+- `context --pin <step_id>` -- ensure a specific step is included
+
+## Signaling completion
+When you have the answer, set one of these in your bash code:
+- `FINAL="your answer"` — set the final answer as a string
+- `FINAL_FILE=path/to/file` — set the final answer from a file
+
+## ShellLM reference
+SYSPROMPT
+    usage_text
+    cat <<'SYSPROMPT'
+
+
+## Guidelines
+SYSPROMPT
+    # The context guideline only when a context was actually passed (stdin or
+    # -f files): a caller with neither, like the monolith, saw the mind spend
+    # first commands probing an empty $CONTEXT (6 of 179 wakes, 2026-09-03).
+    [[ -n "$context_info" ]] && cat <<'SYSPROMPT'
+- Always start by inspecting `$CONTEXT` and `$FILE_CONTEXT1`, `$FILE_CONTEXT2`, if they were provided. These variables contain the context text itself, not file paths; use `printf '%s\n' "$FILE_CONTEXT1"` instead of `cat "$FILE_CONTEXT1"`.
+SYSPROMPT
+    cat <<'SYSPROMPT'
+- Think step by step. Document your reasoning.
+- Your code runs with `set -e` — commands that fail will stop execution. Use `|| true` if a command might fail acceptably.
+- All code shares the same working directory ($SHELLM_WORKDIR). You can create/read/edit/delete files there.
+- Start by inspecting the existing environment before making changes.
+- Do not print environment variables wholesale. Avoid `env`, `printenv`, or `set` unless the user explicitly asks for them.
+- When you use `shellm` to create a nested run always include a summary of the bigger picture in the context you pass it so that it knows how it fits in
+- Prefer parallel sub-runs over sequential iteration when you have multiple approaches to try. Spawn them, do other work, then compare results.
+- Never sit idle waiting for a slow command. Background it and keep working.
+- Your code runs with stdin connected to /dev/null. Interactive prompts
+    (password, confirmation, etc.) will get immediate EOF and fail. Always
+    use non-interactive flags: --yes, -y, --force, --batch, etc.
+    If true interaction still seems necessary, you may create your own
+    PTY-backed session using tmux and interact with it explicitly.
+    For long-running jobs that must continue while you run other commands,
+    prefer a named tmux session or `setsid -f ... </dev/null >log 2>&1`.
+    Do not rely on `nohup ... &` alone for durable benchmark or server runs.
+    If that long-running job uses Docker broker mode, keep the broker alive
+    for the lifetime of the job; a detached Docker job cannot make progress
+    after its broker exits.
+    Use this workflow:
+      a. Start a named tmux session running the target command.
+      b. Inspect the visible terminal state using tmux capture or screenshots.
+      c. Reason about what prompt is being shown.
+      d. Send bounded input with tmux send-keys.
+      e. Re-inspect the terminal after each step.
+      f. Exit or terminate the session when done.
+    When using tmux:
+      - Prefer unique session names.
+      - Capture pane contents frequently to understand the current state.
+      - Send small, deliberate inputs — usually one line or one keypress at a time.
+      - Do not assume a prompt was accepted until you inspect the terminal again.
+      - If the interaction becomes unclear or cyclic, stop and reassess.
+      - tmux may need to be installed first (apt-get install -y tmux).
+SYSPROMPT
+    fi
+
+    if [[ "$docker_active" -eq 1 ]]; then
+        echo ""
+        echo "## Execution environment"
+        echo "Your code runs inside a Docker container ($SHELLM_DOCKER_IMAGE) with bash, python3, jq, and curl pre-installed. You have passwordless sudo — use 'sudo apt-get install -y <pkg>' to install additional packages."
+        echo "Host paths (like \$SHELLM_WORKDIR and run record directories) are bind-mounted at the same paths inside the container — they exist and are accessible."
+        if [[ "$SHELLM_DOCKER_ACCESS" == "broker" ]]; then
+            echo ""
+            echo "## Docker access"
+            echo "shellm-docker talks to a host-side broker that only allows bounded container operations. A constrained docker facade is also available for tools such as Harbor: docker info and docker compose build/down/up/exec/cp/stop/config/version are brokered with the same policy. The broker manages workspace mounts and rejects privileged containers, arbitrary bind mounts, host namespace sharing, device access, and Docker socket mounts."
+            echo "Broker transport: ${_SHELLM_DOCKER_BROKER_TRANSPORT:-$SHELLM_DOCKER_BROKER_TRANSPORT}."
+        elif [[ "$SHELLM_DOCKER_ACCESS" == "socket" ]]; then
+            echo ""
+            echo "## Docker access"
+            echo "The docker CLI controls the host Docker daemon through /var/run/docker.sock. This is convenient but not a strong sandbox; child bind mounts must use host-visible paths."
+        elif [[ "$SHELLM_DOCKER_ACCESS" == "dind" ]]; then
+            echo ""
+            echo "## Docker access"
+            echo "The docker CLI talks to an inner Docker daemon running inside this shellm container. The outer container is privileged, so this is not a strong sandbox."
+        fi
+    fi
+
+    if [[ -n "$rundir" ]]; then
+        echo ""
+        echo "## Current run"
+        echo "- Transient run directory: $rundir (for generated code output; available as \$SHELLM_RUNDIR)"
+        echo "- Trajectory and sub-run monitoring use \$TRAJ_DIR and \$TRAJ_ID."
+    fi
+
+    # Append context documentation if any context was provided
+    if [[ -n "$context_info" ]]; then
+        echo ""
+        echo "## Context available as environment variables"
+        echo "The variables below contain text content. The source path is listed only for orientation and may not be mounted in this execution environment."
+        echo "$context_info"
+    fi
+
+    echo ""
+    echo "## Machine environment"
+    echo "- OS: $(uname -s) $(uname -r)"
+    echo "- Arch: $(uname -m)"
+    echo "- Hostname: $(hostname)"
+    echo "- User: $(whoami)"
+    echo "- Shell: $BASH_VERSION"
+    echo "- Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    local pkgmgrs=""
+    for cmd in apt apt-get brew dnf yum pacman apk zypper nix-env pkg port emerge snap flatpak pip pip3 npm yarn conda cargo gem go; do
+        command -v "$cmd" >/dev/null 2>&1 && pkgmgrs="${pkgmgrs:+$pkgmgrs, }$cmd"
+    done
+    if [[ -n "$pkgmgrs" ]]; then
+        echo "- Package managers: $pkgmgrs"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Async context summary generation
+# ---------------------------------------------------------------------------
+
+generate_run_summary() {
+    local traj_dir="$1"
+    local traj_id="$2"
+    local run_step_id="$3"  # step_id of the shellm-run step this summarizes
+    local prompt="$4"
+    local stdin_file="$5"  # path to file with stdin content, or ""
+    shift 5
+    local file_paths=("$@")
+
+    # Summaries want a cheap model. Resolution: explicit SHELLM_SUMMARY_MODEL,
+    # then the fast class (SHELLM_FAST_MODEL), then haiku when the run is on
+    # Anthropic, else stay on the run's own provider (a claude-* fallback
+    # would need an ANTHROPIC_API_KEY non-Anthropic deployments don't have).
+    local summary_model="${SHELLM_SUMMARY_MODEL:-${SHELLM_FAST_MODEL:-}}"
+    if [[ -z "$summary_model" ]]; then
+        case "$SHELLM_MODEL" in
+            claude-*) summary_model="claude-haiku-4-5-20251001" ;;
+            *)        summary_model="$SHELLM_MODEL" ;;
+        esac
+    fi
+
+    # Read stdin content if available
+    local stdin_content=""
+    if [[ -n "$stdin_file" && -f "$stdin_file" ]]; then
+        stdin_content=$(cat "$stdin_file")
+    fi
+
+    # Build combined context for LLM (cap at 20K chars)
+    local max_ctx=20000
+    local combined="CLI argument: ${prompt:0:$max_ctx}"
+
+    if [[ -n "$stdin_content" ]]; then
+        local avail=$((max_ctx - ${#combined}))
+        if [[ $avail -gt 0 ]]; then
+            combined+=$'\n\nstdin:\n'"${stdin_content:0:$avail}"
+        fi
+    fi
+
+    for f in "${file_paths[@]+"${file_paths[@]}"}"; do
+        if [[ -f "$f" ]]; then
+            local avail=$((max_ctx - ${#combined}))
+            [[ $avail -le 0 ]] && break
+            local fc
+            fc=$(head -c "$avail" "$f" 2>/dev/null || true)
+            combined+=$'\n\nFile '"${f}"$':\n'"${fc}"
+        fi
+    done
+
+    local total_size=${#combined}
+
+    # Determine full_summary instruction
+    local full_summary_hint
+    if [[ $total_size -gt 1000 ]]; then
+        full_summary_hint='"<multi-paragraph summary string>"'
+    else
+        full_summary_hint='null'
+    fi
+
+    # Build LLM prompt — ask for JSON so we can parse reliably
+    local llm_prompt="Analyze the context and goal of this shellm run. Respond with ONLY valid JSON (no markdown fences, no preamble) matching this schema:
+{
+  \"tldr\": \"one-line summary of the context and goal of this shellm run\",
+  \"full_summary\": ${full_summary_hint}
+}
+
+Inputs to the run:
+${combined}"
+
+    # Non-streaming API call to fast model
+    local msg_json
+    local _prompt_tmp
+    _prompt_tmp=$(mktemp)
+    printf '%s' "$llm_prompt" > "$_prompt_tmp"
+    msg_json=$(jq -n --rawfile p "$_prompt_tmp" '[{"role":"user","content":$p}]')
+    rm -f "$_prompt_tmp"
+
+    local text
+    text=$(llm -m "$summary_model" -t 2048 \
+        -s "You produce concise summaries as JSON. Output only valid JSON. No markdown fences. No preamble." \
+        -M "$msg_json" 2>/dev/null) || true
+
+    # Parse JSON response
+    local tldr="" full_summary=""
+    if [[ -n "$text" ]]; then
+        # Strip markdown fences if the model wrapped them anyway
+        local cleaned
+        cleaned=$(printf '%s\n' "$text" | sed '1s/^```json$//;1s/^```$//;$s/^```$//' | sed '/^$/d')
+        if printf '%s' "$cleaned" | jq . >/dev/null 2>&1; then
+            text="$cleaned"
+            tldr=$(printf '%s' "$text" | jq -r '.tldr // empty')
+            full_summary=$(printf '%s' "$text" | jq -r 'if .full_summary == null then "" else .full_summary end')
+        fi
+    fi
+
+    # Write run-summary step to the trajectory
+    local summary_json
+    summary_json=$(jq -nc \
+        --arg tldr "${tldr:-(summary generation failed)}" \
+        --arg full "$full_summary" \
+        --arg run_id "$run_step_id" \
+        --arg model "$summary_model" \
+        '{type:"run-summary", tldr:$tldr, full_summary:$full, run_id:$run_id, model:$model}')
+    printf '%s' "$summary_json" | traj append --traj_dir "$traj_dir" "$traj_id" >/dev/null 2>/dev/null || true
+}
+
+# Stream lines past $2 from $1 to stderr (redacted), then print the new
+# line count and PEM-block state on stdout. The caller carries both across
+# polls and resets them for each execution output file.
+_stream_new_output() {
+    local output_file="$1" lines_read="$2" in_pem="${3:-0}"
+    local pem_begin='-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----'
+    local pem_end='-----END [A-Z0-9 ]*PRIVATE KEY-----'
+    local total_lines
+    total_lines=$(wc -l < "$output_file" 2>/dev/null || echo 0)
+    total_lines=$(echo "$total_lines" | tr -d ' ')
+    if [[ "$QUIET" -eq 0 && "$total_lines" -gt "$lines_read" ]]; then
+        local new_count=$((total_lines - lines_read))
+        local skip_n=$((lines_read + 1))
+        # A flood is not echoed line by line. Each line below costs a fork
+        # (about 240 lines a second), so the 27M trace lines of a busy loop
+        # held a run for 26 h after the command was dead (Audel 2026-10-07).
+        if [[ "$new_count" -gt "$STREAM_MAX_LINES" ]]; then
+            printf '\033[90m  │ [... %s lines not shown ...]\033[0m\n' "$((new_count - STREAM_MAX_LINES))" >&2
+            skip_n=$((total_lines - STREAM_MAX_LINES + 1))
+            new_count=$STREAM_MAX_LINES
+        fi
+        # Use tail + head to get new lines (bash 3.2 safe). pipefail OFF in a
+        # subshell: the output file is written CONCURRENTLY by the running
+        # command, so `head` can close after $new_count lines while `tail` is
+        # still reading freshly-appended lines → SIGPIPE to tail. Under the
+        # global `set -o pipefail` that made the whole run exit rc=141 (on macOS
+        # every streaming run died this way). See design/monolith_run_health.md.
+        # On versions with a display limit, skip_n can omit newly appended
+        # lines. Track delimiters there before displaying the remaining body.
+        # Read only that new range, keeping the existing display policy intact.
+        if [[ "$skip_n" -gt $((lines_read + 1)) ]]; then
+            local omitted=$((skip_n - lines_read - 1))
+            in_pem=$( ( set +o pipefail; tail -n +"$((lines_read + 1))" "$output_file" | head -n "$omitted" ) |
+                awk -v open="$in_pem" -v begin="$pem_begin" -v end="$pem_end" '
+                    $0 ~ begin { open=1 } $0 ~ end { open=0 } END { print open }')
+        fi
+        while IFS= read -r line; do
+            # A fresh sed per line cannot retain a multiline private-key range.
+            # Track it here, before value masking can hide a delimiter.
+            if [[ "$in_pem" -eq 1 ]]; then
+                [[ "$line" =~ $pem_end ]] && in_pem=0
+                continue
+            elif [[ "$line" =~ $pem_begin ]]; then
+                in_pem=1
+                [[ "$line" =~ $pem_end ]] && in_pem=0
+                line='<redacted:private-key>'
+            fi
+            local redacted_line
+            redacted_line=$(redact_sensitive "$line")
+            if [[ "$redacted_line" == +* ]]; then
+                printf '\033[36m  $ %s\033[0m\n' "${redacted_line#+ }" >&2
+            else
+                printf '\033[90m  │ %s\033[0m\n' "$redacted_line" >&2
+            fi
+        done < <( set +o pipefail; tail -n +"$skip_n" "$output_file" | head -n "$new_count" )
+    fi
+    printf '%s %s\n' "$total_lines" "$in_pem"
+}
+
+# ---------------------------------------------------------------------------
+# Main loop
+# ---------------------------------------------------------------------------
+
+run_loop() {
+    local prompt="$1"
+    shift || true
+    local context_files=("$@")
+    local num_files=${#context_files[@]}
+
+    local rundir
+    local workdir
+    local messages_json
+    local system_prompt
+    local docker_active=0
+    local stdin_context=""
+    local -a file_contexts=()
+    local _SHELLM_ACTIVE_ENV=""
+
+    # Trajectory directory
+    local _run_traj_dir="$SHELLM_TRAJ_DIR"
+    mkdir -p "$_run_traj_dir"
+
+    local _run_traj_id _new_output run_name
+
+    if [[ -n "$_use_traj" ]]; then
+        # --- Use existing trajectory (--traj / --resume) ---
+        # Resolve "latest" for --resume
+        if [[ "$_use_traj" == "__latest__" ]]; then
+            _use_traj=$(_find_latest_traj "$_run_traj_dir") \
+                || die "No trajectories found in $_run_traj_dir"
+        fi
+
+        traj exists --traj_dir "$_run_traj_dir" "$_use_traj" 2>/dev/null \
+            || die "Cannot find trajectory: $_use_traj"
+
+        _run_traj_id="$_use_traj"
+
+        # Inherit workdir and env from the trajectory if not explicitly provided
+        # Tolerant parse (fromjson?): a corrupt line in the trajectory must
+        # not kill the run — jq exits 5 on a parse error and set -e would
+        # abort silently. The || true shields against traj tail's SIGPIPE.
+        local _orig_meta
+        _orig_meta=$(traj tail -n 50 --raw --traj_dir "$_run_traj_dir" "$_use_traj" \
+            | jq -cR 'fromjson? | select(.type=="shellm-run")' 2>/dev/null | tail -1) || true
+        if [[ -n "$_orig_meta" ]]; then
+            local _orig_workdir _orig_env _orig_image
+            _orig_workdir=$(printf '%s' "$_orig_meta" | jq -r '.workdir // empty')
+            _orig_env=$(printf '%s' "$_orig_meta" | jq -r '.env.name // empty')
+            _orig_image=$(printf '%s' "$_orig_meta" | jq -r '.env.docker_image // empty')
+            [[ -z "$_SHELLM_WORKDIR_USER" && -n "$_orig_workdir" ]] && _SHELLM_WORKDIR_USER="$_orig_workdir"
+            [[ -z "$_SHELLM_ENV_NAME" && -n "$_orig_env" ]] && _SHELLM_ENV_NAME="$_orig_env"
+            SHELLM_DOCKER_IMAGE=$(_resume_docker_image \
+                "$_SHELLM_DOCKER_IMAGE_EXPLICIT" "$SHELLM_DOCKER_IMAGE" "$_orig_image")
+        fi
+
+        # Resolve run_name from trajectory dir
+        local _traj_file
+        _traj_file=$(traj show "$_use_traj" --traj_dir "$_run_traj_dir" 2>/dev/null \
+            | grep '^File:' | awk '{print $2}') || true
+        run_name=$(basename "$(dirname "$_traj_file")")
+
+        progress "Using trajectory: $_run_traj_id"
+    else
+        # --- New trajectory path ---
+        # Create the trajectory via traj new
+        if [[ -n "${_SHELLM_PARENT_TRAJ_ID:-}" ]]; then
+            # Pre-generate fork step_id for cross-referencing. uuidgen is
+            # not on a bare Ubuntu (uuid-runtime), so fall back the way
+            # traj's gen_step_id does instead of failing the nested run.
+            if command -v uuidgen >/dev/null 2>&1; then
+                _fork_step_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+            elif [[ -r /proc/sys/kernel/random/uuid ]]; then
+                _fork_step_id=$(cat /proc/sys/kernel/random/uuid)
+            else
+                _fork_step_id=$(head -c16 /dev/urandom | od -An -tx1 | tr -d ' \n' \
+                    | sed -E 's/^(.{8})(.{4})(.{4})(.{4})(.{12})$/\1-\2-\3-\4-\5/')
+            fi
+            _new_output=$(traj new --traj_dir "$_run_traj_dir" --slug "${prompt:0:200}" \
+                --field "parent_traj=$_SHELLM_PARENT_TRAJ_ID" \
+                --field "parent_step=$_fork_step_id")
+        else
+            # Slug and env name only ever use a short prefix (traj keeps 60
+            # chars, make_env_name 40); forwarding the whole prompt as an argv
+            # string hit Linux's 128KB cap for big prompts (--prompt-file).
+            _new_output=$(traj new --traj_dir "$_run_traj_dir" --slug "${prompt:0:200}")
+        fi
+        _run_traj_id=$(head -1 <<< "$_new_output")
+        run_name=$(tail -1 <<< "$_new_output")
+
+        # If this is a child run, record a fork step in the parent trajectory
+        if [[ -n "${_SHELLM_PARENT_TRAJ_ID:-}" ]]; then
+            traj fork "$_SHELLM_PARENT_TRAJ_ID" --traj_dir "$_run_traj_dir" \
+                --child "$_run_traj_id" --step-id "$_fork_step_id" >/dev/null 2>&1 || true
+        fi
+    fi
+
+    # Create a temp dir for transient state (exec pids, output, watchdog, etc.)
+    rundir=$(mktemp -d "${TMPDIR:-/tmp}/shellm-run.XXXXXX")
+    # Every temp file this run and its commands make (mktemp, sort, python)
+    # lands under the run dir and dies with it in cleanup. A command killed
+    # by the watchdog never cleans up its own, and wakes share the real /tmp
+    # (2026-09-17: 24 GB of mktemp trajectory copies filled a box). Nested
+    # runs nest their run dir here too; they die with the exec tree anyway.
+    if [[ -n "$rundir" && -d "$rundir" ]] && mkdir -p "$rundir/tmp"; then
+        export TMPDIR="$rundir/tmp"
+    fi
+
+    # Track root rundir for the run tree
+    if [[ -n "${_SHELLM_PARENT_TRAJ_ID:-}" ]]; then
+        _SHELLM_ROOT_RUNDIR="${_SHELLM_ROOT_RUNDIR:-$rundir}"
+    else
+        _SHELLM_ROOT_RUNDIR="$rundir"
+    fi
+
+    # Create or use workdir. Default is a fresh per-run directory; --here
+    # (workdir = current directory) or --workdir DIR override it.
+    if [[ -n "$_SHELLM_WORKDIR_USER" ]]; then
+        workdir="$_SHELLM_WORKDIR_USER"
+    else
+        workdir="$SHELLM_WORKDIRS_DIR/$run_name"
+    fi
+    mkdir -p "$workdir"
+
+    export SHELLM_WORKDIR="$workdir"
+    export TRAJ_DIR="$_run_traj_dir"
+    export TRAJ_ID="$_run_traj_id"
+    # Preserve the root trajectory ID so chat history/reply work in forked trajs
+    export ROOT_TRAJ_ID="${ROOT_TRAJ_ID:-$_run_traj_id}"
+
+    # Show the banner at the top of interactive runs only: skip nested runs
+    # (generated code calling shellm inherits SHELLM_RUN_STEP_ID) and
+    # non-tty stderr, so piped and scripted runs stay clean.
+    if [[ -t 2 && -z "${SHELLM_RUN_STEP_ID:-}" ]]; then
+        banner
+    fi
+
+    progress "Trajectory: $_run_traj_id (dir: $_run_traj_dir)"
+    progress "Workdir: $workdir"
+
+    # Load context into variables for env var passing
+    local context_info=""
+
+    # Read stdin if piped
+    if [[ ! -t 0 ]]; then
+        stdin_context=$(cat)
+        if [[ -n "$stdin_context" ]]; then
+            local ctx_chars=${#stdin_context}
+            progress "Stdin context loaded: $ctx_chars chars"
+            context_info="- \$CONTEXT: stdin data ($ctx_chars chars)"
+        fi
+    fi
+
+    # Read each -f file (resolve to absolute paths for Docker mount compatibility)
+    local i=1
+    if [[ "$num_files" -gt 0 ]]; then
+        local resolved_files=()
+        for f in "${context_files[@]}"; do
+            local abs_path
+            abs_path=$(realpath "$f")
+            resolved_files+=("$abs_path")
+            local content
+            content=$(cat "$abs_path")
+            file_contexts+=("$content")
+            local fc_chars=${#content}
+            progress "File context $i loaded: $abs_path ($fc_chars chars)"
+            context_info="${context_info:+$context_info
+}- \$FILE_CONTEXT$i: $abs_path ($fc_chars chars)"
+            i=$((i + 1))
+        done
+        context_files=("${resolved_files[@]}")
+    fi
+
+    # Env & Docker setup
+    local shellm_path
+    shellm_path=$(realpath "$0")
+    local ws_name="${_SHELLM_ENV_NAME:-}"
+
+    if [[ "$SHELLM_DOCKER_ACCESS" == "broker" ]]; then
+        _SHELLM_DOCKER_BROKER_TRANSPORT=$(docker_broker_select_transport)
+    elif [[ "$SHELLM_DOCKER_ACCESS" == "socket" ]]; then
+        local socket_path
+        socket_path=$(docker_socket_path) || die "Docker socket mode requested, but no Unix socket exists at $SHELLM_DOCKER_SOCKET"
+        SHELLM_DOCKER_SOCKET="$socket_path"
+    fi
+
+    if [[ "$ws_name" == "local" ]]; then
+        if [[ "$SHELLM_DOCKER_ACCESS" != "none" ]]; then
+            die "--docker-access $SHELLM_DOCKER_ACCESS requires a Docker-backed env, but --env local was requested"
+        fi
+        env_register_local "$ws_name"
+    elif ! should_use_docker; then
+        if [[ "$SHELLM_DOCKER_ACCESS" != "none" ]]; then
+            die "--docker-access $SHELLM_DOCKER_ACCESS requested, but shellm cannot reach a Docker daemon from here"
+        fi
+        if [[ ! -f /.dockerenv || "$SHELLM_ALLOW_NESTED_DOCKER" == "1" ]]; then
+            # The operator was promised a sandbox (headlong-init writes
+            # SHELLM_REQUIRE_DOCKER=1 when Docker was present at install
+            # time): a dead daemon is then a hard error, never a silent
+            # fallback to running on the host.
+            if [[ "$SHELLM_REQUIRE_DOCKER" == "1" ]]; then
+                die "SHELLM_REQUIRE_DOCKER=1 is set, but no Docker daemon is reachable. Start Docker, or set SHELLM_REQUIRE_DOCKER=0 in your Headlong .env to allow unsandboxed runs."
+            fi
+            progress "\033[1;33mWARNING: Docker not found — running on host. Use of Docker is recommended!\033[0m"
+        fi
+        ws_name="local"
+        env_register_local "$ws_name"
+    else
+        local env_explicit=0
+        [[ -n "$ws_name" ]] && env_explicit=1
+        if [[ -n "$ws_name" ]]; then
+            # Explicit --env: resolve or create
+            :
+        elif [[ "${_new_env:-0}" -eq 1 ]]; then
+            # --new-env: always create fresh
+            ws_name=$(make_env_name "${prompt:0:200}")
+        else
+            # Default: try to reuse any running env
+            local running
+            running=$(env_find_running "$workdir") || true
+            if [[ -n "$running" ]]; then
+                ws_name="$running"
+            else
+                ws_name=$(make_env_name "${prompt:0:200}")
+            fi
+        fi
+        if env_resolve "$ws_name" "$env_explicit" "$workdir"; then
+            progress "Using env: $ws_name"
+        else
+            docker_setup "$workdir" "$shellm_path" "$ws_name" "${context_files[@]+"${context_files[@]}"}"
+            env_register "$ws_name"
+            docker_active=1
+            progress "Created env: $ws_name"
+        fi
+        docker_prepare_container_tools "$shellm_path"
+        docker_broker_prepare_container "$shellm_path"
+        docker_broker_start "$ws_name" "$workdir" "$shellm_path"
+    fi
+
+    _SHELLM_ACTIVE_ENV="$ws_name"
+
+    # Build system prompt
+    system_prompt=$(build_system_prompt "$context_info" "$_SHELLM_DOCKER_MODE" "$rundir")
+
+    # Build env metadata for the shellm-run step
+    local _env_json
+    if [[ "$_SHELLM_DOCKER_MODE" -eq 1 ]]; then
+        local _img_digest=""
+        _img_digest=$(docker_metadata_value "$ws_name" image_digest 2>/dev/null) || true
+        _env_json=$(jq -nc \
+            --arg name "$ws_name" \
+            --arg etype "docker" \
+            --arg image "$SHELLM_DOCKER_IMAGE" \
+            --arg digest "$_img_digest" \
+            --arg access "$SHELLM_DOCKER_ACCESS" \
+            --arg broker "${_SHELLM_DOCKER_BROKER_TRANSPORT:-}" \
+            --arg socket "${SHELLM_DOCKER_SOCKET:-}" \
+            '{name:$name, type:$etype, docker_image:$image, docker_image_digest:$digest, docker_access:$access, docker_broker_transport:$broker, docker_socket:$socket, privileged:false, var_mounts:[]}')
+    else
+        _env_json='{"name":"local","type":"local"}'
+    fi
+
+    local _ctx_summary_pid=""
+
+    # Build context_files JSON array
+    local _ctx_files_json="[]"
+    for _cf in "${context_files[@]+"${context_files[@]}"}"; do
+        _ctx_files_json=$(printf '%s' "$_ctx_files_json" | jq --arg f "$_cf" '. + [$f]')
+    done
+
+    # Write shellm-run step
+    local _shellm_run_json
+    _shellm_run_json=$(jq -nc \
+        --arg cmd "$_SHELLM_ORIGINAL_CMD" \
+        --arg wd "$workdir" \
+        --arg model "$SHELLM_MODEL" \
+        --arg effort "$SHELLM_EFFORT" \
+        --arg max_iter "${SHELLM_MAX_ITERATIONS:-}" \
+        --arg max_tok "${SHELLM_MAX_TOKENS:-}" \
+        --arg inactivity_timeout "$SHELLM_INACTIVITY_TIMEOUT" \
+        --argjson ctx "$_ctx_files_json" \
+        --argjson env "$_env_json" \
+        --argjson resumed "$(if [[ -n "$_use_traj" ]]; then echo true; else echo false; fi)" \
+        --arg trigger "${SHELLM_TRIGGER_STEP_ID:-}" \
+        --arg launched_by "${SHELLM_LAUNCHED_BY:-}" \
+        --arg wake "${SHELLM_WAKE:-}" \
+        '{type:"shellm-run", command:$cmd, workdir:$wd, model:$model, effort:$effort, max_iterations:$max_iter, max_tokens:$max_tok, inactivity_timeout:$inactivity_timeout, context_files:$ctx, env:$env, resumed:$resumed}
+         + (if $trigger == "" then {} else {trigger_step: $trigger} end)
+         + (if $launched_by == "" then {} else {launched_by: $launched_by} end)
+         + (if $wake == "" then {} else {wake: $wake} end)')
+    # traj append prints the assigned step_id; keep it so every machinery step
+    # this run writes can carry run_id (crucial with --traj, where many runs
+    # interleave in one shared trajectory)
+    local _run_step_id _prompt_step_id=""
+    _run_step_id=$(printf '%s' "$_shellm_run_json" | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id")
+    # Launcher opt-in: report this run's header step_id to the given file so
+    # the caller can pair its own steps with this exact run — the trajectory
+    # alone can't tell whose header is whose when concurrent runs interleave.
+    [[ -n "${SHELLM_RUN_ID_OUT:-}" ]] && printf '%s' "$_run_step_id" > "$SHELLM_RUN_ID_OUT" || true
+
+    if [[ -z "$_use_traj" ]]; then
+        # New trajectory — kick off async run-summary generation
+        local stdin_ctx_file=""
+        if [[ -n "$stdin_context" ]]; then
+            stdin_ctx_file="$rundir/.stdin_context"
+            printf '%s' "$stdin_context" > "$stdin_ctx_file"
+        fi
+        generate_run_summary "$_run_traj_dir" "$_run_traj_id" "$_run_step_id" "$prompt" "$stdin_ctx_file" \
+            "${context_files[@]+"${context_files[@]}"}" &
+        _ctx_summary_pid=$!
+        debug "Run summary generation started (PID: $_ctx_summary_pid)"
+    fi
+
+    # Write prompt step
+    if [[ -n "$prompt" ]]; then
+        local _p_tmp
+        _p_tmp=$(mktemp)
+        printf '%s' "$prompt" > "$_p_tmp"
+        _prompt_step_id=$(printf '%s' "$(jq -n --rawfile p "$_p_tmp" --arg run_id "$_run_step_id" '{type:"prompt",content:$p,run_id:$run_id}')" \
+            | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id")
+        rm -f "$_p_tmp"
+    fi
+
+    # --- Cleanup trap ---
+    _cleanup_docker="$docker_active"
+    _cleanup_rundir="$rundir"
+    _cleanup_workdir="$workdir"
+    _cleanup_temp="$SHELLM_TEMP_DOCKER"
+    _cleanup_ws_name="${_SHELLM_ACTIVE_ENV:-}"
+    _cleanup_ctx_pid="${_ctx_summary_pid:-}"
+    cleanup() {
+        stop_activity_beacon
+        # Give run-summary background process time to finish
+        if [[ -n "$_cleanup_ctx_pid" ]] && kill -0 "$_cleanup_ctx_pid" 2>/dev/null; then
+            local _ctx_wait=0
+            while kill -0 "$_cleanup_ctx_pid" 2>/dev/null && [[ $_ctx_wait -lt 30 ]]; do
+                sleep 1
+                _ctx_wait=$((_ctx_wait + 1))
+            done
+            # Force kill if still running after grace period
+            kill "$_cleanup_ctx_pid" 2>/dev/null || true
+        fi
+        # Kill lingering exec/watchdog processes
+        local pid_file
+        for pid_file in "$_cleanup_rundir/.exec_pid" "$_cleanup_rundir/.watchdog_pid"; do
+            if [[ -f "$pid_file" ]]; then
+                local pid
+                pid=$(cat "$pid_file" 2>/dev/null || true)
+                if [[ -n "$pid" ]]; then
+                    kill "$pid" 2>/dev/null || true
+                    wait "$pid" 2>/dev/null || true
+                fi
+                rm -f "$pid_file"
+            fi
+        done
+        # Clean up temp dir
+        rm -rf "$_cleanup_rundir"
+        # Clean up Docker-mode final file from workdir
+        rm -f "$_cleanup_workdir/.shellm_final" 2>/dev/null
+        # Docker teardown: only if --temp-docker was passed
+        if [[ "${_cleanup_temp:-0}" -eq 1 ]] && [[ "${_SHELLM_DOCKER_MODE:-0}" -eq 1 ]]; then
+            docker_teardown
+            # Also destroy env metadata
+            if [[ -n "$_cleanup_ws_name" ]]; then
+                env_destroy "$_cleanup_ws_name"
+            fi
+        fi
+    }
+    trap cleanup EXIT
+
+    # Get the path to this script for subprocess calls
+    local shellm_path
+    shellm_path=$(realpath "$0")
+
+    progress "Starting shellm loop (model: $SHELLM_MODEL, max iterations: ${SHELLM_MAX_ITERATIONS:-unlimited})"
+
+    local iteration=0
+    # Spin/stall guard state (see SHELLM_MAX_*_FAILURES).
+    local _consec_fail=0 _repeat_fail=0 _prev_fail_code=""
+    while [[ -z "$SHELLM_MAX_ITERATIONS" || "$iteration" -lt "$SHELLM_MAX_ITERATIONS" ]]; do
+        iteration=$((iteration + 1))
+        local iter_label
+        if [[ -n "$SHELLM_MAX_ITERATIONS" ]]; then
+            iter_label="$iteration/$SHELLM_MAX_ITERATIONS"
+        else
+            iter_label="$iteration"
+        fi
+        debug "=== Iteration $iter_label ==="
+        [[ "$QUIET" -eq 0 ]] && echo >&2
+        progress "Iteration $iter_label — calling $SHELLM_MODEL..."
+
+        # Build model context from trajectory as multi-turn messages. The
+        # prompt is never truncated: a cut prompt hands the model a stub
+        # pointing at its own instructions on disk (Audel ran for months on
+        # the first and last KB of its wakeup prompt, 2026-09). In run scope
+        # only this run's steps render, with the prompt pinned so a long run
+        # keeps its instructions past the tail window.
+        local -a _ctx_args=(--traj_dir "$_run_traj_dir" "$_run_traj_id"
+            --assistant-types "reasoning,final"
+            --user-types "prompt,shell-output,feedback"
+            --exclude-types "shellm-run,run-summary"
+            --full-types prompt
+            --block-limit "$SHELLM_CONTEXT_BLOCK_LIMIT" --whole-blocks "$SHELLM_CONTEXT_WHOLE_BLOCKS")
+        if [[ "$SHELLM_CONTEXT_SCOPE" == "run" ]]; then
+            _ctx_args+=(--run "$_run_step_id" --head 0
+                --tail "$SHELLM_CONTEXT_RUN_TAIL" --tail-block "$SHELLM_CONTEXT_RUN_TAIL_BLOCK")
+            [[ -n "$_prompt_step_id" ]] && _ctx_args+=(--pin "$_prompt_step_id")
+        fi
+        messages_json=$(context "${_ctx_args[@]}" 2>/dev/null) || messages_json='[]'
+
+        # Call Claude (capture thinking/reasoning to file)
+        local thinking_file="$rundir/.last_thinking"
+        : > "$thinking_file"
+        # Observability: time the model call and capture token usage. The
+        # usage file is truncated first so a provider that reports nothing
+        # can't inherit the previous iteration's numbers; llm_s spans the
+        # whole call including empty-response retries (the user-felt time).
+        local usage_file="$rundir/.last_usage"
+        export LLM_USAGE_FILE="$usage_file"
+        # llm's usage ledger line for this call carries the run id
+        export LLM_RUN_ID="$_run_step_id"
+        : > "$usage_file"
+        local _llm_t0
+        _llm_t0=$(date +%s)
+        local response
+        response=$(call_llm "$system_prompt" "$messages_json" "$thinking_file")
+
+        # Read captured thinking/reasoning
+        local thinking=""
+        if [[ -s "$thinking_file" ]]; then
+            thinking=$(cat "$thinking_file")
+        fi
+        rm -f "$thinking_file"
+
+        # Retry on empty response: feed captured thinking back as assistant
+        # context so the model continues from where it left off (max_tokens
+        # gets hit during thinking before any visible output is emitted).
+        # Default: 8 retries; SHELLM_EMPTY_RESPONSE_RETRIES overrides (set it
+        # to the empty string for unlimited).
+        local empty_retries=0
+        local max_empty_retries="${SHELLM_EMPTY_RESPONSE_RETRIES-8}"
+        local retry_messages_json="$messages_json"
+        while [[ -z "$response" ]]; do
+            if [[ -n "$max_empty_retries" && "$empty_retries" -ge "$max_empty_retries" ]]; then
+                break
+            fi
+            empty_retries=$((empty_retries + 1))
+            # llm's own stderr lines ("llm: warning: output truncated...")
+            # arrive mixed into the captured thinking; they are harness noise,
+            # not the model's reasoning, and must not become assistant content.
+            local feedback
+            feedback=$(printf '%s\n' "$thinking" | grep -Ev '^llm: (warning|note): ') || feedback=""
+            if [[ -n "$feedback" ]]; then
+                progress "Empty response — feeding thinking back to continue (retry $empty_retries${max_empty_retries:+/$max_empty_retries})..."
+                debug "empty_response_retry: fed back ${#feedback} chars of thinking"
+                # --rawfile, not --arg: a full-budget thinking block can exceed
+                # the OS's 128KB per-argument cap.
+                local feedback_file
+                feedback_file=$(mktemp)
+                printf '%s' "$feedback" > "$feedback_file"
+                retry_messages_json=$(printf '%s' "$retry_messages_json" | jq \
+                    --rawfile t "$feedback_file" \
+                    '. + [{"role":"assistant","content":$t},{"role":"user","content":"Your previous response ran out of output tokens during the reasoning above before you could emit any visible text. Continue from where you left off and produce the bash code for the next step now."}]')
+                rm -f "$feedback_file"
+                sleep 1
+            else
+                progress "Empty response from API (retry $empty_retries${max_empty_retries:+/$max_empty_retries})..."
+                sleep 1
+            fi
+
+            : > "$thinking_file"
+            response=$(call_llm "$system_prompt" "$retry_messages_json" "$thinking_file")
+
+            thinking=""
+            if [[ -s "$thinking_file" ]]; then
+                thinking=$(cat "$thinking_file")
+            fi
+            rm -f "$thinking_file"
+
+            # thinking captured for step record
+        done
+
+        if [[ -z "$response" ]]; then
+            if [[ -n "$thinking" ]]; then
+                die "Empty response from $SHELLM_MODEL after $empty_retries retries: $(truncate_output "$thinking")"
+            fi
+            die "Empty response from $SHELLM_MODEL after $empty_retries retries"
+        fi
+
+        local _llm_s=$(( $(date +%s) - _llm_t0 ))
+        local _usage_extra="{}"
+        if [[ -s "$usage_file" ]]; then
+            _usage_extra=$(jq -c 'select(type == "object")' "$usage_file" 2>/dev/null) || _usage_extra="{}"
+            [[ -z "$_usage_extra" ]] && _usage_extra="{}"
+        fi
+
+        local reasoning
+        reasoning=$(extract_reasoning "$response")
+        # reasoning captured for step record
+
+        debug "Response:\n$response"
+
+        # Extract bash code
+        local code
+        code=$(extract_code "$response")
+
+        if [[ -z "$code" ]]; then
+            debug "No code extracted, treating full response as final answer"
+            progress "No code block found — returning response as answer"
+            # Record as a final step with no cmd
+            printf '%s' "$(jq -n --arg t "$reasoning" --arg f "$response" --arg run_id "$_run_step_id" \
+                --argjson llm_s "$_llm_s" --argjson usage "$_usage_extra" \
+                '{type:"final",thought:$t,content:$f,run_id:$run_id,llm_s:$llm_s} + $usage')" \
+                | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id" >/dev/null
+            echo "$response"
+            return 0
+        fi
+
+        # Show the code being executed
+        local code_lines
+        code_lines=$(echo "$code" | wc -l | tr -d ' ')
+        progress "Executing bash ($code_lines lines):"
+        echo "$code" | while IFS= read -r line; do
+            progress_dim "  $line"
+        done
+
+        # Determine final file path: use workdir (mounted in container) for Docker mode
+        local final_path="$rundir/final"
+        if [[ "${_SHELLM_DOCKER_MODE:-0}" -eq 1 ]]; then
+            final_path="$workdir/.shellm_final"
+        fi
+
+        # Build wrapped code that captures FINAL/FINAL_FILE after execution
+        local wrapped_code
+        # shellcheck disable=SC1078,SC1079  # one long double-quoted string, built across lines on purpose
+        wrapped_code="set -x
+$code
+set +x"$'\n'"
+__shellm_rc=\$?
+set +e
+[ -n \"\${FINAL+x}\" ] && printf '%s' \"\$FINAL\" > \"$final_path\"
+[ -n \"\${FINAL_FILE+x}\" ] && cat \"\$FINAL_FILE\" > \"$final_path\"
+exit \$__shellm_rc
+"
+
+        # Build the environment for generated code. The main shellm process
+        # keeps the host URL, while a Docker sandbox gets the equivalent
+        # host.docker.internal URL.
+        local execution_api_url="$SHELLM_API_URL"
+        if [[ "${_SHELLM_DOCKER_MODE:-0}" -eq 1 ]]; then
+            execution_api_url=$(_shellm_container_api_url "$execution_api_url")
+        fi
+        local -a env_vars=(
+            SHELLM_WORKDIR="$workdir"
+            SHELLM_ENV="$(if [[ "${_SHELLM_DOCKER_MODE:-0}" -eq 1 && "$SHELLM_ALLOW_NESTED_DOCKER" != "1" ]]; then echo "local"; else echo "${_SHELLM_ACTIVE_ENV:-}"; fi)"
+            _SHELLM_PARENT_CONTAINER="${_SHELLM_CONTAINER:-}"
+            ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
+            # The generic openai-compatible provider is configured entirely by
+            # env (never auto-detected), so llm calls inside generated code
+            # need these two like they need the vendor keys above/below.
+            LLM_PROVIDER="${LLM_PROVIDER:-}"
+            LLM_API_KEY="${LLM_API_KEY:-}"
+            SHELLM_MODEL="$SHELLM_MODEL"
+            SHELLM_MAX_TOKENS="$SHELLM_MAX_TOKENS"
+            SHELLM_MAX_ITERATIONS="$SHELLM_MAX_ITERATIONS"
+            SHELLM_EFFORT="$SHELLM_EFFORT"
+            SHELLM_TRUNCATE="$SHELLM_TRUNCATE"
+            SHELLM_API_URL="$execution_api_url"
+            LLM_API_URL="$execution_api_url"
+            SHELLM_DOCKER_IMAGE="$SHELLM_DOCKER_IMAGE"
+            SHELLM_DOCKER_ACCESS="$SHELLM_DOCKER_ACCESS"
+            SHELLM_DOCKER_BROKER_TRANSPORT="${_SHELLM_DOCKER_BROKER_TRANSPORT:-$SHELLM_DOCKER_BROKER_TRANSPORT}"
+            SHELLM_DOCKER_SOCKET="$SHELLM_DOCKER_SOCKET"
+            SHELLM_ALLOW_NESTED_DOCKER="$SHELLM_ALLOW_NESTED_DOCKER"
+            _SHELLM_PARENT_RUN="$run_name"
+            _SHELLM_PARENT_TRAJ_ID="$_run_traj_id"
+            # blank so nested shellm runs don't inherit this run's trigger/launcher
+            # or clobber the launcher's run-id report file
+            SHELLM_TRIGGER_STEP_ID=""
+            SHELLM_LAUNCHED_BY=""
+            SHELLM_RUN_ID_OUT=""
+            # traj append stamps this as run_id on steps the executed code
+            # writes (observations etc.), linking them to this run exactly
+            SHELLM_RUN_STEP_ID="$_run_step_id"
+            TRAJ_DIR="$_run_traj_dir"
+            TRAJ_ID="$_run_traj_id"
+            ROOT_TRAJ_ID="${ROOT_TRAJ_ID:-$_run_traj_id}"
+            SHELLM_RUNDIR="$rundir"
+            _SHELLM_ROOT_RUNDIR="$_SHELLM_ROOT_RUNDIR"
+            SHELLM_ACTIVITY_FILE="$rundir/.activity"
+            PATH="$(dirname "$shellm_path"):$PATH"
+        )
+        # Forward --var values
+        for _ev in "${_SHELLM_EXTRA_VARS[@]+"${_SHELLM_EXTRA_VARS[@]}"}"; do
+            env_vars+=("$_ev")
+        done
+        # Endpoint aliases are canonical shellm state, not ordinary extras.
+        # Keep the Docker-rewritten value last so a duplicate --var cannot
+        # restore a host-only URL inside generated code.
+        if [[ -n "$execution_api_url" ]]; then
+            env_vars+=(SHELLM_API_URL="$execution_api_url" LLM_API_URL="$execution_api_url")
+        fi
+        if [[ "$SHELLM_DOCKER_ACCESS" == "broker" && -n "${_SHELLM_DOCKER_BROKER_DIR:-}" ]]; then
+            env_vars+=(SHELLM_DOCKER_BROKER="$_SHELLM_DOCKER_BROKER_DIR")
+            env_vars+=(SHELLM_DOCKER_TRANSPORT="$_SHELLM_DOCKER_BROKER_TRANSPORT")
+        elif [[ "$SHELLM_DOCKER_ACCESS" == "socket" || "$SHELLM_DOCKER_ACCESS" == "dind" ]]; then
+            env_vars+=(DOCKER_HOST="unix:///var/run/docker.sock")
+            env_vars+=(DOCKER_BUILDKIT=1)
+        fi
+        if [[ -n "$stdin_context" ]]; then
+            env_vars+=(CONTEXT="$stdin_context")
+        fi
+        local j
+        for ((j=0; j<${#file_contexts[@]}; j++)); do
+            env_vars+=("FILE_CONTEXT$((j + 1))=${file_contexts[$j]}")
+        done
+
+        # Execute code — background exec + watchdog + polling reader
+        local output_file="$rundir/.output"
+        local exec_pid_file="$rundir/.exec_pid"
+        local watchdog_pid_file="$rundir/.watchdog_pid"
+        local timeout_marker="$rundir/.timeout"
+        local activity_file="$rundir/.activity"
+        : > "$output_file"
+        : > "$activity_file"
+        rm -f "$timeout_marker" "$exec_pid_file" "$watchdog_pid_file"
+        local exit_code=0
+        local timed_out=0
+
+        # Background: run execute_code, capture PID
+        local _exec_t0
+        _exec_t0=$(date +%s)
+        set +eo pipefail
+        # The execution tree gets its own process group (set -m for the one
+        # launch). _kill_exec_tree stops processes before it kills them, and a
+        # group that is orphaned while it holds stopped members gets SIGHUP
+        # from the kernel: on macOS that hang-up reached this shell and killed
+        # the whole run (rc=129, CI 2026-09-17). In its own group the hang-up
+        # can only land on the tree being killed. Monitor mode goes straight
+        # back off, which also keeps "Terminated" job messages quiet.
+        set -m
+        execute_code "$workdir" "$wrapped_code" "${env_vars[@]}" >> "$output_file" 2>&1 &
+        local exec_pid=$!
+        set +m
+        printf '%s' "$exec_pid" > "$exec_pid_file"
+        set -eo pipefail
+
+        # Background: watchdog monitors output file size for inactivity
+        (
+            local last_size=0
+            local stale_seconds=0
+            local quiet_seconds=0
+            local last_beacon=""
+            local kill_reason=""
+            local kill_limit=""
+            local started=$SECONDS
+            while kill -0 "$exec_pid" 2>/dev/null; do
+                sleep 1
+                local cur_size
+                cur_size=$(wc -c < "$output_file" 2>/dev/null || echo 0)
+                cur_size=$(echo "$cur_size" | tr -d ' ')
+                if [[ "$cur_size" -eq "$last_size" ]]; then
+                    stale_seconds=$((stale_seconds + 1))
+                    quiet_seconds=$((quiet_seconds + 1))
+                else
+                    stale_seconds=0
+                    quiet_seconds=0
+                    last_size="$cur_size"
+                fi
+                # A nested shellm run stamps the beacon while it works, so its
+                # silence counts as activity. quiet_seconds keeps running, so a
+                # sub-run that wedges still dies at SHELLM_INACTIVITY_MAX.
+                local cur_beacon
+                cur_beacon=$(cat "$activity_file" 2>/dev/null || true)
+                if [[ -n "$cur_beacon" && "$cur_beacon" != "$last_beacon" ]]; then
+                    last_beacon="$cur_beacon"
+                    stale_seconds=0
+                fi
+                # A command that never stops producing output (e.g. a runaway
+                # loop printing the same line) resets stale_seconds every check,
+                # so the silence guards above never fire. Cap total output size.
+                if [[ "$SHELLM_MAX_OUTPUT_SIZE" -gt 0 && "$cur_size" -ge "$SHELLM_MAX_OUTPUT_SIZE" ]]; then
+                    kill_reason="output"
+                    kill_limit="$SHELLM_MAX_OUTPUT_SIZE"
+                elif [[ "$SHELLM_MAX_EXEC_TIME" -gt 0 && $((SECONDS - started)) -ge "$SHELLM_MAX_EXEC_TIME" ]]; then
+                    kill_reason="wall"
+                    kill_limit="$SHELLM_MAX_EXEC_TIME"
+                elif [[ "$stale_seconds" -ge "$SHELLM_INACTIVITY_TIMEOUT" ]]; then
+                    kill_reason="idle"
+                    kill_limit="$SHELLM_INACTIVITY_TIMEOUT"
+                elif [[ "$quiet_seconds" -ge "$SHELLM_INACTIVITY_MAX" ]]; then
+                    kill_reason="nested"
+                    kill_limit="$SHELLM_INACTIVITY_MAX"
+                fi
+                if [[ -n "$kill_reason" ]]; then
+                    printf '%s %s\n' "$kill_reason" "$kill_limit" > "$timeout_marker"
+                    # Name the target: a silent watchdog kill is
+                    # indistinguishable from an external one in a
+                    # post-mortem (2026-08-12 dispatcher death).
+                    local unit=s
+                    [[ "$kill_reason" == output ]] && unit=bytes
+                    printf '%s [shellm-watchdog] %s timeout (%s %s): killing exec pid %s\n' \
+                        "$(date -u +%FT%TZ)" "$kill_reason" "$kill_limit" "$unit" "$exec_pid" >&2
+                    kill "$exec_pid" 2>/dev/null || true
+                    # execute_code handles escalation and reaping. Killing
+                    # that supervisor here would orphan the output producer.
+                    break
+                fi
+            done
+        ) &
+        local watchdog_pid=$!
+        printf '%s' "$watchdog_pid" > "$watchdog_pid_file"
+
+        # Foreground: poll output file and stream new lines to stderr
+        local lines_read=0 pem_open=0
+        while kill -0 "$exec_pid" 2>/dev/null; do
+            read -r lines_read pem_open <<< "$(_stream_new_output "$output_file" "$lines_read" "$pem_open")"
+            sleep 0.2
+        done
+
+        # Collect exit code from exec process
+        wait "$exec_pid" 2>/dev/null && exit_code=0 || exit_code=$?
+
+        # Kill watchdog now that exec is done
+        kill "$watchdog_pid" 2>/dev/null || true
+        wait "$watchdog_pid" 2>/dev/null || true
+
+        # Drain any remaining output lines
+        _stream_new_output "$output_file" "$lines_read" "$pem_open" >/dev/null
+
+        # Check if we timed out. The marker carries why, so the feedback the
+        # model gets names the real cause instead of guessing at a prompt.
+        local kill_reason="idle"
+        local kill_limit="$SHELLM_INACTIVITY_TIMEOUT"
+        if [[ -f "$timeout_marker" ]]; then
+            timed_out=1
+            local _marker
+            _marker=$(cat "$timeout_marker" 2>/dev/null || true)
+            if [[ -n "$_marker" ]]; then
+                kill_reason="${_marker%% *}"
+                kill_limit="${_marker##* }"
+            fi
+        fi
+        # A stamped beacon means a nested shellm run was alive in this block.
+        local had_nested=0
+        [[ -s "$activity_file" ]] && had_nested=1
+
+        # A block killed for output size keeps only the two ends of what it
+        # wrote: everything below holds the output in one bash variable.
+        local output _out_bytes
+        _out_bytes=$(( $(wc -c < "$output_file") ))
+        if [[ "$timed_out" -eq 1 && "$kill_reason" == "output" && "$_out_bytes" -gt $((OUTPUT_KEEP_BYTES * 2)) ]]; then
+            output="$(head -c "$OUTPUT_KEEP_BYTES" "$output_file")
+[... $((_out_bytes - OUTPUT_KEEP_BYTES * 2)) bytes of output dropped ...]
+$(tail -c "$OUTPUT_KEEP_BYTES" "$output_file" | tail -n +2)"
+        else
+            output=$(cat "$output_file")
+        fi
+        rm -f "$output_file" "$exec_pid_file" "$watchdog_pid_file" "$timeout_marker" "$activity_file"
+        local _exec_s=$(( $(date +%s) - _exec_t0 ))
+
+        debug "Exit code: $exit_code, timed_out: $timed_out"
+
+        # Show exit status
+        if [[ "$timed_out" -eq 1 ]]; then
+            if [[ "$kill_reason" == "output" ]]; then
+                progress "\033[1;31mKILLED — output exceeded ${kill_limit} bytes\033[0m"
+            elif [[ "$kill_reason" == "nested" ]]; then
+                progress "\033[1;31mKILLED — sub-run silent for ${kill_limit}s\033[0m"
+            else
+                progress "\033[1;31mKILLED — inactivity timeout (${kill_limit}s)\033[0m"
+            fi
+        elif [[ "$exit_code" -eq 0 ]]; then
+            progress_dim "Exit 0"
+        else
+            progress "\033[1;31mExit $exit_code\033[0m"
+        fi
+
+        # Clean output: strip xtrace lines for storage
+        local clean_output
+        clean_output=$(printf '%s' "$output" | grep -v '^+\+ ' | grep -v '^+ ' || true)
+        # Write to temp file to avoid ARG_MAX when passing large output to jq
+        local _stdout_tmp
+        _stdout_tmp=$(mktemp)
+        printf '%s' "$clean_output" > "$_stdout_tmp"
+
+        # Record reasoning step (assistant role in multi-turn). --rawfile, not
+        # --arg: both a full-budget thinking block and the extracted code block
+        # can exceed the kernel's per-argument cap (MAX_ARG_STRLEN, 128KB), and
+        # jq then dies before it starts, so the run ends with no step record at
+        # all (live 2026-09-26, "jq: Argument list too long"). Same pattern as
+        # the prompt, feedback, and shell-output records.
+        local reasoning_json _reasoning_thought_tmp _reasoning_cmd_tmp
+        _reasoning_thought_tmp=$(mktemp)
+        _reasoning_cmd_tmp=$(mktemp)
+        printf '%s' "$reasoning" > "$_reasoning_thought_tmp"
+        printf '%s' "$code" > "$_reasoning_cmd_tmp"
+        reasoning_json=$(jq -n \
+            --rawfile thought "$_reasoning_thought_tmp" \
+            --rawfile cmd "$_reasoning_cmd_tmp" \
+            --arg run_id "$_run_step_id" \
+            --argjson llm_s "$_llm_s" \
+            --argjson usage "$_usage_extra" \
+            '{type:"reasoning", thought:$thought, cmd:$cmd, run_id:$run_id, llm_s:$llm_s} + $usage')
+        rm -f "$_reasoning_thought_tmp" "$_reasoning_cmd_tmp"
+        printf '%s' "$reasoning_json" | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id" >/dev/null
+
+        # Record shell-output step (user role in multi-turn)
+        local output_json
+        if [[ "$timed_out" -eq 1 ]]; then
+            local tail_bytes
+            tail_bytes=$(printf '%s' "$output" | tail -c 500)
+            local prompt_type
+            prompt_type=$(detect_interactive_prompt "$tail_bytes")
+            local feedback
+            feedback=$(build_inactivity_feedback "$output" "$prompt_type" "$kill_limit" "$kill_reason" "$had_nested")
+            output_json=$(jq -n \
+                --rawfile stdout "$_stdout_tmp" \
+                --arg stderr "" \
+                --argjson exit "$exit_code" \
+                --arg feedback "$feedback" \
+                --arg run_id "$_run_step_id" \
+                --argjson exec_s "$_exec_s" \
+                '{type:"shell-output", stdout:$stdout, stderr:$stderr, exit:$exit, timed_out:true, feedback:$feedback, run_id:$run_id, exec_s:$exec_s}')
+        else
+            output_json=$(jq -n \
+                --rawfile stdout "$_stdout_tmp" \
+                --arg stderr "" \
+                --argjson exit "$exit_code" \
+                --arg run_id "$_run_step_id" \
+                --argjson exec_s "$_exec_s" \
+                '{type:"shell-output", stdout:$stdout, stderr:$stderr, exit:$exit, run_id:$run_id, exec_s:$exec_s}')
+        fi
+
+        # Also record as feedback step if timed out
+        if [[ "$timed_out" -eq 1 ]]; then
+            printf '%s' "$output_json" | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id" >/dev/null
+            local feedback_json
+            feedback_json=$(jq -n --arg content "$feedback" --arg run_id "$_run_step_id" '{type:"feedback", content:$content, run_id:$run_id}')
+            printf '%s' "$feedback_json" | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id" >/dev/null
+        else
+            printf '%s' "$output_json" | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id" >/dev/null
+        fi
+        rm -f "$_stdout_tmp" 2>/dev/null || true
+
+        # Check for final answer. The terminating block's reasoning and
+        # shell-output are recorded above like any other iteration; final
+        # carries only the answer and is always the run's last loop step.
+        if [[ -f "$final_path" ]]; then
+            [[ "$QUIET" -eq 0 ]] && echo >&2
+            progress "Final answer received"
+            local final_answer
+            final_answer=$(cat "$final_path")
+            # --rawfile, not --arg: a full-budget final answer can exceed the
+            # kernel's 128KB per-argument cap and kill jq with "Argument list
+            # too long" (rc=126), same class as the reasoning record above.
+            local _final_tmp
+            _final_tmp=$(mktemp)
+            printf '%s' "$final_answer" > "$_final_tmp"
+            rm -f "$final_path"
+            printf '%s' "$(jq -n \
+                --rawfile content "$_final_tmp" \
+                --arg run_id "$_run_step_id" \
+                '{type:"final", content:$content, run_id:$run_id}')" \
+                | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id" >/dev/null
+            redact_sensitive "$final_answer"
+            _consec_fail=0; _repeat_fail=0; _prev_fail_code=""
+            [[ "$QUIET" -eq 0 ]] && echo >&2
+            progress_dim "Trajectory: $_run_traj_id"
+            # Write thought step to parent traj referencing this sub-traj
+            # Skip when using --traj (steps already went to the shared traj)
+            if [[ -n "${_SHELLM_PARENT_TRAJ_ID:-}" && -z "$_use_traj" ]]; then
+                local _last_step_id _child_dir_name _from_traj_ref
+                _last_step_id=$(traj last --traj_dir "$_run_traj_dir" "$_run_traj_id" --field step_id 2>/dev/null) || true
+                _child_dir_name=$(basename "$run_name")
+                _from_traj_ref="$_child_dir_name"
+                jq -nc \
+                    --rawfile content "$_final_tmp" \
+                    --arg from_traj "$_run_traj_id" \
+                    --arg from_step "${_last_step_id:-}" \
+                    --arg from_traj_ref "$_from_traj_ref" \
+                    '{type:"merge", content:$content, from_traj:$from_traj, from_step:$from_step, from_traj_ref:$from_traj_ref}' \
+                    | traj append --traj_dir "$_run_traj_dir" "$_SHELLM_PARENT_TRAJ_ID" >/dev/null 2>/dev/null || true
+            fi
+            rm -f "$_final_tmp"
+            return 0
+        fi
+
+        # ── Spin/stall guard ────────────────────────────────────────────────
+        # No final answer this turn. If the executed code keeps failing without
+        # progress, abort loudly rather than spin forever burning tokens and
+        # inflating context (the classic symptom of a model whose output cannot
+        # be turned into a runnable command). A success clears the counters.
+        if [[ "$exit_code" -eq 0 ]]; then
+            _consec_fail=0; _repeat_fail=0; _prev_fail_code=""
+        else
+            _consec_fail=$(( _consec_fail + 1 ))
+            if [[ -n "$code" && "$code" == "$_prev_fail_code" ]]; then
+                _repeat_fail=$(( _repeat_fail + 1 ))
+            else
+                _repeat_fail=1
+            fi
+            _prev_fail_code="$code"
+
+            local _stall=""
+            if [[ "$SHELLM_MAX_REPEAT_FAILURES" -gt 0 && "$_repeat_fail" -ge "$SHELLM_MAX_REPEAT_FAILURES" ]]; then
+                _stall="submitted the same failing command $_repeat_fail times in a row"
+            elif [[ "$SHELLM_MAX_CONSECUTIVE_FAILURES" -gt 0 && "$_consec_fail" -ge "$SHELLM_MAX_CONSECUTIVE_FAILURES" ]]; then
+                _stall="$_consec_fail commands in a row failed with no progress"
+            fi
+
+            if [[ -n "$_stall" ]]; then
+                [[ "$QUIET" -eq 0 ]] && echo >&2
+                progress "\033[1;31mSTALL: agent $_stall (last exit=$exit_code) — aborting run\033[0m"
+                printf '%s [shellm] STALL: agent %s (last exit=%s); aborting run %s to stop a spin.\n' \
+                    "$(date -u +%FT%TZ)" "$_stall" "$exit_code" "$_run_traj_id" >&2
+                jq -nc \
+                    --arg content "shellm killed this run: the agent stalled — $_stall (last exit=$exit_code). Likely the model output could not be turned into a working command (e.g. a malformed code fence). The run was aborted to stop a token-burning spin; investigate the last few reasoning/shell-output steps." \
+                    --arg run_id "$_run_step_id" \
+                    '{type:"error", content:$content, run_id:$run_id, reason:"stall"}' \
+                    | traj append --traj_dir "$_run_traj_dir" "$_run_traj_id" >/dev/null || true
+                # For sub-runs, surface the stall to the parent trajectory too.
+                if [[ -n "${_SHELLM_PARENT_TRAJ_ID:-}" && -z "$_use_traj" ]]; then
+                    jq -nc \
+                        --arg content "(stalled: $_stall)" \
+                        --arg from_traj "$_run_traj_id" \
+                        '{type:"merge", content:$content, from_traj:$from_traj}' \
+                        | traj append --traj_dir "$_run_traj_dir" "$_SHELLM_PARENT_TRAJ_ID" >/dev/null 2>/dev/null || true
+                fi
+                return 1
+            fi
+        fi
+    done
+
+    [[ "$QUIET" -eq 0 ]] && echo >&2
+    progress "\033[1;31mMax iterations ($SHELLM_MAX_ITERATIONS) reached without final answer\033[0m"
+    # Write thought step to parent traj (even on failure)
+    # Skip when using --traj (steps already went to the shared traj)
+    if [[ -n "${_SHELLM_PARENT_TRAJ_ID:-}" && -z "$_use_traj" ]]; then
+        local _last_step_id _child_dir_name _from_traj_ref
+        _last_step_id=$(traj last --traj_dir "$_run_traj_dir" "$_run_traj_id" --field step_id 2>/dev/null) || true
+        _child_dir_name=$(basename "$run_name")
+        _from_traj_ref="$_child_dir_name"
+        jq -nc \
+            --arg content "(max iterations reached)" \
+            --arg from_traj "$_run_traj_id" \
+            --arg from_step "${_last_step_id:-}" \
+            --arg from_traj_ref "$_from_traj_ref" \
+            '{type:"merge", content:$content, from_traj:$from_traj, from_step:$from_step, from_traj_ref:$from_traj_ref}' \
+            | traj append --traj_dir "$_run_traj_dir" "$_SHELLM_PARENT_TRAJ_ID" >/dev/null 2>/dev/null || true
+    fi
+    return 1
+}
+
+# ---------------------------------------------------------------------------
+# Argument parsing & dispatch
+# ---------------------------------------------------------------------------
+
+# The command line as recorded in the shellm-run trajectory row. Trajectories
+# get rendered into prompts, exported and shared, so `--var NAME=VALUE` values
+# whose NAME looks like a credential or endpoint are masked. (Passing private
+# configuration as a bare `--var NAME` keeps it off the process command line
+# altogether.)
+_shellm_private_var_name() {
+    local u
+    u=$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')
+    [[ "$u" =~ (KEY|TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|CREDENTIALS?) \
+        || "$u" =~ (^|_)(URL|URI|ENDPOINT|DSN)(_|$) ]]
+}
+
+_redacted_cmdline() {
+    local out="shellm" prev="" a n
+    for a in "$@"; do
+        if [[ "$prev" == "--var" && "$a" == *=* ]]; then
+            n="${a%%=*}"
+            if _shellm_private_var_name "$n"; then
+                a="$n=<redacted>"
+            fi
+        fi
+        out+=" $a"
+        prev="$a"
+    done
+    printf '%s' "$out"
+}
+
+main() {
+    _SHELLM_ORIGINAL_CMD=$(_redacted_cmdline "$@")
+    start_activity_beacon
+    local context_files=()
+    local print_prompt=0
+    local _prompt_file=""
+    local _SHELLM_ENV_NAME="${SHELLM_ENV:-}"
+    local _new_env=0
+    local _use_traj=""
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                usage
+                ;;
+            -v|--verbose)
+                VERBOSE=1
+                shift
+                ;;
+            -q|--quiet)
+                QUIET=1
+                shift
+                ;;
+            -f|--file)
+                local f="${2:?Usage: shellm -f FILE \"prompt\"}"
+                [[ -f "$f" ]] || die "Context file not found: $f"
+                context_files+=("$f")
+                shift 2
+                ;;
+            --prompt-file)
+                _prompt_file="${2:?--prompt-file requires a value}"
+                [[ -f "$_prompt_file" ]] || die "Prompt file not found: $_prompt_file"
+                shift 2
+                ;;
+            -m|--model)
+                SHELLM_MODEL="${2:?--model requires a value}"
+                shift 2
+                ;;
+            --max-iterations)
+                SHELLM_MAX_ITERATIONS="${2:?--max-iterations requires a value}"
+                shift 2
+                ;;
+            --max-tokens)
+                SHELLM_MAX_TOKENS="${2:?--max-tokens requires a value}"
+                shift 2
+                ;;
+            --context-scope)
+                SHELLM_CONTEXT_SCOPE="${2:?--context-scope requires a value}"
+                shift 2
+                ;;
+            --effort)
+                SHELLM_EFFORT="${2:?--effort requires a value}"
+                shift 2
+                ;;
+            --workdir)
+                _SHELLM_WORKDIR_USER="${2:?--workdir requires a value}"
+                shift 2
+                ;;
+            --here)
+                _SHELLM_WORKDIR_USER="$PWD"
+                shift
+                ;;
+            --env)
+                _SHELLM_ENV_NAME="${2:?--env requires a value}"
+                shift 2
+                ;;
+            --new-env)
+                _new_env=1
+                shift
+                ;;
+            --temp-docker)
+                SHELLM_TEMP_DOCKER=1
+                shift
+                ;;
+            -s|--system-prompt)
+                SHELLM_SYSTEM_PROMPT="${2:?--system-prompt requires a value}"
+                shift 2
+                ;;
+            --system-prompt-file)
+                local sp_file="${2:?--system-prompt-file requires a file path}"
+                [[ -f "$sp_file" ]] || die "System prompt file not found: $sp_file"
+                SHELLM_SYSTEM_PROMPT=$(cat "$sp_file")
+                shift 2
+                ;;
+            --print-system-prompt)
+                print_prompt=1
+                shift
+                ;;
+            --docker-image)
+                SHELLM_DOCKER_IMAGE="${2:?--docker-image requires a value}"
+                _SHELLM_DOCKER_IMAGE_EXPLICIT=1
+                shift 2
+                ;;
+            --docker-access)
+                SHELLM_DOCKER_ACCESS="${2:?--docker-access requires a value}"
+                shift 2
+                ;;
+            --traj)
+                _use_traj="${2:?--traj requires TRAJ_ID}"
+                shift 2
+                ;;
+            --traj-dir)
+                SHELLM_TRAJ_DIR="${2:?--traj-dir requires DIR}"
+                shift 2
+                ;;
+            --resume)
+                _use_traj="__latest__"
+                shift
+                ;;
+            --var)
+                local _var_arg="${2:?--var requires NAME=VALUE or NAME}" _var_name
+                _var_name="${_var_arg%%=*}"
+                [[ "$_var_name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || die "--var: invalid variable name: $_var_name"
+                if [[ "$_var_arg" == *=* ]]; then
+                    _SHELLM_EXTRA_VARS+=("$_var_arg")
+                else
+                    # Bare NAME: take the value from our own environment so it
+                    # never appears on a command line (use this for API keys).
+                    [[ -n "${!_var_name+x}" ]] || die "--var $_var_name: not set in the environment (export it, or pass --var $_var_name=VALUE)"
+                    _SHELLM_EXTRA_VARS+=("$_var_name=${!_var_name}")
+                fi
+                shift 2
+                ;;
+            --bin)
+                local bin_path="${2:?--bin requires a file path}"
+                [[ -f "$bin_path" && -x "$bin_path" ]] || die "--bin file not found or not executable: $bin_path"
+                _SHELLM_EXTRA_BINS+=("$(realpath "$bin_path")")
+                shift 2
+                ;;
+            -*)
+                die "Unknown option: $1 (try shellm --help)"
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    local prompt="$*"
+    if [[ -n "$_prompt_file" ]]; then
+        # The prompt never touches argv this way, so its size is bounded by
+        # memory, not by the OS (Linux MAX_ARG_STRLEN is 128KB per string:
+        # "Argument list too long", rc=126, before the run even starts).
+        [[ -z "$prompt" ]] || die "--prompt-file and an inline prompt cannot be used together"
+        prompt=$(cat "$_prompt_file") || die "Cannot read prompt file: $_prompt_file"
+    fi
+
+    if [[ "$_new_env" -eq 1 && -n "$_SHELLM_ENV_NAME" ]]; then
+        die "--new-env and --env cannot be used together"
+    fi
+
+    validate_docker_config
+    case "$SHELLM_CONTEXT_SCOPE" in
+        traj|run) ;;
+        *) die "--context-scope must be traj or run (got '$SHELLM_CONTEXT_SCOPE')" ;;
+    esac
+
+    if [[ "$print_prompt" -eq 1 ]]; then
+        build_system_prompt "" 0
+        exit 0
+    fi
+
+    [[ -z "$prompt" && -z "$_use_traj" ]] && { usage; }
+
+    if [[ "${#context_files[@]}" -gt 0 ]]; then
+        run_loop "$prompt" "${context_files[@]}"
+    else
+        run_loop "$prompt"
+    fi
+}
+
+main "$@"

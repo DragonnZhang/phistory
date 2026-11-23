@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "db-gpt",
+  "agent": "DB-GPT",
+  "repository": "eosphoros-ai/DB-GPT",
+  "snapshot": "e4c74ff5406a5b7c95c4",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:23.672676+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "c7a8def445d5c76b01eb0651c085eb9c7133892e",
+      "path": "packages/dbgpt-app/src/dbgpt_app/openapi/api_v1/subagent/react_tools.py",
+      "sha256": "b2fad3cd0da972761fa3479c9d7503051176ed45c5a54109007a52e37061425f",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/c7a8def445d5c76b01eb0651c085eb9c7133892e/packages/dbgpt-app/src/dbgpt_app/openapi/api_v1/subagent/react_tools.py",
+      "url": "https://github.com/eosphoros-ai/DB-GPT/blob/c7a8def445d5c76b01eb0651c085eb9c7133892e/packages/dbgpt-app/src/dbgpt_app/openapi/api_v1/subagent/react_tools.py"
+    },
+    {
+      "commit": "c7a8def445d5c76b01eb0651c085eb9c7133892e",
+      "path": "packages/dbgpt-core/src/dbgpt/agent/expand/actions/tool_action.py",
+      "sha256": "450b5711f9bc4e468740a3951653666f79a7ef23ce30d5132bf83a442d90c529",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/c7a8def445d5c76b01eb0651c085eb9c7133892e/packages/dbgpt-core/src/dbgpt/agent/expand/actions/tool_action.py",
+      "url": "https://github.com/eosphoros-ai/DB-GPT/blob/c7a8def445d5c76b01eb0651c085eb9c7133892e/packages/dbgpt-core/src/dbgpt/agent/expand/actions/tool_action.py"
+    },
+    {
+      "commit": "c7a8def445d5c76b01eb0651c085eb9c7133892e",
+      "path": "packages/dbgpt-core/src/dbgpt/agent/expand/react_agent.py",
+      "sha256": "5fbc4ccca5a38547ae77aee0e0a887da54fa5b46f616d2b33aa839def9d8ac38",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/c7a8def445d5c76b01eb0651c085eb9c7133892e/packages/dbgpt-core/src/dbgpt/agent/expand/react_agent.py",
+      "url": "https://github.com/eosphoros-ai/DB-GPT/blob/c7a8def445d5c76b01eb0651c085eb9c7133892e/packages/dbgpt-core/src/dbgpt/agent/expand/react_agent.py"
+    }
+  ]
+}

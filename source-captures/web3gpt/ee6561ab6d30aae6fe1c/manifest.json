@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "web3gpt",
+  "agent": "web3gpt",
+  "repository": "markeljan/web3gpt",
+  "snapshot": "ee6561ab6d30aae6fe1c",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:27.023643+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "1c9ba797563c2305bd32bb30f078c9be2d3e2d55",
+      "path": "lib/constants.ts",
+      "sha256": "2e564f76518cc593cdad0f845f3cc15cf2cb3153d5487871dd972628c007d956",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/lib/constants.ts",
+      "url": "https://github.com/markeljan/web3gpt/blob/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/lib/constants.ts"
+    },
+    {
+      "commit": "1c9ba797563c2305bd32bb30f078c9be2d3e2d55",
+      "path": "lib/solidity/deployment-tool-result.ts",
+      "sha256": "658a9d40720b2d015c2d35cc9eb556a8849bd5e7f3047891c87e04ae953c8078",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/lib/solidity/deployment-tool-result.ts",
+      "url": "https://github.com/markeljan/web3gpt/blob/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/lib/solidity/deployment-tool-result.ts"
+    },
+    {
+      "commit": "1c9ba797563c2305bd32bb30f078c9be2d3e2d55",
+      "path": "lib/tools.ts",
+      "sha256": "826f0181bca9361f061d8c4302c1f739a69d0984d8ffe70da83c2d2cf47ae6ca",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/lib/tools.ts",
+      "url": "https://github.com/markeljan/web3gpt/blob/1c9ba797563c2305bd32bb30f078c9be2d3e2d55/lib/tools.ts"
+    }
+  ]
+}

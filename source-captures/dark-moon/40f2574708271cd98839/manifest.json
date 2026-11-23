@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "dark-moon",
+  "agent": "Dark-Moon",
+  "repository": "ASCIT31/Dark-Moon",
+  "snapshot": "40f2574708271cd98839",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:21.530703+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "bb1b70cef54c01344e90b373d48bd9a7f91e5dfe",
+      "path": "conf/agents/golang.md",
+      "sha256": "cae0c0a491c452fa19bc41692b49083a907c6bcb37b90bb5eed8ae691ff2aa82",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/bb1b70cef54c01344e90b373d48bd9a7f91e5dfe/conf/agents/golang.md",
+      "url": "https://github.com/ASCIT31/Dark-Moon/blob/bb1b70cef54c01344e90b373d48bd9a7f91e5dfe/conf/agents/golang.md"
+    },
+    {
+      "commit": "bb1b70cef54c01344e90b373d48bd9a7f91e5dfe",
+      "path": "conf/entrypoint-opencode.sh",
+      "sha256": "c4a8bd1b6f67201e3b9e0b718e2e25a00af520b2fc821babe6c84a21644dc183",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/bb1b70cef54c01344e90b373d48bd9a7f91e5dfe/conf/entrypoint-opencode.sh",
+      "url": "https://github.com/ASCIT31/Dark-Moon/blob/bb1b70cef54c01344e90b373d48bd9a7f91e5dfe/conf/entrypoint-opencode.sh"
+    },
+    {
+      "commit": "bb1b70cef54c01344e90b373d48bd9a7f91e5dfe",
+      "path": "mcp/src/tools/core/executor.py",
+      "sha256": "52d1d0753f2a52d63875911157a506d84930bd97f0006e0331dab7aaf1bbb8aa",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/bb1b70cef54c01344e90b373d48bd9a7f91e5dfe/mcp/src/tools/core/executor.py",
+      "url": "https://github.com/ASCIT31/Dark-Moon/blob/bb1b70cef54c01344e90b373d48bd9a7f91e5dfe/mcp/src/tools/core/executor.py"
+    }
+  ]
+}

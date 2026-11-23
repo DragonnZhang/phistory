@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "atomic-agent",
+  "agent": "atomic-agent",
+  "repository": "AtomicBot-ai/atomic-agent",
+  "snapshot": "966f837375967b990153",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:22.153262+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "89d65615e36b763b35bc81c1e64304bd2d0e5c7c",
+      "path": "src/prompt/default-tool-descriptors-a.ts",
+      "sha256": "a7236ba0c58901103c55d7fb66eb53eecf69f629fd9daa7654479e473a23779e",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/89d65615e36b763b35bc81c1e64304bd2d0e5c7c/src/prompt/default-tool-descriptors-a.ts",
+      "url": "https://github.com/AtomicBot-ai/atomic-agent/blob/89d65615e36b763b35bc81c1e64304bd2d0e5c7c/src/prompt/default-tool-descriptors-a.ts"
+    },
+    {
+      "commit": "89d65615e36b763b35bc81c1e64304bd2d0e5c7c",
+      "path": "src/prompt/default-tool-descriptors-b.ts",
+      "sha256": "6021e4a59bd103815716a908c78c9ab1a7b894744c5215c081b5bd36d6a3a65f",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/89d65615e36b763b35bc81c1e64304bd2d0e5c7c/src/prompt/default-tool-descriptors-b.ts",
+      "url": "https://github.com/AtomicBot-ai/atomic-agent/blob/89d65615e36b763b35bc81c1e64304bd2d0e5c7c/src/prompt/default-tool-descriptors-b.ts"
+    },
+    {
+      "commit": "89d65615e36b763b35bc81c1e64304bd2d0e5c7c",
+      "path": "src/prompt/stable-prefix.ts",
+      "sha256": "ab69ab6698906ff84dacd7e0b39173597c74d312885bb8431c5cc20c43a44d0f",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/89d65615e36b763b35bc81c1e64304bd2d0e5c7c/src/prompt/stable-prefix.ts",
+      "url": "https://github.com/AtomicBot-ai/atomic-agent/blob/89d65615e36b763b35bc81c1e64304bd2d0e5c7c/src/prompt/stable-prefix.ts"
+    },
+    {
+      "commit": "89d65615e36b763b35bc81c1e64304bd2d0e5c7c",
+      "path": "src/tools/os/shell/shell-result.ts",
+      "sha256": "4837f9bdc6eb65ef673036be1786bb90b2ad42e2080f06292ccf974b3ffa5b98",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/89d65615e36b763b35bc81c1e64304bd2d0e5c7c/src/tools/os/shell/shell-result.ts",
+      "url": "https://github.com/AtomicBot-ai/atomic-agent/blob/89d65615e36b763b35bc81c1e64304bd2d0e5c7c/src/tools/os/shell/shell-result.ts"
+    }
+  ]
+}

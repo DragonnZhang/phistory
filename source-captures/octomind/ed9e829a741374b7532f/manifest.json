@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "octomind",
+  "agent": "octomind",
+  "repository": "Muvon/octomind",
+  "snapshot": "ed9e829a741374b7532f",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:28.008495+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "818d0f1986fbfd8cb9facfce49b265d25bf7248d",
+      "path": "config-templates/default.toml",
+      "sha256": "a55ca006375eac332faa4b754ed61a0d8855de25214521d18322e9b5d9b1e3e4",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/818d0f1986fbfd8cb9facfce49b265d25bf7248d/config-templates/default.toml",
+      "url": "https://github.com/Muvon/octomind/blob/818d0f1986fbfd8cb9facfce49b265d25bf7248d/config-templates/default.toml"
+    },
+    {
+      "commit": "818d0f1986fbfd8cb9facfce49b265d25bf7248d",
+      "path": "src/mcp/runtime/capability.rs",
+      "sha256": "c5932267d0090c1a7ec3f43ec1bca2c1b2ff6706858c3b6ccbeba88eaadb58c6",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/818d0f1986fbfd8cb9facfce49b265d25bf7248d/src/mcp/runtime/capability.rs",
+      "url": "https://github.com/Muvon/octomind/blob/818d0f1986fbfd8cb9facfce49b265d25bf7248d/src/mcp/runtime/capability.rs"
+    },
+    {
+      "commit": "818d0f1986fbfd8cb9facfce49b265d25bf7248d",
+      "path": "src/providers.rs",
+      "sha256": "36d9a447e3754825936b1bd80b4d7988f0e51a165e89c18f0db6da35a3b2151c",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/818d0f1986fbfd8cb9facfce49b265d25bf7248d/src/providers.rs",
+      "url": "https://github.com/Muvon/octomind/blob/818d0f1986fbfd8cb9facfce49b265d25bf7248d/src/providers.rs"
+    },
+    {
+      "commit": "818d0f1986fbfd8cb9facfce49b265d25bf7248d",
+      "path": "src/session/chat/response/tool_result_processor.rs",
+      "sha256": "baa74b61f03821b9eca47b879694abd191d282b4d94cbc02385b7f59be79e225",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/818d0f1986fbfd8cb9facfce49b265d25bf7248d/src/session/chat/response/tool_result_processor.rs",
+      "url": "https://github.com/Muvon/octomind/blob/818d0f1986fbfd8cb9facfce49b265d25bf7248d/src/session/chat/response/tool_result_processor.rs"
+    },
+    {
+      "commit": "818d0f1986fbfd8cb9facfce49b265d25bf7248d",
+      "path": "src/session/prompt.rs",
+      "sha256": "c7802e83c8c9739ea5064bd7716326f9075f58b7e19a29c47de0925ccb2cce63",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/818d0f1986fbfd8cb9facfce49b265d25bf7248d/src/session/prompt.rs",
+      "url": "https://github.com/Muvon/octomind/blob/818d0f1986fbfd8cb9facfce49b265d25bf7248d/src/session/prompt.rs"
+    }
+  ]
+}

@@ -1,0 +1,1609 @@
+# openagents — System prompt source
+
+Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.
+
+Source templates and assembly code; runtime substitutions and optional modes are not resolved.
+
+## coax/lib/microcoder/loop.coax
+
+Source: https://github.com/OpenAgentsInc/openagents/blob/ff7aef3452208a63db93a09dc9255b15cffc3d80/coax/lib/microcoder/loop.coax
+
+SHA-256: `30ab55cc623d2b71fa2617b362fba34193a4c121a2969b4452ef626160583bda`
+
+````
+// DEPRECATED (2026-11-22, #13978/#13983): Microcoder is deprecated for local Inkling 2 Mini
+// and excluded from OpenAgents Desktop v1.0 (--minimal) release builds.
+// Active native Inkling 2.0 harness: coax/lib/inky/ (worker: coder/tui/inky.coax, spec: docs/coder/inky-spec.md).
+// Kept strictly for legacy --full developer cloud comparisons until cloud models migrate or retire.
+//
+// Microcoder's loop (docs/coder/microcoder.md, Part 1): one structured
+// model call a step, the commands it asks for run and recorded, until the
+// run ends.
+//
+//   state = {environment, task, route}
+//   while not finished:
+//       action = generate(state)          # one structured call -> next_action
+//       run action.commands and views, record their output in state
+//
+// The loop owns no I/O. The caller sends mc_request's GwRequest through a
+// plan (coax/lib/gateway/plan.coax) and feeds each GwEvent to mc_feed; when
+// mc_feed says MC_TOOLS it runs the action's commands and views (tools.coax)
+// and reports them with mc_command / mc_view, then mc_tools_done. So the
+// loop runs the same against a real gateway or a scripted one.
+//
+// Endings: finished (a reply with finished), asked (ask: question; the
+// reply is the question), bad_replies (three replies in a row that fail the
+// schema), no_capacity (every gateway refused before the first token),
+// stopped (mc_stop), idle (three steps with no commands, no views and no
+// reply). Microcoder adds no step or time limit of its own: the user sets
+// limits.
+
+#load "text_action.coax";
+#load "commit.coax";
+#load "device.coax";
+
+MC_END_NONE :: 0;
+MC_END_FINISHED :: 1;
+MC_END_ASKED :: 2;
+MC_END_BAD_REPLIES :: 3;
+MC_END_NO_CAPACITY :: 4;
+MC_END_STOPPED :: 5;
+MC_END_IDLE :: 6;
+MC_END_FAILED :: 7;
+
+MC_WAIT :: 0;                    // keep feeding events
+MC_TOOLS :: 1;                   // run mc_pending's commands and views, then mc_tools_done
+MC_AGAIN :: 2;                   // send mc_request again: the next step
+MC_ENDED :: 3;                   // the run is over: mc_ending, mc_reply
+MC_FINISH :: 4;                  // a run with the memory: the model says finished; answer with mc_finish_accept or mc_finish_refuse
+
+MC_COMMAND_DEFAULT :: 30;        // seconds a command gets when its owner names no limit (the system prompt says so)
+MC_BAD_LIMIT :: 3;
+MC_IDLE_LIMIT :: 3;
+MC_LOCAL_WORK_MIN :: 0.5;
+
+MC_SYSTEM :: "You are Microcoder, a coding agent. Each turn you get JSON state (environment, task, route, left_out (only when your oldest steps have left the state), earlier, actions, notes). Reply with one next_action JSON object.\n- Plain question: reply at once with finished true.\n- Order per turn: edits (exact replacement: old appears once verbatim without line numbers; keep edits minimal — changed lines + 1-2 context lines, never whole procedures), commands (/bin/sh in cwd, killed after environment.command_seconds, or after 30 seconds when that is not given; long output is cut, and when it is saved whole the cut line names the file, which you can view by range), then view (PATH or PATH:A-B for lines A to B; shown as numbered lines, the first 150 or the range asked for). An applied edit's result shows its new text with line numbers; a failed edit's shows the file's nearest lines. Batch actions in one turn.\n- Limits: at most about 32 KB of your state per step; about 140 KB of recent results before compacting (keeping rationale, command head/tail, and only the names of the files it viewed). Search first (git grep -n), view the lines you need (FILE:A-B, <=80 lines; avoid re-reading unchanged lines), keep key facts concisely (1-2 sentences) in that step's rationale, which stays. Steps that left are history, not a new request. When needed, view a file it names again to see it as it is now.\n- Work in environment.cwd (no git worktree/branch/commit unless asked; A git commit's result carries last_check; Never run git push unless explicitly asked). Skip baseline tests; edit each file as you read it (never empty old on existing files), batch edits + verification in one step, ensure every task file and requirement is verified before finished true. Skip AGENTS.md/SKILL.md unless asked.\n- Finish with finished true and a short reply (ask: question only when blocked). When route.local_work < 0.5, run no commands. On multi-step tasks, include todos ({id, content, status}).";
+
+// What a run's system prompt gains with each mode (mc_aware; docs/coder/microcoder.md, "Compiler
+// questions and working memory"; GitHub #13444, #13445). They go after MC_SYSTEM, so a run
+// with neither sends MC_SYSTEM and nothing else.
+MC_AWARE_INTEL :: "\n- The Coax compiler answers questions about .coax files. questions is a list of up to 16, each one line: defines NAME (where NAME is declared: kind, file, lines), uses NAME [FILE] (every use, with the procedure or check it is written in; FILE says which declaration you mean when several files declare the name), exports FILE (what a file declares), show NAME [FILE] (one declaration's lines numbered, with their hash), check FILE (the file's diagnostics; a part of a larger unit is checked through the file that loads it), explain CODE (what a diagnostic code such as E0325 means), vocab NAME (what a library name or keyword is), effects FILE [PROC] (what a procedure may do, with a call path to each effect), depends FILE (the declarations it uses from other files). The compiler's answers are certain where a search is a guess: ask it before you search for a symbol, and show a declaration you can name rather than view its file. Each answer is a result named \"ask: ...\", with exit 0, bounded, and it says how many records it left out. A result that starts \"no answer:\" (exit 1) means the compiler could not answer: use git grep and view for that question.\n- Hashes tie an edit to what you read. A view ends with a line that gives the file's hash, and show gives a declaration's. In an edit, seen is the hash you read (its 12 hex digits), or \"\" for none. When seen is given and the file is no longer what you read, the edit is refused as stale: nothing is written, and its result gives the hash as it is now and the nearest lines. Read them and edit again. To replace a whole declaration, set name to its name, path to its file, seen to the hash show gave (or the file's), old to \"\" and new to the declaration's whole new text; otherwise name is \"\". An applied edit of a .coax file returns the file's new hash and its check: fix what the check reports before you go on.\n- In one turn the order is: edits, then questions, then commands, then view. So a check FILE question sees that turn's edits.";
+MC_AWARE_MEMORY :: "\n- You have a working memory. Your state shows memory (findings, changed, open); steps that left the state (left_out) are still in it. notes takes up to 8 one-line findings (prefix PATH:A-B to tie to lines).\n- A check the task names in backticks passes only when its latest run exited 0 after your last edit; finished true before that is refused with what is open.";
+
+MC_FINISH_REFUSALS :: 2;         // times a finish is refused before it stands
+
+// Loop detection (#13978): counts consecutive read-only steps repeating rationales or
+// same-intent searches with no new facts; nudges at MC_STALL_NUDGE, forces finish at MC_STALL_LIMIT.
+MC_STALL_NUDGE :: 3;
+MC_STALL_LIMIT :: 5;
+MC_STALL_HIST :: 12;
+MC_STALL_INTENTS :: 32;
+MC_RAT_WORDS :: 16;
+MC_STALL_NOTE :: "Loop detected: recent steps repeated prior rationales or searches with no new facts. Stop searching and answer now with finished:true, commands:[], edits:[], view:[].";
+MC_STALL_FALLBACK :: "Stopped after repeated search steps produced no new findings.";
+
+McRatSig :: struct {
+  words: [MC_RAT_WORDS] u32;
+  n: int;
+  exact: u32;
+}
+
+McStall :: struct {
+  count: int;                    // consecutive read-only steps with repeated rationale or no new facts
+  rat_hist: [MC_STALL_HIST] McRatSig;
+  nrat: int;
+  intent_hist: [MC_STALL_INTENTS] u32;
+  nintent: [1] int;
+  out_hist: [MC_STALL_INTENTS] u32;
+  nout: [1] int;
+  mutated: bool;
+  dup_rat: bool;
+  new_fact: bool;
+}
+
+mc_ending_name :: (e: int) -> string {
+  if e == MC_END_FINISHED { return "finished"; }
+  if e == MC_END_ASKED { return "asked"; }
+  if e == MC_END_BAD_REPLIES { return "bad_replies"; }
+  if e == MC_END_NO_CAPACITY { return "no_capacity"; }
+  if e == MC_END_STOPPED { return "stopped"; }
+  if e == MC_END_IDLE { return "idle"; }
+  if e == MC_END_FAILED { return "failed"; }
+  return "";
+}
+
+MC_REPLY_BYTES :: 262144;        // one model reply (raw JSON, decoded arena, normalized text)
+
+McLoopBuffers :: struct {
+  prompt: [MC_PROMPT_BYTES] u8;
+  raw: [MC_REPLY_BYTES] u8;
+  arena: [MC_REPLY_BYTES] u8;
+  norm: [MC_REPLY_BYTES] u8;     // a text reply's action, rewritten whole
+  system: [24576] u8;            // the system prompt of a run with modes, user and workspace instructions; no bigger, since
+                                 // mcworker's journal context frame (AJ_PAYLOAD, 32 KB) carries it escaped with the schema
+                                 // (run.coax mc_run_load_instructions gives the workspace's what is left, GitHub #13808)
+  schema: [8192] u8;            // with every mode and the device member (device.coax) last
+  todos: [8192] u8;              // latest serialized todos JSON array
+}
+
+McLoop :: struct {
+  st: [1] McState;
+  local_work: f64;
+  prompt: [] u8;
+  raw: [] u8; nr: int;           // this step's reply as it streams
+  raw_overflow: bool;            // true when a step's reply exceeded raw.count
+  norm: [] u8;
+  got_text: bool;
+  ar: [1] ClArena;
+  pending: [1] McAction;
+  msgs: [1] GwMessage;
+  steps: int;                    // model calls answered
+  bad: int;                      // replies in a row that failed the schema
+  idle: int;                     // steps in a row with no commands, views or reply
+  ending: int;
+  why: string;                   // no_capacity: the gateways' last reason
+  reply: string;                 // finished or asked: what the user sees
+  check: [1] McLastCheck;        // the last test or check run, for a commit's result (commit.coax)
+  stall: [1] McStall;            // loop-detection state (value-embedded: zero extra slice origins)
+  system: string;                // what every request of the run sends: MC_SYSTEM and MC_SCHEMA, or mc_aware's
+  schema: string;
+  intel: bool;                   // the action's questions, and each edit's seen and name, are read
+  memory: bool;                  // the action's notes are read, and a finish is held for the owner (MC_FINISH)
+  finish_refused: int;           // finishes the owner refused
+  agents: bool;                  // the action's delegate is read: the owner runs sub-agents (mc_agents)
+  device: bool;                  // the action's device is read: the iOS Simulator is on (mc_device)
+  claude: bool;                  // its levels include the Claude models: the owner runs Claude Code too
+  openrouter: bool;              // its levels include openrouter: the owner runs an OpenRouter model for sub-agents
+  inkling: bool;                 // its levels include inkling: free local/LAN Inkling/psionic sub-agents
+  no_ask: bool;                  // interactive ask: question is disabled; never pause with MC_END_ASKED (GitHub #13701)
+  images: [] GwImage;            // multimodal images attached to the user message for this run
+  sent: int;                     // the last request's state, escaped, with its room for the system prompt and schema
+  long_retry: bool;              // this request was refused as too long and sent again (mc_feed): once each
+  too_long: int;                 // requests refused as too long this run
+  todos: [] u8; ntodos: int;     // latest todos JSON array ([{"id":...,"content":...,"status":...}])
+  todos_dirty: bool;             // true when the last action updated todos
+}
+
+// The state's buffers and the loop's are separate (sb, b), each live as long as the loop.
+mc_init :: (l: [] McLoop, sb: [] McStateBuffers, b: [] McLoopBuffers, environment: string, task: string, route: string, local_work: f64) {
+  l[0] = McLoop.{prompt = b[0].prompt[..], raw = b[0].raw[..], norm = b[0].norm[..], todos = b[0].todos[..], local_work = local_work, system = MC_SYSTEM, schema = MC_SCHEMA};
+  l[0].ar[0] = ClArena.{buf = b[0].arena[..]};
+  mc_state_init(l[0].st[..], sb, environment, task, route);
+}
+
+// Turns on, for a loop mc_init set up, the compiler's members (intel) and the memory's
+// (memory): the request's schema gains them and its system prompt gains a section for each.
+// With neither, nothing changes. False when they don't fit b (they do).
+mc_aware :: (l: [] McLoop, b: [] McLoopBuffers, intel: bool, memory: bool) -> bool {
+  if !intel && !memory { return true; }
+  n := json_raw(b[0].system[..], 0, MC_SYSTEM);
+  if intel { n = json_raw(b[0].system[..], n, MC_AWARE_INTEL); }
+  if memory { n = json_raw(b[0].system[..], n, MC_AWARE_MEMORY); }
+  schema := mc_schema(b[0].schema[..], intel, memory);
+  if n < 0 || schema.count == 0 { return false; }
+  l[0].system = cast(string) b[0].system[0..<n]; l[0].schema = schema;
+  l[0].intel = intel; l[0].memory = memory;
+  return true;
+}
+
+// Sub-agents (GitHub #13655): what a run whose owner runs them is told, after MC_SYSTEM and
+// mc_aware's sections.
+MC_AGENTS :: "\n- You can hand work to sub-agents. delegate holds up to 6 standalone parallel tasks ({level, task[, resume, stop]}). Levels: hydrogen (fast/light), carbon (strong), neon (frontier/fast). Results return as agent LEVEL: TASK as soon as one ends; others stay running with their number. Use resume with that number and a note (the note reaches it as more input between its steps; empty waits; stop:true stops it). Don't duplicate work; leave delegate empty when doing the work yourself.";
+// What a run is told when its owner also runs Claude Code sub-agents (GitHub #13660), after MC_AGENTS.
+MC_AGENTS_CLAUDE :: "\n- Four more levels hand a task to Claude Code, on the person's own Claude login, with Claude's tools in your working directory: haiku, sonnet, opus and fable. From weakest to strongest the levels are: haiku, sonnet, carbon and neon, opus, fable. carbon and neon are stronger than haiku and sonnet, so never pick haiku or sonnet for hard work: use them only when the person asks for Claude Haiku or Claude Sonnet by name. Pick opus or fable when the person asks for them, or when a task needs more than carbon or neon gives: opus for hard work that takes careful reasoning, fable for the hardest. When the person asks for Claude and names no model, pick by the task: sonnet for everyday work, opus or fable for hard work. Otherwise use hydrogen, carbon or neon.";
+// What a run is told when its owner runs an OpenRouter model for sub-agents, around the model's id.
+MC_AGENTS_OPENROUTER_A :: "\n- One more level, openrouter, hands a task to ";
+MC_AGENTS_OPENROUTER_B :: " through OpenRouter, in a run of its own with your tools in your working directory. The person chose this model for sub-agents. Use level openrouter when the person asks for OpenRouter or names this model, or asks for every sub-agent to use it. Otherwise pick as above.";
+MC_AGENTS_INKLING :: "\n- IMPORTANT: level inkling runs on a FREE ($0) local GPU on this machine/LAN. When a task touches 2+ files or needs symbol/file discovery beyond step 0, actively delegate parallel read/search/check subtasks to level inkling to preserve cloud budget for surgical edits.";
+// Turns on delegation for a loop mc_init set up (after mc_aware, when the run has a mode): the
+// schema gains delegate and the system prompt MC_AGENTS. False when they don't fit b (they do).
+// claude: with the Claude levels (MC_AGENTS_CLAUDE). openrouter: the OpenRouter model offered as
+// level openrouter ("" for none). inkling: with the free local inkling level.
+mc_agents :: (l: [] McLoop, b: [] McLoopBuffers, claude: bool, openrouter: string) -> bool {
+  return mc_agents_ex(l, b, claude, openrouter, false);
+}
+mc_agents_ex :: (l: [] McLoop, b: [] McLoopBuffers, claude: bool, openrouter: string, inkling: bool) -> bool {
+  sb: [4096] u8;
+  schema := mc_schema_delegate_all(l[0].schema, sb[..], claude, openrouter.count > 0, inkling);
+  n := json_raw(b[0].system[..], 0, l[0].system);          // in place when mc_aware wrote it there
+  n = json_raw(b[0].system[..], n, MC_AGENTS);
+  if claude { n = json_raw(b[0].system[..], n, MC_AGENTS_CLAUDE); }
+  if openrouter.count > 0 { n = json_raw(b[0].system[..], n, MC_AGENTS_OPENROUTER_A); n = json_raw(b[0].system[..], n, openrouter); n = json_raw(b[0].system[..], n, MC_AGENTS_OPENROUTER_B); }
+  if inkling { n = json_raw(b[0].system[..], n, MC_AGENTS_INKLING); }
+  if n < 0 || schema.count == 0 || schema.count > b[0].schema.count { return false; }
+  for c, i: schema { b[0].schema[i] = c; }
+  l[0].system = cast(string) b[0].system[0..<n]; l[0].schema = cast(string) b[0].schema[0..<schema.count];
+  l[0].agents = true; l[0].claude = claude; l[0].openrouter = openrouter.count > 0; l[0].inkling = inkling;
+  return true;
+}
+
+// Turns on the iOS Simulator for a loop mc_init set up (device.coax; GitHub #13811): the schema
+// gains device and the system prompt MC_DEVICE. False when they don't fit b.
+mc_device :: (l: [] McLoop, b: [] McLoopBuffers) -> bool {
+  sb: [8192] u8;
+  schema := mc_schema_device(l[0].schema, sb[..]);
+  n := json_raw(b[0].system[..], 0, l[0].system);
+  n = json_raw(b[0].system[..], n, MC_DEVICE);
+  if n < 0 || schema.count == 0 || schema.count > b[0].schema.count { return false; }   // mutant: equivalent (MC_DEVICE.count > 1 so n is -1 or > 1, and sb is 8192 bytes like b[0].schema)
+  for c, i: schema { b[0].schema[i] = c; }
+  l[0].system = cast(string) b[0].system[0..<n]; l[0].schema = cast(string) b[0].schema[0..<schema.count];
+  l[0].device = true;
+  return true;
+}
+
+// Interactive questioning disabled (GitHub #13701): what a run is told after MC_SYSTEM/mc_aware/mc_agents.
+MC_NO_ASK :: "\n- Interactive questions are disabled. Always keep ask set to none; never pause to ask the user a question. Make reasonable autonomous decisions and complete the task directly.";
+// Disables ask: question on a loop mc_init set up (after mc_aware/mc_agents): restricts the
+// schema's ask enum to ["none"], appends MC_NO_ASK to the system prompt, and prevents MC_END_ASKED.
+mc_no_ask :: (l: [] McLoop, b: [] McLoopBuffers) -> bool {
+  sb: [4096] u8;
+  schema := mc_schema_no_ask(l[0].schema, sb[..]);
+  n := json_raw(b[0].system[..], 0, l[0].system);
+  n = json_raw(b[0].system[..], n, MC_NO_ASK);
+  if n < 0 || schema.count == 0 || schema.count > b[0].schema.count { return false; }
+  for c, i: schema { b[0].schema[i] = c; }
+  l[0].system = cast(string) b[0].system[0..<n]; l[0].schema = cast(string) b[0].schema[0..<schema.count];
+  l[0].no_ask = true;
+  return true;
+}
+
+// Appends workspace instructions (e.g. AGENTS.md or CLAUDE.md fallback) to the loop's system
+// prompt after mc_aware/mc_agents/mc_no_ask. Empty text is a no-op and returns true.
+// False when the combined system prompt does not fit b[0].system (leaving l[0].system unchanged).
+mc_instructions :: (l: [] McLoop, b: [] McLoopBuffers, text: string) -> bool {
+  if text.count == 0 { return true; }
+  n := json_raw(b[0].system[..], 0, l[0].system);
+  n = json_raw(b[0].system[..], n, text);
+  if n < 0 { return false; }
+  l[0].system = cast(string) b[0].system[0..<n];
+  return true;
+}
+
+// The next step's request: the system prompt, the state as JSON, the strict
+// next_action schema. The plan fills in each attempt's model. Valid until
+// the next mc_request. It is at most the state's request_max (state.coax mc_budget; MC_REQUEST_MAX,
+// the journal's bound, at most).
+mc_request :: (l: [] McLoop) -> GwRequest {
+  l[0].nr = 0; l[0].raw_overflow = false; l[0].got_text = false;
+  state := mc_state_json(l[0].st[..], l[0].prompt);
+  // a run with a mode on sends a longer system prompt and schema (the schema's quotes are escaped)
+  room := MC_REQUEST_ROOM + (l[0].system.count - MC_SYSTEM.count) + 2 * (l[0].schema.count - MC_SCHEMA.count);
+  // too long to send (escaped once more inside the request's JSON): the earliest steps leave
+  most := l[0].st[0].request_max;
+  for guard: 0..<24 {
+    if state.count > 0 && mc_escaped_size(state) + room <= most { break; }
+    if l[0].st[0].nacts == 0 {
+      // nothing left to compact (a small window, or a request refused as too long): earlier's oldest half leaves
+      if l[0].st[0].nearly == 0 { break; }
+      mc_earlier_drop(l[0].st[..], l[0].st[0].nearlier / 2);
+    } else {
+      kept := l[0].st[0].nlog;
+      mc_log_drop(l[0].st[..], kept / 2);
+      if l[0].st[0].nlog == kept { mc_log_drop(l[0].st[..], 0); }
+    }
+    state = mc_state_json(l[0].st[..], l[0].prompt);
+  }
+  l[0].sent = mc_escaped_size(state) + room;
+  l[0].msgs[0] = GwMessage.{role = "user", text = state, images = l[0].images};
+  return GwRequest.{system = l[0].system, messages = l[0].msgs[..], schema = l[0].schema, schema_name = MC_SCHEMA_NAME, schema_hint = MC_TEXT_REMINDER};
+}
+
+mc_end :: (l: [] McLoop, ending: int) -> int { l[0].ending = ending; return MC_ENDED; }
+
+// A provider refused the request as longer than its window (GitHub #13730; Codex trims and
+// retries on ContextWindowExceeded, codex-rs/core/src/compact.rs): every step is compacted, the
+// run's request bound drops to three quarters of what was refused (so later steps fit too), and
+// the request goes again, once. A second refusal of the same request ends the run as before.
+mc_too_long :: (l: [] McLoop) -> int {
+  l[0].long_retry = true; l[0].too_long += 1;
+  mc_compact(l[0].st[..], 0);
+  fixed := mc_escaped_size(l[0].st[0].environment) + mc_escaped_size(l[0].st[0].task) + l[0].st[0].nmem;
+  mc_budget_request(l[0].st[..], l[0].sent / 4 * 3, fixed);
+  return MC_AGAIN;
+}
+
+// Sizes the state's budgets from the model's context window in tokens (0 when unknown: the
+// constants stay), before the run's first request (run.coax mc_run_start). What every request
+// carries beside the steps (the facts, the task, the memory's room) comes out of the room first.
+mc_window :: (l: [] McLoop, window: int) {
+  fixed := mc_escaped_size(l[0].st[0].environment) + mc_escaped_size(l[0].st[0].task) + mc_escaped_size(l[0].st[0].route);
+  if l[0].memory { fixed += MC_MEM_BYTES; }
+  fixed += (l[0].system.count - MC_SYSTEM.count) + 2 * (l[0].schema.count - MC_SCHEMA.count);
+  mc_budget(l[0].st[..], window, fixed);
+}
+
+// One event of the step's call. Text accumulates; done hands the reply to
+// mc_take; a refusal with no text is no_capacity (the plan tried every
+// gateway), one after text is a reply cut short (a bad reply).
+mc_feed :: (l: [] McLoop, ev: GwEvent) -> int {
+  if l[0].ending != MC_END_NONE { return MC_ENDED; }
+  if ev.kind == GW_EV_TEXT {
+    l[0].got_text = true;
+    for c: ev.text {
+      if l[0].nr < l[0].raw.count { l[0].raw[l[0].nr] = c; l[0].nr += 1; }
+      else { l[0].raw_overflow = true; }
+    }
+    return MC_WAIT;
+  }
+  if ev.kind == GW_EV_REASONING { return MC_WAIT; }
+  if ev.kind == GW_EV_REFUSED {
+    if !l[0].got_text && !l[0].long_retry && gw_too_long(ev.status, ev.reason) { return mc_too_long(l); }
+    if !l[0].got_text { l[0].why = ev.reason; return mc_end(l, MC_END_NO_CAPACITY); }
+    return mc_bad(l, "the reply was cut off before it finished");
+  }
+  if ev.kind == GW_EV_DONE {
+    if l[0].raw_overflow { l[0].long_retry = false; return mc_bad(l, "the reply exceeded the 256 KB reply buffer; split large edits into smaller changes"); }
+    // When a reply is truncated at the provider context/output ceiling ("length") and fails to parse,
+    // compact the state once so the next step regains output headroom instead of looping into bad_replies.
+    if ev.reason == "length" && !l[0].long_retry && l[0].st[0].nacts > 1 {
+      raw_text := cast(string) l[0].raw[0..<l[0].nr];
+      l[0].ar[0].at = 0; l[0].ar[0].full = false;
+      more := l[0].intel || l[0].memory;
+      chk := mc_action_parse_as(l[0].ar[..], raw_text, l[0].pending[..], more);
+      if chk.count > 0 {
+        l[0].ar[0].at = 0; l[0].ar[0].full = false;
+        chk = mc_text_action_as(l[0].ar[..], raw_text, l[0].norm, l[0].pending[..], more);
+      }
+      if chk.count > 0 { return mc_too_long(l); }
+    }
+    l[0].long_retry = false;
+    return mc_take(l, cast(string) l[0].raw[0..<l[0].nr]);
+  }
+  return MC_WAIT;
+}
+
+mc_bad :: (l: [] McLoop, why: string) -> int {
+  l[0].steps += 1;
+  l[0].bad += 1;
+  if l[0].bad >= MC_BAD_LIMIT { return mc_end(l, MC_END_BAD_REPLIES); }
+  nb: [256] u8;
+  n := json_raw(nb[..], 0, "Your last reply was refused: ");
+  n = json_raw(nb[..], n, why);
+  n = json_raw(nb[..], n, ". Answer with one next_action object.");
+  mc_note(l[0].st[..], ifx n < 0 then "Your last reply was refused. Answer with one next_action object." else cast(string) nb[0..<n]);
+  return MC_AGAIN;
+}
+
+
+// Records the action's todos as a compact JSON array in l[0].todos and marks todos_dirty.
+mc_todos_record :: (l: [] McLoop, a: McAction) {
+  if !a.has_todos { return; }
+  o := l[0].todos;
+  n := json_raw(o, 0, "[");
+  for i: 0..<a.nt {
+    if i > 0 { n = json_raw(o, n, ","); }
+    n = json_raw(o, n, "{\"id\":"); n = json_write_string(o, n, a.todos[i].id);
+    n = json_raw(o, n, ",\"content\":"); n = json_write_string(o, n, a.todos[i].content);
+    n = json_raw(o, n, ",\"status\":"); n = json_write_string(o, n, a.todos[i].status);
+    n = json_raw(o, n, "}");
+  }
+  n = json_raw(o, n, "]");
+  if n >= 0 { l[0].ntodos = n; l[0].todos_dirty = true; }
+}
+
+// A whole reply: checked, then acted on.
+mc_take :: (l: [] McLoop, text: string) -> int {
+  l[0].ar[0].at = 0; l[0].ar[0].full = false;
+  more := l[0].intel || l[0].memory;
+  why := mc_action_parse_as(l[0].ar[..], text, l[0].pending[..], more);
+  if why.count > 0 && more {   // mutant: equivalent (parser error messages are empty or >= 2 bytes)
+    // an action whose added members are wrong is refused whole: read as text it would lose them, and its edits
+    l[0].ar[0].at = 0; l[0].ar[0].full = false;
+    if mc_action_parse(l[0].ar[..], text, l[0].pending[..]).count == 0 { return mc_bad(l, why); }   // mutant: equivalent (parser error messages are empty or >= 2 bytes)
+  }
+  if why.count > 0 {   // mutant: equivalent (parser error messages are empty or >= 2 bytes)
+    // a gateway without strict schemas answers in text: read the action out of it
+    l[0].ar[0].at = 0; l[0].ar[0].full = false;   // mutant: equivalent (if the prior parse overflowed ar on text, mc_text_action_as at i=0 overflows ar again)
+    why = mc_text_action_as(l[0].ar[..], text, l[0].norm, l[0].pending[..], more);
+  }
+  if why.count > 0 { return mc_bad(l, why); }   // mutant: equivalent (parser error messages are empty or >= 2 bytes)
+  if l[0].agents { why = mc_action_delegates_all(l[0].ar[..], text, l[0].pending[..], l[0].claude, l[0].openrouter, l[0].inkling); if why.count > 0 { return mc_bad(l, why); } }   // mutant: equivalent (parser error messages are empty or >= 2 bytes)
+  if l[0].device { why = mc_action_device(l[0].ar[..], text, l[0].pending[..], l[0].steps + 1); if why.count > 0 { return mc_bad(l, why); } }   // mutant: equivalent (parser error messages are empty or >= 2 bytes)
+  l[0].steps += 1;
+  l[0].bad = 0;
+  // a finish that carries edits, commands or views is a working step: they are run, not
+  // dropped, and the run finishes in a turn of its own, once it has seen their results
+  // a mode's members are read only with that mode on
+  if more && !l[0].intel { l[0].pending[0].nq = 0; for i: 0..<l[0].pending[0].ne { l[0].pending[0].edits[i].seen = ""; l[0].pending[0].edits[i].name = ""; } }
+  if more && !l[0].memory { l[0].pending[0].nn = 0; }
+  if l[0].pending[0].finished && (l[0].pending[0].nc > 0 || l[0].pending[0].ne > 0 || l[0].pending[0].nv > 0 || l[0].pending[0].nq > 0 || l[0].pending[0].nd > 0) { l[0].pending[0].finished = false; }
+  a := l[0].pending[0];
+  mc_todos_record(l, a);
+  // with the memory the owner decides a finish (the finish rule): the step is open for its notes
+  if a.finished && l[0].memory { mc_action_begin(l[0].st[..], a.rationale); return MC_FINISH; }
+  if a.finished { l[0].reply = a.reply; mc_record_bare(l); return mc_end(l, MC_END_FINISHED); }
+  if a.asks {
+    if l[0].no_ask {
+      mc_record_bare(l);
+      l[0].idle += 1;
+      if l[0].idle >= MC_IDLE_LIMIT { l[0].reply = a.reply; return mc_end(l, MC_END_FINISHED); }
+      mc_note(l[0].st[..], "Interactive questioning is disabled (ask must stay none). Do not pause to ask a question; proceed autonomously or finish with your reply.");
+      return MC_AGAIN;
+    }
+    l[0].reply = a.reply; mc_record_bare(l); return mc_end(l, MC_END_ASKED);
+  }
+  if a.nc == 0 && a.nv == 0 && a.ne == 0 && a.nq == 0 && a.nn == 0 && a.nd == 0 {
+    mc_record_bare(l);
+    l[0].idle += 1;
+    if l[0].idle >= MC_IDLE_LIMIT { return mc_end(l, MC_END_IDLE); }
+    return MC_AGAIN;
+  }
+  l[0].idle = 0;
+  mc_action_begin(l[0].st[..], a.rationale);
+  if (a.nc > 0 || a.ne > 0) && l[0].local_work < MC_LOCAL_WORK_MIN {
+    for i: 0..<a.ne { mc_action_edit(l[0].st[..], a.edits[i].path, false, "this request is not local work: answer without edits"); }
+    for i: 0..<a.nc { mc_action_refused(l[0].st[..], a.commands[i], "this request is not local work: answer without commands"); }
+    mc_note(l[0].st[..], "Your commands were refused: this request is not local work. Answer from what you know.");
+    l[0].pending[0].nc = 0; l[0].pending[0].ne = 0;
+    if a.nv == 0 && a.nq == 0 && a.nn == 0 && a.nd == 0 { mc_action_end(l[0].st[..]); return MC_AGAIN; }
+  }
+  p := l[0].pending[0];
+  mc_stall_begin(l[0].stall[..], p);
+  return MC_TOOLS;
+}
+
+// The owner's answer to MC_FINISH. Accepted, the run ends finished with the reply.
+mc_finish_accept :: (l: [] McLoop) -> int {
+  l[0].reply = l[0].pending[0].reply;
+  mc_action_end(l[0].st[..]);
+  return mc_end(l, MC_END_FINISHED);
+}
+// Refused, why is a note for the next step and the run goes on (MC_AGAIN). A finish is refused
+// MC_FINISH_REFUSALS times at most: after that it stands, and this accepts it.
+mc_finish_refuse :: (l: [] McLoop, why: string) -> int {
+  if l[0].finish_refused >= MC_FINISH_REFUSALS { return mc_finish_accept(l); }
+  l[0].finish_refused += 1;
+  l[0].pending[0].finished = false;
+  mc_action_end(l[0].st[..]);
+  mc_note(l[0].st[..], why);
+  return MC_AGAIN;
+}
+
+// The seeded first step (GitHub #13325): before the first call, the loop's owner looks up what
+// the task names (mc_seed_scan) and records it as a step of its own: the files it mentions that
+// exist, viewed, and where the code names it mentions appear. In #13231's runs the first call of
+// 14 of 14 tasks only asked to view the files the task named. Nothing here reads a file: the
+// scan is the words; run.coax checks which exist.
+MC_SEED_WORDS :: 16;             // path-like words kept (the owner views the first few that exist)
+MC_SEED_NAMES :: 6;              // code names kept
+MC_SEED_RATIONALE :: "(the loop, before your first turn) Looked up what the task names: the files it mentions that exist here, and the first places its code names appear (git grep -n -w).";
+McSeed :: struct { paths: [MC_SEED_WORDS] string; np: int; names: [MC_SEED_NAMES] string; nn: int; }
+
+mc_seed_letter :: (c: u8) -> bool { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+mc_seed_char :: (c: u8) -> bool { return mc_seed_letter(c) || (c >= '0' && c <= '9') || c == '_' || c == '-' || c == '.' || c == '/'; }
+
+// A word that may be a file under the working directory: relative, with a '/' between names or
+// a short extension (a.txt, AGENTS.md), no "..", not part of a URL.
+mc_seed_pathlike :: (w: string) -> bool {
+  if w.count < 3 || w[0] == '/' || w[0] == '.' || w[0] == '-' { return false; }
+  slash := false; letters := 0; dot := -1;
+  for c, i: w {
+    if c == '/' { if i + 1 < w.count && w[i + 1] == '/' { return false; } slash = true; dot = -1; }
+    else if c == '.' { if i + 1 < w.count && w[i + 1] == '.' { return false; } dot = i; }
+    else if mc_seed_letter(c) { letters += 1; }
+  }
+  if letters < 2 { return false; }
+  if slash { return true; }
+  if dot <= 0 || w.count - dot - 1 < 1 || w.count - dot - 1 > 5 || w.count == 3 { return false; }   // not "e.g"
+  for i: dot + 1..<w.count { if !mc_seed_letter(w[i]) { return false; } }
+  return true;
+}
+
+// A word that is a code name: letters, digits and '_' only, with a '_' inside (wrap_angle,
+// ENV_VERSION). Not a capital inside a word: that takes in GitHub and OpenAgents.
+mc_seed_namelike :: (w: string) -> bool {
+  if w.count < 4 || !(mc_seed_letter(w[0]) || w[0] == '_') { return false; }
+  under := false; letters := 0;
+  for c, i: w {
+    if c == '-' || c == '.' || c == '/' { return false; }
+    if mc_seed_letter(c) { letters += 1; }
+    if c == '_' && i > 0 && i + 1 < w.count { under = true; }
+  }
+  return letters >= 3 && under;
+}
+
+// The task's path-like words and code names, in order, each once.
+mc_seed_scan :: (task: string, s: [] McSeed) {
+  s[0] = McSeed.{};
+  i := 0;
+  while i < task.count {
+    if !mc_seed_char(task[i]) { i += 1; continue; }
+    j := i;
+    while j < task.count && mc_seed_char(task[j]) { j += 1; }
+    e := j;
+    while e > i && (task[e - 1] == '.' || task[e - 1] == '-' || task[e - 1] == '/') { e -= 1; }
+    w := cast(string) task[i..<e];
+    url := i >= 3 && task[i - 1] == '/' || (i >= 1 && task[i - 1] == ':');
+    i = j;
+    if url { continue; }
+    if mc_seed_pathlike(w) {
+      seen := false;
+      for k: 0..<s[0].np { if s[0].paths[k] == w { seen = true; } }
+      if !seen && s[0].np < MC_SEED_WORDS { s[0].paths[s[0].np] = w; s[0].np += 1; }
+    } else if mc_seed_namelike(w) {
+      seen := false;
+      for k: 0..<s[0].nn { if s[0].names[k] == w { seen = true; } }
+      if !seen && s[0].nn < MC_SEED_NAMES { s[0].names[s[0].nn] = w; s[0].nn += 1; }
+    }
+  }
+}
+
+mc_record_bare :: (l: [] McLoop) {
+  mc_action_begin(l[0].st[..], l[0].pending[0].rationale);
+  mc_action_end(l[0].st[..]);
+}
+
+// The action waiting for its tools (MC_TOOLS): its commands (refused ones
+// already removed) and views.
+mc_pending :: (l: [] McLoop) -> McAction { return l[0].pending[0]; }
+
+// ---------------------------------------------------------------- loop detection (#13978)
+
+// Standard 32-bit FNV-1a (overflow-free in u64 before masking to u32).
+mc_fnv_step :: (h: u32, c: u8) -> u32 { return cast(u32) ((((cast(u64) h) ^ cast(u64) c) * 16777619) & 0xffffffff); }
+
+mc_fnv_str :: (h0: u32, s: string) -> u32 {
+  h := h0;
+  for c: s { h = mc_fnv_step(h, c); }
+  return h;
+}
+
+mc_fnv :: (prefix: string, s: string) -> u32 {
+  return mc_fnv_str(mc_fnv_str(2166136261, prefix), s);
+}
+
+mc_contains :: (s: string, needle: string) -> bool {
+  if needle.count == 0 || needle.count > s.count { return false; }
+  for i: 0..<(s.count - needle.count + 1) {
+    if cast(string) s[i..<i + needle.count] == needle { return true; }
+  }
+  return false;
+}
+
+mc_lower :: (c: u8) -> u8 { return ifx c >= 'A' && c <= 'Z' then c + 32 else c; }
+mc_word_ch :: (c: u8) -> bool { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_'; }
+
+// Compact signature of a step's rationale: unique lowercased words (>= 3 chars) plus normalized text hash.
+mc_rat_sig :: (text: string) -> McRatSig {
+  sig: McRatSig;
+  exact := cast(u32) 2166136261;
+  have_word := false;
+  i := 0;
+  while i < text.count {
+    if !mc_word_ch(text[i]) { i += 1; continue; }
+    if have_word { exact = mc_fnv_step(exact, ' '); }
+    have_word = true;
+    j := i;
+    wh := cast(u32) 2166136261;
+    while j < text.count && mc_word_ch(text[j]) {
+      lc := mc_lower(text[j]);
+      exact = mc_fnv_step(exact, lc);
+      wh = mc_fnv_step(wh, lc);
+      j += 1;
+    }
+    if j - i >= 3 && sig.n < MC_RAT_WORDS {
+      seen := false;
+      for k: 0..<sig.n { if sig.words[k] == wh { seen = true; break; } }
+      if !seen { sig.words[sig.n] = wh; sig.n += 1; }
+    }
+    i = j;
+  }
+  sig.exact = exact;
+  return sig;
+}
+
+mc_rat_similar :: (a: McRatSig, b: McRatSig) -> bool {
+  if a.exact == b.exact { return true; }
+  shared := 0;
+  for i: 0..<a.n {
+    for j: 0..<b.n { if a.words[i] == b.words[j] { shared += 1; break; } }
+  }
+  lo := ifx a.n <= b.n then a.n else b.n;   // mutant: equivalent (when a.n == b.n both arms equal a.n)
+  hi := ifx a.n >= b.n then a.n else b.n;   // mutant: equivalent (when a.n == b.n both arms equal a.n)
+  return shared > 0 && shared * 5 >= lo * 3 && shared * 2 >= hi;
+}
+
+mc_cmd_mutates :: (cmd: string) -> bool {
+  return mc_contains(cmd, ">") || mc_contains(cmd, "tee ") || mc_contains(cmd, "sed -i")
+    || mc_contains(cmd, "rm ") || mc_contains(cmd, "mv ") || mc_contains(cmd, "cp ")
+    || mc_contains(cmd, "mkdir ") || mc_contains(cmd, "touch ") || mc_contains(cmd, "patch ")
+    || mc_contains(cmd, "git add") || mc_contains(cmd, "git commit")
+    || mc_contains(cmd, "git checkout") || mc_contains(cmd, "git apply");
+}
+
+// Strips a single trailing "/" (except bare "/") and leading "./" from a path token.
+mc_norm_path :: (p: string) -> string {
+  s := p;
+  if s.count > 1 && s[s.count - 1] == '/' { s = cast(string) s[0..<s.count - 1]; }
+  if s.count >= 3 && s[0] == '.' && s[1] == '/' { s = cast(string) s[2..<s.count]; }
+  return ifx s.count == 0 then "." else s;
+}
+
+// Strips an unquoted trailing pipeline (e.g. "| head -n 30") and splits into up to out.count non-empty tokens.
+mc_cmd_tokens :: (cmd: string, out: [] string) -> int {
+  end := cmd.count;
+  in_sq := false; in_dq := false;
+  for c, i: cmd {
+    if c == '\'' && !in_dq { in_sq = !in_sq; }
+    else if c == '"' && !in_sq { in_dq = !in_dq; }
+    else if c == '|' && !in_sq && !in_dq { end = i; break; }
+  }
+  n := 0; i := 0;
+  while n < out.count {
+    while i < end && (cmd[i] == ' ' || cmd[i] == '\t' || cmd[i] == '\n') { i += 1; }
+    if i == end { break; }
+    j := i; sq := false; dq := false;
+    while j < end {
+      c := cmd[j];
+      if c == '\'' && !dq { sq = !sq; }
+      else if c == '"' && !sq { dq = !dq; }
+      else if !sq && !dq && (c == ' ' || c == '\t' || c == '\n') { break; }
+      j += 1;
+    }
+    a := i; b := j;
+    if b - a >= 2 && ((cmd[a] == '\'' && cmd[b - 1] == '\'') || (cmd[a] == '"' && cmd[b - 1] == '"')) { a += 1; b -= 1; }
+    if b > a { out[n] = cast(string) cmd[a..<b]; n += 1; }
+    i = j;
+  }
+  return n;
+}
+
+mc_hash_tok_lower :: (h0: u32, s: string) -> u32 {
+  h := mc_fnv_step(h0, ' ');
+  for c: s { h = mc_fnv_step(h, mc_lower(c)); }
+  return h;
+}
+
+mc_is_digits :: (s: string) -> bool {
+  if s.count == 0 { return false; }
+  for c: s { if c < '0' || c > '9' { return false; } }
+  return true;
+}
+
+// Canonical intent hash for read/search commands so slight flag or pipeline variations match.
+mc_cmd_intent :: (cmd: string) -> u32 {
+  toks: [16] string;
+  nt := mc_cmd_tokens(cmd, toks[..]);
+  if nt == 0 { return mc_fnv("raw:", cmd); }
+  t0 := toks[0];
+  if t0 == "ls" || t0 == "tree" || t0 == "dir" {
+    path := ".";
+    for i: 1..<nt { if toks[i][0] != '-' { path = mc_norm_path(toks[i]); break; } }
+    return mc_fnv("ls:", path);
+  }
+  is_git_grep := t0 == "git" && nt >= 2 && toks[1] == "grep";
+  if is_git_grep || t0 == "grep" || t0 == "rg" || t0 == "egrep" || t0 == "fgrep" || t0 == "ag" {
+    h := mc_fnv("grep:", "");
+    i := ifx is_git_grep then 2 else 1;
+    while i < nt {
+      t := toks[i];
+      if t[0] == '-' {
+        if (t == "-C" || t == "-A" || t == "-B" || t == "-m") && i + 1 < nt && mc_is_digits(toks[i + 1]) { i += 2; continue; }
+        i += 1; continue;
+      }
+      if t != "." && t != "./" { h = mc_hash_tok_lower(h, t); }
+      i += 1;
+    }
+    return h;
+  }
+  if t0 == "cat" || t0 == "nl" {
+    for i: 1..<nt { if toks[i][0] != '-' { return mc_fnv("read:", mc_norm_path(toks[i])); } }
+  }
+  if t0 == "head" || t0 == "tail" || t0 == "sed" {
+    h := mc_fnv("slice:", "");
+    for i: 1..<nt {
+      if toks[i][0] == '-' { continue; }
+      h = mc_hash_tok_lower(h, mc_norm_path(toks[i]));
+    }
+    return h;
+  }
+  if t0 == "find" || (t0 == "git" && nt >= 2 && toks[1] == "ls-files") {
+    h := mc_fnv("find:", "");
+    i := ifx t0 == "git" then 2 else 1;
+    while i < nt {
+      t := toks[i];
+      if t[0] == '-' {
+        if t == "-type" || t == "-maxdepth" || t == "-mindepth" { i += 2; continue; }
+        i += 1; continue;
+      }
+      h = mc_hash_tok_lower(h, mc_norm_path(t));
+      i += 1;
+    }
+    return h;
+  }
+  return mc_fnv("raw:", cmd);
+}
+
+mc_view_intent :: (path: string) -> u32 {
+  p := mc_norm_path(path);
+  return mc_fnv(ifx mc_contains(p, ":") then "view:" else "read:", p);
+}
+
+mc_ring_add :: (buf: [] u32, count: [] int, h: u32) -> bool {
+  n := ifx count[0] <= buf.count then count[0] else buf.count;   // mutant: equivalent (when count[0] == buf.count both arms equal buf.count)
+  for i: 0..<n { if buf[i] == h { return false; } }
+  buf[count[0] % buf.count] = h;
+  count[0] += 1;
+  return true;
+}
+
+mc_rat_record :: (s: [] McStall, rationale: string) -> bool {
+  sig := mc_rat_sig(rationale);
+  n := ifx s[0].nrat <= MC_STALL_HIST then s[0].nrat else MC_STALL_HIST;   // mutant: equivalent (when nrat == MC_STALL_HIST both arms equal MC_STALL_HIST)
+  dup := false;
+  for i: 0..<n { if mc_rat_similar(s[0].rat_hist[i], sig) { dup = true; break; } }
+  s[0].rat_hist[s[0].nrat % MC_STALL_HIST] = sig;
+  s[0].nrat += 1;
+  return dup;
+}
+
+mc_stall_begin :: (s: [] McStall, p: McAction) {
+  s[0].dup_rat = mc_rat_record(s, p.rationale);
+  s[0].mutated = p.nd > 0;
+  s[0].new_fact = false;
+  for i: 0..<p.nn { if mc_ring_add(s[0].out_hist[..], s[0].nout[..], mc_fnv("note:", p.notes[i])) { s[0].mutated = true; } }
+  for i: 0..<p.nq { if mc_ring_add(s[0].intent_hist[..], s[0].nintent[..], mc_fnv("q:", p.questions[i])) { s[0].new_fact = true; } }
+}
+
+mc_stall_reset :: (l: [] McLoop) { l[0].stall[0].count = 0; }
+mc_stall_count :: (l: [] McLoop) -> int { return l[0].stall[0].count; }
+
+// A command's result, in order.
+// A git commit's result also says how the last test or check before it ended (commit.coax).
+mc_command :: (l: [] McLoop, command: string, exit: int, timed_out: bool, output: string) {
+  lb: [400] u8;
+  line := ifx (mc_cmd_kind(command) & MC_CMD_COMMIT) != 0 then mc_check_line(l[0].check[..], lb[..]) else "";
+  mc_action_command_checked(l[0].st[..], command, exit, timed_out, output, line);
+  mc_check_ran(l[0].check[..], command, exit, timed_out);
+  if mc_cmd_mutates(command) { l[0].stall[0].mutated = true; }
+  else {
+    new_intent := mc_ring_add(l[0].stall[0].intent_hist[..], l[0].stall[0].nintent[..], mc_cmd_intent(command));
+    new_out := output.count > 0 && mc_ring_add(l[0].stall[0].out_hist[..], l[0].stall[0].nout[..], mc_fnv("out:", output));
+    if new_intent && new_out { l[0].stall[0].new_fact = true; }
+  }
+}
+
+// An edit's result: applied, or why not.
+mc_edited :: (l: [] McLoop, path: string, ok: bool, why: string) { mc_edited_shown(l, path, ok, why, 0, 0, ""); }
+// The same with what it shows (tools.coax McEditResult): the new text, lines from..to, or the nearest region.
+mc_edited_shown :: (l: [] McLoop, path: string, ok: bool, why: string, from: int, to: int, shown: string) {
+  mc_action_edit_shown(l[0].st[..], path, ok, why, from, to, shown);
+  if ok { mc_check_edited(l[0].check[..]); l[0].stall[0].mutated = true; }
+}
+
+// A viewed file's content, or found false with why.
+mc_view :: (l: [] McLoop, path: string, found: bool, content: string) {
+  mc_file(l[0].st[..], path, found, content);
+  new_intent := mc_ring_add(l[0].stall[0].intent_hist[..], l[0].stall[0].nintent[..], mc_view_intent(path));
+  new_out := found && content.count > 0 && mc_ring_add(l[0].stall[0].out_hist[..], l[0].stall[0].nout[..], mc_fnv("viewout:", content));
+  if new_intent && new_out { l[0].stall[0].new_fact = true; }
+}
+
+mc_tools_done :: (l: [] McLoop) -> int {
+  mc_action_end(l[0].st[..]);
+  if l[0].ending != MC_END_NONE { return MC_ENDED; }
+  if l[0].stall[0].mutated || (!l[0].stall[0].dup_rat && l[0].stall[0].new_fact) {
+    l[0].stall[0].count = 0;
+  } else {
+    l[0].stall[0].count += 1;
+    if l[0].stall[0].count >= MC_STALL_LIMIT {
+      l[0].reply = MC_STALL_FALLBACK;
+      return mc_end(l, MC_END_FINISHED);
+    }
+    if l[0].stall[0].count >= MC_STALL_NUDGE { mc_note(l[0].st[..], MC_STALL_NOTE); }
+  }
+  return MC_AGAIN;
+}
+
+// STOP: the run ends here (the caller also stops the plan, which kills curl).
+mc_stop :: (l: [] McLoop) {
+  if l[0].ending != MC_END_NONE { return; }
+  if l[0].st[0].open >= 0 { mc_action_end(l[0].st[..]); }
+  l[0].ending = MC_END_STOPPED;
+}
+
+// ---------------------------------------------------------------- checks
+
+// A scripted gateway: each step answers with the next reply, as text deltas
+// then done ("!refuse" answers a refusal with no text, "!cut:TEXT" sends
+// TEXT then a refusal). Commands get scripted output.
+McScript :: struct {
+  replies: [] string;
+  at: int;
+  calls: int;                    // requests sent
+  ran: [16] string; nran: int;   // commands run, in order (copies in rb: the loop reuses its buffers each step)
+  rb: [2048] u8; nrb: int;
+  fail: string;                  // a command that exits 1 (the others exit 0)
+}
+
+mc_script_step :: (l: [] McLoop, s: [] McScript) -> int {
+  req := mc_request(l);
+  #assert req.schema == MC_SCHEMA && req.system == MC_SYSTEM && json_valid(req.messages[0].text);
+  s[0].calls += 1;
+  if s[0].at >= s[0].replies.count { return mc_feed(l, GwEvent.{kind = GW_EV_REFUSED, reason = "script over"}); }
+  r := s[0].replies[s[0].at]; s[0].at += 1;
+  if r == "!refuse" { return mc_feed(l, GwEvent.{kind = GW_EV_REFUSED, status = 503, reason = "every gateway in the plan refused"}); }
+  if r == "!long" { return mc_feed(l, GwEvent.{kind = GW_EV_REFUSED, status = 400, reason = "prompt is too long: 212000 tokens > 200000 maximum"}); }
+  if r.count > 5 && r[0..<5] == "!cut:" {
+    x := mc_feed(l, GwEvent.{kind = GW_EV_TEXT, text = cast(string) r[5..<r.count]});
+    return mc_feed(l, GwEvent.{kind = GW_EV_REFUSED, status = 200, reason = "the stream ended before the response finished"});
+  }
+  // in two deltas, as a stream would
+  half := r.count / 2;
+  x := mc_feed(l, GwEvent.{kind = GW_EV_REASONING, text = "thinking"});
+  x = mc_feed(l, GwEvent.{kind = GW_EV_TEXT, text = cast(string) r[0..<half]});
+  x = mc_feed(l, GwEvent.{kind = GW_EV_TEXT, text = cast(string) r[half..<r.count]});
+  return mc_feed(l, GwEvent.{kind = GW_EV_DONE});
+}
+
+mc_script_run :: (l: [] McLoop, s: [] McScript) {
+  for guard: 0..<50 {
+    r := mc_script_step(l, s);
+    if r == MC_ENDED { return; }
+    if r == MC_TOOLS {
+      a := mc_pending(l);
+      for i: 0..<a.ne { mc_edited(l, a.edits[i].path, true, ""); }
+      for i: 0..<a.nc {
+        if s[0].nran < 16 && s[0].nrb + a.commands[i].count <= s[0].rb.count {
+          at := s[0].nrb;
+          for c: a.commands[i] { s[0].rb[s[0].nrb] = c; s[0].nrb += 1; }
+          s[0].ran[s[0].nran] = cast(string) s[0].rb[at..<s[0].nrb]; s[0].nran += 1;
+        }
+        mc_command(l, a.commands[i], ifx s[0].fail.count > 0 && a.commands[i] == s[0].fail then 1 else 0, false, "3\n");
+      }
+      for i: 0..<a.nv { mc_view(l, a.view[i], true, "contents"); }
+      r = mc_tools_done(l);
+    }
+  }
+}
+
+
+
+#test "a state too long for one request compacts its earliest steps until it fits" #steps 200000000 {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "x", "{}", 1.0);
+  #assert mc_escaped_size("a\"b\\c\nd") == 10 && mc_escaped_size("abc") == 3;
+  // quote-heavy outputs: each byte doubles inside the request
+  q: [65000] u8; for i: 0..<q.count { q[i] = '"'; }
+  mc_action_begin(l[0].st[..], "small"); mc_action_command(l[0].st[..], "true", 0, false, ""); mc_action_end(l[0].st[..]);
+  // each step fills its budget (32 KB in the log), and each byte of it doubles again inside the request
+  for k: 0..<4 {
+    mc_action_begin(l[0].st[..], "q");
+    mc_file(l[0].st[..], "q", true, cast(string) q[0..<8000]);
+    mc_action_command(l[0].st[..], "cat q", 0, false, cast(string) q[0..<6000]);
+    mc_action_command(l[0].st[..], "cat q", 0, false, cast(string) q[0..<6000]);
+    mc_action_end(l[0].st[..]);
+  }
+  #assert l[0].st[0].nearly == 0;
+  before := l[0].st[0].nearly;
+  req := mc_request(l[..]);
+  #assert mc_escaped_size(req.messages[0].text) + MC_REQUEST_ROOM <= MC_REQUEST_MAX;
+  #assert json_valid(req.messages[0].text);
+  #assert l[0].st[0].nearly > before;      // compacted, not dropped
+}
+
+#test "a request refused as too long is compacted harder and sent again, once; a reply clears the once" #steps 400000000 {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "fix it", "{}", 1.0);
+  mc_window(l[..], 1048576);
+  big: [9000] u8; for i: 0..<big.count { big[i] = cast(u8) ('a' + i % 26); }
+  for k: 0..<6 { mc_action_begin(l[0].st[..], "read"); mc_file(l[0].st[..], "f.txt", true, cast(string) big[..]); mc_action_end(l[0].st[..]); }
+  before := l[0].st[0].request_max;
+  replies: [2] string;
+  replies[0] = "!long";
+  replies[1] = "{\"rationale\":\"done\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"Fixed.\",\"ask\":\"none\"}";
+  s: [1] McScript; s[0].replies = replies[..];
+  mc_script_run(l[..], s[..]);
+  // the second request went out with every step compacted, under three quarters of the first
+  #assert l[0].ending == MC_END_FINISHED && l[0].reply == "Fixed." && s[0].calls == 2 && l[0].too_long == 1 && !l[0].long_retry;
+  #assert l[0].st[0].nearly >= 6 && l[0].st[0].request_max < before && l[0].st[0].request_max >= MC_REQUEST_MIN;
+  // refused twice in a row: the run ends as a refusal does
+  mc_init(l[..], sb[..], lb[..], "{}", "fix it", "{}", 1.0);
+  replies2: [2] string; replies2[0] = "!long"; replies2[1] = "!long";
+  s[0] = McScript.{replies = replies2[..]};
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_NO_CAPACITY && s[0].calls == 2 && l[0].too_long == 1 && ps_count(l[0].why, "too long") == 1;
+  // a reply in between: each request gets its own retry
+  mc_init(l[..], sb[..], lb[..], "{}", "fix it", "{}", 1.0);
+  replies3: [4] string; replies3[0] = "!long"; replies3[2] = "!long"; replies3[3] = replies[1];
+  replies3[1] = "{\"rationale\":\"look\",\"edits\":[],\"commands\":[\"ls\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  s[0] = McScript.{replies = replies3[..]};
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_FINISHED && s[0].calls == 4 && l[0].too_long == 2;
+  // any other refusal is no_capacity at once, as before
+  mc_init(l[..], sb[..], lb[..], "{}", "fix it", "{}", 1.0);
+  replies4: [1] string; replies4[0] = "!refuse";
+  s[0] = McScript.{replies = replies4[..]};
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_NO_CAPACITY && s[0].calls == 1 && l[0].too_long == 0;
+}
+
+#test "a request bound smaller than earlier: earlier's oldest steps leave, and left_out names them" #steps 400000000 {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "x", "{}", 1.0);
+  rat: [1190] u8; for i: 0..<rat.count { rat[i] = 'r'; }
+  for k: 0..<60 { mc_action_begin(l[0].st[..], cast(string) rat[..]); mc_file(l[0].st[..], "a.txt", true, "x"); mc_action_end(l[0].st[..]); }
+  mc_compact(l[0].st[..], 0);
+  #assert l[0].st[0].left_out == 0 || l[0].st[0].nearly > 0;
+  l[0].st[0].request_max = 30000;
+  req := mc_request(l[..]);
+  ab: [1024] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  #assert l[0].sent <= 30000 && json_valid(req.messages[0].text) && l[0].st[0].left_out > 0 && cl_str(ar[..], req.messages[0].text, "left_out.viewed.0") == "a.txt";
+}
+
+#test "the system prompt says what left_out is and how to get it back, and that it is history" {
+  #assert ps_count(MC_SYSTEM, "left_out (only when your oldest steps have left the state") == 1 && ps_count(MC_SYSTEM, "view a file it names again to see it as it is now") == 1;
+  #assert ps_count(MC_SYSTEM, "Steps that left are history, not a new request.") == 1;
+  #assert ps_count(MC_AWARE_MEMORY, "steps that left the state (left_out) are still in it") == 1;
+}
+
+#test "a finish that carries edits, commands or views runs them and is not taken; the next finish is" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "fix the typo", "{}", 1.0);
+  replies: [3] string;
+  replies[0] = "{\"rationale\":\"fix and done\",\"edits\":[],\"commands\":[\"sed -i s/helo/hello/ a.txt\"],\"view\":[],\"finished\":true,\"reply\":\"Fixed.\",\"ask\":\"none\"}";
+  replies[1] = "{\"rationale\":\"look\",\"edits\":[],\"commands\":[],\"view\":[\"a.txt\"],\"finished\":true,\"reply\":\"Fixed, I think.\",\"ask\":\"none\"}";
+  replies[2] = "{\"rationale\":\"done\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"Fixed: helo is hello.\",\"ask\":\"none\"}";
+  s: [1] McScript; s[0].replies = replies[..];
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_FINISHED && l[0].reply == "Fixed: helo is hello." && s[0].calls == 3 && s[0].nran == 1 && s[0].ran[0] == "sed -i s/helo/hello/ a.txt";
+  j := mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  ab: [512] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  #assert cl_int(j, "actions.0.results.0.exit").value == 0 && cl_str(ar[..], j, "actions.1.results.0.view") == "a.txt" && cl_count(cl_raw(j, "actions")) == 3;
+}
+
+#test "the seed's scan: the task's path-like words and code names, in order, each once; no URLs, no plain words" {
+  s: [1] McSeed;
+  mc_seed_scan("Fix coax/web/wasm-size.coax: `coax/web/tool.sh wasm-size budget` fails. See AGENTS.md and https://example.com/a/b.html, ../up.txt and /etc/passwd. In wrap_angle (called by step_once) the EnvDir is wrong, e.g. at 0.25 or v5.5; ENV_VERSION stays. Run coax/bin/coax test coax/web/wasm-size.coax. Write EXPLAIN.md.", s[..]);
+  #assert s[0].np == 5 && s[0].paths[0] == "coax/web/wasm-size.coax" && s[0].paths[1] == "coax/web/tool.sh" && s[0].paths[2] == "AGENTS.md" && s[0].paths[3] == "coax/bin/coax" && s[0].paths[4] == "EXPLAIN.md";
+  #assert s[0].nn == 3 && s[0].names[0] == "wrap_angle" && s[0].names[1] == "step_once" && s[0].names[2] == "ENV_VERSION";
+  mc_seed_scan("what is 2+2? Say hi. It costs 1.5 dollars, i.e. a lot.", s[..]);
+  #assert s[0].np == 0 && s[0].nn == 0;
+  #assert mc_seed_pathlike("a/b") && mc_seed_pathlike("a.txt") && !mc_seed_pathlike("a..b/c") && !mc_seed_pathlike("1.5") && !mc_seed_pathlike("e.g") && mc_seed_pathlike("main.c");
+  #assert !mc_seed_pathlike("word") && !mc_seed_pathlike("file.toolongext") && !mc_seed_pathlike("x.5a") && !mc_seed_pathlike("a//b");
+  #assert mc_seed_namelike("a_b_c") && !mc_seed_namelike("camelCase") && !mc_seed_namelike("GitHub") && !mc_seed_namelike("word") && !mc_seed_namelike("WORD") && !mc_seed_namelike("_ab") && !mc_seed_namelike("ab_") && !mc_seed_namelike("a-b_c");
+  // more names than it keeps: the first ones stay
+  mc_seed_scan("aa_1x bb_2x cc_3x dd_4x ee_5x ff_6x gg_7x hh_8x", s[..]);
+  #assert s[0].nn == MC_SEED_NAMES && s[0].names[5] == "ff_6x";
+}
+
+#test "a git commit's result says how the last check before it ended: none, failed, passed, none since an edit" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "fix a and commit", "{}", 1.0);
+  replies: [5] string;
+  replies[0] = "{\"rationale\":\"commit first\",\"edits\":[{\"path\":\"a.txt\",\"old\":\"\",\"new\":\"x\"}],\"commands\":[\"git commit -qam one\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  replies[1] = "{\"rationale\":\"test, commit\",\"edits\":[],\"commands\":[\"coax test a.coax\",\"git add -A && git commit -qm two\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  replies[2] = "{\"rationale\":\"again\",\"edits\":[],\"commands\":[\"coax test b.coax\",\"git commit -qam three\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  replies[3] = "{\"rationale\":\"edit, commit\",\"edits\":[{\"path\":\"a.txt\",\"old\":\"x\",\"new\":\"y\"}],\"commands\":[\"git commit -qam four\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  replies[4] = "{\"rationale\":\"done\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"Committed.\",\"ask\":\"none\"}";
+  s: [1] McScript; s[0].replies = replies[..]; s[0].fail = "coax test a.coax";
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_FINISHED && s[0].nran == 6;
+  j := mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  ab: [2048] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  #assert json_valid(j);
+  #assert cl_str(ar[..], j, "actions.0.results.1.last_check") == "none: no test or check ran in this run before this commit";
+  #assert cl_raw(j, "actions.1.results.0.last_check").count == 0 && cl_int(j, "actions.1.results.0.exit").value == 1;
+  #assert cl_str(ar[..], j, "actions.1.results.1.last_check") == "failed (exit 1): coax test a.coax";
+  #assert cl_str(ar[..], j, "actions.2.results.1.last_check") == "passed: coax test b.coax";
+  #assert cl_str(ar[..], j, "actions.3.results.1.last_check") == "none since the last edit: the last test or check ran before it";
+  #assert ps_count(MC_SYSTEM, "A git commit's result carries last_check") == 1;
+  // a compacted commit keeps its line
+  mc_compact(l[0].st[..], 0);
+  j = mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  ar[0].at = 0;
+  #assert cl_str(ar[..], j, "earlier.1.results.1.last_check") == "failed (exit 1): coax test a.coax";
+}
+
+#test "the system prompt says where a command's time limit is given" {
+  #assert ps_count(MC_SYSTEM, "killed after environment.command_seconds, or after 30 seconds when that is not given") == 1 && MC_COMMAND_DEFAULT == 30;
+}
+
+#test "the system prompt tells the model how its state forgets, and what stays" {
+  #assert ps_count(MC_SYSTEM, "about 140 KB of recent results") == 1 && ps_count(MC_SYSTEM, "only the names of the files it viewed") == 1;
+  #assert ps_count(MC_SYSTEM, "in that step's rationale, which stays") == 1 && ps_count(MC_SYSTEM, "sed -n") == 0 && ps_count(MC_SYSTEM, "view the lines you need (FILE:A-B") == 1;
+  #assert MC_LOG_BYTES >= 140 * 1024 && MC_LOG_BYTES < 150 * 1024 && MC_BRIEF_RATIONALE >= 1000;     // what it says is so
+  #assert ps_count(MC_SYSTEM, "at most about 32 KB of your state") == 1 && MC_STEP_BUDGET == 32768;
+}
+
+#test "the system prompt says how views, long outputs and edit results look" {
+  #assert ps_count(MC_SYSTEM, "PATH:A-B for lines A to B; shown as numbered lines, the first 150") == 1;
+  #assert ps_count(MC_SYSTEM, "Never run git push") == 1;
+  #assert ps_count(MC_SYSTEM, "when it is saved whole the cut line names the file, which you can view by range") == 1;
+  #assert ps_count(MC_SYSTEM, "An applied edit's result shows its new text with line numbers") == 1 && ps_count(MC_SYSTEM, "a failed edit's shows the file's nearest lines") == 1;
+}
+
+#test "'what is 2+2' finishes in one step with no commands" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{\"os\":\"macOS\"}", "what is 2+2", "{\"route\":\"other\",\"difficulty\":\"trivial\",\"local_work\":0.1}", 0.1);
+  replies: [1] string;
+  replies[0] = "{\"rationale\":\"arithmetic\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"none\"}";
+  s: [1] McScript; s[0].replies = replies[..];
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_FINISHED && l[0].reply == "4" && s[0].calls == 1 && s[0].nran == 0 && l[0].steps == 1;
+}
+
+#test "with no mode on the request is the old one, and a reply's questions and notes are not read" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], false, false) && !l[0].intel && !l[0].memory;
+  req := mc_request(l[..]);
+  #assert req.system == MC_SYSTEM && req.schema == MC_SCHEMA && req.schema_name == MC_SCHEMA_NAME && req.schema_hint == MC_TEXT_REMINDER;
+  #assert req.messages[0].text == "{\"environment\":{},\"task\":\"hi\",\"route\":{},\"actions\":[],\"notes\":\"\"}";
+  // questions and notes alone are no work: the step is idle, as a reply without them is
+  r := mc_take(l[..], "{\"rationale\":\"ask\",\"notes\":[\"n\"],\"edits\":[],\"questions\":[\"defines area\"],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}");
+  #assert r == MC_AGAIN && l[0].idle == 1 && l[0].pending[0].nq == 0 && l[0].pending[0].nn == 0;
+  // and a finish is not held
+  r = mc_take(l[..], "{\"rationale\":\"done\",\"notes\":[],\"edits\":[],\"questions\":[\"defines area\"],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"hi\",\"ask\":\"none\"}");
+  #assert r == MC_ENDED && l[0].ending == MC_END_FINISHED && l[0].reply == "hi" && l[0].finish_refused == 0;
+}
+
+#test "a mode adds its section to the system prompt and its members to the schema, after what a plain run sends" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], true, true);
+  req := mc_request(l[..]);
+  #assert req.schema == MC_SCHEMA_AWARE && req.system.count == MC_SYSTEM.count + MC_AWARE_INTEL.count + MC_AWARE_MEMORY.count && cast(string) req.system[0..<MC_SYSTEM.count] == MC_SYSTEM;
+  #assert ps_count(req.system, "The Coax compiler answers questions") == 1 && ps_count(req.system, "You have a working memory.") == 1;
+  #assert ps_count(req.system, MC_Q_FORMS) == 0 && ps_count(MC_AWARE_INTEL, "the order is: edits, then questions, then commands, then view") == 1;
+  for o: MC_Q_OPS { #assert ps_count(MC_AWARE_INTEL, o) >= 1; }
+  #assert ps_count(MC_AWARE_INTEL, "up to 16") == 1 && MC_MAX_QUESTIONS == 16 && ps_count(MC_AWARE_MEMORY, "up to 8") == 1 && MC_MAX_NOTES == 8;
+  // the state has no memory key until the owner sets one
+  #assert req.messages[0].text == "{\"environment\":{},\"task\":\"hi\",\"route\":{},\"actions\":[],\"notes\":\"\"}";
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], true, false);
+  req = mc_request(l[..]);
+  #assert ps_count(req.system, "The Coax compiler answers questions") == 1 && ps_count(req.system, "working memory") == 0 && ps_count(req.schema, "questions") == 2 && ps_count(req.schema, "notes") == 0;
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], false, true);
+  req = mc_request(l[..]);
+  #assert ps_count(req.system, "The Coax compiler") == 0 && ps_count(req.system, "You have a working memory.") == 1 && ps_count(req.schema, "questions") == 0 && ps_count(req.schema, "notes") == 2;
+  // mc_init again: a new run is plain until asked
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  req = mc_request(l[..]);
+  #assert req.system == MC_SYSTEM && req.schema == MC_SCHEMA;
+}
+
+#test "with the compiler's mode questions are work for the owner; with the memory's, notes are; each alone leaves the other unread" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  step := "{\"rationale\":\"ask\",\"notes\":[\"a.coax:1-2 a finding\"],\"edits\":[{\"path\":\"a.coax\",\"old\":\"x\",\"new\":\"y\",\"seen\":\"0123456789ab\",\"name\":\"\"}],\"questions\":[\"defines area\",\"check a.coax\"],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"done\",\"ask\":\"none\"}";
+  only_q := "{\"rationale\":\"ask\",\"notes\":[],\"edits\":[],\"questions\":[\"defines area\"],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"done\",\"ask\":\"none\"}";
+  only_n := "{\"rationale\":\"keep\",\"notes\":[\"a finding\"],\"edits\":[],\"questions\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  mc_init(l[..], sb[..], lb[..], "{}", "fix", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], true, true);
+  #assert mc_take(l[..], step) == MC_TOOLS;
+  a := mc_pending(l[..]);
+  #assert a.nq == 2 && a.questions[1] == "check a.coax" && a.nn == 1 && a.ne == 1 && a.edits[0].seen == "0123456789ab" && !a.finished;
+  #assert mc_tools_done(l[..]) == MC_AGAIN;
+  // a finish that carries only questions is a working step; notes alone are one too
+  #assert mc_take(l[..], only_q) == MC_TOOLS && !mc_pending(l[..]).finished && mc_tools_done(l[..]) == MC_AGAIN;
+  #assert mc_take(l[..], only_n) == MC_TOOLS && mc_pending(l[..]).nn == 1 && mc_tools_done(l[..]) == MC_AGAIN && l[0].idle == 0;
+  // the compiler alone: notes are not read
+  mc_init(l[..], sb[..], lb[..], "{}", "fix", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], true, false);
+  #assert mc_take(l[..], only_n) == MC_AGAIN && l[0].idle == 1;
+  #assert mc_take(l[..], step) == MC_TOOLS && mc_pending(l[..]).nn == 0 && mc_pending(l[..]).nq == 2 && mc_pending(l[..]).edits[0].seen == "0123456789ab";
+  // the memory alone: questions and an edit's hash are not read
+  mc_init(l[..], sb[..], lb[..], "{}", "fix", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], false, true);
+  #assert mc_take(l[..], step) == MC_TOOLS && mc_pending(l[..]).nn == 1 && mc_pending(l[..]).nq == 0 && mc_pending(l[..]).edits[0].seen == "";
+  // under local_work 0.5 an edit is refused, and the questions still go to the owner
+  mc_init(l[..], sb[..], lb[..], "{}", "fix", "{}", 0.1);
+  #assert mc_aware(l[..], lb[..], true, false);
+  #assert mc_take(l[..], step) == MC_TOOLS && mc_pending(l[..]).ne == 0 && mc_pending(l[..]).nq == 2;
+}
+
+#test "an action whose added members are wrong is a bad reply, not an action without them" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "fix", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], true, true);
+  r := mc_take(l[..], "{\"rationale\":\"x\",\"notes\":[\"\"],\"edits\":[{\"path\":\"a\",\"old\":\"b\",\"new\":\"c\",\"seen\":\"\",\"name\":\"\"}],\"questions\":[],\"commands\":[\"ls\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}");
+  #assert r == MC_AGAIN && l[0].bad == 1 && ps_count(cast(string) l[0].st[0].notes[0..<l[0].st[0].nn], "Your last reply was refused: a note is empty") == 1;
+  // a reply in prose is still read as text
+  #assert mc_take(l[..], "I'll look: {\"rationale\": \"look\", \"commands\": \"ls\"}") == MC_TOOLS && l[0].bad == 0 && mc_pending(l[..]).nc == 1;
+}
+
+#test "with the memory a finish is held for the owner: refused twice with a note, then it stands; accepted, the run ends" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  done := "{\"rationale\":\"done\",\"notes\":[\"the check passes\"],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"Fixed.\",\"ask\":\"none\"}";
+  mc_init(l[..], sb[..], lb[..], "{}", "fix it; run `sh t.sh`", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], false, true);
+  #assert mc_take(l[..], done) == MC_FINISH && l[0].ending == MC_END_NONE && l[0].reply == "" && l[0].st[0].open >= 0 && mc_pending(l[..]).nn == 1;
+  #assert mc_finish_refuse(l[..], "finished was refused (1 of at most 2): Open: check sh t.sh") == MC_AGAIN && l[0].finish_refused == 1 && l[0].ending == MC_END_NONE && l[0].st[0].open < 0;
+  j := mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  ab: [1024] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  #assert json_valid(j) && cl_str(ar[..], j, "notes") == "finished was refused (1 of at most 2): Open: check sh t.sh\n" && cl_str(ar[..], j, "actions.0.rationale") == "done" && l[0].idle == 0;
+  #assert mc_take(l[..], done) == MC_FINISH && mc_finish_refuse(l[..], "again") == MC_AGAIN && l[0].finish_refused == 2;
+  // the third finish stands, whatever the owner says
+  #assert mc_take(l[..], done) == MC_FINISH && mc_finish_refuse(l[..], "never") == MC_ENDED && l[0].ending == MC_END_FINISHED && l[0].reply == "Fixed." && l[0].finish_refused == MC_FINISH_REFUSALS;
+  #assert ps_count(cast(string) l[0].st[0].notes[0..<l[0].st[0].nn], "never") == 0 && l[0].steps == 3;
+  // accepted at once
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], true, true);
+  #assert mc_take(l[..], done) == MC_FINISH && mc_finish_accept(l[..]) == MC_ENDED && l[0].ending == MC_END_FINISHED && l[0].reply == "Fixed." && l[0].finish_refused == 0 && l[0].st[0].open < 0;
+  // ask: question is not held
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], false, true);
+  #assert mc_take(l[..], "{\"rationale\":\"unclear\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"Which file?\",\"ask\":\"question\"}") == MC_ENDED && l[0].ending == MC_END_ASKED;
+  #assert ps_count(MC_AWARE_MEMORY, "finished true before that is refused") == 1;
+}
+
+#test "three replies in a row that fail the schema end the run as bad_replies, each refusal noted for the next step" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  replies: [4] string;
+  replies[0] = "Hello! How can I help?";
+  replies[1] = "{\"finished\":\"soon\"}";
+  replies[2] = "!cut:{\"rationale\":\"x\",\"comm";
+  replies[3] = "{\"rationale\":\"x\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"hi\",\"ask\":\"none\"}";
+  s: [1] McScript; s[0].replies = replies[..];
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_BAD_REPLIES && s[0].calls == 3 && l[0].reply == "";
+  #assert ps_count(cast(string) l[0].st[0].notes[0..<l[0].st[0].nn], "Your last reply was refused") == 2;
+}
+
+#test "an action in prose (a gateway without strict schemas) is read out of the text" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "how many files", "{}", 1.0);
+  replies: [2] string;
+  replies[0] = "<think>count them</think>I'll look first:\n```json\n{\"rationale\": \"look\", \"commands\": \"ls | wc -l\"}\n```";
+  replies[1] = "{\"finished\": true, \"reply\": \"3 files\"}";
+  s: [1] McScript; s[0].replies = replies[..];
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_FINISHED && l[0].reply == "3 files" && s[0].nran == 1 && s[0].ran[0] == "ls | wc -l" && l[0].bad == 0;
+  #assert mc_request(l[..]).schema_hint == MC_TEXT_REMINDER;
+}
+
+#test "a good reply between bad ones resets the count" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  replies: [4] string;
+  replies[0] = "nope"; replies[1] = "nope";
+  replies[2] = "{\"rationale\":\"look\",\"commands\":[\"ls\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  replies[3] = "{\"rationale\":\"done\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"3 files\",\"ask\":\"none\"}";
+  s: [1] McScript; s[0].replies = replies[..];
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_FINISHED && l[0].reply == "3 files" && s[0].nran == 1 && s[0].ran[0] == "ls";
+}
+
+#test "a job runs its command, sees the output next step, and answers" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{\"cwd\":\"/tmp/demo\"}", "how many Swift files are in this folder", "{\"local_work\":0.9}", 0.9);
+  replies: [2] string;
+  replies[0] = "{\"rationale\":\"count\",\"commands\":[\"ls *.swift | wc -l\"],\"view\":[\"Package.swift\"],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  replies[1] = "{\"rationale\":\"the count was 3\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"There are 3 Swift files.\",\"ask\":\"none\"}";
+  s: [1] McScript; s[0].replies = replies[..];
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_FINISHED && s[0].calls == 2 && s[0].nran == 1;
+  j := mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  ab: [512] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  #assert cl_str(ar[..], j, "actions.0.results.0.output") == "3\n" && cl_str(ar[..], j, "actions.0.results.1.view") == "Package.swift";
+}
+
+#test "asked, no_capacity, idle and stopped" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  replies: [3] string; s: [1] McScript;
+  mc_init(l[..], sb[..], lb[..], "{}", "fix it", "{}", 1.0);
+  replies[0] = "{\"rationale\":\"unclear\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"Which file?\",\"ask\":\"question\"}";
+  s[0] = McScript.{replies = replies[0..<1]};
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_ASKED && l[0].reply == "Which file?";
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  replies[0] = "!refuse";
+  s[0] = McScript.{replies = replies[0..<1]};
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_NO_CAPACITY && l[0].why == "every gateway in the plan refused";
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  idle := "{\"rationale\":\"hmm\",\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  replies[0] = idle; replies[1] = idle; replies[2] = idle;
+  s[0] = McScript.{replies = replies[..]};
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_IDLE && s[0].calls == 3;
+  mc_init(l[..], sb[..], lb[..], "{}", "hi", "{}", 1.0);
+  x := mc_request(l[..]);
+  x2 := mc_feed(l[..], GwEvent.{kind = GW_EV_TEXT, text = "{\"rat"});
+  mc_stop(l[..]);
+  #assert l[0].ending == MC_END_STOPPED && mc_feed(l[..], GwEvent.{kind = GW_EV_DONE}) == MC_ENDED;
+  #assert mc_ending_name(MC_END_BAD_REPLIES) == "bad_replies";
+}
+
+#test "with local_work under 0.5 commands are refused with a note, and the run goes on" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{}", "what is 2+2", "{\"local_work\":0.1}", 0.1);
+  replies: [2] string;
+  replies[0] = "{\"rationale\":\"check\",\"commands\":[\"python3 -c 'print(2+2)'\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  replies[1] = "{\"rationale\":\"arithmetic\",\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"4\",\"ask\":\"none\"}";
+  s: [1] McScript; s[0].replies = replies[..];
+  mc_script_run(l[..], s[..]);
+  #assert l[0].ending == MC_END_FINISHED && s[0].nran == 0 && l[0].reply == "4";
+  j := mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  ab: [512] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  #assert cl_str(ar[..], j, "actions.0.results.0.refused").count > 0;
+}
+
+ps_count :: (text: string, needle: string) -> int {
+  n := 0;
+  if needle.count == 0 || needle.count > text.count { return 0; }
+  for i: 0..<text.count - needle.count + 1 { if cast(string) text[i..<i + needle.count] == needle { n += 1; } }
+  return n;
+}
+
+#test "with the simulator a step's device ops run first as oasim commands, with a screenshot viewed; every mode fits" {
+  l: [1] McLoop; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;
+  mc_init(l[..], sb[..], lb[..], "{}", "open settings", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], true, true) && mc_agents(l[..], lb[..], true, "a/model") && mc_no_ask(l[..], lb[..]);
+  was: [16384] u8; wn := json_raw(was[..], 0, l[0].system); wn = json_raw(was[..], wn, MC_DEVICE);
+  #assert !l[0].device && mc_device(l[..], lb[..]) && l[0].device && wn > 0 && l[0].system == cast(string) was[0..<wn];
+  // a schema it can't add to: refused, nothing changed
+  k: [1] McLoop; sk: [1] McStateBuffers; lk: [1] McLoopBuffers;
+  mc_init(k[..], sk[..], lk[..], "{}", "x", "{}", 1.0);
+  sys := k[0].system; k[0].schema = "{}";
+  #assert !mc_device(k[..], lk[..]) && !k[0].device && k[0].system == sys && k[0].schema == "{}";
+  #assert json_valid(l[0].schema) && cl_raw(l[0].schema, "properties.device").count > 0 && cl_raw(l[0].schema, "properties.delegate").count > 0 && ps_count(l[0].system, "You can use an iOS Simulator.") == 1;
+  s := mc_take(l[..], "{\"rationale\":\"look\",\"notes\":[],\"device\":[{\"op\":\"tap\",\"x\":10,\"y\":20}],\"edits\":[],\"questions\":[],\"commands\":[\"true\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}");
+  a := mc_pending(l[..]);
+  #assert s == MC_TOOLS && a.nc == 3 && a.commands[0] == "oasim tap 10 20" && a.commands[2] == "true" && a.nv == 1 && a.view[0] == ".openagents/shots/device-1.png";
+  // a wrong device member is a bad reply; without the simulator the member is not read
+  #assert mc_take(l[..], "{\"rationale\":\"x\",\"notes\":[],\"device\":[{\"op\":\"erase\"}],\"edits\":[],\"questions\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") != MC_TOOLS;
+  m: [1] McLoop; sm: [1] McStateBuffers; lm: [1] McLoopBuffers;
+  mc_init(m[..], sm[..], lm[..], "{}", "x", "{}", 1.0);
+  s = mc_take(m[..], "{\"rationale\":\"x\",\"device\":[{\"op\":\"tap\",\"x\":1,\"y\":2}],\"edits\":[],\"commands\":[\"true\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}");
+  #assert mc_pending(m[..]).nc <= 1;
+}
+
+#test "with sub-agents the schema and the system prompt gain delegate, with a mode or without, and a step's delegate is work" {
+  for aware: [2] bool.[false, true] {
+    l: [1] McLoop; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;
+    mc_init(l[..], sb[..], lb[..], "{}", "do two things", "{}", 1.0);
+    #assert mc_aware(l[..], lb[..], aware, aware) && mc_agents(l[..], lb[..], aware, "") && l[0].agents && l[0].claude == aware;
+    #assert ps_count(l[0].system, "You can hand work to sub-agents.") == 1 && ps_count(l[0].system, "You are Microcoder") == 1 && ps_count(l[0].system, "You have a working memory.") == (ifx aware then 1 else 0);
+    #assert json_valid(l[0].schema) && cl_raw(l[0].schema, "properties.delegate").count > 0 && (cl_raw(l[0].schema, "properties.notes").count > 0) == aware;
+    s := mc_take(l[..], "{\"rationale\":\"split\",\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"a\"},{\"level\":\"carbon\",\"task\":\"b\"}],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"done\",\"ask\":\"none\"}");
+    #assert s == MC_TOOLS && mc_pending(l[..]).nd == 2 && !mc_pending(l[..]).finished;
+  }
+  // without it the member is not read
+  l: [1] McLoop; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;
+  mc_init(l[..], sb[..], lb[..], "{}", "x", "{}", 1.0);
+  s := mc_take(l[..], "{\"rationale\":\"split\",\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"a\"}],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"done\",\"ask\":\"none\"}");
+  #assert s == MC_ENDED && mc_pending(l[..]).nd == 0;
+}
+
+#test "a reply larger than 64 KB with a large edit parses, and one over MC_REPLY_BYTES reports the buffer limit" {
+  l: [1] McLoop; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;
+  mc_init(l[..], sb[..], lb[..], "{}", "write a large file", "{}", 1.0);
+  _ = mc_request(l[..]);
+  // stream a 70 KB valid next_action edit reply (exceeds both the old 32 KB raw buffer and JSON_MAX_STRING 64 KB)
+  head := "{\"rationale\":\"big edit\",\"edits\":[{\"path\":\"big.coax\",\"old\":\"\",\"new\":\"";
+  tail := "\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  #assert mc_feed(l[..], GwEvent.{kind = GW_EV_TEXT, text = head}) == MC_WAIT;
+  chunk: [1024] u8; for i: 0..<1024 { chunk[i] = 'a'; }
+  for i: 0..<70 { #assert mc_feed(l[..], GwEvent.{kind = GW_EV_TEXT, text = cast(string) chunk[..]}) == MC_WAIT; }
+  #assert mc_feed(l[..], GwEvent.{kind = GW_EV_TEXT, text = tail}) == MC_WAIT;
+  #assert mc_feed(l[..], GwEvent.{kind = GW_EV_DONE}) == MC_TOOLS;
+  p := mc_pending(l[..]);
+  #assert p.ne == 1 && p.edits[0].path == "big.coax" && p.edits[0].text.count == 70 * 1024;
+
+  // a reply that exceeds MC_REPLY_BYTES is flagged as overflow with an explicit note rather than silent truncation
+  mc_init(l[..], sb[..], lb[..], "{}", "too big", "{}", 1.0);
+  _ = mc_request(l[..]);
+  for i: 0..<260 { _ = mc_feed(l[..], GwEvent.{kind = GW_EV_TEXT, text = cast(string) chunk[..]}); }
+  #assert l[0].raw_overflow;
+  #assert mc_feed(l[..], GwEvent.{kind = GW_EV_DONE}) == MC_AGAIN;
+  j := mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  ab: [1024] u8; ar: [1] ClArena; ar[0] = ClArena.{buf = ab[..]};
+  #assert ps_count(cl_str(ar[..], j, "notes"), "256 KB reply buffer") == 1;
+}
+
+#test "no_ask restricts the schema enum to none, appends the rule, and prevents MC_END_ASKED" {
+  for agents: [2] bool.[false, true] {
+    l: [1] McLoop; sb: [1] McStateBuffers; lb: [1] McLoopBuffers;
+    mc_init(l[..], sb[..], lb[..], "{}", "do the work", "{}", 1.0);
+    if agents { #assert mc_agents(l[..], lb[..], true, ""); }
+    #assert mc_no_ask(l[..], lb[..]) && l[0].no_ask;
+    #assert ps_count(l[0].system, "Interactive questions are disabled.") == 1;
+    #assert json_valid(l[0].schema) && cl_raw(l[0].schema, "properties.ask.enum") == "[\"none\"]";
+    // Even if a non-strict gateway emits ask: question, the loop nudges instead of ending as asked.
+    st0 := mc_take(l[..], "{\"rationale\":\"unsure\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"Which option?\",\"ask\":\"question\"}");
+    #assert st0 == MC_AGAIN && l[0].ending == MC_END_NONE;
+    st1 := mc_take(l[..], "{\"rationale\":\"decide\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"Done.\",\"ask\":\"none\"}");
+    #assert st1 == MC_ENDED && l[0].ending == MC_END_FINISHED && l[0].reply == "Done.";
+  }
+}
+
+#test "mc_instructions appends workspace instructions to system prompt and leaves empty text as no-op" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  mc_init(l[..], sb[..], lb[..], "{\"os\":\"macOS\"}", "do it", "{\"local_work\":0.9}", 0.9);
+  #assert mc_instructions(l[..], lb[..], "");
+  #assert l[0].system == MC_SYSTEM;
+  instr := "\n\nWorkspace instructions (loaded automatically):\n\n--- AGENTS.md ---\nAlways run tests.\n";
+  #assert mc_instructions(l[..], lb[..], instr);
+  #assert l[0].system.count == MC_SYSTEM.count + instr.count;
+  #assert l[0].system[0..<MC_SYSTEM.count] == MC_SYSTEM;
+  #assert l[0].system[MC_SYSTEM.count..<l[0].system.count] == instr;
+  req := mc_request(l[..]);
+  #assert req.system == l[0].system;
+}
+
+#test "mc_take: arena resets, mode stripping, todos, no_ask idle limit, idle reset and local_work boundaries" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+  // 1. Arena reset at entry (at = 0, full = false) and valid JSON does not fall through to text parser
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 1.0);
+  ok_json := "{\"rationale\":\"a\\\"b\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"ok\",\"ask\":\"none\"}";
+  #assert mc_take(l[..], ok_json) == MC_ENDED;
+  need := l[0].ar[0].at;
+  #assert need > 0 && need < 64;
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 1.0);
+  small: [64] u8; l[0].ar[0].buf = small[0..<need]; l[0].ar[0].at = need - 1; l[0].ar[0].full = true;
+  empty_norm: [1] u8; l[0].norm = empty_norm[0..<0];
+  #assert mc_take(l[..], ok_json) == MC_ENDED && !l[0].ar[0].full && l[0].ar[0].at == need && mc_pending(l[..]).rationale == "a\"b";
+  // 2. Arena reset before fallback mc_action_parse when more=true and added member fails after overflowing ar
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], false, true);
+  l[0].ar[0].buf = small[0..<need];
+  #assert mc_take(l[..], "{\"rationale\":\"a\\\"b\",\"notes\":[\"overflow\\\"str\",\"\"],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_AGAIN && !l[0].ar[0].full && l[0].ar[0].at == need;
+  #assert ps_count(mc_state_json(l[0].st[..], lb[0].prompt[..]), "a note is empty") == 1;
+  // 3. Arena reset before mc_text_action_as (empty reply on finished fails strict parse after allocating rationale in ar)
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 1.0);
+  l[0].ar[0].buf = small[0..<need];
+  #assert mc_take(l[..], "{\"rationale\":\"a\\\"b\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"\",\"ask\":\"none\"}") == MC_AGAIN && !l[0].ar[0].full && l[0].ar[0].at == need;
+  #assert ps_count(mc_state_json(l[0].st[..], lb[0].prompt[..]), "finished is true but reply is empty") == 1;
+  // 4. memory-only strips edit.name; 1 delegate alone clears finished; todos are recorded
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], false, true) && mc_agents(l[..], lb[..], false, "");
+  st := mc_take(l[..], "{\"rationale\":\"r\",\"notes\":[],\"todos\":[{\"content\":\"do x\",\"status\":\"in_progress\"}],\"edits\":[{\"path\":\"a.coax\",\"old\":\"x\",\"new\":\"y\",\"name\":\"fn\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}");
+  #assert st == MC_TOOLS && mc_pending(l[..]).edits[0].name == "" && l[0].todos_dirty && l[0].ntodos > 0;
+  mc_action_end(l[0].st[..]);
+  st_del := mc_take(l[..], "{\"rationale\":\"r\",\"notes\":[],\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"a\"}],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":true,\"reply\":\"done\",\"ask\":\"none\"}");
+  #assert st_del == MC_TOOLS && !mc_pending(l[..]).finished && mc_pending(l[..]).nd == 1;
+  // 5. no_ask records bare step, notes, counts idle up to MC_IDLE_LIMIT then finishes with reply
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 1.0);
+  #assert mc_no_ask(l[..], lb[..]);
+  ask_json := "{\"rationale\":\"ask-step\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"final-q\",\"ask\":\"question\"}";
+  #assert mc_take(l[..], ask_json) == MC_AGAIN && l[0].st[0].steps == 1;
+  j1 := mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  #assert ps_count(j1, "Interactive questioning is disabled") == 1 && ps_count(j1, "ask-step") == 1;
+  #assert mc_take(l[..], ask_json) == MC_AGAIN && l[0].st[0].steps == 2;
+  #assert mc_take(l[..], ask_json) == MC_ENDED && l[0].ending == MC_END_FINISHED && l[0].reply == "final-q";
+  // 6. Regular ask and idle record bare steps; working step resets idle counter
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 1.0);
+  #assert mc_take(l[..], ask_json) == MC_ENDED && l[0].ending == MC_END_ASKED && l[0].st[0].steps == 1;
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 1.0);
+  idle_json := "{\"rationale\":\"idle-step\",\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}";
+  #assert mc_take(l[..], idle_json) == MC_AGAIN && l[0].st[0].steps == 1;
+  #assert mc_take(l[..], idle_json) == MC_AGAIN && l[0].idle == 2;
+  #assert mc_take(l[..], "{\"rationale\":\"work\",\"edits\":[],\"commands\":[\"true\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS && l[0].idle == 0;
+  mc_action_end(l[0].st[..]);
+  #assert mc_take(l[..], idle_json) == MC_AGAIN && l[0].idle == 1;
+  // 7. local_work boundaries: 0.5 allows commands; < 0.5 allows view-only, refuses edits with ok=false and note, and keeps MC_TOOLS when nv/nq/nn/nd > 0
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", MC_LOCAL_WORK_MIN);
+  #assert mc_take(l[..], "{\"rationale\":\"ok\",\"edits\":[],\"commands\":[\"true\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS && mc_pending(l[..]).nc == 1;
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 0.0);
+  #assert mc_take(l[..], "{\"rationale\":\"v\",\"edits\":[],\"commands\":[],\"view\":[\"a.coax\"],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS && mc_pending(l[..]).nv == 1;
+  mc_action_end(l[0].st[..]);
+  #assert ps_count(mc_state_json(l[0].st[..], lb[0].prompt[..]), "Your commands were refused") == 0;
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 0.0);
+  #assert mc_take(l[..], "{\"rationale\":\"e\",\"edits\":[{\"path\":\"e.coax\",\"old\":\"a\",\"new\":\"b\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_AGAIN && mc_pending(l[..]).ne == 0 && l[0].st[0].open < 0;
+  j2 := mc_state_json(l[0].st[..], lb[0].prompt[..]);
+  #assert ps_count(j2, "\"failed\":") == 1 && ps_count(j2, "answer without edits") == 1 && ps_count(j2, "Your commands were refused") == 1;
+  // refused command alongside nv=1, nq=1, nn=1, or nd=1 still returns MC_TOOLS and clears nc to 0
+  mc_init(l[..], sb[..], lb[..], "{}", "t", "{}", 0.0);
+  #assert mc_aware(l[..], lb[..], true, true) && mc_agents(l[..], lb[..], false, "");
+  #assert mc_take(l[..], "{\"rationale\":\"r\",\"notes\":[],\"questions\":[],\"edits\":[],\"commands\":[\"true\"],\"view\":[\"a.coax\"],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS && mc_pending(l[..]).nc == 0;
+  mc_action_end(l[0].st[..]);
+  #assert mc_take(l[..], "{\"rationale\":\"r\",\"notes\":[],\"questions\":[\"defines area\"],\"edits\":[],\"commands\":[\"true\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_action_end(l[0].st[..]);
+  #assert mc_take(l[..], "{\"rationale\":\"r\",\"notes\":[\"a finding\"],\"questions\":[],\"edits\":[],\"commands\":[\"true\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_action_end(l[0].st[..]);
+  #assert mc_take(l[..], "{\"rationale\":\"r\",\"notes\":[],\"questions\":[],\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"a\"}],\"edits\":[],\"commands\":[\"true\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+}
+
+#forall "loop detection: ASCII classification boundaries for mc_lower, mc_word_ch, and mc_is_digits (#13978)" c: 0..<128 {
+  b := cast(u8) c;
+  is_upper := c >= 65 && c <= 90;
+  is_lower := c >= 97 && c <= 122;
+  is_digit := c >= 48 && c <= 57;
+  #assert mc_lower(b) == cast(u8) (ifx is_upper then c + 32 else c);
+  #assert mc_word_ch(b) == (is_upper || is_lower || is_digit || c == 95);
+  s: [1] u8; s[0] = b;
+  #assert mc_is_digits(cast(string) s[..]) == is_digit;
+}
+
+#test "loop detection: FNV-1a, contains, path/token normalization, rationale similarity, and ring wraparound (#13978)" {
+  // 1. Exact published 32-bit FNV-1a vectors and domain separation
+  #assert mc_fnv("", "") == 2166136261 && mc_fnv("", "a") == 0xe40c292c && mc_fnv("", "abc") == 0x1a47e90b;
+  #assert mc_fnv("a:", "x") != mc_fnv("b:", "x") && mc_hash_tok_lower(2166136261, "Ab") == mc_fnv_str(2166136261, " ab");
+  #assert !mc_is_digits("") && mc_is_digits("09") && !mc_is_digits("0a");
+  #assert !mc_contains("abc", "") && !mc_contains("ab", "abc") && mc_contains("abc", "abc") && mc_contains("abc", "bc") && !mc_contains("abc", "bd");
+
+  // 2. Path normalization boundaries
+  #assert mc_norm_path("") == "." && mc_norm_path("./") == "." && mc_norm_path("/") == "/" && mc_norm_path("./a") == "a" && mc_norm_path("./a/") == "a" && mc_norm_path("a/") == "a" && mc_norm_path("ab") == "ab";
+
+  // 3. Tokenizer: pipes outside vs inside single/double quotes, tabs/newlines, quotes, capacity cap
+  toks: [4] string;
+  #assert mc_cmd_tokens("  a\tb\nc 'd e' \"f g\" | tail", toks[..]) == 4 && toks[0] == "a" && toks[1] == "b" && toks[2] == "c" && toks[3] == "d e";
+  toks2: [8] string;
+  #assert mc_cmd_tokens("grep -E 'a|b' \"c|d\" \"\" 'x' 'y \"z", toks2[..]) == 6 && toks2[2] == "a|b" && toks2[3] == "c|d" && toks2[4] == "x" && toks2[5] == "'y \"z";
+  #assert mc_cmd_tokens("a \"b c\" d | grep e", toks2[..]) == 3 && toks2[1] == "b c" && toks2[2] == "d";
+  #assert mc_cmd_tokens("a '", toks2[..]) == 2 && toks2[1] == "'" && mc_cmd_tokens("a \"bc", toks2[..]) == 2 && toks2[1] == "\"bc";
+  #assert mc_cmd_tokens("   \t\n  ", toks2[..]) == 0;
+
+  // 4. Rationale signature: exact normalization, >= 3 char threshold, dedup, cap at MC_RAT_WORDS, and similarity boundaries
+  r_lead := mc_rat_sig("!!!  Hello,   WORLD!! ");
+  #assert r_lead.exact == mc_fnv("", "hello world") && r_lead.words[0] == mc_fnv("", "hello") && r_lead.n == 2;
+  #assert mc_rat_sig("a bb ccc").n == 1 && mc_rat_sig("ccc ccc ccc").n == 1 && mc_rat_sig("alpha beta alpha").n == 2;
+  #assert mc_rat_sig("a b").exact != mc_rat_sig("ab").exact;
+  r_many := mc_rat_sig("w01 w02 w03 w04 w05 w06 w07 w08 w09 w10 w11 w12 w13 w14 w15 w16 w17 w18");
+  #assert r_many.n == MC_RAT_WORDS;
+  r1 := mc_rat_sig("The honest answer is no repo code governs it, but the user keeps pushing. Let me do one more look.");
+  r2 := mc_rat_sig("The honest answer is still nothing here, but the user keeps pushing. Let me check one more file.");
+  r3 := mc_rat_sig("Edit coder/tui/microcoder_keys.coax to add self-knowledge field in mk_facts.");
+  #assert mc_rat_similar(r1, r1) && mc_rat_similar(r1, r2) && !mc_rat_similar(r1, r3);
+  #assert !mc_rat_similar(mc_rat_sig(""), r3) && !mc_rat_similar(r3, mc_rat_sig("")) && !mc_rat_similar(mc_rat_sig("a b"), mc_rat_sig("c d"));
+  #assert mc_rat_similar(mc_rat_sig("alpha a"), mc_rat_sig("alpha b"));
+  // Exact threshold boundaries: shared*5 >= lo*3 && shared*2 >= hi
+  s5 := mc_rat_sig("one two thr fou fiv");
+  #assert mc_rat_similar(s5, mc_rat_sig("one two thr xxx yyy"));          // 3/5: 15>=15 && 6>=5
+  #assert !mc_rat_similar(s5, mc_rat_sig("one two xxx yyy zzz"));         // 2/5: 10<15
+  s7 := mc_rat_sig("w01 w02 w03 w04 w05 w06 w07");
+  #assert !mc_rat_similar(s7, mc_rat_sig("w01 w02 w03 w04 x05 x06 x07")); // 4/7: 20<21 while 8>=7
+  s3 := mc_rat_sig("one two thr");
+  #assert mc_rat_similar(s3, mc_rat_sig("one two thr fou fiv six"));      // 3 of (3,6): 15>=9 && 6>=6
+  #assert !mc_rat_similar(s3, mc_rat_sig("one two thr fou fiv six sev")); // 3 of (3,7): 15>=9 && 6<7
+
+  // 5. Command intent normalization across every branch and edge case
+  #assert mc_cmd_intent("ls") == mc_cmd_intent("ls -la") && mc_cmd_intent("ls -la") == mc_cmd_intent("ls -l ./");
+  #assert mc_cmd_intent("ls coax/") == mc_cmd_intent("ls -la ./coax") && mc_cmd_intent("ls coax/") != mc_cmd_intent("ls");
+  #assert mc_cmd_intent("git grep") == mc_fnv("grep:", "") && mc_cmd_intent("echo grep") == mc_fnv("raw:", "echo grep");
+  #assert mc_cmd_intent("git grep -n \"Hello\"") == mc_cmd_intent("grep -rn 'hello' . | head -n 20");
+  #assert mc_cmd_intent("git grep -n \"Hello\"") == mc_cmd_intent("rg -i -C 2 hello | tail -10");
+  #assert mc_cmd_intent("git grep -A 3 foo") == mc_cmd_intent("egrep -B 1 -m 5 foo ./");
+  #assert mc_cmd_intent("grep foo -C 2") == mc_cmd_intent("grep foo") && mc_cmd_intent("grep -n 2 foo") != mc_cmd_intent("grep foo");
+  #assert mc_cmd_intent("grep a b c d e f g h i j k l m n -C") == mc_cmd_intent("grep a b c d e f g h i j k l m n");
+  #assert mc_cmd_intent("grep foo bar") != mc_cmd_intent("grep foo baz");
+  #assert mc_cmd_intent("git grep -C bar foo") != mc_cmd_intent("git grep foo");
+  #assert mc_cmd_intent("git grep -n \"Hello\"") != mc_cmd_intent("git grep -n \"Other\"");
+  #assert mc_cmd_intent("grep -E \"alpha|beta\" a.coax") != mc_cmd_intent("grep -E \"alpha|gamma\" a.coax");
+  #assert mc_cmd_intent("grep -E 'alpha|beta' a.coax") != mc_cmd_intent("grep -E 'alpha|gamma' a.coax");
+  #assert mc_cmd_intent("git") != mc_cmd_intent("grep") && mc_cmd_intent("git status") == mc_fnv("raw:", "git status");
+  #assert mc_cmd_intent("echo ls-files") == mc_fnv("raw:", "echo ls-files") && mc_cmd_intent("git ls-files") == mc_fnv("find:", "");
+  #assert mc_cmd_intent("cat AGENTS.md") == mc_cmd_intent("cat ./AGENTS.md") && mc_cmd_intent("cat AGENTS.md") == mc_cmd_intent("nl -ba AGENTS.md");
+  #assert mc_cmd_intent("cat AGENTS.md") == mc_view_intent("AGENTS.md") && mc_cmd_intent("cat") == mc_fnv("raw:", "cat");
+  #assert mc_cmd_intent("head") == mc_fnv("slice:", "") && mc_cmd_intent("head a.coax") != mc_cmd_intent("head b.coax");
+  #assert mc_cmd_intent("head -q a.coax") == mc_cmd_intent("head a.coax") && mc_cmd_intent("head a-b.coax") != mc_cmd_intent("head");
+  #assert mc_cmd_intent("sed -n '1,80p' loop.coax") == mc_cmd_intent("sed -n '1,80p' ./loop.coax | head -40");
+  #assert mc_cmd_intent("sed -n '1,80p' loop.coax") != mc_cmd_intent("sed -n '81,160p' loop.coax");
+  #assert mc_cmd_intent("head -n 20 a.coax") == mc_cmd_intent("tail -n 20 ./a.coax") && mc_cmd_intent("head -n 20 a.coax") != mc_cmd_intent("head -n 40 a.coax");
+  #assert mc_view_intent("loop.coax:1-80") != mc_view_intent("loop.coax:81-160") && mc_view_intent("loop.coax:1-80") != mc_view_intent("loop.coax");
+  #assert mc_cmd_intent("find") == mc_fnv("find:", "") && mc_cmd_intent("find coax") != mc_cmd_intent("find coder");
+  #assert mc_cmd_intent("find . -name '*.coax'") == mc_cmd_intent("find ./ -maxdepth 3 -mindepth 1 -type f -name '*.coax'");
+  #assert mc_cmd_intent("find . -name '*.coax'") != mc_cmd_intent("find . -name '*.rs'");
+  #assert mc_cmd_intent("find . -type") == mc_cmd_intent("find .") && mc_cmd_intent("git ls-files coax") != mc_cmd_intent("git ls-files coder");
+  #assert mc_cmd_intent("   ") == mc_fnv("raw:", "   ") && mc_cmd_intent("pwd") != mc_cmd_intent("date");
+
+  // 6. Mutating commands vs read-only inspections
+  #assert mc_cmd_mutates("echo hi > a.txt") && mc_cmd_mutates("tee a.txt") && mc_cmd_mutates("sed -i '' 's/a/b/' f");
+  #assert mc_cmd_mutates("rm foo") && mc_cmd_mutates("mv a b") && mc_cmd_mutates("cp a b") && mc_cmd_mutates("mkdir d");
+  #assert mc_cmd_mutates("touch f") && mc_cmd_mutates("patch -p1") && mc_cmd_mutates("git add a") && mc_cmd_mutates("git commit -m x");
+  #assert mc_cmd_mutates("git checkout -- a") && mc_cmd_mutates("git apply p.diff");
+  #assert !mc_cmd_mutates("ls -la") && !mc_cmd_mutates("git grep -n MC_SYSTEM") && !mc_cmd_mutates("sed -n '1,80p' loop.coax");
+
+  // 7. Ring-buffer exact capacity and wraparound (mc_ring_add and mc_rat_record)
+  ring: [MC_STALL_INTENTS] u32; rcnt: [1] int;
+  for k: 0..<MC_STALL_INTENTS { #assert mc_ring_add(ring[..], rcnt[..], cast(u32) (100 + k)); }
+  #assert rcnt[0] == MC_STALL_INTENTS && !mc_ring_add(ring[..], rcnt[..], 100) && !mc_ring_add(ring[..], rcnt[..], cast(u32) (100 + MC_STALL_INTENTS - 1));
+  // Adding one more wraps to slot 0, evicting 100 while keeping slot 1 (101)
+  #assert mc_ring_add(ring[..], rcnt[..], 999) && rcnt[0] == MC_STALL_INTENTS + 1;
+  #assert !mc_ring_add(ring[..], rcnt[..], 101) && mc_ring_add(ring[..], rcnt[..], 100);
+  st: [1] McStall;
+  for k: 0..<MC_STALL_HIST {
+    wb: [16] u8; wn := json_raw(wb[..], 0, "word_"); wn = json_write_int(wb[..], wn, k);
+    #assert !mc_rat_record(st[..], cast(string) wb[0..<wn]);
+  }
+  #assert st[0].nrat == MC_STALL_HIST && mc_rat_record(st[..], "word_0");
+  // Wrapping evicts word_0 (which was written at slot 0, then overwritten by the duplicate above at slot 0, so add another to evict slot 1 = word_1)
+  #assert !mc_rat_record(st[..], "brand_new_one") && !mc_rat_record(st[..], "word_1");
+}
+
+#test "loop detection: nudges after MC_STALL_NUDGE no-new-fact steps, forces finish at MC_STALL_LIMIT, and resets on real progress (#13978)" {
+  sb: [1] McStateBuffers; lb: [1] McLoopBuffers; l: [1] McLoop;
+
+  // 1. Same-intent searches, duplicate outputs, and empty greps stall -> nudge at 3 -> forced MC_END_FINISHED at 5.
+  mc_init(l[..], sb[..], lb[..], "{}", "find prompt", "{}", 1.0);
+  // Step 1: initial ls gets 1-byte output -> stall 0, action closed
+  #assert mc_take(l[..], "{\"rationale\":\"list root files\",\"edits\":[],\"commands\":[\"ls -la\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "ls -la", 0, false, "x");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && l[0].st[0].open < 0 && mc_stall_count(l[..]) == 0;
+  // Step 2 (stall 1): distinct command with identical already-seen output ("x") yields no new fact
+  #assert mc_take(l[..], "{\"rationale\":\"echo single char\",\"edits\":[],\"commands\":[\"printf x\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "printf x", 0, false, "x");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 1;
+  // Step 3 (stall 2): empty grep yields no new facts
+  #assert mc_take(l[..], "{\"rationale\":\"grep greeting phrase\",\"edits\":[],\"commands\":[\"git grep -n Hello\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "git grep -n Hello", 1, false, "");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 2;
+  // Step 4 (stall 3 == MC_STALL_NUDGE): variant ls -l . is same intent -> emits MC_STALL_NOTE
+  #assert mc_take(l[..], "{\"rationale\":\"check directory again\",\"edits\":[],\"commands\":[\"ls -l .\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "ls -l .", 0, false, "total 16\nAGENTS.md\n");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == MC_STALL_NUDGE;
+  #assert ps_count(cast(string) l[0].st[0].notes[0..<l[0].st[0].nn], "Loop detected") == 1;
+  // Step 5 (stall 4): view returns empty content -> still stalled
+  #assert mc_take(l[..], "{\"rationale\":\"read empty file\",\"edits\":[],\"commands\":[],\"view\":[\"empty.coax\"],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_view(l[..], "empty.coax", true, "");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 4;
+  // Step 6 (stall 5 == MC_STALL_LIMIT): forces MC_END_FINISHED with MC_STALL_FALLBACK
+  #assert mc_take(l[..], "{\"rationale\":\"try listing once more\",\"edits\":[],\"commands\":[\"tree .\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "tree .", 0, false, ".\n");
+  #assert mc_tools_done(l[..]) == MC_ENDED && l[0].ending == MC_END_FINISHED && l[0].reply == MC_STALL_FALLBACK;
+
+  // 2. Repeated rationale alone (even with novel commands/output) stalls and forces finish.
+  mc_init(l[..], sb[..], lb[..], "{}", "find prompt", "{}", 1.0);
+  #assert mc_take(l[..], "{\"rationale\":\"The honest answer is no repo code governs it, but the user keeps pushing. Let me do one more look.\",\"edits\":[],\"commands\":[\"cat a.txt\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "cat a.txt", 0, false, "alpha");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 0;
+  cmds := [5] string.["cat b.txt", "cat c.txt", "cat d.txt", "cat e.txt", "cat f.txt"];
+  outs := [5] string.["beta", "gamma", "delta", "epsilon", "zeta"];
+  for k: 0..<MC_STALL_LIMIT {
+    jb: [512] u8;
+    jn := json_raw(jb[..], 0, "{\"rationale\":\"The honest answer is still nothing here, but the user keeps pushing. Let me check one more file.\",\"edits\":[],\"commands\":[");
+    jn = json_write_string(jb[..], jn, cmds[k]);
+    jn = json_raw(jb[..], jn, "],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}");
+    #assert mc_take(l[..], cast(string) jb[0..<jn]) == MC_TOOLS;
+    mc_command(l[..], cmds[k], 0, false, outs[k]);
+    rc := mc_tools_done(l[..]);
+    if k + 1 < MC_STALL_LIMIT { #assert rc == MC_AGAIN && mc_stall_count(l[..]) == k + 1; }
+    else { #assert rc == MC_ENDED && l[0].ending == MC_END_FINISHED && l[0].reply == MC_STALL_FALLBACK; }
+  }
+
+  // 3. New facts, applied edits, mutating commands, delegations, new notes, new questions, and mc_stall_reset each reset stall.
+  mc_init(l[..], sb[..], lb[..], "{}", "work", "{}", 1.0);
+  #assert mc_aware(l[..], lb[..], true, true) && mc_agents(l[..], lb[..], false, "");
+  #assert mc_take(l[..], "{\"rationale\":\"search alpha\",\"notes\":[],\"questions\":[],\"edits\":[],\"commands\":[\"git grep alpha\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "git grep alpha", 1, false, "");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 1;
+  // mc_stall_reset clears count cleanly
+  mc_stall_reset(l[..]);
+  #assert mc_stall_count(l[..]) == 0;
+  // Failed edit does NOT reset stall; applied edit DOES reset stall
+  #assert mc_take(l[..], "{\"rationale\":\"bad edit\",\"notes\":[],\"questions\":[],\"edits\":[{\"path\":\"a.coax\",\"old\":\"z\",\"new\":\"y\",\"seen\":\"\",\"name\":\"\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_edited(l[..], "a.coax", false, "not found");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 1;
+  #assert mc_take(l[..], "{\"rationale\":\"apply change\",\"notes\":[],\"questions\":[],\"edits\":[{\"path\":\"a.coax\",\"old\":\"x\",\"new\":\"y\",\"seen\":\"\",\"name\":\"\"}],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_edited(l[..], "a.coax", true, "");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 0;
+  // New view with 1-byte content resets stall; re-reading same view stalls
+  #assert mc_take(l[..], "{\"rationale\":\"search beta\",\"notes\":[],\"questions\":[],\"edits\":[],\"commands\":[\"git grep beta\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "git grep beta", 1, false, "");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 1;
+  #assert mc_take(l[..], "{\"rationale\":\"read loop prompt lines\",\"notes\":[],\"questions\":[],\"edits\":[],\"commands\":[],\"view\":[\"coax/lib/microcoder/loop.coax:1-80\"],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_view(l[..], "coax/lib/microcoder/loop.coax:1-80", true, "z");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 0;
+  #assert mc_take(l[..], "{\"rationale\":\"inspect loop lines again\",\"notes\":[],\"questions\":[],\"edits\":[],\"commands\":[],\"view\":[\"coax/lib/microcoder/loop.coax:1-80\"],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_view(l[..], "coax/lib/microcoder/loop.coax:1-80", true, "z");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 1;
+  // New working-memory note resets stall; repeating identical note does not
+  #assert mc_take(l[..], "{\"rationale\":\"record finding\",\"notes\":[\"loop.coax:47 defines MC_SYSTEM\"],\"questions\":[],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 0;
+  #assert mc_take(l[..], "{\"rationale\":\"repeat same finding\",\"notes\":[\"loop.coax:47 defines MC_SYSTEM\"],\"questions\":[],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 1;
+  // Mutating command resets stall
+  #assert mc_take(l[..], "{\"rationale\":\"write file\",\"notes\":[],\"questions\":[],\"edits\":[],\"commands\":[\"touch out.txt\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "touch out.txt", 0, false, "");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 0;
+  // New compiler question resets stall; repeated question does not
+  #assert mc_take(l[..], "{\"rationale\":\"empty probe three\",\"notes\":[],\"questions\":[],\"edits\":[],\"commands\":[\"git grep nothing3\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_command(l[..], "git grep nothing3", 1, false, "");
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 1;
+  #assert mc_take(l[..], "{\"rationale\":\"ask compiler\",\"notes\":[],\"questions\":[\"defines MC_SYSTEM\"],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 0;
+  #assert mc_take(l[..], "{\"rationale\":\"ask compiler different words\",\"notes\":[],\"questions\":[\"defines MC_SYSTEM\"],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 1;
+  // Delegation resets stall
+  #assert mc_take(l[..], "{\"rationale\":\"delegate search\",\"notes\":[],\"questions\":[],\"delegate\":[{\"level\":\"hydrogen\",\"task\":\"check\"}],\"edits\":[],\"commands\":[],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  #assert mc_tools_done(l[..]) == MC_AGAIN && mc_stall_count(l[..]) == 0;
+  // Calling mc_tools_done after mc_stop returns MC_ENDED cleanly
+  #assert mc_take(l[..], "{\"rationale\":\"before stop\",\"notes\":[],\"questions\":[],\"edits\":[],\"commands\":[\"pwd\"],\"view\":[],\"finished\":false,\"reply\":\"\",\"ask\":\"none\"}") == MC_TOOLS;
+  mc_stop(l[..]);
+  #assert mc_tools_done(l[..]) == MC_ENDED;
+}
+
+````

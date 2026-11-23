@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "qm",
+  "agent": "qm",
+  "repository": "yc-software/qm",
+  "snapshot": "558b54c33ff55d3e1d72",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:31.797227+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "9dd19899b0414bad494eedbd87696eaab23a9907",
+      "path": "src/agent/agent-tools/mcp.ts",
+      "sha256": "9e375200304828674287e222716cc9bd63d06b830fb67ab269c11bfe82ec8639",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/9dd19899b0414bad494eedbd87696eaab23a9907/src/agent/agent-tools/mcp.ts",
+      "url": "https://github.com/yc-software/qm/blob/9dd19899b0414bad494eedbd87696eaab23a9907/src/agent/agent-tools/mcp.ts"
+    },
+    {
+      "commit": "9dd19899b0414bad494eedbd87696eaab23a9907",
+      "path": "src/agent/agent-tools/workspace.ts",
+      "sha256": "bcba4a83c383945a0a0158b4234a733a084dd3150bad54c54d99ae19e977c725",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/9dd19899b0414bad494eedbd87696eaab23a9907/src/agent/agent-tools/workspace.ts",
+      "url": "https://github.com/yc-software/qm/blob/9dd19899b0414bad494eedbd87696eaab23a9907/src/agent/agent-tools/workspace.ts"
+    },
+    {
+      "commit": "9dd19899b0414bad494eedbd87696eaab23a9907",
+      "path": "src/resolution/protocols/shared-core.md",
+      "sha256": "b4c06f8ba8eb58a9a06f8c20ef4853ddf312189a5e1bc84f9f978238948a7fa1",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/9dd19899b0414bad494eedbd87696eaab23a9907/src/resolution/protocols/shared-core.md",
+      "url": "https://github.com/yc-software/qm/blob/9dd19899b0414bad494eedbd87696eaab23a9907/src/resolution/protocols/shared-core.md"
+    }
+  ]
+}

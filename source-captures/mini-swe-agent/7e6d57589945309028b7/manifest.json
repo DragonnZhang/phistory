@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "mini-swe-agent",
+  "agent": "mini-swe-agent",
+  "repository": "SWE-agent/mini-swe-agent",
+  "snapshot": "7e6d57589945309028b7",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:30.964742+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "04d809ceab9df28f9adaed044884180159172930",
+      "path": "src/minisweagent/config/default.yaml",
+      "sha256": "112aa58328f478a41cc2630702a4b89ef459e912870e05065157ed221f56701f",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/04d809ceab9df28f9adaed044884180159172930/src/minisweagent/config/default.yaml",
+      "url": "https://github.com/SWE-agent/mini-swe-agent/blob/04d809ceab9df28f9adaed044884180159172930/src/minisweagent/config/default.yaml"
+    },
+    {
+      "commit": "04d809ceab9df28f9adaed044884180159172930",
+      "path": "src/minisweagent/models/litellm_model.py",
+      "sha256": "6df4483bcdc9620b2f9d7f8bb1027a7fb9729b739976cbcf1a9d18fb58c48227",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/04d809ceab9df28f9adaed044884180159172930/src/minisweagent/models/litellm_model.py",
+      "url": "https://github.com/SWE-agent/mini-swe-agent/blob/04d809ceab9df28f9adaed044884180159172930/src/minisweagent/models/litellm_model.py"
+    },
+    {
+      "commit": "04d809ceab9df28f9adaed044884180159172930",
+      "path": "src/minisweagent/models/utils/actions_toolcall.py",
+      "sha256": "47b666412e4f838508b50009cf34c7f63fe15e9e40affc257a17c0829896526f",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/04d809ceab9df28f9adaed044884180159172930/src/minisweagent/models/utils/actions_toolcall.py",
+      "url": "https://github.com/SWE-agent/mini-swe-agent/blob/04d809ceab9df28f9adaed044884180159172930/src/minisweagent/models/utils/actions_toolcall.py"
+    }
+  ]
+}

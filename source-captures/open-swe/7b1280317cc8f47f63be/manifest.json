@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "open-swe",
+  "agent": "open-swe",
+  "repository": "langchain-ai/open-swe",
+  "snapshot": "7b1280317cc8f47f63be",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:26.013609+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "1d0c1be6b299c33bf177cc6de8d658454e08ee7f",
+      "path": "mda/rt/remote_files.py",
+      "sha256": "5d6abdb86b5aa65b87b614fea78b10f22e63e82db7891f58eff09cfb154c0cd5",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d0c1be6b299c33bf177cc6de8d658454e08ee7f/mda/rt/remote_files.py",
+      "url": "https://github.com/langchain-ai/open-swe/blob/1d0c1be6b299c33bf177cc6de8d658454e08ee7f/mda/rt/remote_files.py"
+    },
+    {
+      "commit": "1d0c1be6b299c33bf177cc6de8d658454e08ee7f",
+      "path": "mda/rt/run_tools.py",
+      "sha256": "97ba9a7dc62418cbd455bce305d0abea58f1dd6ae7a849aa804c251105261f36",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d0c1be6b299c33bf177cc6de8d658454e08ee7f/mda/rt/run_tools.py",
+      "url": "https://github.com/langchain-ai/open-swe/blob/1d0c1be6b299c33bf177cc6de8d658454e08ee7f/mda/rt/run_tools.py"
+    },
+    {
+      "commit": "1d0c1be6b299c33bf177cc6de8d658454e08ee7f",
+      "path": "mda/rt/search_tools.py",
+      "sha256": "447d1935ed5b3264194a3f6f0190263946b839db7653fd9516ac84571dbf5772",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d0c1be6b299c33bf177cc6de8d658454e08ee7f/mda/rt/search_tools.py",
+      "url": "https://github.com/langchain-ai/open-swe/blob/1d0c1be6b299c33bf177cc6de8d658454e08ee7f/mda/rt/search_tools.py"
+    },
+    {
+      "commit": "1d0c1be6b299c33bf177cc6de8d658454e08ee7f",
+      "path": "openswe/resources/prompts/system/task-execution.md",
+      "sha256": "0b86cad260f9151f9a4e2d2f90b94eb444e46188a639cd7a88e9c711bbe59ea0",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/1d0c1be6b299c33bf177cc6de8d658454e08ee7f/openswe/resources/prompts/system/task-execution.md",
+      "url": "https://github.com/langchain-ai/open-swe/blob/1d0c1be6b299c33bf177cc6de8d658454e08ee7f/openswe/resources/prompts/system/task-execution.md"
+    }
+  ]
+}

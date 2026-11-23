@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "mirix",
+  "agent": "MIRIX",
+  "repository": "Mirix-AI/MIRIX",
+  "snapshot": "fbca677c48cb3e6aec46",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:27.595300+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "9077e4b229dd8f61c5703b431a97788c6b61acfb",
+      "path": "mirix/agent/agent.py",
+      "sha256": "926dc5ad8db1c6859f47d44aeb3cb331f7d575d708dc074205209399f386ec6c",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/9077e4b229dd8f61c5703b431a97788c6b61acfb/mirix/agent/agent.py",
+      "url": "https://github.com/Mirix-AI/MIRIX/blob/9077e4b229dd8f61c5703b431a97788c6b61acfb/mirix/agent/agent.py"
+    },
+    {
+      "commit": "9077e4b229dd8f61c5703b431a97788c6b61acfb",
+      "path": "mirix/prompts/system/base/episodic_memory_agent.txt",
+      "sha256": "e10b752621421df62a639089df74ba5411ae24dcd373fcaa933d97ad864130de",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/9077e4b229dd8f61c5703b431a97788c6b61acfb/mirix/prompts/system/base/episodic_memory_agent.txt",
+      "url": "https://github.com/Mirix-AI/MIRIX/blob/9077e4b229dd8f61c5703b431a97788c6b61acfb/mirix/prompts/system/base/episodic_memory_agent.txt"
+    }
+  ]
+}

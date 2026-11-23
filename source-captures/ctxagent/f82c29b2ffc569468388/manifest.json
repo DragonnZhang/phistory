@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "ctxagent",
+  "agent": "CTXAgent",
+  "repository": "MatthiasHBusch/CTXAgent",
+  "snapshot": "f82c29b2ffc569468388",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:27.252269+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "7fc376ce1f5714491f26d66b266e099051c037fa",
+      "path": "ctxagent/agent.py",
+      "sha256": "4f6edbb1b4c5392a4191694c9014333f693ccfb166f7b265620172a2a78bbd4d",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/7fc376ce1f5714491f26d66b266e099051c037fa/ctxagent/agent.py",
+      "url": "https://github.com/MatthiasHBusch/CTXAgent/blob/7fc376ce1f5714491f26d66b266e099051c037fa/ctxagent/agent.py"
+    },
+    {
+      "commit": "7fc376ce1f5714491f26d66b266e099051c037fa",
+      "path": "ctxagent/tools.py",
+      "sha256": "4fee778a883d5e3fe0d8bbc04c885be4c4b130f7a24f4104bef3e1d99358b85e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/7fc376ce1f5714491f26d66b266e099051c037fa/ctxagent/tools.py",
+      "url": "https://github.com/MatthiasHBusch/CTXAgent/blob/7fc376ce1f5714491f26d66b266e099051c037fa/ctxagent/tools.py"
+    }
+  ]
+}

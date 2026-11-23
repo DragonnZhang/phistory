@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "wechat-mac-rpa",
+  "agent": "wechat-mac-rpa",
+  "repository": "wq19901103wq/wechat-mac-rpa",
+  "snapshot": "eb99c2e2fb097c91b0b7",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:31.956948+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "29f3227f7fa10c8e18b3b62f33b9c5b84e249aef",
+      "path": "src/reply/generator.py",
+      "sha256": "bbe2c4a0aba2d238bd1215ccd20a89b1dc9b47250cd9b85183dfcd83f27db0a6",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/29f3227f7fa10c8e18b3b62f33b9c5b84e249aef/src/reply/generator.py",
+      "url": "https://github.com/wq19901103wq/wechat-mac-rpa/blob/29f3227f7fa10c8e18b3b62f33b9c5b84e249aef/src/reply/generator.py"
+    },
+    {
+      "commit": "29f3227f7fa10c8e18b3b62f33b9c5b84e249aef",
+      "path": "src/tools/builtin_tools.py",
+      "sha256": "cd5c1eca8fea92b65658710576032a3275f6590b192af441106b553f1f0f7e1e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/29f3227f7fa10c8e18b3b62f33b9c5b84e249aef/src/tools/builtin_tools.py",
+      "url": "https://github.com/wq19901103wq/wechat-mac-rpa/blob/29f3227f7fa10c8e18b3b62f33b9c5b84e249aef/src/tools/builtin_tools.py"
+    },
+    {
+      "commit": "29f3227f7fa10c8e18b3b62f33b9c5b84e249aef",
+      "path": "src/tools/tool_registry.py",
+      "sha256": "77b509114a6be4acf7c4005829641526c0a0771e825bffacefc25015880dbb93",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/29f3227f7fa10c8e18b3b62f33b9c5b84e249aef/src/tools/tool_registry.py",
+      "url": "https://github.com/wq19901103wq/wechat-mac-rpa/blob/29f3227f7fa10c8e18b3b62f33b9c5b84e249aef/src/tools/tool_registry.py"
+    }
+  ]
+}

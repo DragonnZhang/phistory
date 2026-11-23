@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "looptroop",
+  "agent": "LoopTroop",
+  "repository": "looptroop-ai/LoopTroop",
+  "snapshot": "70c3217ea3d2937b2eaf",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:26.719812+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "65421038a28051d6891f912af39fe96ad665c641",
+      "path": "server/opencode/toolPolicy.ts",
+      "sha256": "8d703ad44a3f7c3f1f5a191fc0521a787e6b2d2fb1cdfc495a70b457a8d7f6b9",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/65421038a28051d6891f912af39fe96ad665c641/server/opencode/toolPolicy.ts",
+      "url": "https://github.com/looptroop-ai/LoopTroop/blob/65421038a28051d6891f912af39fe96ad665c641/server/opencode/toolPolicy.ts"
+    },
+    {
+      "commit": "65421038a28051d6891f912af39fe96ad665c641",
+      "path": "server/prompts/globalRules.ts",
+      "sha256": "3eb4a76e0f056308f611e5fd67eb73746a4177c6a2dcc84516f1c3faeab90323",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/65421038a28051d6891f912af39fe96ad665c641/server/prompts/globalRules.ts",
+      "url": "https://github.com/looptroop-ai/LoopTroop/blob/65421038a28051d6891f912af39fe96ad665c641/server/prompts/globalRules.ts"
+    },
+    {
+      "commit": "65421038a28051d6891f912af39fe96ad665c641",
+      "path": "server/prompts/index.ts",
+      "sha256": "c032cec4794c393d7a8cdc19c13f871eaa41519dbb35bbde826f29a189b27081",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/65421038a28051d6891f912af39fe96ad665c641/server/prompts/index.ts",
+      "url": "https://github.com/looptroop-ai/LoopTroop/blob/65421038a28051d6891f912af39fe96ad665c641/server/prompts/index.ts"
+    },
+    {
+      "commit": "65421038a28051d6891f912af39fe96ad665c641",
+      "path": "server/workflow/runOpenCodePrompt.ts",
+      "sha256": "602b9a33f635d0e882dec30fc0fc648868538bc71886f8ba065c901dd0f45cf2",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/65421038a28051d6891f912af39fe96ad665c641/server/workflow/runOpenCodePrompt.ts",
+      "url": "https://github.com/looptroop-ai/LoopTroop/blob/65421038a28051d6891f912af39fe96ad665c641/server/workflow/runOpenCodePrompt.ts"
+    }
+  ]
+}

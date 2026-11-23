@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "deer-flow",
+  "agent": "DeerFlow",
+  "repository": "bytedance/deer-flow",
+  "snapshot": "4553be20c9b9cbd6bffc",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:22.261242+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9",
+      "path": "backend/packages/harness/deerflow/agents/lead_agent/prompt.py",
+      "sha256": "a3db7d69fd2cfefc3d7d813a23bb31be9f9debf5c90d5775c7bca9507c945a25",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9/backend/packages/harness/deerflow/agents/lead_agent/prompt.py",
+      "url": "https://github.com/bytedance/deer-flow/blob/fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9/backend/packages/harness/deerflow/agents/lead_agent/prompt.py"
+    },
+    {
+      "commit": "fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9",
+      "path": "backend/packages/harness/deerflow/agents/task_continuity/tools.py",
+      "sha256": "80706c0871bcaa48a6b73ca34d3457b432fdc94e636f9e57331fce9fb096e600",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9/backend/packages/harness/deerflow/agents/task_continuity/tools.py",
+      "url": "https://github.com/bytedance/deer-flow/blob/fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9/backend/packages/harness/deerflow/agents/task_continuity/tools.py"
+    },
+    {
+      "commit": "fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9",
+      "path": "backend/packages/harness/deerflow/sandbox/tools.py",
+      "sha256": "57491e5b4acbe39e272e3ded6623a5fa79c8cff9f1badd5f1b115713292617af",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9/backend/packages/harness/deerflow/sandbox/tools.py",
+      "url": "https://github.com/bytedance/deer-flow/blob/fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9/backend/packages/harness/deerflow/sandbox/tools.py"
+    },
+    {
+      "commit": "fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9",
+      "path": "backend/packages/harness/deerflow/tools/builtins/tool_search.py",
+      "sha256": "c0e157a40fc0dd98f90216d02e4c469c80142cd29370b6a9c940e727fe4d85ef",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9/backend/packages/harness/deerflow/tools/builtins/tool_search.py",
+      "url": "https://github.com/bytedance/deer-flow/blob/fc0d4bd7bc2602b4ff0abdc8600545b23b620ef9/backend/packages/harness/deerflow/tools/builtins/tool_search.py"
+    }
+  ]
+}

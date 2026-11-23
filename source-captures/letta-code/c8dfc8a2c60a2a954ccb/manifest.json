@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "letta-code",
+  "agent": "letta-code",
+  "repository": "letta-ai/letta-code",
+  "snapshot": "c8dfc8a2c60a2a954ccb",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:26.446778+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "dc5bcddd9d55e3b8986a82cb83b55445817d8faf",
+      "path": "src/agent/prompts/letta_local_memfs.md",
+      "sha256": "cf839eed0f972effe2e1df1042fd2b34cbe174bb678a4c4373b1cddc4562adda",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/agent/prompts/letta_local_memfs.md",
+      "url": "https://github.com/letta-ai/letta-code/blob/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/agent/prompts/letta_local_memfs.md"
+    },
+    {
+      "commit": "dc5bcddd9d55e3b8986a82cb83b55445817d8faf",
+      "path": "src/tools/impl/bash.ts",
+      "sha256": "424ffa73091f369dfd33dd671fbb26e23b692e4a88e6305be3fec3da5aa7db99",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/impl/bash.ts",
+      "url": "https://github.com/letta-ai/letta-code/blob/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/impl/bash.ts"
+    },
+    {
+      "commit": "dc5bcddd9d55e3b8986a82cb83b55445817d8faf",
+      "path": "src/tools/impl/code-mode.ts",
+      "sha256": "e4499fc3f1aa238f00ec8e3a9f9f5964c1f51a822864e1496758d5ae6e5be196",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/impl/code-mode.ts",
+      "url": "https://github.com/letta-ai/letta-code/blob/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/impl/code-mode.ts"
+    },
+    {
+      "commit": "dc5bcddd9d55e3b8986a82cb83b55445817d8faf",
+      "path": "src/tools/impl/truncation.ts",
+      "sha256": "3100a8643ece93f4f7f4bfd0830c7d52f4ca3bccc2e851c31606f372da877fdc",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/impl/truncation.ts",
+      "url": "https://github.com/letta-ai/letta-code/blob/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/impl/truncation.ts"
+    },
+    {
+      "commit": "dc5bcddd9d55e3b8986a82cb83b55445817d8faf",
+      "path": "src/tools/toolset-catalog.ts",
+      "sha256": "fc0361e442edcc7344e70693710aef73baa0f25c4238959500879fc4804f326d",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/toolset-catalog.ts",
+      "url": "https://github.com/letta-ai/letta-code/blob/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/toolset-catalog.ts"
+    },
+    {
+      "commit": "dc5bcddd9d55e3b8986a82cb83b55445817d8faf",
+      "path": "src/tools/workflow/workflow-engine.ts",
+      "sha256": "cdfaf2f43534c7d0655b9c5c63f1e18669910e9f99b67fd53e2cd8a55f8effcf",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/workflow/workflow-engine.ts",
+      "url": "https://github.com/letta-ai/letta-code/blob/dc5bcddd9d55e3b8986a82cb83b55445817d8faf/src/tools/workflow/workflow-engine.ts"
+    }
+  ]
+}

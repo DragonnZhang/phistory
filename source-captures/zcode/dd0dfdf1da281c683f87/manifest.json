@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "zcode",
+  "agent": "ZCode",
+  "repository": "zai-org/ZCode",
+  "snapshot": "dd0dfdf1da281c683f87",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:32.703013+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/docs/usage/04-tools.md",
+      "sha256": "05210254b000e2c602577fa178e317aad63243cdbf860fe64ac4d929433254d1",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/docs/usage/04-tools.md",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/docs/usage/04-tools.md"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/docs/usage/08-skills.md",
+      "sha256": "76981b43fc213051dfa434fae47d7c79a4de21fa5bb31d9e4527bcb5390cc7e6",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/docs/usage/08-skills.md",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/docs/usage/08-skills.md"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/docs/usage/11-memory.md",
+      "sha256": "40674086d6ad31366523f74904f46ebbd265e694484da4c1c2fd57f843e662cc",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/docs/usage/11-memory.md",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/docs/usage/11-memory.md"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/context/sections/identity.ts",
+      "sha256": "c313c23c92c32651370dce27cd63e3e59afe357bf9200e9ff05811792fe80a25",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/context/sections/identity.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/context/sections/identity.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/subagent/general-purpose.ts",
+      "sha256": "205edea37fc74c9ef23989da130de4bc7c91abfdc055f0e3dda6d3a1f3cc85ef",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/subagent/general-purpose.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/subagent/general-purpose.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/subagent/tool-policy.ts",
+      "sha256": "43992310797f001e0500dad6feeecb7980db06b221e95e6f12e00568c4ab7c3c",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/subagent/tool-policy.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/subagent/tool-policy.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/agent.ts",
+      "sha256": "6439a33d709f8208663fad31463b85c0b147b9c64da5f0669c5b9add38125ee0",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/agent.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/agent.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/bash-model-content.ts",
+      "sha256": "bda39a58053b7592ec36a8f35b494b1eb0d15e17b7e38426a755af3320030137",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/bash-model-content.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/bash-model-content.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/bash.ts",
+      "sha256": "273eff5c02e68602d70cbcc6c2aa2870004d80b15e8269116170addbb38edd89",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/bash.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/bash.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/index.ts",
+      "sha256": "1ffcf4c0df4056de885cb7ba36cba9700f5dfcbec1eed31c5bf18c5a75be9970",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/index.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/index.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/node-repl.ts",
+      "sha256": "5b1332de426ee2176dcf1c1d8798e023b5706583c167135bbf0f59764243b42c",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/node-repl.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/node-repl.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/plan-mode.ts",
+      "sha256": "295829110461ab137f061311faffa1fdb0bd1e361d52ac9bf3e42673bfcb1d8e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/plan-mode.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/plan-mode.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/tool/handlers/tool-search.ts",
+      "sha256": "c2325323ebd62a36e36b4f13b7c02d5f25d8d68c581d4bce8c1ff17647b229e8",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/tool-search.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/handlers/tool-search.ts"
+    },
+    {
+      "commit": "a4b4445141eb7d3b3e99eada9292775383bfc44e",
+      "path": "apps/zcode-cli/packages/core/src/tool/result-persistence-format.ts",
+      "sha256": "f023502b8df321eb6a2874b019da8bf054ade0a55cd7fa139e8ee53e0a991fea",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/result-persistence-format.ts",
+      "url": "https://github.com/zai-org/ZCode/blob/a4b4445141eb7d3b3e99eada9292775383bfc44e/apps/zcode-cli/packages/core/src/tool/result-persistence-format.ts"
+    }
+  ]
+}

@@ -1,0 +1,1055 @@
+"""Shell execution tool.
+
+Authorization lives at the registry's door (``raven.permissions``): whether a
+command may run, must ask, or is refused is decided before this tool is
+dispatched. What stays here is the tool's own integrity boundary -- the
+operator's allowlist and the workspace fence -- and the execution itself.
+"""
+
+import asyncio
+import fnmatch
+import os
+import re
+import shlex
+from pathlib import Path
+from typing import Any
+
+from raven.agent import workdir
+from raven.agent.tools import command_writes
+from raven.contracts.tool import (
+    STOP_RETRY_INSTRUCTION,
+    Continuation,
+    FileRemoval,
+    FileWrite,
+    Tool,
+    ToolOutput,
+    ToolResult,
+)
+from raven.permissions.shell_policy import (
+    _MAX_EMBEDDED_SHELL_DEPTH,
+    _command_segments_with_separators,
+    _embedded_shell_command,
+    _runner_inner_command,
+    _unwrap_command_wrappers,
+    executable_text,
+)
+from raven.sandbox import DirectExecutor, SandboxExecutor
+from raven.sandbox.compat_bin import with_compat
+
+
+class _UnmodelledExpansionError(Exception):
+    """A parameter expansion the fence cannot resolve to the text the shell runs.
+
+    The fence's promise is that it reads what will run. Where it cannot, the
+    honest answer is a refusal rather than a scan of text the shell will
+    replace: an expansion it does not model can hand the command any path at
+    all, and every spelling that reached this point before was a silent bypass.
+    Command substitution is not this case -- it holds an arbitrary program,
+    which no textual guard can resolve, and it is a declared limit of the fence
+    rather than a gap in it.
+    """
+
+    def __init__(self, construct: str) -> None:
+        super().__init__(construct)
+        self.construct = construct
+
+
+class ExecTool(Tool):
+    """Tool to execute shell commands."""
+
+    # Backstop above the 600s internal exec cap (``_MAX_TIMEOUT``); the
+    # executor's own timeout fires first, this only catches a wedged executor.
+    # A tool that measures its commands' files adds what the measuring may
+    # take (``measure_writes``): cutting a call off here loses its output.
+    timeout_seconds = 660.0
+    approval_kind = "shell.exec"
+
+    def __init__(
+        self,
+        timeout: int = 60,
+        working_dir: str | None = None,
+        allow_patterns: list[str] | None = None,
+        restrict_to_workspace: bool = False,
+        path_append: str = "",
+        executor: SandboxExecutor | None = None,
+        extra_allowed_dirs: tuple[Path, ...] = (),
+        *,
+        follow_binding: bool = True,
+        record_writes: bool = False,
+        shadow: command_writes.ShadowFor | None = None,
+    ):
+        self._timeout = timeout
+        self.working_dir = working_dir
+        self.allow_patterns = allow_patterns or []
+        self.restrict_to_workspace = restrict_to_workspace
+        self.extra_allowed_dirs = extra_allowed_dirs
+        # A sub-agent run is a background asyncio task that can outlive the turn
+        # that spawned it, since SubagentManager.spawn captures the workspace at
+        # spawn time; its ExecTool must resolve cwd from the directory captured
+        # for that run, never from the ambient binding, or it disagrees with its
+        # own fs tools about which directory it is in (the same follow_binding
+        # convention as the filesystem tools). The main loop's ExecTool keeps
+        # following the live binding as normal.
+        self.follow_binding = follow_binding
+        self.record_writes = False
+        self._shadow: command_writes.ShadowFor | None = None
+        if record_writes:
+            self.measure_writes(shadow)
+        self.path_append = path_append
+        self._executor: SandboxExecutor = executor if executor is not None else DirectExecutor()
+        if not self._executor.is_sandboxed:
+            # The model checks a deck by running `soffice --convert-to` itself,
+            # with LibreOffice's default profile; on a Mac that profile is the
+            # only place its Chinese faces can come from (raven/utils/office.py).
+            from raven.utils import office
+
+            office.link_han_faces_into_default_profile()
+
+    @property
+    def timeout(self) -> int:
+        """The ceiling a command runs under, as the file has it now.
+
+        Read here rather than copied at construction: a timeout is a preference
+        about the next command, and this tool outlives any number of turns --
+        and a sub-agent's copy outlives the spawn that built it. What it was
+        built with answers when the file has no opinion.
+        """
+        from raven.config.live import default_live, exec_timeout, held
+
+        configured = held("tools.exec.timeout", lambda: exec_timeout(default_live()))
+        return configured or self._timeout
+
+    @property
+    def name(self) -> str:
+        return "exec"
+
+    def measure_writes(self, shadow: command_writes.ShadowFor | None) -> None:
+        """Have each command's result say which files it created, rewrote and removed.
+
+        Read off its directory either side (``command_writes``), with ``shadow``
+        saying what those files held, for their diffs, and which of them may be
+        shown. Asked of the built-in and of a plugin's same-name replacement
+        alike, and before either is registered: the ceiling it raises is read
+        off the spec the registry admits. Left off for a lane whose runner lists
+        every call itself.
+        """
+        if not self.record_writes:
+            self.timeout_seconds += command_writes.MEASURE_SECONDS
+        self.record_writes = True
+        self._shadow = shadow
+
+    async def warm(self, root: Path) -> None:
+        """Start staging ``root`` into the shadow repo, ahead of its first command.
+
+        The first staging of a directory hashes every file in it, which in a
+        large tree takes long enough to hold a command up; started as a session
+        opens, it runs while the user types and the model replies. Returns at
+        once, and does nothing where no shadow repo covers ``root``.
+        """
+        if not self.record_writes or self._shadow is None:
+            return
+        shadow = self._shadow(root)
+        if shadow is not None:
+            await shadow.warm()
+
+    _MAX_TIMEOUT = 600
+    _MAX_OUTPUT = 10_000
+
+    # What the deletion watch will look at and hold. The candidate cap bounds a
+    # stat per token of one command; the byte cap bounds what a removed file's
+    # body costs to carry, and past it the deletion is still reported, without
+    # its text.
+    _MAX_REMOVAL_CANDIDATES = 64
+    _MAX_REMOVAL_BYTES = 256 * 1024
+
+    # A token holding one of these is a pattern, not a path: the shell expands it
+    # to names this tool never sees, so resolving it as written would stat a file
+    # that does not exist under that name.
+    _GLOB_CHARS = frozenset("*?[")
+
+    def to_schema(self) -> dict[str, Any]:
+        """This call's shape, rendered fresh for every model call.
+
+        Authored rather than inherited on purpose: ``ToolRegistry`` serves a
+        tool from the copy it took at registration unless the tool writes its
+        own ``to_schema``, and the machine lane below depends on the registry,
+        which can be written mid-session. Served from that copy, a process that
+        started with no machine kept an ``exec`` without ``machine`` after the
+        first ``ops_connection_add`` -- while that tool's reply, the typed-ssh
+        refusal and the coding guide all sent the model to ``machine=<id>``
+        (reviewed 2026-09-24). The shape moves only when the registry goes from
+        empty to not, so the array stays stable across calls otherwise.
+        """
+        return super().to_schema()
+
+    @property
+    def description(self) -> str:
+        # Two descriptions, because the second sentence is a lie for an owner
+        # who registered no machines. Read per call rather than fixed at
+        # construction -- the registry can be written mid-session, and
+        # ``to_schema`` above is what makes the registry serve this live.
+        base = "Execute a shell command and return its output. Use with caution."
+        from raven.agent.tools.machine_exec import machines_registered
+
+        if not machines_registered():
+            return base
+        return (
+            f"{base} "
+            "Runs on THIS computer unless you name a machine: pass 'machine' with a "
+            "connection id from the owner's registry to run it there instead. When the "
+            "owner said where -- a machine's name, a nickname, an address or part of one, "
+            "a port -- pass their words as 'machine' even if they are not an id: the reply "
+            "says which registered machine they mean. A machine "
+            "of the owner's is where their code and their cases live, and work that "
+            "outlives the call belongs to a job runner, so this refuses to detach there."
+        )
+
+    @property
+    def truncation_hint(self) -> str:
+        # "Send it in smaller pieces" is meaningless for a command: half a
+        # command is not a command. What splits here is the work, not the
+        # argument.
+        return "Shorten the command, or split the work across several runs."
+
+    @property
+    def incomplete_hint(self) -> str:
+        # Phrased as the consequent of a condition; see Tool.incomplete_hint.
+        return "shorten the command, or split the work across several runs."
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        schema: dict[str, Any] = {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "description": "The shell command to execute",
+                },
+                "working_dir": {
+                    "type": "string",
+                    "description": "Optional working directory for the command",
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": (
+                        "Timeout in seconds for a command on THIS computer. Increase for long-running "
+                        "commands like compilation or installation (default 60, max 600). Not read with "
+                        "'machine': a look on a registered machine is capped at 60s whatever this says, and "
+                        "anything longer there is a job for the on-call agent's ops_submit."
+                    ),
+                    "minimum": 1,
+                    "maximum": 600,
+                },
+                "run_in_background": {
+                    "type": "boolean",
+                    "description": (
+                        "Run detached on THIS computer instead of holding the turn: for long "
+                        "mechanical local work (a download, an rsync, packaging). Returns a task id "
+                        "and a log path at once; 'timeout' is not read on this lane, the task runs "
+                        "until it finishes or the session ends. Read the log with a later exec. Not "
+                        "combinable with 'machine': work on a registered machine is ops_submit's job."
+                    ),
+                },
+            },
+            "required": ["command"],
+        }
+        from raven.agent.tools.machine_exec import machines_registered
+
+        if machines_registered():
+            schema["properties"]["machine"] = {
+                "type": "string",
+                "description": "Where to run it: a connection id from the owner's machine "
+                "registry, exactly as listed (an unknown id answers with the list). "
+                "Leave out to run on THIS computer.",
+            }
+        return schema
+
+    async def execute(
+        self,
+        command: str,
+        working_dir: str | None = None,
+        timeout: int | None = None,
+        machine: str = "",
+        run_in_background: bool = False,
+        **kwargs: Any,
+    ) -> str | ToolResult:
+        # Someone else's machine is a different place with different rules: the
+        # guards below are about this computer (a deny-list for accidents, an
+        # operator's workspace boundary), while there the rule is that work
+        # outliving the call belongs on a ledger. Branching before them keeps
+        # each set where it means something.
+        #
+        # Imported here and nowhere else in the execute path: a caller who
+        # names no machine must not be able to be broken by the ops layer -- a
+        # malformed connection registry has to leave the plain shell working.
+        if machine and run_in_background:
+            # Background work ON a registered machine is the definition of an
+            # ops_submit job; allowing it here would re-legalise the accounting
+            # bypass this boundary exists for (a main agent once drove 35 jobs
+            # over raw ssh nohup, past the occupancy gate, dedup and the GPU
+            # ledger). The two parameters never combine.
+            return (
+                "Error: 'machine' and 'run_in_background' do not combine. Background work on a "
+                "registered machine is a job: submit it with ops_submit (budget, dedup, ledger). "
+                "run_in_background is for long mechanical work on THIS computer. Nothing was run."
+            )
+        if machine:
+            from raven.agent.tools.machine_exec import run_on_machine
+
+            return await run_on_machine(command, connection=machine, cwd=working_dir)
+        # Same import discipline as above: the registry is read only to
+        # recognise a registered address, and a registry that cannot be read
+        # recognises nothing.
+        from raven.agent.tools.machine_exec import raw_ssh_target
+
+        # Off the loop: a destination the registry does not hold literally is
+        # resolved through a local ``ssh -G``, a subprocess.
+        if (row := await asyncio.to_thread(raw_ssh_target, command)) is not None:
+            # Typed ssh to a registered machine is the registry bypassed: the
+            # cap, the process-group sweep and the ledger all live on the
+            # other two paths. Refused by name so the model learns the path,
+            # not just that this one closed. A copy there with scp, sftp or
+            # rsync starts nothing and passes this tool's own question like
+            # any other command, so it is left alone. File tools read remote
+            # paths through the registered machine's node.
+
+            conn_id = str(row.get("id") or "").strip()
+            files = (
+                " Its files are read and written with read_file, write_file and edit_file on the path the way "
+                "scp writes it."
+            )
+            return (
+                f"Error: this command reaches {row.get('display_name') or conn_id} over raw ssh from "
+                f"this computer, and that machine is registered as {conn_id!r}. Look at it with "
+                f"exec(machine={conn_id!r}) (capped at 60s, nothing left running), and hand anything "
+                "longer, or anything that must keep running, to the on-call agent's ops_submit "
+                f"(budget, dedup, ledger).{files} scp and rsync to it are still fine here. Nothing was run."
+            )
+
+        cwd = self._cwd_for(working_dir)
+
+        if not self._executor.is_sandboxed:
+            guard_error = self._guard_command(command, cwd)
+            if guard_error:
+                return self._boundary_error(guard_error)
+        elif self.restrict_to_workspace:
+            # Sandboxed: the sandbox provides real isolation, but the workspace
+            # fence is an operator-set boundary and still holds.
+            workspace_error = self._check_workspace_restriction(command, cwd)
+            if workspace_error:
+                return self._boundary_error(workspace_error)
+
+        if run_in_background:
+            # After the guards on purpose: the background lane changes where the
+            # output goes and who holds the turn, never what a command is
+            # allowed to do. The permission gate has already ruled on this call
+            # at the registry door, whichever lane it takes.
+            if self._executor.is_sandboxed:
+                # The detached child is a host process; starting one from a
+                # sandboxed session would run the command OUTSIDE the sandbox.
+                return (
+                    "Error: run_in_background is not available in a sandboxed session -- the "
+                    "detached process would run outside the sandbox. Run it synchronously, or "
+                    "split the work. Nothing was run."
+                )
+            from raven.agent.tools import background_exec
+            from raven.sandbox.direct_executor import baseline_env
+
+            # The same environment hygiene as the synchronous path: the child
+            # gets the executor's baseline allowlist, never the full host
+            # environment, so a detached download cannot read credentials the
+            # capped path already withholds.
+            bg_env = baseline_env()
+            if self.path_append:
+                bg_env["PATH"] = bg_env.get("PATH", "") + os.pathsep + self.path_append
+            try:
+                task = background_exec.start(command, cwd=cwd, env=bg_env)
+            except OSError as exc:
+                return f"Error starting background command: {exc}"
+            # The note waits up to a second to see whether the command died at once;
+            # on the loop's thread that wait would stall every other turn with it.
+            return await asyncio.to_thread(background_exec.start_note, task)
+
+        # Use `is None` check — `timeout or default` would treat timeout=0 as falsy.
+        effective_timeout = min(self.timeout if timeout is None else timeout, self._MAX_TIMEOUT)
+
+        # Read from the command as written, before the PATH wrapper below
+        # rewrites it, and only on this lane: a detached command finishes after
+        # the result is gone, and one on another machine names paths that are
+        # not this filesystem's.
+        watched = self._removal_watch(command, cwd)
+        start: command_writes.Before | None = None
+        if self.record_writes:
+            start = await command_writes.before(Path(cwd), self._shadow)
+
+        env: dict[str, str] | None = None
+        if self.path_append:
+            if self._executor.is_sandboxed:
+                # Inject path inside the sandbox via command wrapper; never pass os.environ
+                # to a sandboxed executor — it would leak host credentials into the sandbox.
+                command = f'export PATH="$PATH:{shlex.quote(self.path_append)}" && {command}'
+            else:
+                # Pass ONLY the PATH override. Copying os.environ here would hand
+                # the full host environment to DirectExecutor and defeat its
+                # baseline-allowlist hygiene; the executor supplies the rest.
+                base_path = with_compat(os.environ.get("PATH", ""))
+                env = {"PATH": base_path + os.pathsep + self.path_append}
+
+        try:
+            result = await self._executor.exec(command, cwd=cwd, timeout=effective_timeout, env=env)
+        except Exception as e:
+            from raven.agent.tools.machine_exec import missing_here_note
+
+            # A working_dir that is not on this disk fails here, before the command runs.
+            return f"Error executing command: {str(e)}" + missing_here_note([cwd], command=command)
+        text = result.as_text(self._MAX_OUTPUT)
+        stop = False
+        if result.denials:
+            from raven.permissions.sandbox_network import handle_denials
+
+            notice = await handle_denials(self._executor, result.denials, command=command)
+            text += notice.text
+            stop = notice.stop
+        # `ls x || echo none` exits 0 with the miss only in its text.
+        if (result.exit_code != 0 or "No such file or directory" in text) and not self._executor.is_sandboxed:
+            from raven.agent.tools.machine_exec import missing_here_note
+
+            text += missing_here_note(self._extract_absolute_paths(command), command=command)
+        removed = tuple(
+            FileRemoval(path=path, before=before) for path, before in watched.items() if not os.path.exists(path)
+        )
+        written: tuple[FileWrite, ...] = ()
+        if start is not None:
+            written, removed = await command_writes.after(start, named=removed)
+        # The exit code is the verdict a config change, a security call or a
+        # syntax error share, and the text a failing command produced is not
+        # token-safe to classify from -- so the caller gets it structurally.
+        return ToolOutput(
+            text,
+            ok=result.exit_code == 0,
+            removed=removed,
+            written=written,
+            # The person declined a blocked connection and asked to stop here.
+            continuation=Continuation.ABORT_TURN if stop else Continuation.CONTINUE,
+        )
+
+    def _removal_watch(self, command: str, cwd: str) -> dict[str, str | None]:
+        """The files this command could remove, with the text they hold now.
+
+        No tool deletes a file as its purpose, so a deletion is only ever
+        visible as a file that was there before a command ran and is not there
+        after. What can be watched is what the command names: a path it computes
+        (a glob the shell expands, a name a substitution produces) is outside
+        this, the same limit the workspace fence declares for itself.
+
+        The text is read here because after the command there is nothing left to
+        read. Absent past the byte cap or on undecodable bytes -- the deletion is
+        still reported, only its body is not.
+        """
+        readable = executable_text(command)
+        try:
+            # The fence's own reading of the command: split on the shell's
+            # operators first, so `rm gone.txt;` names `gone.txt` and not a
+            # file called `gone.txt;` that was never there.
+            tokens = [token for segment, _ in _command_segments_with_separators(readable) for token in segment]
+        except ValueError:
+            # Quoting the lexer cannot close. The command may still run (the
+            # shell is a better lexer than this one), so fall back to the
+            # coarsest split rather than watching nothing.
+            tokens = readable.split()
+        roots = [Path(cwd).resolve(), *(Path(d).resolve() for d in self.extra_allowed_dirs)]
+        watched: dict[str, str | None] = {}
+        for token in tokens:
+            if len(watched) >= self._MAX_REMOVAL_CANDIDATES:
+                break
+            raw = token.strip("\"'")
+            if not raw or self._GLOB_CHARS & set(raw):
+                continue
+            try:
+                candidate = Path(raw).expanduser()
+                if not candidate.is_absolute():
+                    candidate = Path(cwd) / candidate
+                candidate = candidate.resolve()
+                if not candidate.is_file():
+                    continue
+            except OSError:
+                continue
+            if not any(root == candidate or root in candidate.parents for root in roots):
+                continue
+            key = str(candidate)
+            if key not in watched:
+                watched[key] = self._text_before(candidate)
+        return watched
+
+    @classmethod
+    def _text_before(cls, path: Path) -> str | None:
+        try:
+            if path.stat().st_size > cls._MAX_REMOVAL_BYTES:
+                return None
+            return path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError, ValueError):
+            return None
+
+    @classmethod
+    def _boundary_error(cls, message: str) -> ToolResult:
+        """A fence refusal: this call and its siblings do not run, the turn does."""
+        return ToolResult(
+            model_text=message + STOP_RETRY_INSTRUCTION,
+            retryable=False,
+            blocks_call=True,
+            continuation=Continuation.CONTINUE,
+            ok=False,
+        )
+
+    def _cwd_for(self, working_dir: str | None) -> str:
+        bound = str(workdir.current() or "") if self.follow_binding else ""
+        return working_dir or bound or self.working_dir or os.getcwd()
+
+    def listing_root(self, params: dict[str, Any]) -> Path | None:
+        """Where this call's files land, as far as this host can see.
+
+        The directory the command runs in, resolved the way ``execute`` will --
+        a per-call ``working_dir`` moves it off the bound one -- or ``None`` for
+        a command run on a registered machine, whose files are not on this disk
+        and would be described by nothing a listing here could find.
+        """
+        if str(params.get("machine") or "").strip():
+            return None
+        return Path(self._cwd_for(str(params.get("working_dir") or "") or None))
+
+    def approval_evidence(self, params: dict[str, Any]) -> dict[str, Any]:
+        """The command and where it would run, resolved the way ``execute`` will."""
+        command = str(params.get("command") or "")
+        machine = str(params.get("machine") or "").strip()
+        if machine:
+            return {"command": command, "machine": machine}
+        return {"command": command, "cwd": self._cwd_for(params.get("working_dir") or None)}
+
+    def _guard_command(self, command: str, cwd: str) -> str | None:
+        """The tool's own boundary: the operator's allowlist and the workspace fence.
+
+        Reads the executable view (comments and quoted text stripped) so a
+        command cannot be talked onto the allowlist by its own comment, and a
+        path named in a comment is not scanned as a path the command touches.
+        The deny list is not here: refusing dangerous commands is the
+        permission gate's job, decided before dispatch.
+        """
+        cmd = executable_text(command).strip()
+        lower = cmd.lower()
+
+        if self.allow_patterns:
+            if not any(re.search(p, lower) for p in self.allow_patterns):
+                return "Error: Command blocked by safety guard (not in allowlist)"
+
+        workspace_error = self._check_workspace_restriction(command, cwd)
+        if workspace_error:
+            return workspace_error
+
+        return None
+
+    # The null-device family is how a shell mutes or feeds a stream, not an
+    # escape from the workspace: `2>/dev/null` names a path only to the
+    # guard's regex, and blocking it turns every quiet read-only probe into a
+    # terminal safety refusal. Matched on the written form, before resolve(),
+    # which on macOS follows /dev/stdout into /dev/fd and out of this set.
+    _DEVICE_FILES = frozenset(
+        {
+            "/dev/null",
+            "/dev/stdin",
+            "/dev/stdout",
+            "/dev/stderr",
+            "/dev/tty",
+            "/dev/zero",
+            "/dev/urandom",
+            "/dev/random",
+        }
+    )
+
+    def _check_workspace_restriction(self, command: str, cwd: str, *, _depth: int = 0) -> str | None:
+        """Check only the workspace boundary constraints (no allow-list).
+
+        Reads the executable view rather than trusting the caller to strip: the
+        traversal and absolute-path scans have no reason to see text the shell
+        discards, and there are two call sites -- the guard and the sandboxed
+        path -- so doing it here is what keeps them from diverging. Reading the
+        raw text refused ``ls -la  # see ../notes for why`` as path traversal.
+
+        The contract, because the fence is a reader of shell and a reader can
+        always meet syntax it does not know:
+
+        **A parameter expansion is resolved faithfully or the command is
+        refused.** The set of spellings is finite, so the residue is closed:
+        there is no further form that quietly passes. Refusing is visible and
+        arguable; the failure it replaces was silent, and silence is what let
+        four spellings through at once.
+
+        **Unmodelled directory state is refused.** Conditional and loop syntax
+        can hide directory changes, and ``cd -`` reads mutable OLDPWD state.
+        The fence rejects those forms and unknown directory options instead of
+        treating them as no move or as literal directory names.
+        Shell and command-runner payloads share the policy's inspection bound;
+        exceeding it refuses the command rather than leaving a payload unseen.
+
+        **Command substitution is a declared limit, not a gap.** It holds an
+        arbitrary program, so no textual guard can resolve it, and refusing it
+        would refuse ``echo "built at $(date)"`` along with everything else.
+        Paths written literally inside one are still scanned; a path the
+        substitution computes is beyond this fence, as a symlink inside the
+        workspace is, and the sandbox executor is the boundary for both.
+        """
+        if not self.restrict_to_workspace:
+            return None
+        command = executable_text(command)
+
+        cmd = command.strip()
+        if "..\\" in cmd or "../" in cmd:
+            return "Error: Command blocked by safety guard (path traversal detected)"
+
+        cwd_path = Path(cwd).resolve()
+        roots = [cwd_path, *(Path(d).resolve() for d in self.extra_allowed_dirs)]
+        env = self._child_env(cwd_path)
+        try:
+            readable = self._as_the_shell_reads_it(cmd, env)
+        except _UnmodelledExpansionError as unresolved:
+            return f"Error: Command blocked by safety guard (unsupported shell expansion: {unresolved.construct})"
+
+        try:
+            segments = list(_command_segments_with_separators(readable))
+        except ValueError:
+            # Quoting the lexer cannot close. The permission gate reads the
+            # same text through the same lexer and refuses it there, so
+            # answering here would only duplicate that refusal.
+            segments = []
+
+        for segment, _ in segments:
+            tokens = _unwrap_command_wrappers(segment)
+            if tokens and tokens[0] in {
+                "if",
+                "then",
+                "elif",
+                "else",
+                "fi",
+                "for",
+                "while",
+                "until",
+                "do",
+                "done",
+                "case",
+                "esac",
+                "select",
+                "function",
+                "!",
+            }:
+                return "Error: Command blocked by safety guard (unsupported shell control flow)"
+
+        if self._steps_outside(segments, cwd_path, roots, env):
+            return "Error: Command blocked by safety guard (directory change outside working dir)"
+
+        for raw in self._extract_absolute_paths(readable):
+            try:
+                if raw in self._DEVICE_FILES:
+                    continue
+                p = Path(raw.strip()).expanduser().resolve()
+            except Exception:
+                continue
+            if not p.is_absolute():
+                continue
+            if any(root == p or root in p.parents for root in roots):
+                continue
+            return "Error: Command blocked by safety guard (path outside working dir)"
+
+        # A nested shell's payload is a program, not an argument: the quoting
+        # that stopped this pass expanding it is what hands it to that shell
+        # intact, and the names in it expand there. Scanning it with the same
+        # rules is the only reading that matches what runs. Depth-capped with
+        # the policy's own bound, which is what decides the same question for
+        # the deny list.
+        for segment, _ in segments:
+            # Unwrapped first, the way the policy reads a segment before
+            # asking what it runs. Reusing the payload helper without the
+            # unwrap that precedes it there reused half the agreement:
+            # `env sh -c '...'` put the program back out of view.
+            tokens = _unwrap_command_wrappers(segment)
+            for inner in (_embedded_shell_command(tokens), _runner_inner_command(tokens)):
+                if not inner:
+                    continue
+                if _depth >= _MAX_EMBEDDED_SHELL_DEPTH:
+                    return "Error: Command blocked by safety guard (shell nesting limit exceeded)"
+                nested = self._check_workspace_restriction(inner, cwd, _depth=_depth + 1)
+                if nested:
+                    return nested
+
+        return None
+
+    # `$NAME` and `${NAME}`, the two spellings that carry a path. `$(`, `$$`
+    # and `$?` are deliberately not names, so they fall through untouched.
+    _VARIABLE = re.compile(r"\$(?:\{([A-Za-z_]\w*)([^}]*)\}|([A-Za-z_]\w*))")
+
+    # The brace bodies that offer a second word the shell may substitute
+    # instead of the value (`:-`, `:=`, `:?`, `:+` and their colon-less forms).
+    _BRACE_WORD_OPERATOR = re.compile(r"^:?[-=?+]")
+
+    # Suffix and prefix removal. These shorten a path, which walks it UP and
+    # out of the workspace, so reading them as decoration beside an in-root
+    # value is what let `${PWD%/*}/outside.txt` open the parent directory.
+    _BRACE_TRIM = re.compile(r"^(##?|%%?)(.*)$", re.DOTALL)
+
+    # How cmd.exe spells a variable, and ``DirectExecutor`` runs the platform
+    # shell, so on Windows this is the ordinary spelling of an outside path.
+    # Substituted only for a name the child is actually given, which is cmd's
+    # own rule for an undefined one.
+    _WINDOWS_VARIABLE = re.compile(r"%([A-Za-z_]\w*)%")
+
+    # Whether the shell that will run the command reads that spelling at all.
+    # `%VAR%` is cmd.exe syntax and means nothing to `sh`, which prints it --
+    # and HOME, PWD, USER and TMPDIR are on the executor's allowlist on POSIX
+    # too, so reading it there refused `echo '%HOME%/notes'`, which names no
+    # path. A class attribute rather than a call to `os.name`, so the Windows
+    # branch can be driven from a POSIX host.
+    _WINDOWS_SHELL = os.name == "nt"
+
+    # A `${` the name pattern does not accept. `${#NAME}` counts characters, so
+    # whatever it yields is a number and cannot name a path; anything else here
+    # is indirection, an array or a form not modelled, and gets refused.
+    _BRACE_OTHER = re.compile(r"\$\{(#[A-Za-z_]\w*|[^}]*)\}")
+
+    @staticmethod
+    def _child_env(cwd: Path) -> dict[str, str]:
+        """The environment the command will be run with.
+
+        ``PWD`` is overridden because a shell sets it from the directory it is
+        started in: this command's ``$PWD`` is the workspace, whatever this
+        process inherited.
+        """
+        from raven.sandbox.direct_executor import baseline_env
+
+        env = baseline_env()
+        env["PWD"] = str(cwd)
+        return env
+
+    @classmethod
+    def _steps_outside(
+        cls,
+        segments: list[tuple[list[str], str]],
+        cwd: Path,
+        roots: list[Path],
+        env: dict[str, str],
+    ) -> bool:
+        """Whether the command leaves the workspace before doing its work.
+
+        Reaching out and stepping out are the same escape, but only the first
+        leaves a path for :meth:`_extract_absolute_paths` to find. A ``cd``
+        whose destination is spelled out is already refused there, because
+        ``/etc`` is a path like any other. What is left are the destinations
+        the pattern cannot take: ``/`` has nothing after it, ``..`` is not
+        absolute, and a ``cd`` with no argument names ``$HOME`` by saying
+        nothing -- and after any of them, every relative path in the rest of
+        the command resolves somewhere the operator did not allow.
+
+        ``pushd`` moves the shell exactly as far and is read the same way. Its
+        stack is what this cannot follow: ``popd`` and a bare ``pushd`` take
+        their destination from entries earlier pushes already cleared, so the
+        walk falls back to the shallowest of those, which is where the command
+        began.
+
+        A successful `cd` advances the paths on which it executes, so
+        `cd subdir && cd ..` can return to its starting directory. An AND/OR
+        chain can also skip that move while retaining a successful result:
+        `x || cd a &&` keeps the directory where x succeeded. The successful
+        and failed paths therefore travel separately. A move in a pipeline or
+        group may leave the parent's directory unchanged, so a later step must
+        stay inside from every retained position.
+
+        A pipeline is one step of an AND/OR chain. Its members start from the
+        directory before the pipeline; earlier members cannot change the
+        parent's directory. The last member may run in the parent on shells
+        with lastpipe semantics, so a move there retains both possibilities.
+        """
+        # AND/OR chains keep the last exit status when a command is skipped.
+        # Track each outcome's directories separately: `x || cd a && cd ..`
+        # can reach the final cd after x succeeds, without having entered a.
+        passed = failed = [cwd]
+        previous_separator = ""
+        pipeline_start: list[Path] | None = None
+        skipped_passed: list[Path] = []
+        skipped_failed: list[Path] = []
+        for raw_tokens, separator in segments:
+            # Group terminators and following flow operators are separate
+            # events: both the parent directory and the next branch matter.
+            tokens = _unwrap_command_wrappers(raw_tokens)
+            continues_pipe = separator in ("|", "|&")
+            if pipeline_start is None:
+                skipped_passed = passed if previous_separator == "||" else []
+                skipped_failed = failed if previous_separator == "&&" else []
+                start = (
+                    passed
+                    if previous_separator == "&&"
+                    else failed
+                    if previous_separator == "||"
+                    else cls._either(passed, failed)
+                )
+            else:
+                start = pipeline_start
+            moved = start
+            if tokens and tokens[0] in ("cd", "pushd", "popd"):
+                moved = cls._moved(tokens, start, cwd, roots, env)
+                if moved is None:
+                    return True
+            if continues_pipe:
+                pipeline_start = start
+                continue
+            if pipeline_start is not None:
+                # lastpipe can retain the last member's cd, and pipefail can
+                # report failure even when that member succeeded.
+                moved = start = cls._either(start, moved)
+            pipeline_start = None
+            passed = cls._either(skipped_passed, moved)
+            failed = cls._either(skipped_failed, start)
+            previous_separator = separator
+            if len(cls._either(passed, failed)) > cls._MAX_WALK_POSITIONS:
+                # Unreachable for a command a person or a model writes: the
+                # list only grows on a `cd` into a directory no earlier step
+                # named, and repeats collapse. Refusing past the bound keeps
+                # the walk from being a place to spend the caller's time.
+                return True
+        return False
+
+    @classmethod
+    def _moved(
+        cls,
+        tokens: list[str],
+        here: list[Path],
+        cwd: Path,
+        roots: list[Path],
+        env: dict[str, str],
+    ) -> list[Path] | None:
+        """Where a directory builtin can leave the shell, or ``None`` to refuse.
+
+        ``None`` is the refusal: a destination outside every root, reached from
+        any of the places the shell can currently be.
+        """
+
+        if tokens[0] == "popd":
+            # A stack return lands on a directory some earlier push put there,
+            # and each of those was cleared on the way in. The shallowest of
+            # them is where the command began.
+            return cls._either(here, [cwd])
+        arguments = list(tokens[1:])
+        while arguments and arguments[0].startswith("-"):
+            option = arguments.pop(0)
+            if option == "--":
+                break
+            if option not in {"-L", "-P"}:
+                return None
+        if arguments and arguments[0] == "-":
+            # Even after --, this operand reads mutable OLDPWD state.
+            return None
+        if not arguments and tokens[0] == "pushd":
+            # A bare `pushd` swaps the top two entries rather than naming a
+            # destination. Both were cleared on the way in, so the worst case
+            # is the one `popd` gets.
+            return cls._either(here, [cwd])
+        target = arguments[0] if arguments else env.get("HOME", "")
+        if not target:
+            return here
+        landings: list[Path] = []
+        for start in here:
+            try:
+                destination = (start / Path(target).expanduser()).resolve()
+            except Exception:
+                return None
+            if not any(root == destination or root in destination.parents for root in roots):
+                return None
+            landings.append(destination)
+        return landings
+
+    #: How many places the walk will hold at once; see the walk for why the
+    #: list grows and why nothing real reaches this.
+    _MAX_WALK_POSITIONS = 64
+
+    @staticmethod
+    def _either(*groups: list[Path]) -> list[Path]:
+        """The places from every group, each once, in the order first seen."""
+
+        seen: dict[Path, None] = {}
+        for group in groups:
+            for path in group:
+                seen.setdefault(path, None)
+        return list(seen)
+
+    @staticmethod
+    def _windows_value(env: dict[str, str], name: str) -> str | None:
+        """``env``'s value for ``name`` the way cmd.exe finds it, or ``None``.
+
+        cmd.exe resolves an environment name without regard to case, so an
+        exact-key lookup leaves `%UserProfile%` standing and the path scan then
+        sees no drive prefix. ``None`` means the child has no such name, which
+        cmd answers by leaving the text as written.
+        """
+        if name in env:
+            return env[name]
+        folded = name.casefold()
+        return next((value for key, value in env.items() if key.casefold() == folded), None)
+
+    @classmethod
+    def _resolve_brace(cls, value: str, body: str, construct: str, env: dict[str, str]) -> str:
+        """The value a ``${...}`` yields, or a refusal when that cannot be known.
+
+        Two bodies are resolved. A word operator offers a second word the shell
+        may substitute instead of the value, and which one it picks depends on a
+        value this cannot read -- so both are emitted, the operator becoming a
+        space so the word it introduces starts on a boundary the scan can take.
+        A trim shortens the value, which is the case that matters: it walks a
+        path UP, so reading it as decoration beside an in-root value is what let
+        ``${PWD%/*}/outside.txt`` open the parent.
+
+        Every other body is refused. Substitution, case folding and indirection
+        can each hand the command a path this cannot compute, and allowing them
+        would make the fence's promise depend on which spellings happen to be
+        implemented -- which is the defect, not a smaller version of it.
+        """
+        if not body:
+            return value
+        # The body is inserted after this walk has passed the position it lands
+        # in, so nothing would read it again. The shell does read it, which is
+        # why it goes back through the same pass here rather than out as text:
+        # `${UNSET:-$HOME/secret}` is that path, and leaving it unread was the
+        # one spelling the resolved-or-refused rule claimed and did not cover.
+        if cls._BRACE_WORD_OPERATOR.match(body):
+            word = cls._as_the_shell_reads_it(cls._BRACE_WORD_OPERATOR.sub("", body), env)
+            return f"{value} {word}"
+        trim = cls._BRACE_TRIM.match(body)
+        if trim is not None:
+            pattern = cls._as_the_shell_reads_it(trim.group(2), env)
+            return cls._trim(value, trim.group(1), pattern)
+        raise _UnmodelledExpansionError(construct)
+
+    @staticmethod
+    def _trim(value: str, operator: str, pattern: str) -> str:
+        """``value`` with the matching prefix or suffix removed, as the shell does.
+
+        A doubled operator takes the longest match and a single one the
+        shortest, which is why each direction is walked from its own end. No
+        match leaves the value alone, exactly as the shell leaves it.
+        """
+        from_end = operator.startswith("%")
+        longest = len(operator) == 2
+        if from_end:
+            cuts = range(0, len(value) + 1) if longest else range(len(value), -1, -1)
+            for cut in cuts:
+                if fnmatch.fnmatchcase(value[cut:], pattern):
+                    return value[:cut]
+            return value
+        cuts = range(len(value), -1, -1) if longest else range(0, len(value) + 1)
+        for cut in cuts:
+            if fnmatch.fnmatchcase(value[:cut], pattern):
+                return value[cut:]
+        return value
+
+    @classmethod
+    def _as_the_shell_reads_it(cls, command: str, env: dict[str, str]) -> str:
+        """``command`` with its parameters expanded, as the child will expand them.
+
+        The scan below reads text, so it can only refuse a path it can see, and
+        a name is where a path hides: ``$HOME/.ssh/id_rsa`` put a letter in
+        front of the ``/`` that :meth:`_extract_absolute_paths` looks for, and
+        the whole command went through as naming no path at all. Expanding
+        first is what puts the path back in view -- expanding afterwards, which
+        is what this used to do, only ever saw candidates the scan had already
+        passed.
+
+        Three rules, each taken from the shell rather than invented:
+
+        - **An unknown name is nothing.** ``$NOPE/etc/shadow`` *is*
+          ``/etc/shadow``, and it is the case with no literal spelling to fall
+          back on.
+        - **The child's environment decides.** ``DirectExecutor`` hands over an
+          allowlisted baseline, so a name outside that list arrives unset
+          however this process reads it; ``os.environ`` would answer for a
+          variable the command will never have.
+        - **Single quotes expand nothing.** ``echo 'keys go in $HOME/.ssh'`` is
+          a sentence, and refusing it would teach the operator to turn the
+          fence off.
+
+        A sandboxed executor runs somewhere with its own environment, which
+        nothing here can read. The values are a host-side approximation there;
+        the rule that carries is the first one, which needs no value to hold.
+        """
+        out: list[str] = []
+        quote = ""
+        index = 0
+        while index < len(command):
+            char = command[index]
+            if char == "%" and cls._WINDOWS_SHELL:
+                # Ahead of the quote branches on purpose: cmd.exe has no
+                # quoting that suppresses this, so a run it would expand must
+                # not be hidden here by POSIX quoting rules.
+                windows_match = cls._WINDOWS_VARIABLE.match(command, index)
+                if windows_match is not None:
+                    value = cls._windows_value(env, windows_match.group(1))
+                    if value is not None:
+                        out.append(value)
+                        index = windows_match.end()
+                        continue
+            if quote == "'":
+                out.append(char)
+                if char == "'":
+                    quote = ""
+                index += 1
+                continue
+            if char == "\\" and index + 1 < len(command):
+                escaped = command[index + 1]
+                # An escaped `$` is a literal `$` that this level does not
+                # expand -- but the character still travels on, and a nested
+                # shell handed it does expand it. Keeping the backslash here
+                # hid `sh -c "sh -c 'cat \\$HOME/x'"` from the nested scan,
+                # because the payload it was given no longer looked like a
+                # name. Every other escape keeps both characters: only these
+                # two decide whether something expands.
+                out.append(escaped if escaped in "$`" else char + escaped)
+                index += 2
+                continue
+            if quote == '"' and char == '"':
+                quote = ""
+                out.append(char)
+                index += 1
+                continue
+            if not quote and char in "'\"":
+                quote = char
+                out.append(char)
+                index += 1
+                continue
+            if char == "$":
+                name_match = cls._VARIABLE.match(command, index)
+                if name_match is not None:
+                    value = env.get(name_match.group(1) or name_match.group(3), "")
+                    out.append(cls._resolve_brace(value, name_match.group(2) or "", name_match.group(0), env))
+                    index = name_match.end()
+                    continue
+                if command.startswith("${", index):
+                    other = cls._BRACE_OTHER.match(command, index)
+                    if other is None:
+                        # Nesting runs past the first `}`, which this does not
+                        # parse. The contract answers that with a refusal.
+                        raise _UnmodelledExpansionError(command[index : index + 32])
+                    if not other.group(1).startswith("#"):
+                        raise _UnmodelledExpansionError(other.group(0))
+                    # A character count. Whatever it yields is a number, and a
+                    # number cannot name a path, so it needs no value here.
+                    out.append("0")
+                    index = other.end()
+                    continue
+            out.append(char)
+            index += 1
+        return "".join(out)
+
+    @staticmethod
+    def _extract_absolute_paths(command: str) -> list[str]:
+        # The boundary class must cover every character a path can be glued
+        # to, not just whitespace: --file=/etc/passwd, </etc/passwd,
+        # cmd;/bin/x, $(/usr/bin/id) and `/bin/x` all name a path with no
+        # space before it, and a boundary the class misses is a fence bypass.
+        win_paths = re.findall(r"[A-Za-z]:\\[^\s\"'|><;]+", command)
+        posix_paths = re.findall(r"(?:^|[\s|>'\"=<;(`])(/[^\s\"'>;|<]+)", command)
+        home_paths = re.findall(r"(?:^|[\s|>'\"=<;(`])(~[^\s\"'>;|<]*)", command)
+        return win_paths + posix_paths + home_paths

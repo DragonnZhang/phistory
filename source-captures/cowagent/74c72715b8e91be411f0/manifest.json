@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "cowagent",
+  "agent": "CowAgent",
+  "repository": "zhayujie/CowAgent",
+  "snapshot": "74c72715b8e91be411f0",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:32.203867+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "1d98c418cb10fee59c5cfd932bc7be2ef36f4b24",
+      "path": "agent/prompt/builder.py",
+      "sha256": "a3d67dbf4cc98ea1d01b99355afbba2ec8f1a6ff835cbd2e73cc75dc4dfe2ef7",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/prompt/builder.py",
+      "url": "https://github.com/zhayujie/CowAgent/blob/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/prompt/builder.py"
+    },
+    {
+      "commit": "1d98c418cb10fee59c5cfd932bc7be2ef36f4b24",
+      "path": "agent/tools/bash/bash.py",
+      "sha256": "3d0958046a0750499536575361f2cece7fa4793827eac943d8e1d5b691c0357a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/bash/bash.py",
+      "url": "https://github.com/zhayujie/CowAgent/blob/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/bash/bash.py"
+    },
+    {
+      "commit": "1d98c418cb10fee59c5cfd932bc7be2ef36f4b24",
+      "path": "agent/tools/edit/edit.py",
+      "sha256": "0e3b8d42f4323e878b34ec6b67f3237f57aaa0cb95b0d062588e5248f03e37a2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/edit/edit.py",
+      "url": "https://github.com/zhayujie/CowAgent/blob/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/edit/edit.py"
+    },
+    {
+      "commit": "1d98c418cb10fee59c5cfd932bc7be2ef36f4b24",
+      "path": "agent/tools/mcp/tool_retrieval.py",
+      "sha256": "d4e3da07f7466c6c2d073fc679ab5abaa8cb2fcce92135766538ba0ccab4c7e4",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/mcp/tool_retrieval.py",
+      "url": "https://github.com/zhayujie/CowAgent/blob/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/mcp/tool_retrieval.py"
+    },
+    {
+      "commit": "1d98c418cb10fee59c5cfd932bc7be2ef36f4b24",
+      "path": "agent/tools/read/read.py",
+      "sha256": "d90f2fe552d820d82543c2011cfdf8e3f578f6f064efb437b9837d0acf46f63b",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/read/read.py",
+      "url": "https://github.com/zhayujie/CowAgent/blob/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/read/read.py"
+    },
+    {
+      "commit": "1d98c418cb10fee59c5cfd932bc7be2ef36f4b24",
+      "path": "agent/tools/subagent/subagent.py",
+      "sha256": "613bb43d3c8a4ffe8ca4542844c26b415dfb2aae424a20689ff0b01b0dcb8a46",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/subagent/subagent.py",
+      "url": "https://github.com/zhayujie/CowAgent/blob/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/subagent/subagent.py"
+    },
+    {
+      "commit": "1d98c418cb10fee59c5cfd932bc7be2ef36f4b24",
+      "path": "agent/tools/write/write.py",
+      "sha256": "4474499c8680ebf9b16c419c1bdfaf726e01f9dbf41d0c11e0af4c0dca659662",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/write/write.py",
+      "url": "https://github.com/zhayujie/CowAgent/blob/1d98c418cb10fee59c5cfd932bc7be2ef36f4b24/agent/tools/write/write.py"
+    }
+  ]
+}

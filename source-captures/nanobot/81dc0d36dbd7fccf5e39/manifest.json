@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "nanobot",
+  "agent": "nanobot",
+  "repository": "HKUDS/nanobot",
+  "snapshot": "81dc0d36dbd7fccf5e39",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:25.082572+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "37c2af8ffc86c5adf0a9e42732e26722d8a4260b",
+      "path": "nanobot/agent/runner.py",
+      "sha256": "bd4dd30002a417f125ed2ffd2078a0326c72665e0f3caf6ecaac07be86bede2e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/37c2af8ffc86c5adf0a9e42732e26722d8a4260b/nanobot/agent/runner.py",
+      "url": "https://github.com/HKUDS/nanobot/blob/37c2af8ffc86c5adf0a9e42732e26722d8a4260b/nanobot/agent/runner.py"
+    },
+    {
+      "commit": "37c2af8ffc86c5adf0a9e42732e26722d8a4260b",
+      "path": "nanobot/agent/tools/filesystem.py",
+      "sha256": "2309bc4e66c1db7ca7b24a18b5c81c2083437df805c7ca270a1275efc9a0a0c2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/37c2af8ffc86c5adf0a9e42732e26722d8a4260b/nanobot/agent/tools/filesystem.py",
+      "url": "https://github.com/HKUDS/nanobot/blob/37c2af8ffc86c5adf0a9e42732e26722d8a4260b/nanobot/agent/tools/filesystem.py"
+    },
+    {
+      "commit": "37c2af8ffc86c5adf0a9e42732e26722d8a4260b",
+      "path": "nanobot/templates/AGENTS.md",
+      "sha256": "fde77eda8d85d4c8cdcc39b1acaa9b18f30db0a86d7c30a18c1a30a95a671989",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/37c2af8ffc86c5adf0a9e42732e26722d8a4260b/nanobot/templates/AGENTS.md",
+      "url": "https://github.com/HKUDS/nanobot/blob/37c2af8ffc86c5adf0a9e42732e26722d8a4260b/nanobot/templates/AGENTS.md"
+    }
+  ]
+}

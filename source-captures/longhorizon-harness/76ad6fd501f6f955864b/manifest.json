@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "longhorizon-harness",
+  "agent": "LongHorizon",
+  "repository": "AMAP-ML/LongHorizon-Harness",
+  "snapshot": "76ad6fd501f6f955864b",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:21.931146+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "634030370a9d41ac1c1c6ea7c07bc96ca1d24462",
+      "path": "src/lh_harness/adapters/cli_agent.py",
+      "sha256": "cb5445a6f6c51016458ec3dd805d5c606eab01b80306ef4c772c42b3538eafd1",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/634030370a9d41ac1c1c6ea7c07bc96ca1d24462/src/lh_harness/adapters/cli_agent.py",
+      "url": "https://github.com/AMAP-ML/LongHorizon-Harness/blob/634030370a9d41ac1c1c6ea7c07bc96ca1d24462/src/lh_harness/adapters/cli_agent.py"
+    },
+    {
+      "commit": "634030370a9d41ac1c1c6ea7c07bc96ca1d24462",
+      "path": "src/lh_harness/prompt_texts.py",
+      "sha256": "6cb14527f487be707a881666185101361909d3752ab3b1db9524f14cf3fc344a",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/634030370a9d41ac1c1c6ea7c07bc96ca1d24462/src/lh_harness/prompt_texts.py",
+      "url": "https://github.com/AMAP-ML/LongHorizon-Harness/blob/634030370a9d41ac1c1c6ea7c07bc96ca1d24462/src/lh_harness/prompt_texts.py"
+    },
+    {
+      "commit": "634030370a9d41ac1c1c6ea7c07bc96ca1d24462",
+      "path": "src/lh_harness/role_prompts.py",
+      "sha256": "e4e7190f4b9d1ae7bbf2926a64bdc9f34a8ad9fe759fd1d6dec90df2b2ceca09",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/634030370a9d41ac1c1c6ea7c07bc96ca1d24462/src/lh_harness/role_prompts.py",
+      "url": "https://github.com/AMAP-ML/LongHorizon-Harness/blob/634030370a9d41ac1c1c6ea7c07bc96ca1d24462/src/lh_harness/role_prompts.py"
+    }
+  ]
+}

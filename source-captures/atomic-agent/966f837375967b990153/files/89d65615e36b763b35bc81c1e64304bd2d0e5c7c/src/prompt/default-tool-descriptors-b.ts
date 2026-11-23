@@ -1,0 +1,487 @@
+import type { ToolDescriptor } from "./stable-prefix.js";
+import { SCREEN_TOOL_DESCRIPTORS } from "./screen-tool-descriptors.js";
+import { OS_FS_CODE_MAP_CONTRACT } from "../tools/os/code-map/code-map-contract.js";
+import { OS_CODE_SEARCH_CONTRACT } from "../tools/os/code/code-search-contract.js";
+import { OS_CODE_REWRITE_CONTRACT } from "../tools/os/code/code-rewrite-contract.js";
+
+/** Second half of `DEFAULT_TOOL_DESCRIPTORS` (order is load-bearing). */
+export const DEFAULT_TOOL_DESCRIPTORS_B: readonly ToolDescriptor[] = [
+  {
+    name: "os.clipboard.read",
+    summary: "Read the system clipboard as text.",
+    argsSchema: "{}",
+    tier: "rare",
+  },
+  {
+    name: "os.clipboard.write",
+    summary: "Write text to the system clipboard.",
+    argsSchema: "{ value: string }",
+    tier: "rare",
+  },
+  {
+    name: "os.window.list",
+    summary: "List window titles. Read-only.",
+    argsSchema: "{}",
+    tier: "rare",
+  },
+  {
+    name: "os.window.focus",
+    summary: "Focus a window by title substring.",
+    argsSchema: "{ title: string }",
+    tier: "rare",
+  },
+  {
+    name: "os.notify",
+    summary: "System notification (title + message).",
+    argsSchema: "{ title: string, message: string, sound?: boolean }",
+    tier: "rare",
+  },
+  {
+    name: "os.email.inbox",
+    summary:
+      "Newest messages in the agent's own e-mail inbox (Atomic Mail): sender, subject, preview, unread.",
+    argsSchema: "{ limit?: number }",
+    tier: "rare",
+  },
+  {
+    name: "os.email.send",
+    summary:
+      "Send a plain-text e-mail from the agent's own inbox; the operator approves recipient + subject first.",
+    argsSchema: "{ to: string, subject: string, text: string }",
+    tier: "rare",
+  },
+  ...SCREEN_TOOL_DESCRIPTORS,
+  // Appended in list B so the positions pinned for list A's duplicates
+  // (tool-contract-conformance) do not move (ATO-652).
+  OS_FS_CODE_MAP_CONTRACT.descriptor,
+  // Same reason (ATO-696).
+  OS_CODE_SEARCH_CONTRACT.descriptor,
+  OS_CODE_REWRITE_CONTRACT.descriptor,
+  {
+    name: "skill.view",
+    summary: "Load an installed skill body (SKILL.md) into the session tail.",
+    argsSchema: "{ name: string }",
+  },
+  {
+    name: "tool.view",
+    summary:
+      "Load full args schema for a tool listed in `# extras` into `### loaded-tools`.",
+    argsSchema: '{ name: string } /* e.g. "os.git.show" */',
+  },
+  {
+    // ATO-558: only in the catalog while search mode is on
+    // (`applyToolSearch`); it then stands in for the deferred tools.
+    name: "tool.search",
+    summary:
+      "Find a tool listed under `# extras` (built-in or MCP) by what it should do. Returns the best matches with their args and a ready call, and loads their schemas: call the right one on the next step.",
+    argsSchema:
+      '{ query: string /* what the tool should do, e.g. "send a slack message" */, limit?: number /* 1..8, default 3 */ }',
+    examples: ['{"query":"create a github issue"}'],
+  },
+  {
+    name: "skill.run_script",
+    summary:
+      "Run a script from a skill's requires_scripts (may require approval).",
+    argsSchema:
+      "{ skill: string, script: string, args?: string[], timeoutMs?: number }",
+    tier: "rare",
+  },
+  {
+    name: "memory.profile.set",
+    summary:
+      "Upsert a durable user profile fact (pinned vs contextual with keywords).",
+    argsSchema:
+      "{ key: string, value: string, pinned?: boolean, keywords?: string[] /* required when pinned=false */ }",
+    examples: [
+      '{"key":"language","value":"ru"}',
+      '{"key":"deploy_cmd","value":"pnpm run deploy","pinned":false,"keywords":["deploy","release","ship"]}',
+    ],
+  },
+  {
+    name: "memory.profile.remove",
+    summary: "Delete a profile fact by key.",
+    argsSchema: "{ key: string }",
+  },
+  {
+    name: "memory.profile.list",
+    summary: "List all profile facts with metadata. Read-only.",
+    argsSchema: "{}",
+  },
+  {
+    name: "memory.profile.history",
+    summary:
+      "Return the bi-temporal history of one profile key (oldest first; active value last).",
+    argsSchema: "{ key: string }",
+    examples: ['{"key":"language"}'],
+  },
+  {
+    name: "memory.notes.store",
+    summary:
+      "Store a durable note (triggers: remember, outcomes, preferences; before reply on non-trivial work).",
+    argsSchema:
+      "{ content: string /* max 4000 chars */, tags?: string[] /* 1–4 */ }",
+    examples: [
+      '{"content":"Prefer pnpm; package-lock ignored","tags":["prefs","tooling"]}',
+      '{"content":"Fix auth test via Date mock — 8f2a1c9","tags":["bugfix"]}',
+    ],
+  },
+  {
+    name: "memory.notes.recall",
+    summary: "Search notes or fetch by id (from memory-index pointers).",
+    argsSchema:
+      "{ query?: string, id?: number, k?: number, scope?: 'project' | 'all', tags?: string[] }",
+    examples: [
+      '{"query":"pnpm","k":3}',
+      '{"query":"flaky login","scope":"project"}',
+      '{"id":42}',
+    ],
+  },
+  {
+    name: "memory.notes.forget",
+    summary: "Delete a note by id (user asked to forget or note obsolete).",
+    argsSchema: "{ id: number }",
+    tier: "rare",
+  },
+  {
+    name: "memory.lessons.recall",
+    summary:
+      "Read distilled lessons by id (pointer from `### lessons`) or BM25 query. Returns full principle bodies; the prompt only shows activation pointers.",
+    argsSchema: "{ id?: number, query?: string, k?: number /* 1..10 */ }",
+    examples: ['{"id":42}', '{"query":"pnpm install","k":2}'],
+  },
+  {
+    name: "memory.procedures.recall",
+    summary:
+      "Read advisory how-to procedures by id (pointer from `### procedures`) or BM25 query. Returns ordered steps (description + optional toolHint); the prompt only shows activation pointers. Steps are guidance, not commands — follow them or consciously deviate.",
+    argsSchema: "{ id?: number, query?: string, k?: number /* 1..10 */ }",
+    examples: [
+      '{"id":17}',
+      '{"query":"extract typescript function signatures","k":2}',
+    ],
+  },
+  {
+    name: "memory.sessions.search",
+    summary:
+      "Find words from past chats (user messages and agent replies, not tool output), then read the lines around a hit. Use when the user refers to something discussed in an earlier session.",
+    argsSchema:
+      "{ query?: string, scope?: 'all' | 'project', limit?: number /* 1..25 */, sessionId?: string, line?: number, radius?: number /* 1..20 */ }",
+    examples: [
+      '{"query":"deploy staging"}',
+      '{"sessionId":"<id from a hit>","line":4}',
+    ],
+    tier: "rare",
+  },
+  {
+    name: "files.search",
+    summary:
+      "Search the folders the person added in My files (PDF, Word, slides, sheets, text). Each hit has the file, PDF page, a snippet and a `cite` link: paste `cite` exactly as given after what you took from it.",
+    argsSchema: "{ query: string, folder?: string /* an added folder */, topK?: number /* 1..20 */ }",
+    examples: [
+      '{"query":"notice period termination"}',
+      '{"query":"Q3 revenue","folder":"/Users/me/Reports","topK":5}',
+    ],
+    tier: "rare",
+  },
+  {
+    name: "tasks.schedule",
+    summary: "Schedule a one-shot task; current session or newSession.",
+    argsSchema:
+      '{ userMessage: string, at?: number, inSeconds?: number, newSession?: boolean, notify?: "telegram" }',
+    examples: [
+      '{"userMessage":"check build","inSeconds":300}',
+      '{"userMessage":"PR follow-up","at":1735689600000,"newSession":true}',
+    ],
+    tier: "rare",
+  },
+  {
+    name: "tasks.cron",
+    summary: "Recurring cron task; runs in a dedicated persistent session.",
+    argsSchema:
+      '{ userMessage: string, expression: string, tz?: string /* IANA */, notify?: "telegram" /* report result to paired Telegram */ }',
+    examples: [
+      '{"userMessage":"digest","expression":"0 9 * * *","tz":"Europe/Berlin","notify":"telegram"}',
+    ],
+    tier: "rare",
+  },
+  {
+    name: "tasks.list",
+    summary: "List tasks (filter by status CSV; optional session). Read-only.",
+    argsSchema: "{ status?: string, sessionId?: string, limit?: number }",
+    tier: "rare",
+  },
+  {
+    name: "tasks.cancel",
+    summary: "Cancel a task by id; idempotent on terminal rows.",
+    argsSchema: "{ id: string }",
+    tier: "rare",
+  },
+  {
+    name: "tasks.show",
+    summary: "One task by id. Read-only.",
+    argsSchema: "{ id: string }",
+    tier: "rare",
+  },
+  {
+    name: "sessions.list",
+    summary:
+      "List the operator's other chats: id, status, last activity, name. Read-only; names only.",
+    argsSchema: "{ query?: string /* name contains */, limit?: number /* 1..50 */ }",
+    tier: "rare",
+  },
+  {
+    name: "sessions.read",
+    summary:
+      "Last messages of another chat (the person's words and the agent's replies, no tool output). Asks the operator first.",
+    argsSchema: "{ sessionId: string, limit?: number /* 1..100 */ }",
+    tier: "rare",
+  },
+  {
+    name: "sessions.send",
+    summary:
+      "Queue a request for the agent in another chat (or a new one); returns a taskId. Asks first; nothing waits, follow up with sessions.check.",
+    argsSchema: "{ message: string, sessionId?: string, newSession?: boolean }",
+    examples: [
+      '{"sessionId":"s_123","message":"What did we decide about the API names?"}',
+      '{"newSession":true,"message":"Draft release notes from CHANGELOG.md"}',
+    ],
+    tier: "rare",
+  },
+  {
+    name: "sessions.check",
+    summary:
+      "Status of a message sent with sessions.send, and the other agent's reply once it answered. Read-only.",
+    argsSchema: "{ taskId: string }",
+    tier: "rare",
+  },
+  {
+    // `frequent` tier: vision.describe needs the full args schema +
+    // examples in the stable prefix so the model first-shots a valid
+    // call. `rare` (single-line manifest) led to the model guessing
+    // `{paths: [...]}` without `prompt` and burning a step on the
+    // schema error before retrying with the right shape.
+    name: "vision.describe",
+    summary:
+      "Describe one or more images via the configured vision LLM. Only available when the active model + provider support multimodal input. Accepts at most 4 images per call by default (`vision.maxImagesPerCall`); to cover more images, split them across several calls.",
+    argsSchema:
+      "{ prompt: string, path?: string, paths?: string[] /* png|jpg|jpeg|webp|gif; at most 4 by default */ }",
+    examples: [
+      '{"path":"./screenshot.png","prompt":"What error is shown?"}',
+      '{"paths":["a.png","b.png"],"prompt":"Compare these two diagrams"}',
+    ],
+  },
+  {
+    // ATO-497. Offered per `vision.audioInput` (unset = auto: local model that reports audio; `GATED_TOOLS.audio`).
+    name: "audio.listen",
+    summary:
+      "Listen to a WAV or MP3 file with the current model, when it takes audio input (transcribe, answer a voice message). On a model that cannot hear it says so: then use the audio-transcribe skill. Other formats (ogg voice notes, m4a): the skill.",
+    argsSchema: "{ path: string /* .wav|.mp3 */, prompt?: string /* default: transcribe */ }",
+    examples: ['{"path":"./voice.mp3","prompt":"What does the speaker ask for?"}'],
+  },
+  {
+    // Frequent tier, like vision.describe: "draw me a ..." must reach a
+    // valid call first time, and the summary carries the one step a
+    // model would otherwise skip (attaching the file to the reply).
+    // Offered only while an OpenRouter key is configured
+    // (`GATED_TOOLS.image`).
+    name: "image.generate",
+    summary:
+      "Generate pictures from a text prompt (cloud image model on OpenRouter via Atomic Chat Core; paid, so it may ask the user first). Saves image files in the working folder and returns their paths; to show them, pass the paths in reply.attachments. Write the prompt in English with subject, style, lighting and composition.",
+    argsSchema:
+      '{ prompt: string, size?: string /* square|landscape|portrait or 1:1|16:9|9:16|4:3|3:4|3:2|2:3; default square */, count?: number /* 1..4, default 1 */, seed?: number, model?: string /* OpenRouter image model id; omit for the default */ }',
+    examples: [
+      '{"prompt":"A red fox in a snowy birch forest at dawn, soft golden light, photorealistic"}',
+      '{"prompt":"Flat vector logo of a paper rocket, two colours","size":"square","count":2}',
+    ],
+  },
+  {
+    // Frequent tier beside image.generate, for the same reason: "make a
+    // video of ..." must reach a valid call first time and the summary
+    // carries the reply.attachments step. Offered only while an
+    // OpenRouter key is configured (`GATED_TOOLS.video`).
+    name: "video.generate",
+    summary:
+      "Generate a short video clip from a text prompt, optionally starting from an image file (cloud video model on OpenRouter via Atomic Chat Core; paid per second, so it asks the user first and takes one to a few minutes). Saves an .mp4 in the working folder and returns its path; to show it, pass the path in reply.attachments. If it answers that the model is busy, tell the user and ask which listed model to use; pass `model` only when the user names one. Write the prompt in English: subject, action, camera movement, style, sound.",
+    argsSchema:
+      '{ prompt: string, image?: string /* path of a png|jpg|webp first frame */, duration?: number /* seconds; default 4; the default model takes 4|6|8 */, aspect?: string /* 16:9|9:16 or landscape|portrait; default 16:9 */, resolution?: string /* 720p|1080p|4K; omit for the model default */, audio?: boolean, seed?: number, model?: string /* OpenRouter video model id; omit for the default */ }',
+    examples: [
+      '{"prompt":"A red fox trotting through a snowy birch forest at dawn, slow tracking shot, soft golden light"}',
+      '{"prompt":"The rocket lifts off and flies out of frame","image":"rocket.png","duration":6,"aspect":"9:16"}',
+    ],
+  },
+  {
+    // Rare: a voice message is the usual reason, and the Telegram
+    // attachments hint names this tool (ATO-702).
+    name: "audio.transcribe",
+    summary:
+      "Transcribe speech in a local audio file (Telegram voice message .ogg, mp3, m4a, wav, flac, ...) to text with whisper.cpp on this computer; no Python needed. The first use downloads the speech model (and on Windows/Linux the whisper.cpp engine) after one approval. On macOS whisper.cpp comes from `brew install whisper-cpp`; voice messages need `ffmpeg`. If something is missing the result says how to install it, tell the user. Answer from the returned text.",
+    argsSchema:
+      '{ path: string, language?: string /* ISO code like en|ru, default auto */, model?: string /* tiny|base|small|medium|large-v3-turbo; default base */, translate?: boolean /* into English */, make_default?: boolean /* save model as the default for later calls */ }',
+    tier: "rare",
+    examples: [
+      '{"path":"/Users/me/.atomic-agent/inbox/telegram/2026-11-12/voice-101500.ogg"}',
+      '{"path":"meeting.m4a","language":"ru","model":"small"}',
+    ],
+  },
+  {
+    // ATO-1164: free and local (headless browser + ffmpeg), so not gated
+    // on a key; rare tier, loaded through tool.view / tool.search.
+    name: "video.render_html",
+    summary:
+      "Record an HTML page to an .mp4 video in the working folder: an animated title card, a chart, a product teaser made in HTML/CSS/JS. Frames are taken on a virtual clock (requestAnimationFrame, timers, Date and CSS animations step exactly 1/fps per frame), then put together by the local ffmpeg. Free, nothing goes to the cloud. Pass `path` (an .html file in the working folder) or `html` (the markup). Returns the path; to show it, pass the path in reply.attachments. Needs Chrome (or another Chromium browser) and ffmpeg; it says how to install whichever is missing.",
+    argsSchema:
+      '{ path?: string /* .html file in the working folder */, html?: string /* the markup, instead of path */, duration?: number /* seconds; default 5, max 60 */, fps?: number /* 1..60; default 30 */, width?: number /* 64..1920; default 1280 */, height?: number /* 64..1920; default 720 */, output?: string /* .mp4 name in the working folder; default video-html-<time>.mp4 */ }',
+    examples: [
+      '{"path":"intro.html","duration":6}',
+      '{"html":"<body style=\'margin:0;background:#111\'><h1 style=\'color:#fff;animation:f 2s\'>Hello</h1><style>@keyframes f{from{opacity:0}}</style></body>","duration":3,"width":1080,"height":1920}',
+    ],
+    tier: "rare",
+  },
+  {
+    // MCP discovery / resource / prompt tools. The actual MCP tool
+    // calls themselves come from the dynamic descriptor builder
+    // (see `mcp-descriptor-builder.ts`) and ship at tier `rare`.
+    name: "mcp.resource.list",
+    summary:
+      "List resources exposed by an MCP server. Pass `server` (one of the configured MCP server names) and optional `limit` (1..100, default 30).",
+    argsSchema: "{ server: string, limit?: number /* 1..100 */ }",
+    tier: "rare",
+  },
+  {
+    name: "mcp.resource.read",
+    summary:
+      "Read a resource exposed by an MCP server. Pass `server` and the exact `uri` returned by `mcp.resource.list`.",
+    argsSchema: "{ server: string, uri: string }",
+    tier: "rare",
+  },
+  {
+    // The quoting note belongs HERE, not in the `ToolDefinition`
+    // description in `mcp/mcp-prompt-tools.ts`. That string reaches
+    // only `http/route-capabilities.ts`; what the model reads is this
+    // `summary` — rendered into the stable prefix by `formatToolRare`
+    // and into the native function spec by `openai-tool-call-adapter`
+    // as `${summary}\nArgs: ${argsSchema}`. A convention explained
+    // only in the definition is a convention the model never sees, so
+    // it would meet a quoted key with no idea to strip the quotes and
+    // send `"my (odd) name"` verbatim — the "unknown prompt" the
+    // quoting exists to prevent.
+    name: "mcp.prompt.list",
+    summary:
+      'List prompt templates exposed by an MCP server. Pass `server` and optional `limit` (1..100, default 30). One entry per line: `<name>(arg1, arg2?) — description`. A name or argument name that would be ambiguous in that format is printed JSON-quoted (`"my (odd) name"`); pass it decoded, without the quotes, as `mcp.prompt.get`\'s `name` or as an `arguments` key.',
+    argsSchema: "{ server: string, limit?: number /* 1..100 */ }",
+    tier: "rare",
+  },
+  {
+    name: "mcp.prompt.get",
+    summary:
+      "Render a prompt template from an MCP server. Pass `server`, `name`, and optional `arguments` (object of string values for the template parameters).",
+    argsSchema:
+      "{ server: string, name: string, arguments?: Record<string,string> }",
+    tier: "rare",
+  },
+  {
+    // Frequent tier: the review step of a fan-out reaches for it, and a
+    // reviewer that has to `tool.view` first reviews less. Read-only, so
+    // the fusion orchestrator gate lets it through (decision D1).
+    name: "verify.syntax",
+    summary:
+      "Syntax-check files, one checker per file by extension (.js/.json in-process then node --check, .ts via the project's tsc, .py, .sh, .html inline scripts + a warning for content after </html>, .css braces, .go/.rb/.php/.lua/.zsh via their own parse-only tool when installed). Read-only. Reports a file with no checker as unchecked, never as passing.",
+    argsSchema: "{ files: string[] }",
+  },
+  {
+    // Frequent tier for the same reason, and with an example: the
+    // runtime failures no syntax check sees (a throw on load, a dead
+    // button, a probe that never moves) are what this catches, and a
+    // page run with two probes is not something a model first-shots
+    // from a one-line manifest.
+    name: "verify.run",
+    summary:
+      "Run what was built against a throwaway copy of the working directory (nothing it writes reaches the workspace; may require approval). kind 'command': a test runner, compiler or script. kind 'service': start a server, wait for a port/url, send requests. kind 'page': a local HTML file or url in a headless browser (add `start` to serve the url first; the page opens once `ready` passes, by default when the url answers 2xx) — scripted input, then `seconds` of runtime with `probes` sampled; collects uncaught errors, console errors and failed getElementById/querySelector lookups. `checks` are assertions on the result. Default `network: false` (a soft proxy block, not a sandbox).",
+    argsSchema:
+      "{ kind: 'command' | 'service' | 'page', cmd?: string, args?: string[], start?: { cmd: string, args?: string[] }, ready?: { port?: number, url?: string, timeoutMs?: number }, requests?: [{ method?: string, path?: string, url?: string, body?: string, expectStatus?: number, expectBody?: string }], path?: string, url?: string, script?: [{ action: 'click' | 'key' | 'type' | 'wait', selector?: string, key?: string, text?: string, ms?: number }], seconds?: number /* page runtime, default 5 */, probes?: [{ name: string, expr: string /* JS expression */ }], checks?: string[] /* 'exit 0' | 'exit != 0' | 'stdout contains \"x\"' | 'stderr not contains \"x\"' | 'status 200' | 'no errors' | 'missing selectors 0' | 'probe <name> decreases|increases|equals <v>|reaches <v>|stays <v>' */, cwd?: string, env?: Record<string,string>, timeoutMs?: number, network?: boolean }",
+    examples: [
+      '{"kind":"page","path":"index.html","script":[{"action":"click","selector":"#launch"},{"action":"key","key":"ArrowLeft"}],"seconds":6,"probes":[{"name":"lives","expr":"window.game.lives"},{"name":"score","expr":"window.game.score"}],"checks":["no errors","missing selectors 0","probe score increases"]}',
+      '{"kind":"command","cmd":"npm","args":["test"],"checks":["exit 0","stdout not contains \\"failed\\""]}',
+    ],
+  },
+  {
+    // `frequent` tier and a full example: the whole point of the tool is
+    // that a cloud orchestrator reaches for it instead of doing the bulk
+    // itself, and a one-line manifest is not enough to first-shot a
+    // well-formed task list. Only mounted in fusion mode, so the tokens
+    // are paid by exactly the runs that use it.
+    name: "fusion.delegate",
+    summary:
+      "Delegate independent parts of the work to local worker agents that run concurrently and report back. Each task becomes one throwaway worker turn that sees the operator's original request and your `instructions`, but nothing else from this conversation, so `instructions` must carry what the request does not (exact paths, the contract between parts, acceptance criteria, the answer format you want). Returns every worker's reply plus a per-task status. You choose `maxWorkers`; it is bounded only by the task count and the machine. Call it on its own, never alongside other tool calls.",
+    argsSchema:
+      '{ tasks: [{ id: string, instructions: string, title?: string /* defaults to the id */, deliverable?: string, files?: string[], etaSeconds?: number /* your estimate of how long this part takes; shown to the operator beside the running clock so they can tell thinking from stuck */, outputTokens?: number, outputLines?: number /* what the worker will write; checked against its time limit on a local leg */, profile?: string /* a subagent profile: "explore" (find code), "review" (find bugs), "research" (web + files), all read-only, or a profile the user defined */ }] /* 1..16 */, maxWorkers?: number /* how many run at once; you decide */, contract?: { inputs?: string[] /* the files the request provides: workers edit them in place, never replace */, owners?: { [path]: taskId }, provides?: [{ task, kind: "symbol"|"file"|"id"|"endpoint"|"env"|"flag"|"other", name, in?: path, shape?: string /* one line: signature or return shape; give it for anything another task uses */, example?: { call, expect, page? } /* for a function another task calls: one small call and a JS condition over its result r, run after the fan-out; page = the HTML file that loads browser code */ }], requires?: [{ task, name /* a provides name */ }], checks?: [{ task?, ...verify.run args }] } /* the interface between the parts: shown to every worker, checked after the fan-out */, resume?: string /* ONLY to continue a run cut off by a restart: the run id, sent alone */, confirm?: string[] /* with resume: task ids the person agreed to run again */ }',
+    examples: [
+      '{"tasks":[{"id":"t1","title":"Map the auth routes","instructions":"List every route under src/http/ that touches auth. For each: path, method, and the middleware it runs.","deliverable":"one bullet per route","etaSeconds":120},{"id":"t2","title":"Summarise the session store","instructions":"Read src/session/session-store.ts and describe its public API and persistence model.","files":["src/session/session-store.ts"]}]}',
+    ],
+  },
+  {
+    // ATO-1670. Rare tier: one line in the catalog, the full args through
+    // tool.view. Hidden while Fusion is the run mode, where
+    // fusion.delegate is the way to hand work out (filter-disabled-tools).
+    name: "subagent.run",
+    summary:
+      "Hand a self-contained part of the work to a subagent: a fresh worker turn on your current model that sees the user's request and your `instructions`, nothing else of this chat, and reports back. Optional `profile` (built-in: explore, review, research, all read-only; or one the user defined) gives it that profile's instructions and tool list. Several tasks in one call run side by side, at most 4 per call. Listing `files` on a task asks the user once for the call, and a yes lets the subagents write anywhere in the directories of those files and in the working directory, not only in the listed files; with no `files` a subagent cannot write, so make the edit yourself or list the files. What subagents spend counts toward this task's spend budget, and none starts once it is used up. A subagent cannot start subagents of its own. Call it on its own, never alongside other tool calls.",
+    argsSchema:
+      '{ tasks: [{ id: string, instructions: string, title?: string, profile?: string /* "explore" | "review" | "research" or a user profile */, deliverable?: string, files?: string[] /* paths it may write; asks the user once */ }] /* 1..4 */ }',
+    examples: [
+      '{"tasks":[{"id":"find-auth","profile":"explore","instructions":"Find where session tokens are checked under src/http/ and list each file and function."}]}',
+    ],
+    tier: "rare",
+  },
+  {
+    // Frequent tier: a checklist only helps when the model keeps it from
+    // the first step, and a model that must `tool.view` first never
+    // starts one (ATO-486). Placed after the git duplicates so their
+    // pinned catalog positions do not move.
+    name: "plan.update",
+    summary:
+      "Show the user a live checklist for multi-step work. Send the WHOLE plan every call (it replaces the previous one): each step with status pending, in_progress or done, at most one in_progress. Call it when you start work of 3+ steps and whenever a step finishes or the plan changes; items: [] clears it. Skip it for one-step answers.",
+    argsSchema:
+      "{ items: [{ step: string, status: 'pending' | 'in_progress' | 'done' }] }",
+    examples: [
+      '{"items":[{"step":"Read the failing test","status":"done"},{"step":"Fix the date parser","status":"in_progress"},{"step":"Run the test suite","status":"pending"}]}',
+    ],
+  },
+  {
+    // ATO-1137. Rare tier: the one-liner is enough to pick it, and the
+    // full args load through tool.view (or on the first failed call).
+    name: "canvas.render",
+    summary:
+      "Show the user a chart or a page in the chat as a canvas: give `chart` (bar|line|area|pie|table) with `labels` and `series` [{ name, values }], or `html` you wrote. Saves a self-contained HTML file in the working folder and returns its path. Use it for dashboards, comparisons and any numbers the user would rather see than read.",
+    argsSchema:
+      "{ title: string, chart?: 'bar' | 'line' | 'area' | 'pie' | 'table', labels?: string[] /* x axis or pie slices */, series?: [{ name: string, values: number[] /* one per label */ }] /* 1..8 */, values?: number[] /* one series, instead of series */, html?: string /* a page or fragment, instead of chart */, subtitle?: string, name?: string /* file name hint */ }",
+    examples: [
+      '{"title":"Revenue by quarter","chart":"bar","labels":["Q1","Q2","Q3","Q4"],"series":[{"name":"2025","values":[120,135,150,170]},{"name":"2026","values":[140,160,155,190]}]}',
+      '{"title":"Disk usage","chart":"pie","labels":["Photos","Code","Other"],"values":[52,31,17]}',
+    ],
+    tier: "rare",
+  },
+  {
+    // Frequent tier (ATO-489): a model that must `tool.view` first asks in
+    // prose instead, and the person gets no cards to click.
+    name: "ask_user",
+    summary:
+      "Stop and ask the user ONE clarifying question with 2-8 short ready answers, when a choice only they can make blocks the work (which of several targets, a style, a scope). The turn waits; the answer comes back as this tool's result. multiSelect: true lets them pick several; they can always type their own answer unless allowOther: false. Do not use it for confirmation of a risky action (that asks by itself) or when the request already says what to do.",
+    argsSchema:
+      "{ question: string, options: [{ label: string, description?: string }] /* 2..8 */, multiSelect?: boolean, allowOther?: boolean /* default true */ }",
+    examples: [
+      '{"question":"Which database should the app use?","options":[{"label":"SQLite","description":"one file, no server"},{"label":"Postgres","description":"a server, scales further"}]}',
+    ],
+  },
+  {
+    name: "reply",
+    summary:
+      "Final natural-language answer; ends the macro-turn. Never use to announce a pending action; keep text short (no huge dumps). If the task requires an exact answer format or marker, `text` must be ONLY that bare value or marker line — no preamble or commentary. `attachments`: paths of existing files to deliver with the reply (a report you wrote, a screenshot, a converted file) — on Telegram/Discord they are sent as files after the text; never paste a file's contents into `text` when you can attach it.",
+    argsSchema: "{ text: string, attachments?: string[] }",
+  },
+  {
+    name: "finish",
+    summary:
+      "End the session with a final summary; only if the user asked to end.",
+    argsSchema: "{ summary: string }",
+  },
+];

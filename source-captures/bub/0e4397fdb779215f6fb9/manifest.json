@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "bub",
+  "agent": "Bub",
+  "repository": "bubbuild/bub",
+  "snapshot": "0e4397fdb779215f6fb9",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:22.215523+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "06745d361a386da85f05da991bb01158d478c69a",
+      "path": "src/bub/builtin/hook_impl.py",
+      "sha256": "88b26edc985fb96b7b389408d037d5fe3a78e5d2a99f57227d25478fd2ba4807",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/06745d361a386da85f05da991bb01158d478c69a/src/bub/builtin/hook_impl.py",
+      "url": "https://github.com/bubbuild/bub/blob/06745d361a386da85f05da991bb01158d478c69a/src/bub/builtin/hook_impl.py"
+    },
+    {
+      "commit": "06745d361a386da85f05da991bb01158d478c69a",
+      "path": "src/bub/builtin/tools.py",
+      "sha256": "f81a29fb0f218b79e99eaaabdd9f44adf9ce2d3003bfd434ba4523aba0e4fa63",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/06745d361a386da85f05da991bb01158d478c69a/src/bub/builtin/tools.py",
+      "url": "https://github.com/bubbuild/bub/blob/06745d361a386da85f05da991bb01158d478c69a/src/bub/builtin/tools.py"
+    },
+    {
+      "commit": "06745d361a386da85f05da991bb01158d478c69a",
+      "path": "src/bub/core/codemode/__init__.py",
+      "sha256": "8276090e0d6a8fa119d8ee0c03332744a5e888380d535b283da9700d2a90b693",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/06745d361a386da85f05da991bb01158d478c69a/src/bub/core/codemode/__init__.py",
+      "url": "https://github.com/bubbuild/bub/blob/06745d361a386da85f05da991bb01158d478c69a/src/bub/core/codemode/__init__.py"
+    }
+  ]
+}

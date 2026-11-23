@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "raven",
+  "agent": "Raven",
+  "repository": "EverMind-AI/Raven",
+  "snapshot": "c9b0487bb92972032122",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:24.723842+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "agents/raven-code/plugins/code-flow/code_flow/tools/exec.py",
+      "sha256": "f0ffccda888bde0a7f13598bfdf08163aba5501a3c32f72257d7d383ccdceeba",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/agents/raven-code/plugins/code-flow/code_flow/tools/exec.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/agents/raven-code/plugins/code-flow/code_flow/tools/exec.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "agents/raven-code/plugins/code-flow/code_flow/tools/plugin.py",
+      "sha256": "a54b00701eb64d40bbd5ad5072d1cc1bdb903e50e0aa3b1ca8a4ef82a790e7f4",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/agents/raven-code/plugins/code-flow/code_flow/tools/plugin.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/agents/raven-code/plugins/code-flow/code_flow/tools/plugin.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "agents/raven-code/plugins/code-flow/prompts/CODE_CONDUCT_default.md",
+      "sha256": "a62a5015a90ff849d879752c5eace92454b522756373f30c45e2777af1d545af",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/agents/raven-code/plugins/code-flow/prompts/CODE_CONDUCT_default.md",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/agents/raven-code/plugins/code-flow/prompts/CODE_CONDUCT_default.md"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "agents/raven-code/plugins/code-flow/prompts/CODE_DISCIPLINE.md",
+      "sha256": "fe7c1f8dcbcf7e205a9755474021c2ffa317568f6847eb83a4967ba684f3e316",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/agents/raven-code/plugins/code-flow/prompts/CODE_DISCIPLINE.md",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/agents/raven-code/plugins/code-flow/prompts/CODE_DISCIPLINE.md"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "raven/agent/loop/turn_path.py",
+      "sha256": "af805bb908e6859a6b6a9710359e37676826f64581efb304bdbd0a9c565a7da4",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/loop/turn_path.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/loop/turn_path.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "raven/agent/loop/wiring.py",
+      "sha256": "36071729cf9edfa9861fe3fd200f3b758624ea0df62ab935afdf9e990b6638e4",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/loop/wiring.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/loop/wiring.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "raven/agent/subagent/backends/raven_loop.py",
+      "sha256": "456dc9f312689f2504234dad1971112d94ae79739223b80f87daad3804692763",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/subagent/backends/raven_loop.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/subagent/backends/raven_loop.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "raven/agent/tools/context_retrieve.py",
+      "sha256": "b52d3de52c622059e0ea2f3ec2836f31ea8a0a34195d8dfb03e36b7e657f1083",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/context_retrieve.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/context_retrieve.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "raven/agent/tools/filesystem.py",
+      "sha256": "421f9061f316158202f817788035c69006565f912c3af335b7812945bc0f077b",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/filesystem.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/filesystem.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "raven/agent/tools/registry.py",
+      "sha256": "59022dac3e13b2848003319283e295a72c6a4337aa6b5539d8169daf48441164",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/registry.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/registry.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "raven/agent/tools/shell.py",
+      "sha256": "e67a43fd8c7d0c5fefb8e069fb076d14929cbc30d6dc55b7384d34af06df60fe",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/shell.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/shell.py"
+    },
+    {
+      "commit": "a5754e6a1f5b43c130132115c8522b541eb70422",
+      "path": "raven/agent/tools/tool_search.py",
+      "sha256": "db393eefea10dc0848daa2169094750ca46c488860690a08d24529f57c71d563",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/tool_search.py",
+      "url": "https://github.com/EverMind-AI/Raven/blob/a5754e6a1f5b43c130132115c8522b541eb70422/raven/agent/tools/tool_search.py"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "librechat",
+  "agent": "LibreChat",
+  "repository": "LibreChat-AI/LibreChat",
+  "snapshot": "0d3a706013786af22121",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:26.445015+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "4700c44eb77c142b4f9f8b87476924f22890eb39",
+      "path": "packages/api/src/agents/initialize.ts",
+      "sha256": "eaf287e6f963d1a5be0112ffdcead904936afbfa7ec1e19fa769fed4f7bfb2b3",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/4700c44eb77c142b4f9f8b87476924f22890eb39/packages/api/src/agents/initialize.ts",
+      "url": "https://github.com/LibreChat-AI/LibreChat/blob/4700c44eb77c142b4f9f8b87476924f22890eb39/packages/api/src/agents/initialize.ts"
+    },
+    {
+      "commit": "4700c44eb77c142b4f9f8b87476924f22890eb39",
+      "path": "packages/api/src/agents/ptc.ts",
+      "sha256": "dc192c7762d10396ed6ef777899416021d95c73fb33e31bcf199cfd07e7ae42a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4700c44eb77c142b4f9f8b87476924f22890eb39/packages/api/src/agents/ptc.ts",
+      "url": "https://github.com/LibreChat-AI/LibreChat/blob/4700c44eb77c142b4f9f8b87476924f22890eb39/packages/api/src/agents/ptc.ts"
+    },
+    {
+      "commit": "4700c44eb77c142b4f9f8b87476924f22890eb39",
+      "path": "packages/api/src/agents/run.ts",
+      "sha256": "61a77cc3d532731b4c51d10fe99df9d04fa81721555faa492675022bb015413a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4700c44eb77c142b4f9f8b87476924f22890eb39/packages/api/src/agents/run.ts",
+      "url": "https://github.com/LibreChat-AI/LibreChat/blob/4700c44eb77c142b4f9f8b87476924f22890eb39/packages/api/src/agents/run.ts"
+    },
+    {
+      "commit": "4700c44eb77c142b4f9f8b87476924f22890eb39",
+      "path": "packages/api/src/agents/tools.ts",
+      "sha256": "e2857141c712f4c7083c247d11d7674fb72dad865c009d3d0daaef10bf51ca12",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/4700c44eb77c142b4f9f8b87476924f22890eb39/packages/api/src/agents/tools.ts",
+      "url": "https://github.com/LibreChat-AI/LibreChat/blob/4700c44eb77c142b4f9f8b87476924f22890eb39/packages/api/src/agents/tools.ts"
+    }
+  ]
+}

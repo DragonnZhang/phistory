@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "cheetahclaws",
+  "agent": "cheetahclaws",
+  "repository": "SAIL-Research-Lab/cheetahclaws",
+  "snapshot": "7c4b082e9bbe6d691a3e",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:30.128212+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "932a27769835ad77c9b8fc1e635f0583c9c01ff2",
+      "path": "cheetahclaws/agent_templates/auto_coder.md",
+      "sha256": "d7ff87f55a342d094a0eb8ae8e8c5d65e48f95ee9b5379593e1fe5dd7923ecae",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/932a27769835ad77c9b8fc1e635f0583c9c01ff2/cheetahclaws/agent_templates/auto_coder.md",
+      "url": "https://github.com/SAIL-Research-Lab/cheetahclaws/blob/932a27769835ad77c9b8fc1e635f0583c9c01ff2/cheetahclaws/agent_templates/auto_coder.md"
+    },
+    {
+      "commit": "932a27769835ad77c9b8fc1e635f0583c9c01ff2",
+      "path": "cheetahclaws/tools/__init__.py",
+      "sha256": "d9ffe140b1c540e641c61f304a1abef415c86a1a0505757d714fac537afcc6d3",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/932a27769835ad77c9b8fc1e635f0583c9c01ff2/cheetahclaws/tools/__init__.py",
+      "url": "https://github.com/SAIL-Research-Lab/cheetahclaws/blob/932a27769835ad77c9b8fc1e635f0583c9c01ff2/cheetahclaws/tools/__init__.py"
+    }
+  ]
+}

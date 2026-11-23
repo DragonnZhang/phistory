@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "deepseek-reasonix",
+  "agent": "DeepSeek-Reasonix",
+  "repository": "esengine/DeepSeek-Reasonix",
+  "snapshot": "bfdee5041314c59fb8a4",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:24.084736+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/assembly/boot/agent_preset.go",
+      "sha256": "ba33dee19278eaa0a1c3611c07839a7fec9ad4690f404c49948fe1c63b7a0db0",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/agent_preset.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/agent_preset.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/assembly/boot/build.go",
+      "sha256": "ede5a4173baedcd962ae25c624a85bda04f5543504378e8f173430f8dd0e0739",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/build.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/build.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/assembly/boot/prompt.go",
+      "sha256": "4e89062490c8e2df45fd69342ba295d4a9d52eb59fe3343aceaae31beb7a2a62",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/prompt.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/prompt.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/assembly/boot/prompt_policy.go",
+      "sha256": "773a3cd9e30e9f47133c0d4d5d6da7fe1d83accb9f828d2ca7736b31f9578c72",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/prompt_policy.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/prompt_policy.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/assembly/boot/roles.go",
+      "sha256": "c4c8a1903facc41c2a2d3b6778a010577fbe3e9f1d45483d7122070e422c57df",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/roles.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/assembly/boot/roles.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/contract/config/config.go",
+      "sha256": "6003cbe202d41a3819ca06e300679f64bae9dccd695c0dacffdf0386e7b7bc7c",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/contract/config/config.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/contract/config/config.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/contract/config/policies.go",
+      "sha256": "fe30cc496543f851cb13789e19a6b26173b8e9a6c311ea990bb813f9f8b3dfde",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/contract/config/policies.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/contract/config/policies.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/runtime/agent/tool_output_spill.go",
+      "sha256": "03f948d186615eb11e4f9757f1b42944ca4c42f9f0a9dd164e0a64c113c931a2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/runtime/agent/tool_output_spill.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/runtime/agent/tool_output_spill.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/runtime/coordinator/coordinator.go",
+      "sha256": "574301ffd656d500faf570769a0c9a7d4a5fe1e550e900113a60e09805b68278",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/runtime/coordinator/coordinator.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/runtime/coordinator/coordinator.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/runtime/usecap/usecapability.go",
+      "sha256": "397c5bffa81586c0df4d00cc0cb80da35e82b11866a0f42a2d3506e0ebebf15a",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/runtime/usecap/usecapability.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/runtime/usecap/usecapability.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/tools/builtin/compress.go",
+      "sha256": "dea6c51b4d9d938d288a913cf65601746e413feedb90cc9adc0013d568ec599b",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/tools/builtin/compress.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/tools/builtin/compress.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/tools/builtin/workspace.go",
+      "sha256": "57d44aa9d21b686872caf1dfa22438f56712a708ae99a60a43ba8c1039ce6659",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/tools/builtin/workspace.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/tools/builtin/workspace.go"
+    },
+    {
+      "commit": "cd20bb50be3b1eac5fad0648373a158c35767ae4",
+      "path": "internal/tools/script/script.go",
+      "sha256": "94c597c9b8a977d82376586a7ec93680f24b08d92b9fafc3a669c6b5e6cf758d",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/tools/script/script.go",
+      "url": "https://github.com/esengine/DeepSeek-Reasonix/blob/cd20bb50be3b1eac5fad0648373a158c35767ae4/internal/tools/script/script.go"
+    }
+  ]
+}

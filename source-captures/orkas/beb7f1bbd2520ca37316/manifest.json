@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "orkas",
+  "agent": "Orkas",
+  "repository": "Orkas-AI/Orkas",
+  "snapshot": "beb7f1bbd2520ca37316",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:28.500944+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "7a3d04eef90244637dd19e2e23363b71bb353535",
+      "path": "src/main/model/core-agent/local-tools.ts",
+      "sha256": "52b1fed570bd1ff3f1eddfc56d5f0f3854d53603d1e0a8dd7cac3f845f240013",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/local-tools.ts",
+      "url": "https://github.com/Orkas-AI/Orkas/blob/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/local-tools.ts"
+    },
+    {
+      "commit": "7a3d04eef90244637dd19e2e23363b71bb353535",
+      "path": "src/main/model/core-agent/tool-result-tools.ts",
+      "sha256": "ce48544f02d3e69a8c5bca1c12d8251f7260c8aaea34f301bd34ff6877f87be3",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/tool-result-tools.ts",
+      "url": "https://github.com/Orkas-AI/Orkas/blob/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/tool-result-tools.ts"
+    },
+    {
+      "commit": "7a3d04eef90244637dd19e2e23363b71bb353535",
+      "path": "src/main/model/core-agent/tool-surface.ts",
+      "sha256": "ef6fa5c40709d94a4fe519ca2cd174900bea2999bfc8d218845c16d148965404",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/tool-surface.ts",
+      "url": "https://github.com/Orkas-AI/Orkas/blob/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/tool-surface.ts"
+    },
+    {
+      "commit": "7a3d04eef90244637dd19e2e23363b71bb353535",
+      "path": "src/main/prompts/chat_commander.md",
+      "sha256": "36e5a38e30e2f4171cf5dd30bfb9acafe110b1fb88ecef467e13dcc96c5e5cc8",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/prompts/chat_commander.md",
+      "url": "https://github.com/Orkas-AI/Orkas/blob/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/prompts/chat_commander.md"
+    },
+    {
+      "commit": "7a3d04eef90244637dd19e2e23363b71bb353535",
+      "path": "src/main/prompts/chat_shared_rules.md",
+      "sha256": "adb46250d699adbb22af0b6030c36a567dff89d5900609a0d9873ee6597c238b",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/prompts/chat_shared_rules.md",
+      "url": "https://github.com/Orkas-AI/Orkas/blob/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/prompts/chat_shared_rules.md"
+    }
+  ]
+}

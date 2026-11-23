@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "pi-rust",
+  "agent": "pi-rust",
+  "repository": "bigfish1913/pi-rust",
+  "snapshot": "7dc17d67aef4840cf031",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:22.550948+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "5b26ba9078bb5d5a88282431026ebc8643c64f16",
+      "path": "crates/rpi-cli/src/session.rs",
+      "sha256": "e26a2f62b02988048e74064a79a26cd3211e0593c57ff031832c17a431bd42b5",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/5b26ba9078bb5d5a88282431026ebc8643c64f16/crates/rpi-cli/src/session.rs",
+      "url": "https://github.com/bigfish1913/pi-rust/blob/5b26ba9078bb5d5a88282431026ebc8643c64f16/crates/rpi-cli/src/session.rs"
+    },
+    {
+      "commit": "5b26ba9078bb5d5a88282431026ebc8643c64f16",
+      "path": "crates/rpi-tools/src/tools/bash.rs",
+      "sha256": "f8af3480cf5f9fb0256eac5c67abafa18d5e21623fc63943e23a28ea3563360f",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/5b26ba9078bb5d5a88282431026ebc8643c64f16/crates/rpi-tools/src/tools/bash.rs",
+      "url": "https://github.com/bigfish1913/pi-rust/blob/5b26ba9078bb5d5a88282431026ebc8643c64f16/crates/rpi-tools/src/tools/bash.rs"
+    }
+  ]
+}

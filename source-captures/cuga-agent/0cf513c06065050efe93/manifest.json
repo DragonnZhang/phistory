@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "cuga-agent",
+  "agent": "cuga-agent",
+  "repository": "cuga-project/cuga-agent",
+  "snapshot": "0cf513c06065050efe93",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:23.079346+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "3d82061e7cc89f5755a40cde91ef6850ac6ed0e2",
+      "path": "src/cuga/backend/agent_spawn/tools.py",
+      "sha256": "be1e7e0a87288fa93a8a7eb6ac8b5cea1682ac4141420b63ff463dcb9603a014",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/3d82061e7cc89f5755a40cde91ef6850ac6ed0e2/src/cuga/backend/agent_spawn/tools.py",
+      "url": "https://github.com/cuga-project/cuga-agent/blob/3d82061e7cc89f5755a40cde91ef6850ac6ed0e2/src/cuga/backend/agent_spawn/tools.py"
+    },
+    {
+      "commit": "3d82061e7cc89f5755a40cde91ef6850ac6ed0e2",
+      "path": "src/cuga/backend/cuga_graph/nodes/cuga_lite/executors/execd/tool_callback.py",
+      "sha256": "6355dc5f72d1b16709da97c1134e587b308cf01da87f0dfd40c8b1de8410e4c7",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/3d82061e7cc89f5755a40cde91ef6850ac6ed0e2/src/cuga/backend/cuga_graph/nodes/cuga_lite/executors/execd/tool_callback.py",
+      "url": "https://github.com/cuga-project/cuga-agent/blob/3d82061e7cc89f5755a40cde91ef6850ac6ed0e2/src/cuga/backend/cuga_graph/nodes/cuga_lite/executors/execd/tool_callback.py"
+    },
+    {
+      "commit": "3d82061e7cc89f5755a40cde91ef6850ac6ed0e2",
+      "path": "src/cuga/backend/cuga_graph/nodes/cuga_lite/prompts/fc_prompt.jinja2",
+      "sha256": "9d4565440e4ac5b2e23bea2758e88cb53882baa3dfafa1350a4ff72a6be508eb",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/3d82061e7cc89f5755a40cde91ef6850ac6ed0e2/src/cuga/backend/cuga_graph/nodes/cuga_lite/prompts/fc_prompt.jinja2",
+      "url": "https://github.com/cuga-project/cuga-agent/blob/3d82061e7cc89f5755a40cde91ef6850ac6ed0e2/src/cuga/backend/cuga_graph/nodes/cuga_lite/prompts/fc_prompt.jinja2"
+    },
+    {
+      "commit": "3d82061e7cc89f5755a40cde91ef6850ac6ed0e2",
+      "path": "src/cuga/backend/cuga_graph/nodes/cuga_lite/prompts/mcp_prompt.jinja2",
+      "sha256": "5453cfa8317c0c31a61ca5060dde9c9431c1557e764f3dccbac9251aded4c5f4",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/3d82061e7cc89f5755a40cde91ef6850ac6ed0e2/src/cuga/backend/cuga_graph/nodes/cuga_lite/prompts/mcp_prompt.jinja2",
+      "url": "https://github.com/cuga-project/cuga-agent/blob/3d82061e7cc89f5755a40cde91ef6850ac6ed0e2/src/cuga/backend/cuga_graph/nodes/cuga_lite/prompts/mcp_prompt.jinja2"
+    }
+  ]
+}

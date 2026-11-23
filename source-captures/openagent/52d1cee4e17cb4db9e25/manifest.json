@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "openagent",
+  "agent": "openagent",
+  "repository": "the-open-agent/openagent",
+  "snapshot": "52d1cee4e17cb4db9e25",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:31.061635+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "f2338321f65ad7dd65d0749ad0bd95efa7c2c881",
+      "path": "model/util.go",
+      "sha256": "8067b46dc215d64717edefd870704be01ba1975f1baa6afa3ef9ba21ad14b1ba",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/f2338321f65ad7dd65d0749ad0bd95efa7c2c881/model/util.go",
+      "url": "https://github.com/the-open-agent/openagent/blob/f2338321f65ad7dd65d0749ad0bd95efa7c2c881/model/util.go"
+    },
+    {
+      "commit": "f2338321f65ad7dd65d0749ad0bd95efa7c2c881",
+      "path": "tool/local_file.go",
+      "sha256": "d52186d045b949685b8719fc86203ae6ee09dd76754f97351cc3ff609260aac2",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/f2338321f65ad7dd65d0749ad0bd95efa7c2c881/tool/local_file.go",
+      "url": "https://github.com/the-open-agent/openagent/blob/f2338321f65ad7dd65d0749ad0bd95efa7c2c881/tool/local_file.go"
+    },
+    {
+      "commit": "f2338321f65ad7dd65d0749ad0bd95efa7c2c881",
+      "path": "tool/shell.go",
+      "sha256": "148f71aec3e40dc0b334da9efaadef9de0e0d6912adf7d99f46ba1d136c1670e",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/f2338321f65ad7dd65d0749ad0bd95efa7c2c881/tool/shell.go",
+      "url": "https://github.com/the-open-agent/openagent/blob/f2338321f65ad7dd65d0749ad0bd95efa7c2c881/tool/shell.go"
+    }
+  ]
+}

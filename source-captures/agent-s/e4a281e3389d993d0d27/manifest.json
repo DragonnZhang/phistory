@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "agent-s",
+  "agent": "Agent-S",
+  "repository": "simular-ai/Agent-S",
+  "snapshot": "e4a281e3389d993d0d27",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:30.691253+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "bcdf1d6c8f1cbe3f1c4004e83fad6020651db925",
+      "path": "agent_s4/README.md",
+      "sha256": "ef8ef5c83b7b30d8e0cf9d8e734d1916faf977a1cb998ebcdf9af63c1c253a01",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/bcdf1d6c8f1cbe3f1c4004e83fad6020651db925/agent_s4/README.md",
+      "url": "https://github.com/simular-ai/Agent-S/blob/bcdf1d6c8f1cbe3f1c4004e83fad6020651db925/agent_s4/README.md"
+    },
+    {
+      "commit": "bcdf1d6c8f1cbe3f1c4004e83fad6020651db925",
+      "path": "gui_agents/s3/README.md",
+      "sha256": "600865b1da2a49ee032cc987bfccd182ea6a2a0f73f156872c5a487c04974bf3",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/bcdf1d6c8f1cbe3f1c4004e83fad6020651db925/gui_agents/s3/README.md",
+      "url": "https://github.com/simular-ai/Agent-S/blob/bcdf1d6c8f1cbe3f1c4004e83fad6020651db925/gui_agents/s3/README.md"
+    },
+    {
+      "commit": "bcdf1d6c8f1cbe3f1c4004e83fad6020651db925",
+      "path": "gui_agents/s3/memory/procedural_memory.py",
+      "sha256": "d4cc3aca3ffb390636706e22ff651e02e5db178e06d3e6f21327bd43f6f58575",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/bcdf1d6c8f1cbe3f1c4004e83fad6020651db925/gui_agents/s3/memory/procedural_memory.py",
+      "url": "https://github.com/simular-ai/Agent-S/blob/bcdf1d6c8f1cbe3f1c4004e83fad6020651db925/gui_agents/s3/memory/procedural_memory.py"
+    }
+  ]
+}

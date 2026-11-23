@@ -1,0 +1,8023 @@
+# Orkas — Toolset source
+
+Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.
+
+Source tool declarations and registration code; enabled runtime tool schemas are not inferred.
+
+## src/main/model/core-agent/local-tools.ts
+
+Source: https://github.com/Orkas-AI/Orkas/blob/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/local-tools.ts
+
+SHA-256: `52b1fed570bd1ff3f1eddfc56d5f0f3854d53603d1e0a8dd7cac3f845f240013`
+
+```
+import { defaultNumericRange } from '../../../../bin/tool-input-compat.cjs';
+/**
+ * Local-machine tool wrappers injected into every AgentRunner built by
+ * this app.
+ *
+ * Local-machine tools:
+ *   - `bash`          — overrides core-agent's builtin (last-write-wins in
+ *                       AgentRunner's tool map). Same schema; tighter
+ *                       English description; permission-gated.
+ *   - `write_file`    — same pattern as bash. On success, invokes
+ *                       `onFileWritten(absPath)` so the caller (chats.ts)
+ *                       can accumulate a produced-files list to attach to
+ *                       the assistant message. Conflict-uniquifies the
+ *                       basename (`-2 / -3 / ...`) when the target path
+ *                       already exists AND the caller's `hasProducedPath`
+ *                       does not claim it (i.e. it's not our own prior
+ *                       write being refined). The rename is surfaced via a
+ *                       `<file-renamed>` block in the tool result.
+ *   - `append_file`   — append one bounded UTF-8 chunk to an existing text
+ *                       file with an expected byte offset. Replayed chunks
+ *                       are idempotent; stale offsets fail without writing.
+ *   - `edit_file`     — in-place `old_string → new_string` replacement on
+ *                       an existing text file. Sandbox-checked
+ *                       (workspace + current attachment dir + extraRoots);
+ *                       does NOT uniquify (semantics are "modify
+ *                       existing"); non-text/extracted kinds rejected; on
+ *                       success fires `onFileWritten` so the UI can show
+ *                       the green chip. Companion to `write_file` for
+ *                       cheap targeted edits without a full overwrite.
+ *   - `create_pdf`      — built-in PDF channel (no pandoc/wkhtmltopdf
+ *                       dependency). Renders via util/md-to-pdf +
+ *                       Electron's webContents.printToPDF.
+ *                        dependency) for Markdown or hand-crafted HTML input.
+ *   - `interactive_cli`   — live stdin/stdout sessions for CLIs that need
+ *                       user interaction such as OAuth codes or setup prompts.
+ *
+ * Permission gate: every execute() re-reads the local access mode so a
+ * mid-conversation settings change takes effect on the next tool call without
+ * a rebuild.
+ *
+ * Note on naming: the two override tools MUST keep the exact core-agent
+ * names (`bash` / `write_file`) or the LLM will see both — broken.
+ *
+ * Note on `bash`: shell-side writes (`cat > foo.py`, `tee`, document
+ * generators, etc.) still bypass write_file's conflict protection. Bash
+ * auto-reports files created / modified under the current conversation
+ * workspace, exposed to scripts as `ORKAS_OUTPUT_DIR`.
+ */
+
+import { isUtf8 } from 'node:buffer';
+import * as crypto from 'node:crypto';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { outputPublicationReceipt } from '../../util/output-publication';
+import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+
+// Electron boots main/ through tsx/cjs. Keep #core-agent type-only here:
+// importing runtime values from its barrel eagerly require()s ESM-only pi-ai
+// and crashes startup with ERR_PACKAGE_PATH_NOT_EXPORTED. Runtime helpers
+// come from their leaf modules so the normal lazy ESM boundary stays intact.
+import type {
+  AgentTool,
+  ToolContext,
+  ToolResult,
+} from '#core-agent';
+import {
+  createApplyPatchTool as createCoreApplyPatchTool,
+  type ApplyPatchCommittedFile,
+} from '../../../core-agent/src/tools/apply-patch';
+import { managedCommandsEnabled } from '../../../core-agent/src/tools/command-sessions';
+import { parsePowerShellChain } from '../../../core-agent/src/sandbox/powershell-chain';
+import { scanPowerShell } from '../../../core-agent/src/sandbox/powershell-lexical';
+import { getProcessSessionTools } from '../../../core-agent/src/tools/process-session';
+import type { FileChangeObservation } from '../../../core-agent/src/tools/base';
+import {
+  BASH_PROGRESS_INTERVAL_MS,
+  bashTool as coreBashTool,
+  normalizeBashTimeoutMs,
+  renderCommandResult,
+  writeFileTool as coreWriteFileTool,
+} from '../../../core-agent/src/tools/builtin';
+import {
+  buildSandboxEnv,
+  decodeProcessOutput,
+  defaultShellForPlatform,
+  resolveShellTarget,
+  formatProcessStartFailure,
+  killProcessTree,
+} from '../../../core-agent/src/sandbox/executor';
+import {
+  ProcessOutputCapture,
+  discardStreamedToolOutput,
+  type CapturedProcessOutput,
+} from '../../../core-agent/src/sandbox/output-capture';
+import {
+  getLocalExecMode,
+  localAccessAllowsOutsideWorkspace,
+  localAccessRequiresSensitiveApproval,
+} from '../../features/permissions';
+import { classifyConfiguredBashCommand, locationOnlyRead, sensitivePathReasons, type LocalAccessRiskCategory } from '../../features/local_access_policy';
+import { classifyBashCommand, hasDestructiveBashRedirection } from './bash-risk';
+import { ordinaryBashReasons } from './ordinary-shell-operations';
+import { CreationSnapshot, TaskFileOwnership } from './task-file-ownership';
+import {
+  classifyExternalMutationScript,
+  referencedExecutableScripts,
+  type ExternalMutationFinding,
+} from './external-mutation-risk';
+import { requestBashDecision, type BashPermissionFact } from './bash-permissions';
+import { librarySaveFieldError } from '../../util/library-save-input';
+import { markdownToPdf, htmlToPdf } from '../../util/md-to-pdf';
+import { uniquifyPathForWrite, renderRenameSignal } from '../../util/uniquify-path';
+import { isPathAllowed, resolveSandboxEntry, resolveSandboxRoot, type PathAllowedOptions } from '../../util/path-sandbox';
+import { kindOf } from '../../features/file_indexer';
+import { getWorkspacePath } from '../../features/user_workspace';
+import * as projectFiles from '../../features/project_files';
+import {
+  agentPrivateSkillsDir,
+  globalSkillRoots,
+  userAgentsDir,
+  userMarketplaceAgentsDir,
+  userMarketplaceAgentSkillsDir,
+  userMarketplaceSkillsDir,
+  userSystemSkillsDir,
+  userSkillsDir,
+} from '../../paths';
+import { enabledPackageSkillRoots } from '../../features/packages';
+import { getGlobalSkillRootsEnabledForUser } from '../../features/config';
+import { chatAttachmentDirForConversation } from '../../util/project-layout';
+import * as chatArtifacts from '../../features/chat_artifacts';
+import { getActiveUserId } from '../../features/users';
+import { finalizeProducedArtifact, producedDocumentFooterText } from '../../features/produced_output_hooks';
+import { readDisabledSets } from '../../features/component_enabled';
+import {
+  renderInteractiveHtmlSmoke,
+  renderResponsiveHtmlPreview,
+  type HtmlPreviewViewport,
+} from '../../features/html_preview';
+import { prepareLosslessModelImage } from '../../features/image_assets';
+import {
+  cancelConfirmation as cancelDeleteConfirmation,
+  consumeGrantedConfirmation,
+  requestConfirmation as requestDeleteConfirmation,
+  waitForConfirmationVisible as waitForDeleteConfirmationVisible,
+} from './delete-file-confirm';
+import { acquireWithAbort, fileEditLock } from '../../util/locks';
+import { fileFailure, type FileFailureDiagnostic } from '../../../core-agent/src/tools/file-diagnostics';
+import { lookupSkillRuntimeRef } from './skill-runtime-ref';
+import { firstMatchOffsets, matchRecoveryContext } from '../../../core-agent/src/tools/match-context';
+import { checkEditFreshness, forgetRead, getReadState, readStampChanged, recordRead } from './read-tracker';
+import {
+  canonicalFileRevisionPath,
+  findAppendReplay,
+  issueFileRevision,
+  recordAppendReplay,
+  resolveFileRevision,
+} from './file-revision';
+import { createLogger } from '../../logger';
+import { logErrorRef, logPathRef, maskId } from '../../util/log-redact';
+import { t } from '../../i18n';
+import {
+  closeInteractiveCliSession,
+  readInteractiveCliSession,
+  sendInteractiveCliInput,
+  startInteractiveCliSession,
+} from './interactive-cli-sessions';
+import type { InteractiveCliSessionView } from './interactive-cli-sessions';
+import type { SkillRuntimeBinding } from './skill-registry';
+import {
+  DEEP_RESEARCH_EVIDENCE_ENV,
+  DEEP_RESEARCH_EVIDENCE_STATE_KEY,
+  DEEP_RESEARCH_SKILL_ID,
+} from './deep-research-evidence';
+
+const log = createLogger('local-tools');
+
+export interface ArtifactInteractionSmokeResult {
+  sdkByViewport?: Array<{ viewport: string; calls: Array<{ method: string; code: string }> }>;
+  ok: boolean;
+  blockers: string[];
+  /** Non-blocking embed findings worth telling the author about, e.g. content
+   *  taller than the chat frame that will scroll rather than fit. */
+  warnings?: string[];
+  controlsExercised?: number;
+  observableEffects?: number;
+}
+
+/** What a successful write did to the target path. Editing, appending to, or
+ *  patching a file the user already had is not the same as producing one:
+ *  only the tool knows which happened, and a deliverable post-processor
+ *  downstream must not rewrite the former. */
+export interface ProducedFileWriteInfo {
+  /** The path already existed before this write. */
+  preExisting?: boolean;
+  /** Generation billed to the configured service account. */
+  billedToOwnAccount?: boolean;
+}
+
+export interface LocalToolsOpts {
+  /** Trusted creation/editing binding; narrows the existing parameter before generation. */
+  lockedAppType?: 'local'|'web';
+  /** Host shell platform override for deterministic wrapper integration tests.
+   *  Production callers omit this and use `process.platform`. */
+  hostPlatform?: NodeJS.Platform;
+  /** Active uid. Used by `edit_file` to resolve workspace + attachment
+   *  sandbox roots; also reserved for future tools that need user-scoped
+   *  resolution. Optional so the catalog drift test can call
+   *  `createLocalTools({})` without runtime user state. */
+  userId?: string;
+  /** Current conversation id. Used by `edit_file` to add the current
+   *  conv's attachment dir to the sandbox. Without it, only the workspace
+   *  (+ extraRoots) is editable. Also the storage key for `create_artifact`
+   *  (artifacts live under `chat_artifacts/<cid>/`); the tool errors out
+   *  when it's missing. */
+  cid?: string;
+  /** Stable id for the current actor/model turn. Renderer uses this to group
+   *  only delete confirmations produced by that same turn. */
+  turnId?: string;
+  /** The actor id producing this turn (an agent's id, or `''` for the
+   *  group-chat commander / edit chats). Stamped into `create_artifact`'s
+   *  metadata so the renderer knows which actor to route an interaction
+   *  result back to. */
+  agentId?: string;
+  /** Display name for the bash risk-permission dialog. Falls back to
+   *  `agentId` when absent. */
+  agentName?: string;
+  /** Project id of the current conversation, when it belongs to one.
+   *  Threaded through from group_chat at runTurn so workspace resolution
+   *  picks up the project-scoped selection (per CLAUDE.md projects feature).
+   *  Empty / missing → default-scope workspace. */
+  projectId?: string;
+  /** Extra absolute directory roots `edit_file` should treat as in-scope
+   *  on top of workspace + attachment. Used by skill-edit / agent-edit
+   *  chats so the LLM can edit files inside the skill / agent dir. */
+  extraRoots?: readonly string[];
+  /** Extra roots that read tools may expose but local execution must never
+   *  mutate. This is a deny-only lane: it does not make paths readable or
+   *  writable for localTools, and it overrides all-files access modes. */
+  readOnlyExtraRoots?: readonly string[];
+  /** Mutable deny-only roots admitted after runner construction. File tools
+   * may read them; local write/delete/bash paths must never mutate them. */
+  runtimeReadOnlyRoots?: readonly string[];
+  /** Host-created, session-scoped working copies of persisted results. Bash
+   * may read files under these roots even in workspace-only mode; writes stay
+   * confined to the ordinary workspace and file tools gain no access. */
+  analysisInputRoots?: readonly string[];
+  /** Exact logical Skill namespace already advertised to this runner. When
+   * present, run-skill.cjs execution is confined to the matching bound root;
+   * standalone callers that omit it retain the CLI's legacy discovery mode. */
+  skillRuntimeBindings?: ReadonlyMap<string, SkillRuntimeBinding>;
+  /** Fires with absolute path after every successful write (write_file,
+   * append_file, edit_file, create_pdf). Lets chats.ts surface
+   * produced files to the UI. `info.preExisting` marks a write that only
+   * modified a file the user already had, so a caller that post-processes
+   * deliverables can leave the user's own files byte-identical. Producers
+   * that always create their output omit it. */
+  onFileWritten?: (absPath: string, info?: ProducedFileWriteInfo) => void | Promise<void>;
+  /** Filters and records the complete list declared through
+   * `publish_outputs`; returns only paths eligible for resource display. */
+  onOutputsPublished?: (absPaths: string[]) => string[] | Promise<string[]>;
+  /** Fires after a successful `create_artifact` call. The caller (group_chat
+   *  bus) collects these per turn and attaches `message.artifacts` to the
+   *  assistant record so the renderer embeds each one in the bubble. */
+  onArtifactCreated?: (a: { id: string; title: string; revision?: number }) => void;
+  /** Internal override for deterministic tests. Production uses the packaged
+   *  isolated-browser interaction smoke before exposing an artifact card. */
+  artifactInteractionSmoke?: (entryPath: string) => Promise<ArtifactInteractionSmokeResult>;
+  /** Predicate: returns true when the given absolute path was already
+   *  written by this caller in the current scope (typically: a Set
+   *  populated by `onFileWritten` this turn). When true, wrapped output
+   *  tools overwrite in place — the refinement pattern — and the shared bash
+   *  gate may delete that exact file without a generic destructive prompt.
+   *  When false / absent, an existing output target is treated as a foreign
+   *  collision and uniquify (`-2 / -3 / ...`) kicks in. `edit_file` ignores
+   *  it because its semantics is explicitly to modify an existing file. */
+  hasProducedPath?: (absPath: string) => boolean;
+}
+
+function resolveAbs(ctx: ToolContext, p: string): string {
+  return path.resolve(ctx.workingDir ?? '.', p);
+}
+
+function isMineFor(opts: LocalToolsOpts): (p: string) => boolean {
+  const fn = opts.hasProducedPath;
+  return (p) => {
+    if (fn?.(p)) return true;
+    return !!opts.extraRoots?.length && isPathAllowed(path.resolve(p), opts.extraRoots);
+  };
+}
+
+function errText(code: string, msg: string): string {
+  return `${code}: ${msg}`;
+}
+
+function permissionWaitProgress(ctx: ToolContext | undefined, operation: string): (elapsedMs: number) => void {
+  return (elapsedMs: number) => {
+    ctx?.emitProgress?.({
+      phase: 'permission',
+      message: `Waiting for user approval for ${operation}`,
+      data: {
+        heartbeat: true,
+        userAction: true,
+        elapsedMs,
+        timeoutMs: elapsedMs + 60_000,
+      },
+    });
+  };
+}
+
+function bashMsg(key: string, vars?: Record<string, string | number>): string {
+  return t(`bash.error.${key}`, vars);
+}
+
+function translateFixedBashError(result: ToolResult): ToolResult {
+  const content = result.content || '';
+  if (!content) return result;
+
+  const structured = /^<command-result status="([^"]+)" exit_code="([^"]+)" duration_ms="(\d+)"[^>]*>\n\[no command output\]\n<\/command-result>$/.exec(content);
+  if (structured?.[1] === 'timed_out') {
+    return { ...result, content: bashMsg('timeout', { ms: structured[3] }) };
+  }
+  if (structured?.[1] === 'failed' && structured[2] !== 'null') {
+    return { ...result, content: bashMsg('exit_code', { code: structured[2] }) };
+  }
+
+  let m = /^Command timed out after (\d+)ms$/.exec(content);
+  if (m) return { ...result, content: bashMsg('timeout', { ms: m[1] }) };
+
+  m = /^Exit code: (.+)$/.exec(content);
+  if (m) return { ...result, content: bashMsg('exit_code', { code: m[1] }) };
+
+  m = /^Failed to start background command: (.+)$/.exec(content);
+  if (m) return { ...result, content: bashMsg('background_start_failed', { error: m[1] }) };
+
+  m = /^Command blocked by sandbox policy: (.+)$/.exec(content);
+  if (m) return { ...result, content: bashMsg('blocked', { reason: m[1] }) };
+
+  return result;
+}
+
+const BASH_PRODUCED_SCAN_LIMIT = 5000;
+const BASH_PRODUCED_SKIP_DIRS = new Set([
+  '.cache',
+  '.git',
+  '.hg',
+  '.idea',
+  '.mypy_cache',
+  '.next',
+  '.parcel-cache',
+  '.pytest_cache',
+  '.ruff_cache',
+  '.svn',
+  '.turbo',
+  '.venv',
+  '.vs',
+  '.vscode',
+  '__pycache__',
+  'node_modules',
+  'venv',
+]);
+const BASH_PRODUCED_SKIP_FILES = new Set([
+  '.DS_Store',
+  '.orkas-output-manifest',
+]);
+const BASH_OUTPUT_MANIFEST_NAME = '.orkas-output-manifest';
+const BASH_OUTPUT_MANIFEST_MAX_BYTES = 256 * 1024;
+const BASH_OUTPUT_MANIFEST_MAX_FILES = 500;
+const BASH_SNAPSHOT_FILE_MAX_BYTES = 512 * 1024;
+const BASH_SNAPSHOT_TOTAL_MAX_BYTES = 8 * 1024 * 1024;
+
+type BashFileSnapshotEntry = {
+  mtimeMs: number;
+  size: number;
+  hash?: string;
+  content?: string;
+  binary: boolean;
+};
+type BashFileSnapshot = Map<string, BashFileSnapshotEntry>;
+const creationSnapshots = new WeakMap<BashFileSnapshot, CreationSnapshot>();
+const taskFileOwnership = new WeakMap<LocalToolsOpts, TaskFileOwnership>();
+
+function shouldSkipBashProducedDir(name: string): boolean {
+  return BASH_PRODUCED_SKIP_DIRS.has(name);
+}
+
+function shouldSkipBashProducedFile(name: string): boolean {
+  return BASH_PRODUCED_SKIP_FILES.has(name) || name.startsWith(`${BASH_OUTPUT_MANIFEST_NAME}-`);
+}
+
+function collectBashFileSnapshot(root: string, owner?: symbol): BashFileSnapshot {
+  const out: BashFileSnapshot = new Map();
+  const creation = new CreationSnapshot(owner);
+  creationSnapshots.set(out, creation);
+  const absRoot = path.resolve(root);
+  let captureBytesRemaining = BASH_SNAPSHOT_TOTAL_MAX_BYTES;
+  const visit = (dir: string) => {
+    if (out.size >= BASH_PRODUCED_SCAN_LIMIT) return;
+    let entries: fs.Dirent[];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+    catch { return; }
+    creation.directory(dir, entries);
+    for (const ent of entries) {
+      if (out.size >= BASH_PRODUCED_SCAN_LIMIT) return;
+      const name = ent.name;
+      if (ent.isDirectory()) {
+        if (!shouldSkipBashProducedDir(name)) visit(path.join(dir, name));
+        continue;
+      }
+      if (!ent.isFile() || shouldSkipBashProducedFile(name)) continue;
+      const abs = path.join(dir, name);
+      let st: fs.Stats;
+      try { st = fs.lstatSync(abs); }
+      catch { continue; }
+      if (!st.isFile()) continue;
+      creation.node(abs, st);
+      let hash: string | undefined;
+      let content: string | undefined;
+      let binary = kindOf(abs) !== 'text';
+      if (
+        st.size <= BASH_SNAPSHOT_FILE_MAX_BYTES
+        && st.size <= captureBytesRemaining
+      ) {
+        try {
+          const body = fs.readFileSync(abs);
+          captureBytesRemaining -= body.length;
+          hash = `sha256:${crypto.createHash('sha256').update(body).digest('hex')}`;
+          binary = body.includes(0);
+          if (!binary) content = body.toString('utf8');
+        } catch { /* keep bounded metadata-only snapshot */ }
+      }
+      out.set(path.resolve(abs), {
+        mtimeMs: st.mtimeMs,
+        size: st.size,
+        ...(hash ? { hash } : {}),
+        ...(content !== undefined ? { content } : {}),
+        binary,
+      });
+    }
+  };
+  visit(absRoot);
+  return out;
+}
+
+function _bashShellWords(command: string): string[] {
+  const out: string[] = [];
+  let cur = '';
+  let quote: "'" | '"' | null = null;
+  let escaped = false;
+  const push = () => {
+    if (cur) out.push(cur);
+    cur = '';
+  };
+  for (let i = 0; i < command.length; i++) {
+    const ch = command[i];
+    if (escaped) {
+      cur += ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (quote) {
+      if (ch === quote) quote = null;
+      else cur += ch;
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '\n' || ch === '\r') {
+      push();
+      out.push(';');
+      continue;
+    }
+    if (/\s/.test(ch)) {
+      push();
+      continue;
+    }
+    if (ch === '&' || ch === '|' || ch === ';') {
+      push();
+      if ((ch === '&' || ch === '|') && command[i + 1] === ch) {
+        out.push(ch + ch);
+        i += 1;
+      } else {
+        out.push(ch);
+      }
+      continue;
+    }
+    cur += ch;
+  }
+  push();
+  return out;
+}
+
+function _isShellBoundaryToken(token: string): boolean {
+  return token === '&&' || token === '||' || token === ';' || token === '|';
+}
+
+function _cloneOptionConsumesValue(token: string): boolean {
+  return [
+    '-b', '--branch',
+    '-c', '--config',
+    '-j', '--jobs',
+    '-o', '--origin',
+    '--depth',
+    '--reference',
+    '--reference-if-able',
+    '--separate-git-dir',
+    '--shallow-exclude',
+    '--shallow-since',
+    '--template',
+  ].includes(token);
+}
+
+function _cloneOperands(tokens: string[], start: number): string[] {
+  const operands: string[] = [];
+  for (let i = start; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (_isShellBoundaryToken(token) || token === '--') break;
+    if (token.startsWith('-')) {
+      if (!token.includes('=') && _cloneOptionConsumesValue(token)) i += 1;
+      continue;
+    }
+    operands.push(token);
+    if (operands.length >= 2) break;
+  }
+  return operands;
+}
+
+function _repoDefaultDir(repo: string): string {
+  const raw = String(repo || '').replace(/[?#].*$/, '').replace(/\/+$/, '');
+  const tail = raw.split(/[/:]/).filter(Boolean).pop() || '';
+  return tail.replace(/\.git$/i, '') || 'repo';
+}
+
+function _sameOrInside(parent: string, candidate: string): boolean {
+  const rel = path.relative(path.resolve(parent), path.resolve(candidate));
+  return rel === '' || (!!rel && !rel.startsWith('..') && !path.isAbsolute(rel));
+}
+
+function _uniqueResolvedRoots(input: readonly string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const root of input) {
+    if (!root) continue;
+    const abs = path.resolve(root);
+    if (seen.has(abs)) continue;
+    seen.add(abs);
+    out.push(abs);
+  }
+  return out;
+}
+
+/** Agent/skill package roots. The structured agent/skill edit flow is the only
+ *  sanctioned mutation channel for these packages, so they stay protected even
+ *  when an unusually broad workspace contains the Orkas data directory. The
+ *  same list also decides which supplied roots {@link retainedReadOnlyRoots}
+ *  must retain. */
+function resourceProtectedRoots(opts: LocalToolsOpts): string[] {
+  if (!opts.userId) return [];
+  return _uniqueResolvedRoots([
+    userMarketplaceAgentsDir(opts.userId),
+    userMarketplaceSkillsDir(opts.userId),
+    userSystemSkillsDir(opts.userId),
+    userAgentsDir(opts.userId),
+    userSkillsDir(opts.userId),
+  ]);
+}
+
+/** Keep a caller-supplied read-only root only when it cannot revoke writes the
+ *  workspace sandbox already grants.
+ *
+ *  `readOnlyExtraRoots` / `runtimeReadOnlyRoots` exist to widen READ access
+ *  beyond {@link allowedRootsFor} — agent/skill specs, referenced attachments,
+ *  and files produced by another conversation all live outside the workspace.
+ *  Inside the workspace that grant is redundant (the workspace is already
+ *  readable), but the same list is also the write blocklist, so admitting a
+ *  workspace-overlapping root silently turns the agent's own workspace
+ *  read-only. Group chat derives a reference root from `path.dirname()` of each
+ *  referenced file, so referencing one file stored at the workspace root used to
+ *  lock the whole workspace — every write tool and any bash command naming that
+ *  path — for the rest of the run. Package roots are exempt so an unusual
+ *  workspace selection cannot unlock them. */
+function retainedReadOnlyRoots(opts: LocalToolsOpts, supplied: readonly string[]): string[] {
+  const candidates = _uniqueResolvedRoots(supplied);
+  if (!candidates.length) return [];
+  const writable = _uniqueResolvedRoots(workspaceScopedRootsFor(opts));
+  if (!writable.length) return candidates;
+  const packages = resourceProtectedRoots(opts);
+  return candidates.filter((root) => (
+    packages.some((pkg) => _sameOrInside(pkg, root))
+    || !writable.some((allowed) => _sameOrInside(root, allowed) || _sameOrInside(allowed, root))
+  ));
+}
+
+function protectedWriteRootsFor(opts: LocalToolsOpts): string[] {
+  const roots: string[] = [];
+  if (opts.userId) {
+    roots.push(...resourceProtectedRoots(opts));
+  }
+  const supplied: string[] = [];
+  if (opts.readOnlyExtraRoots?.length) supplied.push(...opts.readOnlyExtraRoots);
+  if (opts.runtimeReadOnlyRoots?.length) supplied.push(...opts.runtimeReadOnlyRoots);
+  roots.push(...retainedReadOnlyRoots(opts, supplied));
+  return _uniqueResolvedRoots(roots);
+}
+
+function protectedRootForPath(opts: LocalToolsOpts, abs: string): string | null {
+  const candidate = path.resolve(abs);
+  for (const root of protectedWriteRootsFor(opts)) {
+    if (_sameOrInside(root, candidate)) return root;
+  }
+  return null;
+}
+
+function protectedRootMentionedByCommand(opts: LocalToolsOpts, command: string): string | null {
+  if (!command) return null;
+  const normalized = command.replace(/\\([\\ "'$`])/g, '$1').replace(/\\/g, '/');
+  for (const root of protectedWriteRootsFor(opts)) {
+    const resolved = path.resolve(root).replace(/\\/g, '/');
+    if (normalized.includes(resolved)) return root;
+  }
+  return null;
+}
+
+function protectedWriteError(abs: string, root: string): string {
+  return errText(
+    'E_PROTECTED_PATH_READ_ONLY',
+    `path is inside a protected read-only root and cannot be modified by local tools: ${abs} (root: ${root}).`,
+  );
+}
+
+function _addDownloadDir(out: string[], root: string, target: string): void {
+  if (!target || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(target)) return;
+  const abs = path.resolve(root, target);
+  if (_sameOrInside(root, abs)) out.push(abs);
+}
+
+function _addDownloadFile(out: Set<string>, root: string, target: string): void {
+  if (!target || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(target)) return;
+  const abs = path.resolve(root, target);
+  if (_sameOrInside(root, abs)) out.add(abs);
+}
+
+function _downloadNameFromUrl(raw: string): string {
+  try {
+    const u = new URL(raw);
+    const tail = u.pathname.split('/').filter(Boolean).pop() || '';
+    return tail || 'index.html';
+  } catch {
+    const clean = String(raw || '').replace(/[?#].*$/, '').replace(/\/+$/, '');
+    return clean.split('/').filter(Boolean).pop() || 'index.html';
+  }
+}
+
+function _buildExternalDownloadSkipper(command: string, root: string): (absPath: string) => boolean {
+  const tokens = _bashShellWords(command);
+  const skipDirs: string[] = [];
+  const skipFiles = new Set<string>();
+
+  for (let i = 0; i < tokens.length; i++) {
+    const a = tokens[i];
+    const b = tokens[i + 1];
+    const c = tokens[i + 2];
+    if (a === 'git' && b === 'clone') {
+      const operands = _cloneOperands(tokens, i + 2);
+      if (operands[0]) _addDownloadDir(skipDirs, root, operands[1] || _repoDefaultDir(operands[0]));
+    } else if (a === 'gh' && b === 'repo' && c === 'clone') {
+      const operands = _cloneOperands(tokens, i + 3);
+      if (operands[0]) _addDownloadDir(skipDirs, root, operands[1] || _repoDefaultDir(operands[0]));
+    } else if (a === 'curl') {
+      let output = '';
+      let remoteName = false;
+      let url = '';
+      for (let j = i + 1; j < tokens.length && !_isShellBoundaryToken(tokens[j]); j++) {
+        const token = tokens[j];
+        if (token === '-o' || token === '--output') output = tokens[++j] || '';
+        else if (token.startsWith('--output=')) output = token.slice('--output='.length);
+        else if (token === '-O' || token === '--remote-name') remoteName = true;
+        else if (/^https?:\/\//i.test(token)) url = token;
+      }
+      if (output) _addDownloadFile(skipFiles, root, output);
+      else if (remoteName && url) _addDownloadFile(skipFiles, root, _downloadNameFromUrl(url));
+    } else if (a === 'wget') {
+      let output = '';
+      let url = '';
+      for (let j = i + 1; j < tokens.length && !_isShellBoundaryToken(tokens[j]); j++) {
+        const token = tokens[j];
+        if (token === '-O' || token === '--output-document') output = tokens[++j] || '';
+        else if (token.startsWith('--output-document=')) output = token.slice('--output-document='.length);
+        else if (/^https?:\/\//i.test(token)) url = token;
+      }
+      if (output) _addDownloadFile(skipFiles, root, output);
+      else if (url) _addDownloadFile(skipFiles, root, _downloadNameFromUrl(url));
+    }
+  }
+
+  return (absPath: string) => {
+    const abs = path.resolve(absPath);
+    if (skipFiles.has(abs)) return true;
+    return skipDirs.some((dir) => _sameOrInside(dir, abs));
+  };
+}
+
+async function emitBashProducedFiles(
+  opts: LocalToolsOpts,
+  before: BashFileSnapshot,
+  root: string,
+  command: string,
+  manifestedPaths: readonly string[] = [],
+): Promise<FileChangeObservation[]> {
+  const after = collectBashFileSnapshot(root, taskFileOwnership.get(opts)?.token);
+  const beforeCreation = creationSnapshots.get(before);
+  const afterCreation = creationSnapshots.get(after);
+  if (beforeCreation && afterCreation && beforeCreation.owner === afterCreation.owner) {
+    taskFileOwnership.get(opts)?.observe(beforeCreation, afterCreation);
+  }
+  const isExternalDownload = _buildExternalDownloadSkipper(command, root);
+  const discovered = new Set<string>(manifestedPaths);
+  for (const [abs, next] of after) {
+    const prev = before.get(abs);
+    const capturedChanged = !!prev?.hash && !!next.hash && prev.hash !== next.hash;
+    if (
+      prev
+      && prev.mtimeMs === next.mtimeMs
+      && prev.size === next.size
+      && !capturedChanged
+    ) continue;
+    if (isExternalDownload(abs)) continue;
+    discovered.add(abs);
+  }
+  if (opts.onFileWritten) {
+    for (const abs of discovered) {
+      // The pre-command snapshot already answers "was this the user's file?":
+      // a path present in `before` was only modified by the command, not
+      // produced by it.
+      try { await opts.onFileWritten(abs, { preExisting: before.has(abs) }); }
+      catch (err) { log.warn('onFileWritten callback failed', { path: logPathRef(abs), error: logErrorRef(err) }); }
+    }
+  }
+  const changes: FileChangeObservation[] = [];
+  for (const abs of discovered) {
+    const prev = before.get(abs);
+    const next = after.get(abs);
+    if (!next || isExternalDownload(abs)) continue;
+    changes.push({
+      operation: prev ? 'update' : 'create',
+      sourcePath: abs,
+      beforeExists: !!prev,
+      afterExists: true,
+      ...(prev ? { beforeBytes: prev.size } : {}),
+      afterBytes: next.size,
+      ...(prev?.hash ? { beforeHash: prev.hash } : {}),
+      ...(next.hash ? { afterHash: next.hash } : {}),
+      ...(prev?.content !== undefined ? { beforeContent: prev.content } : {}),
+      ...(next.content !== undefined ? { afterContent: next.content } : {}),
+      binary: !!prev?.binary || next.binary,
+      coverage: (!prev || !!prev.hash) && !!next.hash ? 'exact' : 'partial',
+    });
+  }
+  for (const [abs, prev] of before) {
+    if (after.has(abs) || isExternalDownload(abs)) continue;
+    changes.push({
+      operation: 'delete',
+      sourcePath: abs,
+      beforeExists: true,
+      afterExists: false,
+      beforeBytes: prev.size,
+      ...(prev.hash ? { beforeHash: prev.hash } : {}),
+      ...(prev.content !== undefined ? { beforeContent: prev.content } : {}),
+      binary: prev.binary,
+      coverage: prev.hash ? 'exact' : 'partial',
+    });
+  }
+  return changes;
+}
+
+function readBashOutputManifest(manifestPath: string, root: string): string[] {
+  let st: fs.Stats;
+  try { st = fs.statSync(manifestPath); }
+  catch { return []; }
+  if (!st.isFile() || st.size <= 0 || st.size > BASH_OUTPUT_MANIFEST_MAX_BYTES) return [];
+
+  let body = '';
+  try { body = fs.readFileSync(manifestPath, 'utf8'); }
+  catch { return []; }
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const rawLine of body.split(/\r?\n/)) {
+    if (out.length >= BASH_OUTPUT_MANIFEST_MAX_FILES) break;
+    let declared = rawLine.trim();
+    if (!declared) continue;
+    if (declared.startsWith('"')) {
+      try {
+        const parsed = JSON.parse(declared);
+        if (typeof parsed === 'string') declared = parsed;
+      } catch { continue; }
+    }
+    const abs = path.isAbsolute(declared) ? path.normalize(declared) : path.resolve(root, declared);
+    if (!_sameOrInside(root, abs) || seen.has(abs)) continue;
+    try {
+      const fileStat = fs.lstatSync(abs);
+      if (!fileStat.isFile() || fileStat.isSymbolicLink()) continue;
+    } catch { continue; }
+    seen.add(abs);
+    out.push(abs);
+  }
+  return out;
+}
+
+function withBashOutputEnv(ctx: ToolContext, outputDir: string, manifestPath: string): () => void {
+  const original = ctx.state.sandboxEnv as Record<string, string> | undefined;
+  ctx.state.sandboxEnv = {
+    ...(original ?? {}),
+    ORKAS_OUTPUT_DIR: outputDir,
+    ORKAS_OUTPUT_MANIFEST: manifestPath,
+  };
+  return () => {
+    if (original) ctx.state.sandboxEnv = original;
+    else delete ctx.state.sandboxEnv;
+  };
+}
+
+function withBashWritableRoots(ctx: ToolContext, roots: string[]): () => void {
+  const original = ctx.state.sandboxAllowedDirs;
+  ctx.state.sandboxAllowedDirs = roots;
+  return () => {
+    if (original !== undefined) ctx.state.sandboxAllowedDirs = original;
+    else delete ctx.state.sandboxAllowedDirs;
+  };
+}
+
+type OrkasCliInvocation = {
+  script: 'run-skill.cjs' | 'orkas-pkg.cjs';
+  nodePath: string;
+  scriptPath: string;
+  args: string[];
+  stdin?: string;
+};
+
+const ORKAS_DIRECT_CLI_SCRIPTS = new Set(['run-skill.cjs', 'orkas-pkg.cjs']);
+const ORKAS_DIRECT_OUTPUT_LIMIT = 1024 * 1024;
+
+function splitTrailingHeredoc(command: string): { command: string; stdin: string } | null {
+  const open = /<<-?\s*['"]?([A-Za-z_][A-Za-z0-9_]*)['"]?\s*\r?\n/.exec(command);
+  if (!open) return null;
+  const marker = open[1];
+  const bodyAndEnd = command.slice(open.index + open[0].length);
+  const endRe = new RegExp(`\\r?\\n${marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[ \\t]*(?:\\r?\\n)?$`);
+  const end = endRe.exec(bodyAndEnd);
+  if (!end) return null;
+  return {
+    command: command.slice(0, open.index).trimEnd(),
+    stdin: bodyAndEnd.slice(0, end.index),
+  };
+}
+
+function hasUnquotedShellControlSyntax(input: string): boolean {
+  let quote: "'" | '"' | null = null;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (quote === "'") {
+      if (ch === "'") quote = null;
+      continue;
+    }
+    if (quote === '"') {
+      if (ch === '"') {
+        quote = null;
+        continue;
+      }
+      if (ch === '\\' && i + 1 < input.length) i++;
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      quote = ch;
+      continue;
+    }
+    if (ch === '\\' && i + 1 < input.length) {
+      i++;
+      continue;
+    }
+    if (ch === '\n' || ch === '\r' || ch === ';' || ch === '|' || ch === '&' || ch === '<' || ch === '>') {
+      return true;
+    }
+  }
+  return false;
+}
+
+function shellWords(input: string): string[] | null {
+  const words: string[] = [];
+  let cur = '';
+  let quote: "'" | '"' | null = null;
+  let hasCur = false;
+  const push = () => {
+    if (!hasCur) return;
+    words.push(cur);
+    cur = '';
+    hasCur = false;
+  };
+
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (quote === "'") {
+      if (ch === "'") quote = null;
+      else { cur += ch; hasCur = true; }
+      continue;
+    }
+    if (quote === '"') {
+      if (ch === '"') { quote = null; continue; }
+      if (ch === '\\' && i + 1 < input.length) {
+        cur += input[++i];
+      } else {
+        cur += ch;
+      }
+      hasCur = true;
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      quote = ch;
+      hasCur = true;
+      continue;
+    }
+    if (ch === '\\' && i + 1 < input.length) {
+      cur += input[++i];
+      hasCur = true;
+      continue;
+    }
+    if (/\s/.test(ch)) {
+      push();
+      continue;
+    }
+    cur += ch;
+    hasCur = true;
+  }
+  if (quote) return null;
+  push();
+  return words;
+}
+
+function shellEnvValue(env: Record<string, string>, name: string): string | undefined {
+  if (Object.prototype.hasOwnProperty.call(env, name)) return env[name];
+  const key = Object.keys(env).find((candidate) => candidate.toLowerCase() === name.toLowerCase());
+  return key === undefined ? undefined : env[key];
+}
+
+function replaceKnownShellEnvTokens(
+  raw: string,
+  env: Record<string, string>,
+  onUnknown?: (token: string) => void,
+): string {
+  const replace = (token: string, name: string): string => {
+    const value = shellEnvValue(env, name);
+    if (value !== undefined) return value;
+    onUnknown?.(token);
+    return token;
+  };
+  return raw
+    // PowerShell environment-variable forms must run before the generic
+    // `$NAME` replacement, otherwise `$env:NAME` is misread as an unknown
+    // variable named `env` and the path guard rejects a documented command.
+    .replace(/\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}/gi, (token, name) => replace(token, name))
+    .replace(/\$env:([A-Za-z_][A-Za-z0-9_]*)/gi, (token, name) => replace(token, name))
+    .replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (token, name) => replace(token, name))
+    .replace(/\$([A-Za-z_][A-Za-z0-9_]*)/g, (token, name) => replace(token, name))
+    // Explicit `cmd /c` commands use `%NAME%` even though PowerShell is the
+    // default Windows host shell.
+    .replace(/%([A-Za-z_][A-Za-z0-9_]*)%/g, (token, name) => replace(token, name));
+}
+
+function expandOrkasEnvToken(token: string, env: Record<string, string>): string {
+  const known = {
+    ORKAS_NODE: shellEnvValue(env, 'ORKAS_NODE') || '',
+    ORKAS_PC_DIR: shellEnvValue(env, 'ORKAS_PC_DIR') || '',
+  };
+  return replaceKnownShellEnvTokens(token, known);
+}
+
+function sameResolvedPath(a: string, b: string): boolean {
+  const ra = path.resolve(a);
+  const rb = path.resolve(b);
+  return process.platform === 'win32'
+    ? ra.toLowerCase() === rb.toLowerCase()
+    : ra === rb;
+}
+
+function parseOrkasCliInvocation(
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+): OrkasCliInvocation | null {
+  if (input.run_in_background === true) return null;
+  const rawCommand = String(input.command ?? '');
+  const heredoc = splitTrailingHeredoc(rawCommand);
+  // A PowerShell executable path needs the call operator (`&`). Standard
+  // Orkas CLI invocations are executed directly by the host, so accept that
+  // prefix and keep the same cross-platform fast/safe path.
+  const command = (heredoc?.command ?? rawCommand).replace(/^\s*&\s+/, '');
+  if (hasUnquotedShellControlSyntax(command)) return null;
+  const words = shellWords(command);
+  if (!words || words.length < 2) return null;
+
+  const sandboxEnv = (ctx.state.sandboxEnv ?? {}) as Record<string, string>;
+  const nodePath = sandboxEnv.ORKAS_NODE;
+  const pcDir = sandboxEnv.ORKAS_PC_DIR;
+  if (!nodePath || !pcDir) return null;
+
+  const resolvedNode = expandOrkasEnvToken(words[0], sandboxEnv);
+  if (!sameResolvedPath(resolvedNode, nodePath)) return null;
+
+  const scriptPath = expandOrkasEnvToken(words[1], sandboxEnv);
+  const script = path.basename(scriptPath) as OrkasCliInvocation['script'];
+  if (!ORKAS_DIRECT_CLI_SCRIPTS.has(script)) return null;
+  if (!sameResolvedPath(scriptPath, path.join(pcDir, 'bin', script))) return null;
+
+  // Direct spawn cannot reproduce shell expansion or its quoting rules in
+  // script arguments. Keep those commands on the existing guarded shell path.
+  if (words.slice(2).some((word) => /[$`]/.test(word))) return null;
+
+  return {
+    script,
+    nodePath,
+    scriptPath: path.resolve(scriptPath),
+    args: words.slice(2),
+    ...(heredoc ? { stdin: heredoc.stdin } : {}),
+  };
+}
+
+/** Minimum interval between forwarded script progress events; the 60s
+ *  heartbeat still carries the latest one in between. */
+const SCRIPT_PROGRESS_FORWARD_MIN_MS = 5_000;
+
+/**
+ * Incremental scanner for the skill-script progress protocol: scripts (video
+ * skills et al) write `{"type":"progress",...}` JSONL to stderr. feed() returns
+ * the parsed payloads of any complete progress lines in the chunk; other
+ * stderr content is ignored.
+ */
+export function createScriptProgressScanner(): { feed(chunk: string): Array<Record<string, unknown>> } {
+  let buf = '';
+  return {
+    feed(chunk: string) {
+      buf += chunk;
+      const events: Array<Record<string, unknown>> = [];
+      let nl: number;
+      while ((nl = buf.indexOf('\n')) !== -1) {
+        const line = buf.slice(0, nl).trim();
+        buf = buf.slice(nl + 1);
+        if (!line.startsWith('{') || !line.includes('"progress"')) continue;
+        try {
+          const parsed = JSON.parse(line) as Record<string, unknown>;
+          if (parsed && parsed.type === 'progress') events.push(parsed);
+        } catch { /* not a progress line */ }
+      }
+      // A stream that never emits a newline must not grow the buffer forever.
+      if (buf.length > 64 * 1024) buf = buf.slice(-8 * 1024);
+      return events;
+    },
+  };
+}
+
+/** One-line human summary of a script progress payload for the tool progress UI. */
+export function formatScriptProgress(p: Record<string, unknown>): string {
+  const s = (v: unknown) => (typeof v === 'string' && v ? v : '');
+  if (s(p.message)) return s(p.message);
+  const parts = [s(p.source), s(p.op), s(p.phase), s(p.status)].filter((v, i, a) => v && a.indexOf(v) === i);
+  const pct = typeof p.percent === 'number' && Number.isFinite(p.percent) ? ` ${Math.round(p.percent as number)}%` : '';
+  const t = typeof p.out_time_sec === 'number' && Number.isFinite(p.out_time_sec) ? ` t=${Math.round(p.out_time_sec as number)}s` : '';
+  const elapsed = typeof p.elapsed_sec === 'number' && Number.isFinite(p.elapsed_sec) ? ` (${Math.round(p.elapsed_sec as number)}s elapsed)` : '';
+  return parts.length ? `${parts.join(' ')}${pct}${t}${elapsed}` : 'script progress';
+}
+
+function withDirectCommandObservation(result: ToolResult, input: {
+  status: 'succeeded' | 'failed' | 'timed_out' | 'aborted' | 'output_limit' | 'start_failed';
+  exitCode: number | null;
+  durationMs: number;
+  timedOut: boolean;
+  outputLimitExceeded: boolean;
+  stdout: string;
+  stderr: string;
+  stdoutBytes: number;
+  stderrBytes: number;
+  stdoutTruncated: boolean;
+  stderrTruncated: boolean;
+}): ToolResult {
+  return {
+    ...result,
+    observations: {
+      ...(result.observations ?? {}),
+      execution: {
+        status: input.status,
+        exitCode: input.exitCode,
+        durationMs: input.durationMs,
+        timedOut: input.timedOut,
+        outputLimitExceeded: input.outputLimitExceeded,
+        stdout: { bytes: input.stdoutBytes, truncated: input.stdoutTruncated },
+        stderr: { bytes: input.stderrBytes, truncated: input.stderrTruncated },
+      },
+    },
+  };
+}
+
+async function executeDirectOrkasCli(
+  invocation: OrkasCliInvocation,
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+  workingDir: string,
+): Promise<ToolResult> {
+  const timeoutMs = normalizeBashTimeoutMs(input.timeoutMs);
+  const sandboxEnv = (ctx.state.sandboxEnv ?? {}) as Record<string, string>;
+  const env = buildSandboxEnv(sandboxEnv);
+
+  return await new Promise<ToolResult>((resolve) => {
+    const spoolDir = typeof ctx.state.toolResultSpoolDir === 'string'
+      ? ctx.state.toolResultSpoolDir
+      : undefined;
+    const stdoutCapture = spoolDir
+      ? new ProcessOutputCapture({
+        spoolDir,
+        prefix: 'orkas-cli-stdout',
+        memoryBytes: ORKAS_DIRECT_OUTPUT_LIMIT,
+      })
+      : null;
+    const stderrCapture = spoolDir
+      ? new ProcessOutputCapture({
+        spoolDir,
+        prefix: 'orkas-cli-stderr',
+        memoryBytes: ORKAS_DIRECT_OUTPUT_LIMIT,
+      })
+      : null;
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
+    let totalBytes = 0;
+    let timedOut = false;
+    let aborted = false;
+    let outputLimitExceeded = false;
+    let truncatedKind: 'stdout' | 'stderr' | null = null;
+    let settled = false;
+    let killed = false;
+    const startedAt = Date.now();
+    let heartbeat: NodeJS.Timeout | null = null;
+    let settleTimer: NodeJS.Timeout | null = null;
+    let abortListener: (() => void) | null = null;
+
+    const startFailureResult = (error: unknown): ToolResult => {
+      const message = formatProcessStartFailure(error);
+      return withDirectCommandObservation(
+        { content: message, isError: true },
+        {
+          status: 'start_failed',
+          exitCode: null,
+          durationMs: Date.now() - startedAt,
+          timedOut: false,
+          outputLimitExceeded: false,
+          stdout: '',
+          stderr: message,
+          stdoutBytes: 0,
+          stderrBytes: Buffer.byteLength(message),
+          stdoutTruncated: false,
+          stderrTruncated: false,
+        },
+      );
+    };
+
+    let child: ChildProcessWithoutNullStreams;
+    try {
+      child = spawn(invocation.nodePath, [invocation.scriptPath, ...invocation.args], {
+        cwd: workingDir,
+        env,
+        detached: process.platform !== 'win32',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        windowsHide: true,
+      }) as ChildProcessWithoutNullStreams;
+    } catch (error) {
+      stdoutCapture?.discard();
+      stderrCapture?.discard();
+      resolve(startFailureResult(error));
+      return;
+    }
+
+    const finish = (result: ToolResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      if (heartbeat) clearInterval(heartbeat);
+      if (settleTimer) clearTimeout(settleTimer);
+      if (ctx.signal && abortListener) ctx.signal.removeEventListener('abort', abortListener);
+      resolve(result);
+    };
+
+    const finishFromChunks = (code: number | null) => {
+      if (settled) return;
+      let stdout: string;
+      let stderr: string;
+      let capturedStdout: CapturedProcessOutput | null = null;
+      let capturedStderr: CapturedProcessOutput | null = null;
+      if (stdoutCapture && stderrCapture) {
+        const decode = (bytes: Buffer) => decodeProcessOutput(bytes, process.platform, env);
+        capturedStdout = stdoutCapture.finish({
+          decode,
+          normalizeSpoolToUtf8: process.platform === 'win32',
+        });
+        capturedStderr = stderrCapture.finish({
+          decode,
+          normalizeSpoolToUtf8: process.platform === 'win32',
+        });
+        stdout = capturedStdout.text;
+        stderr = capturedStderr.text;
+      } else {
+        stdout = decodeProcessOutput(Buffer.concat(stdoutChunks), process.platform, env);
+        stderr = decodeProcessOutput(Buffer.concat(stderrChunks), process.platform, env);
+        if (outputLimitExceeded) {
+          if (truncatedKind === 'stdout') stdout += '\n... [output truncated by sandbox]';
+          else stderr += '\n... [output truncated by sandbox]';
+        }
+      }
+      const status = timedOut
+        ? 'timed_out' as const
+        : aborted
+          ? 'aborted' as const
+          : outputLimitExceeded
+            ? 'output_limit' as const
+            : code === 0
+              ? 'succeeded' as const
+              : 'failed' as const;
+      const metadata = {
+        status,
+        exitCode: code,
+        durationMs: Date.now() - startedAt,
+        timedOut,
+        outputLimitExceeded,
+        stdout,
+        stderr,
+        stdoutBytes: capturedStdout?.bytes ?? Buffer.byteLength(stdout),
+        stderrBytes: capturedStderr?.bytes ?? Buffer.byteLength(stderr),
+        stdoutTruncated: !!capturedStdout?.streamedOutput || truncatedKind === 'stdout',
+        stderrTruncated: !!capturedStderr?.streamedOutput || truncatedKind === 'stderr',
+      };
+      const discardCaptured = () => {
+        discardStreamedToolOutput(capturedStdout?.streamedOutput);
+        discardStreamedToolOutput(capturedStderr?.streamedOutput);
+      };
+      if (timedOut) {
+        discardCaptured();
+        finish(withDirectCommandObservation(
+          { content: bashMsg('timeout', { ms: timeoutMs }), isError: true },
+          metadata,
+        ));
+        return;
+      }
+      if (aborted) {
+        discardCaptured();
+        finish(withDirectCommandObservation(
+          { content: 'Command aborted', isError: true },
+          metadata,
+        ));
+        return;
+      }
+      if (outputLimitExceeded) {
+        const useStderr = truncatedKind === 'stderr';
+        const selected = useStderr ? capturedStderr : capturedStdout;
+        discardStreamedToolOutput(useStderr
+          ? capturedStdout?.streamedOutput
+          : capturedStderr?.streamedOutput);
+        finish(withDirectCommandObservation({
+          content: useStderr ? stderr : stdout,
+          ...(selected?.streamedOutput ? { streamedOutput: selected.streamedOutput } : {}),
+          isError: true,
+        }, metadata));
+        return;
+      }
+      if (code !== 0) {
+        const useStderr = (capturedStderr?.bytes ?? Buffer.byteLength(stderr)) > 0;
+        const selected = useStderr ? capturedStderr : capturedStdout;
+        discardStreamedToolOutput(useStderr
+          ? capturedStdout?.streamedOutput
+          : capturedStderr?.streamedOutput);
+        finish(withDirectCommandObservation({
+          content: (useStderr ? stderr : stdout) || bashMsg('exit_code', { code: code ?? 'null' }),
+          ...(selected?.streamedOutput ? { streamedOutput: selected.streamedOutput } : {}),
+          isError: true,
+        }, metadata));
+        return;
+      }
+      discardStreamedToolOutput(capturedStderr?.streamedOutput);
+      finish(withDirectCommandObservation({
+        content: stdout || renderCommandResult(metadata, 'succeeded'),
+        ...(capturedStdout?.streamedOutput
+          ? { streamedOutput: capturedStdout.streamedOutput }
+          : {}),
+      }, metadata));
+    };
+
+    const killChild = () => {
+      if (killed) return;
+      killed = true;
+      killProcessTree(child, 'SIGTERM');
+      const killTimer = setTimeout(() => killProcessTree(child, 'SIGKILL'), 5000);
+      if (typeof killTimer.unref === 'function') killTimer.unref();
+      settleTimer = setTimeout(() => finishFromChunks(null), 6000);
+      if (typeof settleTimer.unref === 'function') settleTimer.unref();
+    };
+
+    const append = (kind: 'stdout' | 'stderr', data: Buffer) => {
+      if (outputLimitExceeded) return;
+      const capture = kind === 'stdout' ? stdoutCapture : stderrCapture;
+      if (capture) {
+        if (!capture.append(data)) {
+          outputLimitExceeded = true;
+          truncatedKind = kind;
+          killChild();
+        }
+        return;
+      }
+      totalBytes += data.length;
+      if (totalBytes > ORKAS_DIRECT_OUTPUT_LIMIT) {
+        outputLimitExceeded = true;
+        truncatedKind = kind;
+        const allowed = Math.max(0, data.length - (totalBytes - ORKAS_DIRECT_OUTPUT_LIMIT));
+        if (allowed > 0) {
+          (kind === 'stdout' ? stdoutChunks : stderrChunks).push(data.subarray(0, allowed));
+        }
+        killChild();
+        return;
+      }
+      (kind === 'stdout' ? stdoutChunks : stderrChunks).push(data);
+    };
+
+    child.stdout.on('data', (data: Buffer) => append('stdout', data));
+    const progressScanner = createScriptProgressScanner();
+    let lastScriptProgress: Record<string, unknown> | null = null;
+    let lastProgressForwardAt = 0;
+    child.stderr.on('data', (data: Buffer) => {
+      append('stderr', data);
+      if (!ctx.emitProgress) return;
+      for (const ev of progressScanner.feed(data.toString('utf8'))) {
+        lastScriptProgress = ev;
+        const now = Date.now();
+        if (now - lastProgressForwardAt < SCRIPT_PROGRESS_FORWARD_MIN_MS) continue;
+        lastProgressForwardAt = now;
+        ctx.emitProgress({
+          phase: 'running',
+          message: formatScriptProgress(ev),
+          data: { script_progress: ev },
+        });
+      }
+    });
+
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      killChild();
+    }, timeoutMs);
+    if (typeof timeout.unref === 'function') timeout.unref();
+
+    if (ctx.signal) {
+      abortListener = () => {
+        aborted = true;
+        killChild();
+      };
+      if (ctx.signal.aborted) abortListener();
+      else ctx.signal.addEventListener('abort', abortListener, { once: true });
+    }
+
+    if (ctx.emitProgress) {
+      heartbeat = setInterval(() => {
+        const elapsedMs = Date.now() - startedAt;
+        const scriptNote = lastScriptProgress ? `; last: ${formatScriptProgress(lastScriptProgress)}` : '';
+        ctx.emitProgress?.({
+          phase: 'running',
+          message: `Command still running (${formatBashDuration(elapsedMs)} elapsed; timeout ${formatBashDuration(timeoutMs)})${scriptNote}`,
+          data: {
+            elapsedMs,
+            timeoutMs,
+            heartbeat: true,
+            ...(lastScriptProgress ? { script_progress: lastScriptProgress } : {}),
+          },
+        });
+      }, BASH_PROGRESS_INTERVAL_MS);
+      if (typeof heartbeat.unref === 'function') heartbeat.unref();
+    }
+
+    child.on('error', (err) => {
+      stdoutCapture?.discard();
+      stderrCapture?.discard();
+      finish(startFailureResult(err));
+    });
+    child.on('close', (code) => {
+      finishFromChunks(code);
+    });
+
+    child.stdin.end(invocation.stdin ?? '');
+  });
+}
+
+function formatBashDuration(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) return `${ms}ms`;
+  if (ms >= 60_000) return `${Math.max(1, Math.round(ms / 60_000))}m`;
+  if (ms >= 1_000) return `${Math.max(1, Math.round(ms / 1_000))}s`;
+  return `${Math.round(ms)}ms`;
+}
+
+// Only active calls are retained; a yielded command releases at terminal delivery.
+const bashWorkingDirs = new Map<string, { active: number; removeWhenIdle: boolean }>();
+function retainBashWorkingDir(workingDir: string, removeWhenIdle: boolean): () => void {
+  const entry = bashWorkingDirs.get(workingDir) ?? { active: 0, removeWhenIdle: false };
+  entry.active++;
+  entry.removeWhenIdle ||= removeWhenIdle;
+  bashWorkingDirs.set(workingDir, entry);
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    if (--entry.active > 0) return;
+    bashWorkingDirs.delete(workingDir);
+    if (entry.removeWhenIdle) {
+      try { if (fs.readdirSync(workingDir).length === 0) fs.rmdirSync(workingDir); } catch { /* concurrent work */ }
+    }
+  };
+}
+
+async function executeCoreBashWithOutputTracking(
+  opts: LocalToolsOpts,
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+  workingDir: string,
+): Promise<ToolResult> {
+  // Per-call state is captured before yield; later calls cannot replace a
+  // running command's environment, manifest or terminal observer.
+  const managed = managedCommandsEnabled(ctx) && input.run_in_background !== true;
+  ctx = { ...ctx, state: { ...ctx.state, commandSessionEnabled: managed,
+    processSessionOwner: `${opts.userId ?? ''}:${opts.cid ?? ''}` } };
+  const outputDir = workingDir;
+  const command = String(input.command ?? '');
+  const skillRuntime = resolveRunSkillRuntimeBinding(opts, command);
+  if (skillRuntime.error) return { content: skillRuntime.error, isError: true, observations: { fileFailure: skillRuntime.diagnostic } };
+  const removeEmptyWorkingDirOnCompletion = !fs.existsSync(workingDir);
+  if (removeEmptyWorkingDirOnCompletion) {
+    try { fs.mkdirSync(workingDir, { recursive: true }); }
+    catch { /* let spawn produce the canonical error */ }
+  }
+  const manifestPath = path.join(outputDir, `${BASH_OUTPUT_MANIFEST_NAME}-${crypto.randomUUID()}`);
+  try { fs.rmSync(manifestPath, { force: true }); } catch { /* stale cleanup */ }
+  const before = collectBashFileSnapshot(outputDir, taskFileOwnership.get(opts)?.token);
+  const restoreSkillRuntimeEnv = withRunSkillRuntimeEnv(ctx, skillRuntime.binding);
+  const restoreEnv = withBashOutputEnv(ctx, outputDir, manifestPath);
+  const restoreWritableRoots = withBashWritableRoots(ctx, bashWritableRootsFor(opts, workingDir));
+  const releaseWorkingDir = retainBashWorkingDir(workingDir, removeEmptyWorkingDirOnCompletion);
+  let delegatedTerminal = false;
+  const finish = async (result: ToolResult): Promise<ToolResult> => {
+    try {
+      const manifestedPaths = readBashOutputManifest(manifestPath, outputDir);
+      const fileChanges = await emitBashProducedFiles(opts, before, outputDir, command, manifestedPaths);
+      return translateFixedBashError({ ...result,
+        ...(fileChanges.length ? { observations: { ...(result.observations ?? {}),
+          fileChanges: [...(result.observations?.fileChanges ?? []), ...fileChanges] } } : {}),
+      });
+    } finally {
+      try { fs.rmSync(manifestPath, { force: true }); } catch { /* cleanup */ }
+      releaseWorkingDir();
+    }
+  };
+  try {
+    const direct = parseOrkasCliInvocation(input, ctx);
+    const macWriteSandboxActive = process.platform === 'darwin'
+      && fs.existsSync('/usr/bin/sandbox-exec')
+      && Array.isArray(ctx.state.sandboxAllowedDirs)
+      && ctx.state.sandboxAllowedDirs.length > 0;
+    // Structured run-skill invocations preserve their host-owned stdin and
+    // progress transport. They remain terminal-returning callers.
+    if (direct && !macWriteSandboxActive) return await finish(await executeDirectOrkasCli(direct, input, ctx, workingDir));
+    if (managed) {
+      ctx.state.commandSessionTerminal = finish;
+      const result = await coreBashTool.execute(input, ctx);
+      delegatedTerminal = !result.isError || !!result.observations?.execution;
+      return result;
+    }
+    return await finish(await coreBashTool.execute(input, ctx));
+  } finally {
+    if (!delegatedTerminal) {
+      try { fs.rmSync(manifestPath, { force: true }); } catch { /* cleanup */ }
+      releaseWorkingDir();
+    }
+    restoreWritableRoots();
+    restoreEnv();
+    restoreSkillRuntimeEnv();
+  }
+}
+
+/** The workspace-scoped half of {@link allowedRootsFor}: the roots this turn may
+ *  write to before `extraRoots` widens the scope. Split out so
+ *  {@link retainedReadOnlyRoots} can tell a read-widening root apart from the
+ *  scope that grant would otherwise revoke. */
+function workspaceScopedRootsFor(opts: LocalToolsOpts): string[] {
+  const roots: string[] = [];
+  if (!opts.userId) return roots;
+  try {
+    const ws = getWorkspacePath(opts.userId, opts.projectId, opts.cid);
+    if (ws) roots.push(ws);
+  } catch (err) { log.warn('edit_file resolve workspace failed', { user_id: maskId(opts.userId), project_id: maskId(opts.projectId), error: logErrorRef(err) }); }
+  if (opts.cid) {
+    try { roots.push(chatAttachmentDirForConversation(opts.userId, opts.cid)); }
+    catch (err) { log.warn('edit_file resolve attachment dir failed', { user_id: maskId(opts.userId), cid: maskId(opts.cid), error: logErrorRef(err) }); }
+  }
+  return roots;
+}
+
+/** Assemble the workspace-scoped writable roots for the current (uid, cid).
+ *  The global access mode may allow paths outside these roots, but these
+ *  roots remain the default safe scope and the macOS write sandbox scope for
+ *  `workspace_approval`. */
+function allowedRootsFor(opts: LocalToolsOpts): string[] {
+  const roots = workspaceScopedRootsFor(opts);
+  if (opts.extraRoots?.length) {
+    for (const r of opts.extraRoots) if (r) roots.push(r);
+  }
+  return roots;
+}
+
+function guardEditPath(opts: LocalToolsOpts, abs: string): string | null {
+  const protectedRoot = protectedRootForPath(opts, abs);
+  if (protectedRoot) return protectedWriteError(abs, protectedRoot);
+  const roots = allowedRootsFor(opts);
+  if (!roots.length && !localAccessAllowsOutsideWorkspace()) {
+    return errText('E_NO_SCOPE', 'no visible roots for this conversation');
+  }
+  if (roots.length && isPathAllowed(abs, roots)) return null;
+  if (!localAccessAllowsOutsideWorkspace()) {
+    return errText(
+      'E_PATH_OUT_OF_SCOPE',
+      `path is outside the current workspace/attachment scope and the current access mode only allows workspace files: ${abs}`,
+    );
+  }
+  return null;
+}
+
+async function gateSensitiveLocalPath(
+  opts: LocalToolsOpts,
+  abs: string,
+  operation: string,
+  access: 'read' | 'write',
+  ctx?: ToolContext,
+): Promise<string | null> {
+  const result = await gateSensitiveLocalPathDetailed(opts, abs, operation, access, ctx);
+  return result.error;
+}
+
+async function gateSensitiveLocalPathDetailed(
+  opts: LocalToolsOpts,
+  abs: string,
+  operation: string,
+  access: 'read' | 'write',
+  ctx?: ToolContext,
+): Promise<BashPathGateResult> {
+  if (!localAccessRequiresSensitiveApproval()) return { error: null, approvedReasons: [] };
+  const trustedRoots = allowedRootsFor(opts);
+  const reasons = sensitivePathReasons(abs, access, { trustedRoots });
+  if (!reasons.length) return { error: null, approvedReasons: [] };
+  const folderRead = access === 'read' ? locationOnlyRead(abs, { trustedRoots }) : undefined;
+  const decision = await requestBashDecision({
+    uid: opts.userId ?? '',
+    cid: opts.cid ?? '',
+    agentId: opts.agentId ?? '',
+    agentName: opts.agentName ?? opts.agentId ?? '',
+    command: '',
+    operation,
+    subject: abs,
+    reasons,
+    ...(folderRead ? { folderRead } : {}),
+    onWaiting: permissionWaitProgress(ctx, operation),
+  });
+  if (decision !== 'deny') return { error: null, approvedReasons: reasons };
+  return {
+    error: errText(
+      'E_SENSITIVE_PATH_DENIED',
+      `the user declined to allow ${operation} on a sensitive path: ${abs}. Do not retry or work around it.`,
+    ),
+    approvedReasons: [],
+  };
+}
+
+/** Write-side access gate. Folder grants were removed: paths outside the
+ * workspace are controlled only by the global three-mode access setting. */
+async function gateEditPath(opts: LocalToolsOpts, abs: string, ctx?: ToolContext): Promise<string | null> {
+  const denied = guardEditPath(opts, abs);
+  if (denied) return denied;
+  return gateSensitiveLocalPath(opts, abs, 'write_file', 'write', ctx);
+}
+
+function guardDeletePath(opts: LocalToolsOpts, abs: string): string | null {
+  const protectedRoot = protectedRootForPath(opts, abs);
+  if (protectedRoot) return protectedWriteError(abs, protectedRoot);
+  const roots = allowedRootsFor(opts);
+  if (!roots.length && !localAccessAllowsOutsideWorkspace()) {
+    return errText('E_NO_SCOPE', 'no visible roots for this conversation');
+  }
+  if (roots.length && isPathAllowed(abs, roots)) return null;
+  if (!localAccessAllowsOutsideWorkspace()) {
+    return errText(
+      'E_PATH_OUT_OF_SCOPE',
+      `path is outside the current workspace/attachment scope and the current access mode only allows workspace files: ${abs}`,
+    );
+  }
+  return null;
+}
+
+function isInWritableWorkspaceScope(opts: LocalToolsOpts, abs: string, pathOptions: PathAllowedOptions = {}): boolean {
+  const roots = allowedRootsFor(opts);
+  return roots.length > 0 && isPathAllowed(abs, roots, pathOptions);
+}
+
+function deleteRequiresUserConfirmation(opts: LocalToolsOpts, abs: string): boolean {
+  return !isInWritableWorkspaceScope(opts, abs) && localAccessRequiresSensitiveApproval();
+}
+
+type BashPathToken = { type: 'word' | 'op'; value: string; raw?: string };
+type BashPathSegment = {
+  words: string[];
+  rawWords: string[];
+  redirectTargets: string[];
+  inputTargets: string[];
+  separatorAfter?: string;
+  pathExpressions?: Record<string, string>;
+};
+/** `removesSource` marks an operand the command takes AWAY from where it is
+ *  now — an `rm`/`shred`/`Remove-Item` target, or an `mv` source. Those are
+ *  deletes as far as the user's file is concerned, whatever verb spelled it. */
+type BashPathCandidate = { raw: string; abs?: string; reason: string; dynamic?: boolean; removesSource?: boolean; operatesOnEntry?: boolean; detail?: string };
+type BashPathGateResult = { error: string | null; approvedReasons: LocalAccessRiskCategory[] };
+type BashFilesystemGuardResult = {
+  result: ToolResult | null;
+  approvedReasons: LocalAccessRiskCategory[];
+  unresolvedPaths?: boolean;
+  keyFacts?: BashPermissionFact[];
+};
+
+const BASH_PATH_SEGMENT_OPS = new Set([';', '&&', '||', '|', '|&', '&']);
+const BASH_OUTPUT_REDIR_OPS = new Set(['>', '>>', '>|', '&>', '&>>', '1>', '1>>', '2>', '2>>']);
+const BASH_FILE_INPUT_REDIR_OPS = new Set(['<']);
+const BASH_NON_FILE_INPUT_REDIR_OPS = new Set(['<<', '<<<']);
+const BASH_GUARD_WRAPPERS = new Set(['env', 'command', 'builtin', 'exec', 'nohup', 'time', 'nice', 'ionice', 'stdbuf', 'setsid']);
+const BASH_GUARD_PRIV_ESC = new Set(['sudo', 'doas', 'pkexec']);
+const BASH_MUTATE_ALL_OPERANDS = new Set(['rm', 'rmdir', 'unlink', 'shred', 'mkdir', 'touch', 'chmod', 'chown', 'chgrp', 'mv', 'ln']);
+const BASH_DELETE_MUTATION_CMDS = new Set(['rm', 'rmdir', 'unlink']);
+const BASH_SHRED_FLAGS_WITH_VALUE = new Set([
+  '-n', '--iterations', '-s', '--size', '--random-source',
+]);
+const BASH_DEST_LAST_OPERAND = new Set(['cp', 'install', 'rsync']);
+const BASH_READ_ALL_OPERANDS = new Set([
+  'cat', 'less', 'more', 'head', 'tail', 'wc', 'stat', 'file', 'du', 'ls',
+  'sort', 'uniq', 'cut', 'strings', 'realpath', 'readlink', 'open',
+  'get-content', 'get-childitem', 'get-item', 'test-path', 'resolve-path',
+]);
+const BASH_READ_PATTERN_FIRST_CMDS = new Set(['grep', 'egrep', 'fgrep', 'rg', 'ag', 'ack']);
+const BASH_READ_SCRIPT_CMDS = new Set([
+  'sh', 'bash', 'zsh', 'dash', 'ksh', 'fish',
+  'python', 'python3', 'node', 'ruby', 'perl', 'php',
+]);
+const BASH_POSIX_SHELL_CMDS = new Set(['sh', 'bash', 'zsh', 'dash', 'ksh', 'fish']);
+const BASH_PROTECTED_READ_ONLY_CMDS = new Set([
+  'cat', 'head', 'tail', 'wc', 'stat', 'file', 'du', 'ls',
+  'grep', 'egrep', 'fgrep', 'rg', 'ag', 'ack', 'find',
+  'echo', 'printf', 'pwd', 'dirname', 'basename', 'true', 'false', 'test', '[',
+  'get-content', 'get-childitem', 'get-item', 'test-path', 'resolve-path', 'write-output',
+]);
+/** Concurrency admission only (2026-09-18): the protected-root set plus
+ *  commands that take no filesystem operand at all. Built from the audited
+ *  set so widening here can never flow back into the sensitive-path gate,
+ *  which keeps using `BASH_PROTECTED_READ_ONLY_CMDS` unchanged. */
+const BASH_CONCURRENCY_READ_ONLY_CMDS = new Set([
+  ...BASH_PROTECTED_READ_ONLY_CMDS,
+  'sleep', 'start-sleep', 'date', 'uname', 'whoami', 'hostname', 'id', 'which',
+]);
+const BASH_FIND_MUTATING_ACTIONS = new Set([
+  '-delete', '-exec', '-execdir', '-ok', '-okdir', '-fls', '-fprint', '-fprint0', '-fprintf',
+]);
+const BASH_ENV_ASSIGN_RE = /^[A-Za-z_][A-Za-z0-9_]*=/;
+const BASH_GENERIC_FLAGS_WITH_VALUE = new Set([
+  '-C', '-D', '-F', '-G', '-I', '-J', '-M', '-O', '-S', '-T', '-b', '-c', '-d', '-e', '-f', '-g', '-m', '-o', '-p', '-r', '-s', '-t', '-u',
+  '--backup', '--context', '--group', '--mode', '--owner', '--reference', '--suffix', '--target-directory',
+]);
+const BASH_GREP_FLAGS_WITH_VALUE = new Set([...BASH_GENERIC_FLAGS_WITH_VALUE, '-e', '-f', '-m', '-A', '-B', '-C', '--regexp', '--file', '--max-count', '--after-context', '--before-context', '--context', '--glob', '-g', '--type', '-t']);
+const BASH_AWK_FLAGS_WITH_VALUE = new Set([...BASH_GENERIC_FLAGS_WITH_VALUE, '-f', '-v', '-F']);
+const POWERSHELL_CONTENT_WRITE_CMDS = new Set(['set-content', 'add-content', 'clear-content', 'out-file']);
+const POWERSHELL_PATH_FLAGS = new Set(['-path', '-literalpath', '-filepath']);
+const POWERSHELL_CONTENT_FLAGS_WITH_VALUE = new Set([
+  ...POWERSHELL_PATH_FLAGS,
+  '-value',
+  '-encoding',
+  '-filter',
+  '-include',
+  '-exclude',
+  '-stream',
+]);
+const POWERSHELL_DELETE_PATH_FLAGS = new Set(['-path', '-literalpath']);
+const POWERSHELL_DELETE_FLAGS_WITH_VALUE = new Set([
+  ...POWERSHELL_DELETE_PATH_FLAGS,
+  '-erroraction',
+  '-warningaction',
+  '-informationaction',
+  '-progressaction',
+  '-errorvariable',
+  '-warningvariable',
+  '-informationvariable',
+  '-outvariable',
+  '-outbuffer',
+  '-pipelinevariable',
+]);
+const POWERSHELL_TRANSFER_FLAGS_WITH_VALUE = new Set([
+  ...POWERSHELL_DELETE_FLAGS_WITH_VALUE,
+  '-destination', '-filter', '-include', '-exclude', '-credential', '-fromsession', '-tosession',
+]);
+const POWERSHELL_DELETE_UNSAFE_FLAGS = new Set(['-recurse', '-include', '-exclude', '-filter']);
+const POWERSHELL_DELETE_SWITCHES = new Set([
+  '-force', '-whatif', '-verbose', '-debug', '-confirm:$false',
+]);
+const POSIX_RM_SAFE_SWITCHES = new Set([
+  '-f', '--force', '-v', '--verbose',
+  '--preserve-root', '--no-preserve-root',
+]);
+
+type BashHeredocSpec = { delimiter: string; stripTabs: boolean; shellPayload: boolean; expand: boolean; language?: 'python'; fileTarget?: string };
+
+/** Recognize a literal file consumer on this command line, independently of
+ * other heredocs/commands in the enclosing command list. Ambiguous receivers,
+ * pipelines, expansions and redirects retain conservative script inspection. */
+function bashHeredocFileTarget(line: string, opener: number): string | undefined {
+  let prefix: BashPathToken[] = [];
+  let piped = false;
+  for (const token of tokenizeBashPathGuard(line.slice(0, opener))) {
+    if (token.type === 'op' && BASH_PATH_SEGMENT_OPS.has(token.value)) {
+      prefix = [];
+      piped = token.value === '|' || token.value === '|&';
+    } else prefix.push(token);
+  }
+  const suffix = tokenizeBashPathGuard(line.slice(opener));
+  const end = suffix.findIndex(token => token.type === 'op' && BASH_PATH_SEGMENT_OPS.has(token.value));
+  if (piped || (end >= 0 && ['|', '|&'].includes(suffix[end].value))) return undefined;
+  const tokens = [...prefix, ...(end < 0 ? suffix : suffix.slice(0, end))];
+  const words: string[] = [];
+  let target: string | undefined;
+  let delimiter = false;
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.type === 'word') { words.push(token.value); continue; }
+    const operand = tokens[++i];
+    if (!operand || operand.type !== 'word') return undefined;
+    if (token.value === '>' && target === undefined) {
+      if (!bashLiteralAssignmentValue(operand.value)) return undefined;
+      target = operand.value;
+    } else if (token.value === '<<' && !delimiter) {
+      delimiter = true;
+    } else return undefined;
+  }
+  return words.length === 1 && words[0] === 'cat' && delimiter ? target : undefined;
+}
+
+function bashHeredocReceiver(prefix: string): string | undefined {
+  let words: string[] = [];
+  let expectOperand = false;
+  for (const token of tokenizeBashPathGuard(prefix)) {
+    if (token.type === 'op') {
+      if (BASH_PATH_SEGMENT_OPS.has(token.value)) words = [];
+      expectOperand = BASH_OUTPUT_REDIR_OPS.has(token.value)
+        || BASH_FILE_INPUT_REDIR_OPS.has(token.value)
+        || BASH_NON_FILE_INPUT_REDIR_OPS.has(token.value);
+      continue;
+    }
+    if (expectOperand) { expectOperand = false; continue; }
+    words.push(token.value);
+  }
+  const effective = bashEffectiveCommand(words);
+  return effective?.cmd;
+}
+
+const BASH_SHELL_EVAL_CMDS = new Set(['eval', 'source', '.']);
+
+/** A heredoc whose receiver merely forwards stdin still becomes shell text
+ *  when a later stage of the same pipeline is a POSIX shell, `eval`/`source`,
+ *  or `xargs sh -c` (`cat <<'EOF' | bash`). Masking that payload would hide it
+ *  from the risk classifier that the approval flow depends on. */
+function bashHeredocPipelineReachesShell(rest: string): boolean {
+  let stage: string[] = [];
+  let expectOperand = false;
+  let skipDelimiter = true;
+  const stageIsShell = (words: string[]): boolean => {
+    const effective = bashEffectiveCommand(words);
+    if (!effective) return false;
+    if (BASH_POSIX_SHELL_CMDS.has(effective.cmd) || BASH_SHELL_EVAL_CMDS.has(effective.cmd)) return true;
+    return effective.cmd === 'xargs' && effective.args.some((arg) => BASH_POSIX_SHELL_CMDS.has(arg));
+  };
+  for (const token of tokenizeBashPathGuard(rest)) {
+    if (token.type === 'op') {
+      if (token.value === '|' || token.value === '|&') {
+        if (stageIsShell(stage)) return true;
+        stage = [];
+      } else if (BASH_PATH_SEGMENT_OPS.has(token.value)) {
+        // `;`, `&&`, `||`, `&` end the command list that consumes this heredoc.
+        return stageIsShell(stage);
+      }
+      expectOperand = BASH_OUTPUT_REDIR_OPS.has(token.value)
+        || BASH_FILE_INPUT_REDIR_OPS.has(token.value)
+        || BASH_NON_FILE_INPUT_REDIR_OPS.has(token.value);
+      continue;
+    }
+    if (skipDelimiter) { skipDelimiter = false; continue; }
+    if (expectOperand) { expectOperand = false; continue; }
+    stage.push(token.value);
+  }
+  return stageIsShell(stage);
+}
+
+/**
+ * Find POSIX heredoc openers on one shell command line. The heredoc payload is
+ * data for the receiving process, not shell syntax; parsing it as shell text
+ * makes JavaScript arrows (`=>`) and comparisons look like redirections.
+ */
+function bashHeredocSpecs(line: string): BashHeredocSpec[] {
+  const specs: BashHeredocSpec[] = [];
+  let quote: "'" | '"' | null = null;
+  let escaped = false;
+  let arithmeticDepth = 0;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\' && quote !== "'") { escaped = true; continue; }
+    if (quote) {
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (arithmeticDepth > 0) {
+      if (ch === '(') arithmeticDepth += 1;
+      else if (ch === ')') arithmeticDepth -= 1;
+      continue;
+    }
+    if (ch === "'" || ch === '"') { quote = ch; continue; }
+    if (ch === '#' && (i === 0 || /\s/.test(line[i - 1]))) break;
+    if (line.slice(i, i + 3) === '$((') {
+      arithmeticDepth = 2;
+      i += 2;
+      continue;
+    }
+    if (line.slice(i, i + 2) === '(('
+      && (i === 0 || /[\s;&|()]/.test(line[i - 1]))) {
+      arithmeticDepth = 2;
+      i += 1;
+      continue;
+    }
+    if (ch !== '<' || line[i + 1] !== '<' || line[i + 2] === '<') continue;
+
+    let j = i + 2;
+    let stripTabs = false;
+    if (line[j] === '-') { stripTabs = true; j += 1; }
+    while (line[j] === ' ' || line[j] === '\t') j += 1;
+
+    let delimiter = '';
+    let wordQuote: "'" | '"' | null = null;
+    let wordEscaped = false;
+    let quotedDelimiter = false;
+    let started = false;
+    for (; j < line.length; j++) {
+      const c = line[j];
+      if (wordEscaped) {
+        delimiter += c;
+        started = true;
+        wordEscaped = false;
+        continue;
+      }
+      if (c === '\\' && wordQuote !== "'") {
+        quotedDelimiter = true;
+        wordEscaped = true;
+        started = true;
+        continue;
+      }
+      if (wordQuote) {
+        if (c === wordQuote) wordQuote = null;
+        else delimiter += c;
+        started = true;
+        continue;
+      }
+      if (c === "'" || c === '"') {
+        quotedDelimiter = true;
+        wordQuote = c;
+        started = true;
+        continue;
+      }
+      if (/\s/.test(c) || /[;&|<>]/.test(c)) break;
+      delimiter += c;
+      started = true;
+    }
+    if (started && delimiter) {
+      const receiver = bashHeredocReceiver(line.slice(0, i));
+      specs.push({
+        delimiter,
+        stripTabs,
+        expand: !quotedDelimiter,
+        language: quotedDelimiter && receiver && /^(?:python(?:3(?:\.\d+)?)?|py)(?:\.exe)?$/i.test(receiver) ? 'python' : undefined,
+        fileTarget: quotedDelimiter ? bashHeredocFileTarget(line, i) : undefined,
+        shellPayload: (!!receiver && BASH_POSIX_SHELL_CMDS.has(receiver))
+          || bashHeredocPipelineReachesShell(line.slice(i + 2)),
+      });
+    }
+    i = Math.max(i, j - 1);
+  }
+  return specs;
+}
+
+type BashHeredocAnalysis = { shellSurface: string; nonShellPayloads: Array<{ source: string; language?: 'python'; fileTarget?: string }>; unquotedPayloads: string[] };
+
+/** Preserve shell command lines/newlines while blanking non-shell heredoc
+ * payloads and terminator lines. Python/Node/etc. payloads are source code,
+ * not shell syntax, so parsing calls such as Python's `open(...)` as macOS
+ * `open` would create false external-launch approvals. Shell-receiver payloads
+ * remain on the shell surface, while non-shell source is returned separately
+ * for the external-mutation script scanner. */
+function analyzeBashHeredocs(command: string): BashHeredocAnalysis {
+  const pending: Array<BashHeredocSpec & { bodyLines: string[] }> = [];
+  const nonShellPayloads: BashHeredocAnalysis['nonShellPayloads'] = [];
+  const unquotedPayloads: string[] = [];
+  const retainPayload = (current: BashHeredocSpec & { bodyLines: string[] }) => {
+    if (!current.bodyLines.length) return;
+    const source = current.bodyLines.join('\n');
+    if (!current.shellPayload) nonShellPayloads.push({ source, language: current.language, fileTarget: current.fileTarget });
+    if (current.expand) unquotedPayloads.push(source);
+  };
+  let out = '';
+  let offset = 0;
+  while (offset < command.length) {
+    let end = offset;
+    while (end < command.length && command[end] !== '\n' && command[end] !== '\r') end += 1;
+    const line = command.slice(offset, end);
+    let newline = '';
+    if (end < command.length) {
+      if (command[end] === '\r' && command[end + 1] === '\n') {
+        newline = '\r\n';
+        end += 2;
+      } else {
+        newline = command[end];
+        end += 1;
+      }
+    }
+
+    if (pending.length) {
+      const current = pending[0];
+      const comparable = current.stripTabs ? line.replace(/^\t+/, '') : line;
+      const isTerminator = comparable === current.delimiter;
+      out += (current.shellPayload && !isTerminator ? line : ' '.repeat(line.length)) + newline;
+      if (!isTerminator) current.bodyLines.push(line);
+      if (isTerminator) {
+        retainPayload(current);
+        pending.shift();
+      }
+    } else {
+      out += line + newline;
+      pending.push(...bashHeredocSpecs(line).map((spec) => ({ ...spec, bodyLines: [] })));
+    }
+    offset = end;
+  }
+  for (const current of pending) retainPayload(current);
+  return { shellSurface: out, nonShellPayloads, unquotedPayloads };
+}
+
+function maskBashHeredocBodies(command: string): string {
+  return analyzeBashHeredocs(command).shellSurface;
+}
+
+function tokenizeBashPathGuard(input: string, executionSyntax = false): BashPathToken[] {
+  const toks: BashPathToken[] = [];
+  let cur = '';
+  let hasCur = false;
+  let quote: "'" | '"' | null = null;
+  let escaped = false;
+  let wordStart: number | undefined;
+  const push = (end: number) => {
+    if (hasCur) toks.push({ type: 'word', value: cur, raw: input.slice(wordStart ?? end, end) });
+    wordStart = undefined;
+    cur = '';
+    hasCur = false;
+  };
+
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (wordStart === undefined) wordStart = i;
+    if (escaped) {
+      cur += ch;
+      hasCur = true;
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      const next = input[i + 1] || '';
+      const escapable = quote === "'"
+        ? false
+        : quote === '"'
+          ? ['"', '\\', '$', '`'].includes(next)
+          : /[\s'"\\;&|<>$`]/.test(next);
+      if (escapable) escaped = true;
+      else { cur += ch; hasCur = true; }
+      continue;
+    }
+    if (quote) {
+      if (ch === quote) quote = null;
+      else { cur += ch; hasCur = true; }
+      continue;
+    }
+    if (ch === "'" || ch === '"') {
+      quote = ch;
+      hasCur = true;
+      continue;
+    }
+    if (executionSyntax && ch === '#' && !hasCur) {
+      while (i < input.length && input[i] !== '\n' && input[i] !== '\r') i++;
+      wordStart = undefined;
+      toks.push({ type: 'op', value: ';' });
+      continue;
+    }
+    const groupingOperator = ch === '(' || ch === ')'
+      || (!hasCur && (ch === '{' || ch === '}') && /\s|$/.test(input[i + 1] || ''));
+    if (executionSyntax && groupingOperator) {
+      push(i);
+      toks.push({ type: 'op', value: ';' });
+      continue;
+    }
+    if (/\s/.test(ch)) {
+      push(i);
+      if (ch === '\n' || ch === '\r') toks.push({ type: 'op', value: ';' });
+      continue;
+    }
+
+    const three = input.slice(i, i + 3);
+    if (three === '&>>' || three === '<<<' || /^\d>>$/.test(three)) {
+      push(i); toks.push({ type: 'op', value: three }); i += 2; continue;
+    }
+    const two = input.slice(i, i + 2);
+    if (['&&', '||', '|&', '>>', '>|', '&>', '<<'].includes(two) || /^\d>$/.test(two)) {
+      push(i); toks.push({ type: 'op', value: two }); i += 1; continue;
+    }
+    if (ch === '|' || ch === '&' || ch === ';' || ch === '>' || ch === '<') {
+      push(i); toks.push({ type: 'op', value: ch }); continue;
+    }
+    cur += ch;
+    hasCur = true;
+  }
+  push(input.length);
+  return toks;
+}
+
+function bashPathSegments(command: string, executionSyntax = false): BashPathSegment[] {
+  const out: BashPathSegment[] = [];
+  let words: string[] = [];
+  let rawWords: string[] = [];
+  let redirectTargets: string[] = [];
+  let inputTargets: string[] = [];
+  let expect: 'out' | 'in' | 'skip' | null = null;
+  const push = (separatorAfter?: string) => {
+    if (words.length || redirectTargets.length || inputTargets.length) {
+      out.push({ words, rawWords, redirectTargets, inputTargets, ...(separatorAfter ? { separatorAfter } : {}) });
+    }
+    words = [];
+    rawWords = [];
+    redirectTargets = [];
+    inputTargets = [];
+  };
+
+  for (const tok of tokenizeBashPathGuard(maskBashHeredocBodies(command), executionSyntax)) {
+    if (tok.type === 'op') {
+      if (BASH_PATH_SEGMENT_OPS.has(tok.value)) {
+        push(tok.value);
+        expect = null;
+      } else if (BASH_OUTPUT_REDIR_OPS.has(tok.value)) {
+        expect = 'out';
+      } else if (BASH_FILE_INPUT_REDIR_OPS.has(tok.value)) {
+        expect = 'in';
+      } else if (BASH_NON_FILE_INPUT_REDIR_OPS.has(tok.value)) {
+        expect = 'skip';
+      } else {
+        expect = null;
+      }
+      continue;
+    }
+    if (expect === 'out') {
+      redirectTargets.push(tok.value);
+      expect = null;
+      continue;
+    }
+    if (expect === 'in') {
+      inputTargets.push(tok.value);
+      expect = null;
+      continue;
+    }
+    if (expect === 'skip') {
+      expect = null;
+      continue;
+    }
+    words.push(tok.value);
+    rawWords.push(tok.raw ?? tok.value);
+  }
+  push();
+  return out;
+}
+
+const BASH_LITERAL_ASSIGNMENT_PERSIST_SEPARATORS = new Set([';', '&&']);
+const BASH_ASSIGNMENT_BUILTINS = new Set(['export', 'readonly', 'declare', 'typeset', 'local']);
+const BASH_UNSET_BUILTINS = new Set(['unset', 'unset-variable', 'remove-variable', 'clear-variable']);
+const BASH_PATH_ASSIGN_WORD_RE = /^([A-Za-z_][A-Za-z0-9_]*)(\+)?=(.*)$/s;
+
+function bashLiteralAssignmentValue(value: string): string | null {
+  if (!value
+    || /[$`*?\[\]{}]/.test(value)
+    || /%[A-Za-z_][A-Za-z0-9_]*%/.test(value)
+    || /(^|:)~(?:[/\\]|$)/.test(value)) return null;
+  return value;
+}
+
+/** Resolve only assignments whose value is already a literal in a completed
+ * shell statement. Temporary command assignments, pipelines, background jobs,
+ * general loop variables, substitutions, and calculated PowerShell expressions
+ * remain unresolved and require a runtime permission decision. A narrow
+ * finite-loop case is expanded by bashGuardCommandVariants before collection. */
+function bashPersistentLiteralAssignments(
+  segment: BashPathSegment,
+  hostPlatform: NodeJS.Platform,
+  env: Record<string, string>,
+): Record<string, string | null> | null {
+  if (hostPlatform === 'win32') {
+    // Parse the original spelling: whitespace around '=' is optional, while a
+    // quoted "$name" is data rather than an assignment target. Cooked shell
+    // words lose both distinctions and PowerShell's literal backslashes.
+    const assignment = /^\$(?:env:)?([A-Za-z_][A-Za-z0-9_]*)\s*(\?\?=|[+*/%-]?=|\+\+|--)([\s\S]*)$/i.exec(segment.rawWords.join(' '));
+    if (assignment) {
+      const raw = assignment[3].trim();
+      let literal: string | null = null;
+      if (assignment[2] === '=' && segment.separatorAfter
+        && BASH_LITERAL_ASSIGNMENT_PERSIST_SEPARATORS.has(segment.separatorAfter)) {
+        if (/^'(?:[^']|'')*'$/.test(raw)) literal = raw.slice(1, -1).replace(/''/g, "'");
+        else if (/^"(?:[^"$`]|"")*"$/.test(raw)) literal = raw.slice(1, -1).replace(/""/g, '"');
+        else literal = powershellLiteralJoinPath(raw, env);
+      }
+      // Computed, compound, or pipeline assignments invalidate an earlier
+      // literal. Never verify a later operation against the variable's old path.
+      return { [assignment[1]]: literal === null ? null : bashLiteralAssignmentValue(literal) };
+    }
+  }
+  if (!segment.separatorAfter || !BASH_LITERAL_ASSIGNMENT_PERSIST_SEPARATORS.has(segment.separatorAfter)) return null;
+  if (segment.words.length > 0 && segment.words.every((word) => BASH_PATH_ASSIGN_WORD_RE.test(word))) {
+    const assignments: Record<string, string | null> = {};
+    for (const word of segment.words) {
+      const match = BASH_PATH_ASSIGN_WORD_RE.exec(word)!;
+      assignments[match[1]] = match[2] ? null : bashLiteralAssignmentValue(match[3]);
+    }
+    return assignments;
+  }
+
+  const command = segment.words[0]?.toLowerCase();
+  if ((command === 'for' || command === 'select') && /^[A-Za-z_][A-Za-z0-9_]*$/.test(segment.words[1] || '')) {
+    return { [segment.words[1]]: null };
+  }
+  if (command && BASH_ASSIGNMENT_BUILTINS.has(command)) {
+    const assignments: Record<string, null> = {};
+    for (const word of segment.words.slice(1)) {
+      const match = BASH_PATH_ASSIGN_WORD_RE.exec(word);
+      if (match) assignments[match[1]] = null;
+    }
+    return Object.keys(assignments).length ? assignments : null;
+  }
+  if (command && BASH_UNSET_BUILTINS.has(command)) {
+    const assignments: Record<string, null> = {};
+    for (const word of segment.words.slice(1)) {
+      const name = word.replace(/^\$(?:env:)?/i, '');
+      if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) assignments[name] = null;
+    }
+    return Object.keys(assignments).length ? assignments : null;
+  }
+  if (command === 'read') {
+    const names = segment.words.slice(1).filter((word) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(word));
+    return Object.fromEntries((names.length ? names : ['REPLY']).map((name) => [name, null]));
+  }
+  if (command === 'printf') {
+    const variableIndex = segment.words.findIndex((word) => word === '-v');
+    const name = variableIndex >= 0 ? segment.words[variableIndex + 1] : '';
+    if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(name || '')) return { [name]: null };
+  }
+  return null;
+}
+
+/** Evaluate only the path-composition grammar, never a PowerShell command.
+ * No providers, substitutions, -Resolve, wildcards or unknown arguments are
+ * executed to discover a path. Preserve '..' for the existing symlink check. */
+function powershellLiteralJoinPath(raw: string, env: Record<string, string>): string | null {
+  const tokens = tokenizeBashPathGuard(raw);
+  if (tokens.length > 5 || tokens.some((token) => token.type !== 'word')
+    || tokens[0]?.value.toLowerCase() !== 'join-path') return null;
+  const atom = (token: BashPathToken): string | null => {
+    const source = token.raw ?? token.value;
+    let value: string | undefined;
+    if (/^'(?:[^']|'')*'$/.test(source)) value = source.slice(1, -1).replace(/''/g, "'");
+    else if (/^"[^"$`]*"$/.test(source)) value = source.slice(1, -1);
+    else {
+      const variable = /^\$([A-Za-z_][A-Za-z0-9_]*)$/.exec(source);
+      if (variable) value = Object.entries(env).find(([name]) => name.toLowerCase() === variable[1].toLowerCase())?.[1];
+    }
+    return value === undefined ? null : bashLiteralAssignmentValue(value);
+  };
+  const positional: string[] = [];
+  const named: Record<string, string> = {};
+  for (let i = 1; i < tokens.length; i++) {
+    const flag = tokens[i].value.toLowerCase();
+    if (flag.startsWith('-')) {
+      if (!['-path', '-childpath'].includes(flag) || named[flag] !== undefined || !tokens[i + 1]) return null;
+      const value = atom(tokens[++i]);
+      if (value === null) return null;
+      named[flag] = value;
+    } else {
+      const value = atom(tokens[i]);
+      if (value === null) return null;
+      positional.push(value);
+    }
+  }
+  const parent = named['-path'] ?? positional.shift();
+  const child = named['-childpath'] ?? positional.shift();
+  if (!parent || !child || positional.length || /^[\\/]|^[A-Za-z][A-Za-z0-9_-]*:/.test(child)
+    || /^[A-Za-z][A-Za-z0-9_-]+:/.test(parent) || /^[A-Za-z]:(?![\\/])/.test(parent)) return null;
+  return `${parent.replace(/[\\/]+$/, '')}${parent.includes('\\') ? '\\' : '/'}${child}`;
+}
+
+function updateBashPathEnv(env: Record<string, string>, assignments: Record<string, string | null>): void {
+  for (const [name, value] of Object.entries(assignments)) {
+    for (const existing of Object.keys(env)) {
+      if (existing.toLowerCase() === name.toLowerCase()) delete env[existing];
+    }
+    if (value !== null) env[name] = value;
+  }
+}
+
+const BASH_PATH_LOOP_EXPANSION_MAX = 256;
+
+function powershellLiteralLoopValues(raw: string): string[] | null {
+  const compact = raw.replace(/\s+/g, '');
+  const range = /^(-?\d+)\.\.(-?\d+)$/.exec(compact);
+  if (range) {
+    const start = Number(range[1]);
+    const end = Number(range[2]);
+    const length = Math.abs(end - start) + 1;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end)
+      || length > BASH_PATH_LOOP_EXPANSION_MAX) return null;
+    const step = start <= end ? 1 : -1;
+    return Array.from({ length }, (_, index) => String(start + index * step));
+  }
+  if (!/^-?\d+(?:,-?\d+)*$/.test(compact)) return null;
+  const values = compact.split(',');
+  return values.length <= BASH_PATH_LOOP_EXPANSION_MAX ? values : null;
+}
+
+function bashPathSegmentsWithEnv(
+  command: string,
+  baseEnv: Record<string, string>,
+  hostPlatform: NodeJS.Platform = process.platform,
+): Array<{ segment: BashPathSegment; env: Record<string, string> }> {
+  const env = { ...baseEnv };
+  const expressions: Record<string, string> = {};
+  const out: Array<{ segment: BashPathSegment; env: Record<string, string> }> = [];
+  for (const segment of bashPathSegments(command)) {
+    segment.pathExpressions = { ...expressions };
+    out.push({ segment, env: { ...env } });
+    const assignments = bashPersistentLiteralAssignments(segment, hostPlatform, env);
+    if (assignments) {
+      updateBashPathEnv(env, assignments);
+      for (const name of Object.keys(assignments)) {
+        const key = name.toLowerCase();
+        delete expressions[key];
+        if (Object.keys(expressions).length >= 64) delete expressions[Object.keys(expressions)[0]];
+        const source = segment.rawWords.join(' ');
+        expressions[key] = source.length > 240 ? source.slice(0, 120) + '…' + source.slice(-119) : source;
+      }
+    }
+  }
+  return out;
+}
+
+type BashGuardCommandVariant = { command: string; env: Record<string, string> };
+
+function finiteLoopBodyIsSingleCommand(body: string): boolean {
+  const segments = bashPathSegments(body);
+  return segments.length === 1 && !segments[0].separatorAfter;
+}
+
+function bashGuardCommandVariants(
+  command: string,
+  baseEnv: Record<string, string>,
+  hostPlatform: NodeJS.Platform,
+): BashGuardCommandVariant[] {
+  if (hostPlatform === 'win32') {
+    const match = /^\s*foreach\s*\(\s*\$([A-Za-z_][A-Za-z0-9_]*)\s+in\s+([\s\S]+)\)\s*\{\s*([\s\S]*?)\s*\}\s*$/i.exec(command);
+    if (match && finiteLoopBodyIsSingleCommand(match[3])) {
+      const values = powershellLiteralLoopValues(match[2]);
+      if (values) return values.map((value) => ({
+        command: match[3],
+        env: { ...baseEnv, [match[1]]: value },
+      }));
+      const env = { ...baseEnv };
+      updateBashPathEnv(env, { [match[1]]: null });
+      return [{ command: match[3], env }];
+    }
+  } else {
+    const match = /^\s*for\s+([A-Za-z_][A-Za-z0-9_]*)\s+in\s+([^;\r\n]+)\s*(?:;|\r?\n)\s*do\s+([\s\S]*?)(?:;|\r?\n)\s*done\s*$/i.exec(command);
+    if (match && finiteLoopBodyIsSingleCommand(match[3])) {
+      const tokens = tokenizeBashPathGuard(match[2]);
+      const values = tokens.every((token) => token.type === 'word')
+        ? tokens.map((token) => token.value)
+        : [];
+      if (values.length > 0
+        && values.length <= BASH_PATH_LOOP_EXPANSION_MAX
+        && values.every((value) => bashLiteralAssignmentValue(value) !== null)) {
+        return values.map((value) => ({
+          command: match[3],
+          env: { ...baseEnv, [match[1]]: value },
+        }));
+      }
+      const env = { ...baseEnv };
+      updateBashPathEnv(env, { [match[1]]: null });
+      return [{ command: match[3], env }];
+    }
+  }
+  return [{ command, env: baseEnv }];
+}
+
+const POSIX_DIRECTORY_CHANGES = new Set(['cd', 'pushd', 'popd']);
+const POWERSHELL_DIRECTORY_CHANGES = new Set([
+  'cd', 'chdir', 'sl', 'set-location', 'pushd', 'push-location', 'popd', 'pop-location',
+]);
+// A shell function or alias can make these names go anywhere.
+const POSIX_DIRECTORY_CHANGE_REDEFINITION = /\b(?:cd|pushd|popd)\s*\(\s*\)|\bfunction\s+(?:cd|pushd|popd)\b|\balias\s+(?:cd|pushd|popd)=/;
+const POWERSHELL_DIRECTORY_CHANGE_REDEFINITION = /\b(?:function|filter)\s+(?:global:|script:|local:|private:)?(?:cd|chdir|sl|set-location|pushd|push-location|popd|pop-location)\b|\b(?:set-alias|new-alias|sal|nal)\b/i;
+
+/** How one segment moves the location used by later relative paths:
+ * undefined when it does not, `target: null` when this walk cannot follow it.
+ * Every form that moves the location must be listed: before 2026-10-07 only
+ * `cd` was, so `pushd`/`Set-Location <outside>; Remove-Item x` resolved `x`
+ * in the workspace and deleted an outside file without a prompt. pushd moves
+ * like cd; popd, stack/history/home shorthands and PowerShell provider paths
+ * (`HKCU:`, `Env:`, `FileSystem::`) stay unknown. */
+function shellDirectoryChange(words: string[], hostPlatform: NodeJS.Platform): { target: string | null } | undefined {
+  const [raw = '', ...args] = words;
+  const powershell = hostPlatform === 'win32';
+  const cmd = powershell ? raw.toLowerCase() : raw;
+  if (!(powershell ? POWERSHELL_DIRECTORY_CHANGES : POSIX_DIRECTORY_CHANGES).has(cmd)) return undefined;
+  if (cmd === 'popd' || cmd === 'pop-location') return { target: null };
+  const named = powershell && args.length === 2 && ['-path', '-literalpath'].includes(args[0].toLowerCase());
+  const target = named ? args[1] : args.length === 1 ? args[0] : '';
+  if (!target || /^[-+]/.test(target)) return { target: null };
+  if (powershell && (target.startsWith('~') || /^(?:[^\\/:]{2,}:|[^\\/]+::)/.test(target))) return { target: null };
+  return { target };
+}
+
+const POSIX_SCRIPT_LOCATION_CHANGE = /(?:^|[;&|({]\s*|\b(?:then|do|else)\s+)(?:cd|pushd|popd)(?=\s|;|$)/m;
+const POWERSHELL_SCRIPT_LOCATION_CHANGE = /(?:^|[;&|({]\s*)(?:cd|chdir|sl|set-location|pushd|push-location|popd|pop-location|invoke-expression|iex)(?=\s|;|\)|$)/im;
+
+/** A segment that runs a script inside the current shell, sharing its
+ * location: PowerShell `& x.ps1`/`. x.ps1`/`x.ps1` (one runspace; a real
+ * PowerShell 7 moved the caller on 2026-10-07) and POSIX `source`/`.`. Returns
+ * its literal path, `null` for evaluated code, else undefined. */
+function locationSharingScript(words: string[], hostPlatform: NodeJS.Platform): string | null | undefined {
+  const [head = '', next] = words;
+  if (hostPlatform === 'win32') {
+    const lower = head.toLowerCase();
+    if (lower === 'invoke-expression' || lower === 'iex') return null;
+    if (head === '.' && next) return next;
+    return /\.ps1$/i.test(head) ? head : undefined;
+  }
+  if (head === 'eval') return null;
+  return (head === 'source' || head === '.') && next ? next : undefined;
+}
+
+/** Whether running `raw` in the shell may leave it in another directory. A
+ * script that cannot be read as a whole, or that this command also names
+ * elsewhere (and may write first), is treated as moving it; a missing one
+ * cannot run, as on the failed-cd branch of `cd p; & ./tools/x.ps1`.
+ * Comments aside, only a location command at a command position counts, so
+ * an activate script or a VideoStudio build script keeps paths resolvable. */
+function scriptMayMoveLocation(
+  raw: string,
+  directory: string | null,
+  env: Record<string, string>,
+  command: string,
+  hostPlatform: NodeJS.Platform,
+): boolean {
+  if (directory === null) return true;
+  const resolved = resolveBashCandidate(raw, directory, env);
+  if (!resolved?.abs || resolved.dynamic) return true;
+  if (command.split(path.basename(resolved.abs)).length > 2) return true;
+  let source: string;
+  try {
+    const stat = fs.statSync(resolved.abs);
+    if (!stat.isFile() || stat.size > EXTERNAL_MUTATION_SCRIPT_MAX_BYTES) return true;
+    source = fs.readFileSync(resolved.abs, 'utf8');
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException)?.code;
+    return code !== 'ENOENT' && code !== 'ENOTDIR';
+  }
+  const code = source.replace(/<#[\s\S]*?#>/g, '').replace(/^\s*#.*$/gm, '');
+  return (hostPlatform === 'win32' ? POWERSHELL_SCRIPT_LOCATION_CHANGE : POSIX_SCRIPT_LOCATION_CHANGE).test(code);
+}
+
+function bashGuardPathSegments(
+  command: string,
+  baseEnv: Record<string, string>,
+  hostPlatform: NodeJS.Platform,
+  initialDirectory: string,
+): Array<{ segment: BashPathSegment; env: Record<string, string>; workingDir: string | null }> {
+  return bashGuardCommandVariants(command, baseEnv, hostPlatform).flatMap((variant) => {
+    const out: Array<{ segment: BashPathSegment; env: Record<string, string>; workingDir: string | null }> = [];
+    const segments = bashPathSegmentsWithEnv(variant.command, variant.env, hostPlatform);
+    const conditionalFlow = segments.some(({ segment }) => ['||', '|', '|&', '&'].includes(segment.separatorAfter ?? ''));
+    const directoryChangeRedefined = (hostPlatform === 'win32'
+      ? POWERSHELL_DIRECTORY_CHANGE_REDEFINITION
+      : POSIX_DIRECTORY_CHANGE_REDEFINITION).test(variant.command);
+    let directories: Array<string | null> = [initialDirectory];
+    let skippedDirectories: Array<string | null> = [];
+    let exitsOnError = false;
+    let changedDirectory = false;
+    for (const { segment, env } of segments) {
+      const scopedEnv = { ...env };
+      // A cd may succeed or fail on different branches. Do not keep the
+      // original injected PWD as an authoritative path after that transition.
+      if (changedDirectory) delete scopedEnv.PWD;
+      for (const workingDir of directories) {
+        out.push({ segment, env: scopedEnv, workingDir });
+      }
+      const [cmd, ...args] = segment.words;
+      // Only direct, sequential directory changes have these semantics. Keep
+      // both outcomes when a failed change can fall through (PowerShell has no
+      // `set -e`, and a failed Set-Location leaves the location unchanged).
+      // Bound branching; unknown contexts use the existing unresolved-path
+      // approval mechanism.
+      if (cmd === 'set') {
+        exitsOnError = !conditionalFlow && hostPlatform !== 'win32'
+          && args.length === 1 && args[0] === '-e';
+      }
+      // This walk does not split `(...)`/`{...}`: a change inside a group, a
+      // block or after a keyword (`(cd x && rm y)`, `{ Set-Location x }`,
+      // `then cd x`) is real but not a plain head, so the location becomes
+      // unknown. 2026-10-07: `(cd <outside> && rm -f y)` deleted outside.
+      const grouped = segment.words.some((word) => /^[({]|[)}]$/.test(word));
+      const sharedScript = locationSharingScript(segment.words, hostPlatform);
+      const directoryChange = (grouped ? undefined : shellDirectoryChange(segment.words, hostPlatform))
+        ?? (segment.words.some((word, index) => (grouped || index > 0)
+          && shellDirectoryChange([word.replace(/^[({]+|[)}]+$/g, '')], hostPlatform)) ? { target: null } : undefined)
+        ?? (sharedScript !== undefined && (sharedScript === null || directories.some((directory) => (
+          scriptMayMoveLocation(sharedScript, directory, scopedEnv, variant.command, hostPlatform)
+        ))) ? { target: null } : undefined);
+      if (directoryChange) {
+        const target = directoryChangeRedefined ? null : directoryChange.target;
+        if (target === null
+          || /[*?\[\]{}]/.test(expandKnownShellPathVars(target, scopedEnv).value)
+          || (hostPlatform !== 'win32' && !!(scopedEnv.CDPATH || process.env.CDPATH) && !path.isAbsolute(target) && !target.startsWith('.'))
+          || ['||', '|', '|&', '&'].includes(segment.separatorAfter ?? '')) {
+          directories = [null];
+        } else {
+          const next = directories.map((directory) => directory === null ? null
+            : resolveBashCandidate(target, directory, scopedEnv)?.abs ?? null);
+          if (segment.separatorAfter === '&&') {
+            // Failed cd skips the rest of this AND-list, but can resume at
+            // its following statement even under set -e.
+            skippedDirectories.push(...directories);
+            directories = next;
+          } else {
+            directories = exitsOnError ? next : [...directories, ...next];
+          }
+        }
+        changedDirectory = true;
+      }
+      if (segment.separatorAfter !== '&&') {
+        directories.push(...skippedDirectories);
+        skippedDirectories = [];
+      }
+      directories = [...new Set(directories)];
+      if (directories.length > BASH_PATH_LOOP_EXPANSION_MAX) directories = [null];
+      if (skippedDirectories.length > BASH_PATH_LOOP_EXPANSION_MAX) skippedDirectories = [null];
+    }
+    return out;
+  });
+}
+
+function bashEffectiveCommand(words: string[], hostPlatform: NodeJS.Platform = process.platform): { cmd: string; args: string[] } | null {
+  let w = words.slice();
+  while (w.length && BASH_ENV_ASSIGN_RE.test(w[0])) w = w.slice(1);
+  if (!w.length) return null;
+  let cmd = path.basename(w[0]).toLowerCase();
+
+  if (cmd === 'env') {
+    w = w.slice(1);
+    while (w.length && (BASH_ENV_ASSIGN_RE.test(w[0]) || w[0].startsWith('-'))) w = w.slice(1);
+    if (!w.length) return null;
+    cmd = path.basename(w[0]).toLowerCase();
+  }
+  while (BASH_GUARD_WRAPPERS.has(cmd)) {
+    w = w.slice(1);
+    while (w.length && BASH_ENV_ASSIGN_RE.test(w[0])) w = w.slice(1);
+    if (!w.length) return null;
+    cmd = path.basename(w[0]).toLowerCase();
+  }
+  if (BASH_GUARD_PRIV_ESC.has(cmd)) {
+    w = w.slice(1);
+    while (w.length && w[0].startsWith('-')) w = w.slice(1);
+    if (!w.length) return null;
+    cmd = path.basename(w[0]).toLowerCase();
+  }
+  // The Windows executor uses PowerShell. Resolve its built-in filesystem
+  // aliases before extracting operands; POSIX commands keep their own meaning.
+  if (hostPlatform === 'win32') {
+    if (['rm', 'rmdir', 'rd', 'ri', 'del', 'erase'].includes(cmd)) cmd = 'remove-item';
+    else if (['mv', 'move', 'mi'].includes(cmd)) cmd = 'move-item';
+    else if (['cp', 'copy', 'cpi'].includes(cmd)) cmd = 'copy-item';
+  }
+  return { cmd, args: w.slice(1) };
+}
+
+/**
+ * The protected-root mention guard is intentionally conservative because an
+ * interpreter can mutate a literal protected path without using a shell
+ * redirection that the path guard can inspect. Let only a small, auditable
+ * read-only command subset continue to the normal read/write path checks.
+ */
+function bashProtectedRootMentionIsProvablyReadOnly(command: string): boolean {
+  return bashSegmentsUseOnlyReadOnlyCommands(command, BASH_PROTECTED_READ_ONLY_CMDS);
+}
+
+/** Every pipeline/list segment runs a command from `readOnly`, with no
+ *  command/process substitution, no `find` mutating action and no `rg --pre`. */
+function bashSegmentsUseOnlyReadOnlyCommands(command: string, readOnly: ReadonlySet<string>): boolean {
+  if (!command.trim() || /\$\(|`|[<>]\(/.test(command)) return false;
+  const segments = bashPathSegments(command);
+  if (!segments.length) return false;
+  for (const segment of segments) {
+    const effective = bashEffectiveCommand(segment.words);
+    if (!effective || !readOnly.has(effective.cmd)) return false;
+    if (effective.cmd === 'find' && effective.args.some((arg) => BASH_FIND_MUTATING_ACTIONS.has(arg))) {
+      return false;
+    }
+    if ((effective.cmd === 'rg' || effective.cmd === 'ag' || effective.cmd === 'ack')
+      && effective.args.some((arg) => arg === '--pre' || arg.startsWith('--pre='))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Whether a shell command provably reads only: every pipeline/list segment
+ * runs a command from the audited read-only set — or one of the listed
+ * commands that take no filesystem operand (`sleep`, `date`, `uname`,
+ * `whoami`, `hostname`, `id`, `which`) — with no substitution, no `find`
+ * mutating action, no `rg --pre`, and no segment redirects output anywhere
+ * but the null device. This is the admission test for running two `bash`
+ * calls concurrently (2026-09-18 decision): anything it cannot prove — a
+ * redirection, `sed -i`, `npm`, `node -e`, a `cd` — stays a barrier, because
+ * overlapping writes in one cwd race on files and on the ordering the model
+ * assumed. It never authorizes anything; the permission gates still run.
+ */
+export function bashCommandIsProvablyReadOnly(
+  command: string,
+  hostPlatform: NodeJS.Platform = process.platform,
+): boolean {
+  if (!bashSegmentsUseOnlyReadOnlyCommands(command, BASH_CONCURRENCY_READ_ONLY_CMDS)) return false;
+  for (const segment of bashPathSegments(command)) {
+    const effective = bashEffectiveCommand(segment.words, hostPlatform);
+    if (!effective) return false;
+    // These utilities also expose state-changing modes. Unknown arguments
+    // remain sequential; this does not change their permission checks.
+    if (effective.cmd === 'date'
+      && !effective.args.every(arg => arg.startsWith('+') || ['-u', '--utc', '--universal', '-R', '--rfc-email', '-I', '--iso-8601'].includes(arg))) return false;
+    if (effective.cmd === 'hostname'
+      && !effective.args.every(arg => ['-s', '-f', '-d', '-i', '-I', '--short', '--fqdn', '--domain', '--ip-address', '--all-ip-addresses'].includes(arg))) return false;
+    if (effective.cmd === 'file'
+      && effective.args.some(arg => arg === '--compile' || /^-[^-]*C/.test(arg))) return false;
+    if (segment.redirectTargets.some((target) => !isBashNullRedirection(target, hostPlatform))) return false;
+  }
+  return true;
+}
+
+/** `find [-H|-L|-P] [-O…] [-D opts] starting-point… [expression]`: only the
+ *  leading operands before the first expression token are paths the command
+ *  reads. Expression operands (`-maxdepth 1`, `-type f`, `-name x`) are not
+ *  paths — gating them as such resolved `1`/`f` against the cwd and could
+ *  raise a bogus sensitive-path prompt (or deny) for a read-only listing. */
+function findStartingPoints(args: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '-H' || a === '-L' || a === '-P' || /^-O\d*$/.test(a)) continue;
+    if (a === '-D') { i += 1; continue; }
+    if (a.startsWith('-') || a === '(' || a === '!' || a === ',') break;
+    out.push(a);
+  }
+  return out;
+}
+
+function bashNonFlagOperands(args: string[], flagsWithValue: Set<string> = BASH_GENERIC_FLAGS_WITH_VALUE): string[] {
+  const out: string[] = [];
+  let endOfOptions = false;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (!endOfOptions && a === '--') { endOfOptions = true; continue; }
+    if (!endOfOptions && a.startsWith('--target-directory=')) {
+      out.push(a.slice('--target-directory='.length));
+      continue;
+    }
+    if (!endOfOptions && a.startsWith('-')) {
+      if (!a.includes('=') && flagsWithValue.has(a)) i += 1;
+      continue;
+    }
+    out.push(a);
+  }
+  return out;
+}
+
+function powershellContentWriteOperands(args: string[]): string[] {
+  const explicit: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const flag = args[i].toLowerCase();
+    if (POWERSHELL_PATH_FLAGS.has(flag) && args[i + 1]) {
+      explicit.push(args[i + 1]);
+      i += 1;
+    }
+  }
+  if (explicit.length) return explicit;
+  return bashNonFlagOperands(args, POWERSHELL_CONTENT_FLAGS_WITH_VALUE).slice(0, 1);
+}
+
+function powershellNewItemOperands(args: string[]): Array<{ raw: string; uncertain: boolean }> {
+  const paths: string[] = [];
+  const positional: string[] = [];
+  let name: string | undefined;
+  let uncertain = false;
+  const valueFlags = new Set([...POWERSHELL_DELETE_FLAGS_WITH_VALUE, '-name', '-itemtype', '-type', '-value', '-credential']);
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (!arg.startsWith('-')) { positional.push(arg); continue; }
+    const colon = arg.indexOf(':');
+    const flag = (colon > 0 ? arg.slice(0, colon) : arg).toLowerCase();
+    if (valueFlags.has(flag)) {
+      const value = colon > 0 ? arg.slice(colon + 1) : args[++i];
+      if (value === undefined) { uncertain = true; continue; }
+      if (flag === '-path' || flag === '-literalpath') paths.push(value);
+      if (flag === '-name') name = value;
+    } else if (!['-force', '-whatif', '-confirm', '-verbose', '-debug'].includes(flag)) uncertain = true;
+  }
+  if (!paths.length) paths.push(...positional);
+  else if (positional.length) uncertain = true;
+  if (!paths.length) paths.push('.');
+  return paths.map((entry) => ({
+    raw: name ? `${entry.replace(/[\\/]+$/, '')}/${name}` : entry,
+    uncertain: uncertain || entry.includes(',') || !!name && /[\\/:,]/.test(name)
+      || /^(?:[^\\/:]{2,}:|[^\\/]+::)/.test(entry),
+  }));
+}
+
+function powershellDeleteOperands(args: string[]): string[] {
+  const explicit: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const flag = args[i].toLowerCase();
+    if (POWERSHELL_DELETE_PATH_FLAGS.has(flag) && args[i + 1]) {
+      explicit.push(args[i + 1]);
+      i += 1;
+    }
+  }
+  if (explicit.length) return explicit;
+  // Parameter names are case-insensitive: `-ErrorAction SilentlyContinue`
+  // must not make `SilentlyContinue` a deletion target.
+  const operands: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--') return [...operands, ...args.slice(i + 1)];
+    if (!args[i].startsWith('-')) operands.push(args[i]);
+    else if (POWERSHELL_DELETE_FLAGS_WITH_VALUE.has(args[i].toLowerCase())) i += 1;
+  }
+  return operands;
+}
+
+/** Move-Item and Copy-Item bind source and destination independently: either
+ * can be named while the other remains positional. Common parameter values
+ * such as `-ErrorAction Stop` are not filesystem operands. */
+function powershellTransferOperands(args: string[]): { sources: string[]; destination: string | null } {
+  const sources: string[] = [];
+  const positional: string[] = [];
+  let destination: string | null = null;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (!arg.startsWith('-')) {
+      positional.push(arg);
+      continue;
+    }
+    const colon = arg.indexOf(':');
+    const flag = (colon > 0 ? arg.slice(0, colon) : arg).toLowerCase();
+    if (!POWERSHELL_TRANSFER_FLAGS_WITH_VALUE.has(flag)) continue;
+    const value = colon > 0 ? arg.slice(colon + 1) : args[++i];
+    if (value === undefined) continue;
+    if (POWERSHELL_DELETE_PATH_FLAGS.has(flag)) sources.push(value);
+    else if (flag === '-destination') destination = value;
+  }
+  if (!sources.length && positional.length) sources.push(positional.shift()!);
+  if (destination === null) destination = positional.shift() ?? (sources.length ? '.' : null);
+  return { sources, destination };
+}
+
+function bashMutationOperands(cmd: string, args: string[]): string[] {
+  // Delete switches such as `rm -f` do not consume the following path. The
+  // generic table includes value-taking flags used by unrelated commands.
+  if (BASH_DELETE_MUTATION_CMDS.has(cmd)) return bashNonFlagOperands(args, new Set());
+  if (cmd === 'shred') return bashNonFlagOperands(args, BASH_SHRED_FLAGS_WITH_VALUE);
+  return bashNonFlagOperands(args);
+}
+
+function windowsDeleteOperands(args: string[]): string[] {
+  return args.filter((arg) => !/^\/(?:[afq]|a(?::.*)?)$/i.test(arg));
+}
+
+type SimpleDeletion = { operands: string[]; kind: 'unlink' | 'empty_directory' | 'remove' };
+
+function simpleDeletion(cmd: string, args: string[], hostPlatform: NodeJS.Platform): SimpleDeletion | null {
+  if (cmd === 'rmdir' && hostPlatform !== 'win32') {
+    // rmdir itself enforces emptiness at execution time. Parent traversal and
+    // unknown switches must never receive the ordinary deletion exemption.
+    const optionEnd = args.indexOf('--');
+    const options = optionEnd < 0 ? args : args.slice(0, optionEnd);
+    if (options.some((arg) => arg.startsWith('-') && arg !== '-v' && arg !== '--verbose')) return null;
+    return { operands: bashNonFlagOperands(args, new Set()), kind: 'empty_directory' };
+  }
+  if (cmd === 'rm') {
+    if (args.some((arg) => arg === '--recursive' || /^-[A-Za-z]*[rR][A-Za-z]*$/.test(arg))) return null;
+    for (const arg of args) {
+      if (arg === '--' || !arg.startsWith('-')) continue;
+      if (POSIX_RM_SAFE_SWITCHES.has(arg) || arg.startsWith('--preserve-root=')) continue;
+      if (/^-[fv]+$/.test(arg)) continue;
+      return null;
+    }
+    return { operands: bashNonFlagOperands(args, new Set()), kind: 'unlink' };
+  }
+  if (cmd === 'unlink') {
+    if (args.some((arg) => arg.startsWith('-') && arg !== '--')) return null;
+    return { operands: bashNonFlagOperands(args, new Set()), kind: 'unlink' };
+  }
+  if (cmd === 'remove-item') {
+    const lower = args.map((arg) => arg.toLowerCase());
+    // Keep cmd-style recursive deletion behind its existing risk gate even
+    // when a Windows spelling is also a PowerShell alias.
+    if (hostPlatform === 'win32' && lower.some((arg) => arg === '/s' || arg === '/p')) return null;
+    if (lower.some((arg) => POWERSHELL_DELETE_UNSAFE_FLAGS.has(arg))) return null;
+    for (let i = 0; i < args.length; i++) {
+      const flag = lower[i];
+      if (!args[i].startsWith('-')) continue;
+      if (POWERSHELL_DELETE_FLAGS_WITH_VALUE.has(flag)) {
+        if (!args[i + 1]) return null;
+        i += 1;
+        continue;
+      }
+      if (POWERSHELL_DELETE_SWITCHES.has(flag)) continue;
+      return null;
+    }
+    return { operands: powershellDeleteOperands(args), kind: 'remove' };
+  }
+  if (cmd === 'del' || cmd === 'erase') {
+    if (args.some((arg) => /^\/[ps]$/i.test(arg))) return null;
+    if (args.some((arg) => arg.startsWith('/') && !/^\/(?:[afq]|a(?::.*)?)$/i.test(arg))) return null;
+    return { operands: windowsDeleteOperands(args), kind: 'remove' };
+  }
+  return null;
+}
+
+function isLiteralAcceptedDeleteTarget(
+  raw: string,
+  workingDir: string | null,
+  env: Record<string, string>,
+  acceptsPath: (absPath: string) => boolean,
+): boolean {
+  if (!raw || /[$`*?\[\]{}]/.test(raw) || /%[A-Za-z_][A-Za-z0-9_]*%/.test(raw) || /^@\(/.test(raw)) {
+    return false;
+  }
+  const resolved = resolveBashCandidate(raw, workingDir, env);
+  return !!resolved?.abs && !resolved.dynamic && acceptsPath(resolved.abs);
+}
+
+function isLiteralEntry(raw: string): boolean {
+  return !!raw && !/[$`*?\[\]{}]/.test(raw)
+    && !raw.endsWith('/') && raw.split('/').at(-1) !== '.' && !raw.split('/').includes('..');
+}
+
+function movesLiteralEntry(args: string[], raw: string, hostPlatform: NodeJS.Platform): boolean {
+  if (hostPlatform === 'win32' || !isLiteralEntry(raw)) return false;
+  const optionEnd = args.indexOf('--');
+  const options = optionEnd < 0 ? args : args.slice(0, optionEnd);
+  return options.every((arg) => !arg.startsWith('-') || /^-[finv]+$/.test(arg)
+    || ['--force', '--interactive', '--no-clobber', '--verbose'].includes(arg));
+}
+
+function bashDestructiveRiskIsOnlyAcceptedFileDeletion(
+  command: string,
+  workingDir: string,
+  env: Record<string, string>,
+  acceptsPath: (absPath: string, pathOptions: PathAllowedOptions) => boolean,
+  hostPlatform: NodeJS.Platform,
+): boolean {
+  if (!command.trim()) return false;
+  let sawAcceptedFileDelete = false;
+  for (const { segment, env: segmentEnv, workingDir: segmentDirectory } of bashGuardPathSegments(command, env, hostPlatform, workingDir)) {
+    // Read/write scope and unresolved targets have their own filesystem gate.
+    // Redirection does not change deletion semantics, but raw-device writes
+    // contribute an independent destructive risk that this exemption must keep.
+    if (hasDestructiveBashRedirection(segment.redirectTargets)) return false;
+    const effective = bashEffectiveCommand(segment.words, hostPlatform);
+    if (!effective) continue;
+    const deletion = simpleDeletion(effective.cmd, effective.args, hostPlatform);
+    if (deletion !== null) {
+      const { operands } = deletion;
+      if (!operands.length || !operands.every((raw) => (
+        isLiteralAcceptedDeleteTarget(raw, segmentDirectory, segmentEnv, (abs) => acceptsPath(abs, {
+          followFinalSymlink: !(hostPlatform !== 'win32' && deletion.kind === 'unlink' && isLiteralEntry(raw)),
+        }))
+      ))) return false;
+      sawAcceptedFileDelete = true;
+      continue;
+    }
+    if (classifyBashCommand(segment.words.join(' ')).reasons.includes('destructive')) return false;
+  }
+  return sawAcceptedFileDelete;
+}
+
+/**
+ * Narrow ownership exception for the generic `destructive` command category.
+ * Every destructive segment must be a simple, literal, non-recursive deletion
+ * (including empty-directory removal) and every target must be owned by this
+ * conversation. Other risk categories and configured policy matches are evaluated separately.
+ */
+export function bashDestructiveRiskIsOnlyProducedFileDeletion(
+  command: string,
+  workingDir: string,
+  env: Record<string, string>,
+  hasProducedPath: ((absPath: string) => boolean) | undefined,
+  hostPlatform: NodeJS.Platform = process.platform,
+): boolean {
+  if (!hasProducedPath || !command.trim()) return false;
+  return bashDestructiveRiskIsOnlyAcceptedFileDeletion(command, workingDir, env, hasProducedPath, hostPlatform);
+}
+
+function bashDestructiveRiskIsOnlyWorkspaceFileDeletion(
+  command: string,
+  workingDir: string,
+  env: Record<string, string>,
+  opts: LocalToolsOpts,
+): boolean {
+  if (!opts.userId) return false;
+  let workspaceRoot = '';
+  try { workspaceRoot = getWorkspacePath(opts.userId, opts.projectId, opts.cid); }
+  catch { return false; }
+  if (!workspaceRoot) return false;
+  return bashDestructiveRiskIsOnlyAcceptedFileDeletion(
+    command,
+    workingDir,
+    env,
+    (candidate, pathOptions) => isPathAllowed(candidate, [workspaceRoot], pathOptions),
+    opts.hostPlatform ?? process.platform,
+  );
+}
+
+function bashEnvForPathResolution(ctx: ToolContext | undefined, workingDir: string): Record<string, string> {
+  const hostPathEnv: Record<string, string> = {};
+  for (const name of ['HOME', 'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'LOCALAPPDATA', 'APPDATA', 'TEMP', 'TMP', 'TMPDIR']) {
+    const value = process.env[name];
+    if (value) hostPathEnv[name] = value;
+  }
+  return {
+    ...hostPathEnv,
+    ...(ctx?.state.sandboxEnv as Record<string, string> | undefined),
+    ORKAS_OUTPUT_DIR: workingDir,
+    ORKAS_OUTPUT_MANIFEST: path.join(workingDir, BASH_OUTPUT_MANIFEST_NAME),
+    PWD: workingDir,
+    HOME: process.env.HOME || process.env.USERPROFILE || '',
+  };
+}
+
+export function expandKnownShellPathVars(raw: string, env: Record<string, string>): { value: string; dynamic: boolean } {
+  let dynamic = false;
+  const value = path.normalize(replaceKnownShellEnvTokens(raw, env, () => { dynamic = true; }));
+  return {
+    value,
+    dynamic: dynamic || value.includes('$') || value.includes('`') || /%[A-Za-z_][A-Za-z0-9_]*%/.test(value),
+  };
+}
+
+function resolveBashCandidate(raw: string, workingDir: string | null, env: Record<string, string>): { abs?: string; dynamic?: boolean } | null {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed || trimmed === '-' || /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed)) return null;
+  // Lexical normalization cannot resolve `link/..`: the OS traverses the
+  // link first. Keep that uncertainty in the existing one-time approval path.
+  if (workingDir === null) {
+    const expanded = expandKnownShellPathVars(trimmed, env);
+    if (expanded.dynamic || !path.isAbsolute(expanded.value)) return { dynamic: true };
+    workingDir = path.parse(expanded.value).root;
+  }
+  const unnormalized = replaceKnownShellEnvTokens(trimmed, env, () => {});
+  const parts = unnormalized.split(path.sep);
+  if (parts.includes('..')) {
+    let prefix = path.isAbsolute(unnormalized) ? path.parse(unnormalized).root : workingDir;
+    let crossedLink = false;
+    for (const part of parts) {
+      if (part === '..' && crossedLink) return { dynamic: true };
+      prefix = path.join(prefix, part);
+      try { crossedLink ||= fs.lstatSync(prefix).isSymbolicLink(); }
+      catch { /* Missing paths retain the existing lexical fallback. */ }
+    }
+  }
+  const expanded = expandKnownShellPathVars(trimmed, env);
+  if (expanded.dynamic) return { dynamic: true };
+  let value = expanded.value;
+  if (value === '~' || value.startsWith('~/')) {
+    const home = env.HOME || process.env.HOME || process.env.USERPROFILE || '';
+    if (!home) return { dynamic: true };
+    value = path.join(home, value.slice(2));
+  }
+  const globAt = value.search(/[*?\[\]{}]/);
+  if (globAt >= 0) {
+    const prefix = value.slice(0, globAt);
+    value = prefix.endsWith(path.sep) ? prefix.slice(0, -1) : path.dirname(prefix || '.');
+  }
+  return { abs: path.resolve(workingDir, value) };
+}
+
+function addBashCandidate(
+  out: BashPathCandidate[],
+  raw: string,
+  reason: string,
+  workingDir: string | null,
+  env: Record<string, string>,
+  removesSource = false,
+  operatesOnEntry = false,
+): void {
+  const resolved = resolveBashCandidate(raw, workingDir, env);
+  if (!resolved) return;
+  out.push({
+    raw,
+    reason,
+    ...(resolved.abs ? { abs: resolved.abs } : {}),
+    ...(resolved.dynamic ? { dynamic: true } : {}),
+    ...(removesSource ? { removesSource: true } : {}),
+    ...(operatesOnEntry ? { operatesOnEntry: true } : {}),
+  });
+}
+
+/** Split `mv` operands into the paths that lose their current location and
+ *  the one that gains them. `-t DIR` / `--target-directory=DIR` invert the
+ *  usual "last operand is the destination" shape: with either flag, every
+ *  positional operand is a source. */
+function bashMoveOperands(args: string[]): { sources: string[]; destination: string | null } {
+  let targetDir: string | null = null;
+  const positional: string[] = [];
+  let endOfOptions = false;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (!endOfOptions && a === '--') { endOfOptions = true; continue; }
+    if (!endOfOptions && a.startsWith('--target-directory=')) {
+      targetDir = a.slice('--target-directory='.length);
+      continue;
+    }
+    if (!endOfOptions && /^-t.+/.test(a)) { targetDir = a.slice(2); continue; }
+    if (!endOfOptions && a.startsWith('-')) {
+      if (a === '-t' || a === '--target-directory') {
+        if (args[i + 1] !== undefined) targetDir = args[i + 1];
+        i += 1;
+        continue;
+      }
+      if (!a.includes('=') && BASH_GENERIC_FLAGS_WITH_VALUE.has(a)) i += 1;
+      continue;
+    }
+    positional.push(a);
+  }
+  if (targetDir !== null) return { sources: positional, destination: targetDir };
+  // A lone operand is a malformed `mv`; treat it as a source so the gate
+  // errs toward asking rather than toward silently relocating a file.
+  if (positional.length < 2) return { sources: positional, destination: null };
+  return { sources: positional.slice(0, -1), destination: positional[positional.length - 1] };
+}
+
+function addBashCurlTargets(out: BashPathCandidate[], args: string[], workingDir: string | null, env: Record<string, string>): void {
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if ((a === '-o' || a === '--output') && args[i + 1]) addBashCandidate(out, args[++i], 'download output', workingDir, env);
+    else if (a.startsWith('--output=')) addBashCandidate(out, a.slice('--output='.length), 'download output', workingDir, env);
+  }
+}
+
+function addBashWgetTargets(out: BashPathCandidate[], args: string[], workingDir: string | null, env: Record<string, string>): void {
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if ((a === '-O' || a === '--output-document') && args[i + 1]) addBashCandidate(out, args[++i], 'download output', workingDir, env);
+    else if (a.startsWith('--output-document=')) addBashCandidate(out, a.slice('--output-document='.length), 'download output', workingDir, env);
+  }
+}
+
+function gitCloneDestination(args: string[], gh = false): string | null {
+  const start = gh ? 2 : 1;
+  const operands = _cloneOperands(gh ? ['gh', 'repo', 'clone', ...args.slice(2)] : ['git', 'clone', ...args.slice(1)], gh ? 3 : 2);
+  if (!operands[0]) return null;
+  return operands[1] || _repoDefaultDir(operands[0] || args[start] || 'repo');
+}
+
+function tarFileOperand(args: string[]): string | null {
+  const fIdx = args.findIndex((a) => a === '-f' || a === '--file');
+  if (fIdx >= 0 && args[fIdx + 1]) return args[fIdx + 1];
+  const eq = args.find((a) => a.startsWith('--file='));
+  if (eq) return eq.slice('--file='.length);
+  const clustered = args.find((a) => /^-[A-Za-z]*f[A-Za-z]*$/.test(a));
+  if (clustered) {
+    const idx = args.indexOf(clustered);
+    if (idx >= 0 && args[idx + 1]) return args[idx + 1];
+  }
+  return null;
+}
+
+function bashScriptOperand(cmd: string, args: string[]): string | null {
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--') return args[i + 1] || null;
+    if (a === '-') return null;
+    if (cmd === 'node' && (a === '-e' || a === '--eval' || a === '-p' || a === '--print')) {
+      i += 1;
+      continue;
+    }
+    if ((cmd === 'python' || cmd === 'python3') && (a === '-c' || a === '-m')) {
+      i += 1;
+      continue;
+    }
+    if ((cmd === 'perl' || cmd === 'ruby' || cmd === 'php') && (a === '-e' || a === '-E')) {
+      i += 1;
+      continue;
+    }
+    if (a === '-c') {
+      i += 1;
+      continue;
+    }
+    if (a.startsWith('-')) continue;
+    return a;
+  }
+  return null;
+}
+
+function grepReadOperands(args: string[]): string[] {
+  const operands = bashNonFlagOperands(args, BASH_GREP_FLAGS_WITH_VALUE);
+  if (!operands.length) return [];
+  const hasPatternFlag = args.some((a) => a === '-e' || a === '--regexp' || a.startsWith('--regexp='));
+  return hasPatternFlag ? operands : operands.slice(1);
+}
+
+function sedReadOperands(args: string[]): string[] {
+  if (args.some((a) => a === '-i' || a.startsWith('-i'))) return [];
+  const operands = bashNonFlagOperands(args);
+  if (!operands.length) return [];
+  const hasScriptFlag = args.some((a) => a === '-e' || a === '-f' || a === '--expression' || a === '--file' || a.startsWith('--expression=') || a.startsWith('--file='));
+  return hasScriptFlag ? operands : operands.slice(1);
+}
+
+function awkReadOperands(args: string[]): string[] {
+  const operands = bashNonFlagOperands(args, BASH_AWK_FLAGS_WITH_VALUE);
+  if (!operands.length) return [];
+  const hasScriptFile = args.some((a) => a === '-f' || a.startsWith('-f') || a === '--file' || a.startsWith('--file='));
+  return hasScriptFile ? operands : operands.slice(1);
+}
+
+function isBashNullRedirection(target: string, hostPlatform: NodeJS.Platform): boolean {
+  if (hostPlatform === 'win32') return target.toLowerCase() === '$null';
+  if (target !== '/dev/null') return false;
+  // Only the actual null device is a stream sink/source, never a look-alike
+  // file, symlink, or a deletion operand bearing the same path.
+  try { return fs.lstatSync(target).isCharacterDevice(); }
+  catch { return false; }
+}
+
+function collectBashMutationCandidates(
+  command: string,
+  workingDir: string,
+  env: Record<string, string>,
+  hostPlatform: NodeJS.Platform,
+): BashPathCandidate[] {
+  const out: BashPathCandidate[] = [];
+  for (const { segment: seg, env: segmentEnv, workingDir: segmentDirectory } of bashGuardPathSegments(command, env, hostPlatform, workingDir)) {
+    const firstCandidate = out.length;
+    for (const target of seg.redirectTargets) {
+      if (isBashNullRedirection(target, hostPlatform)) continue;
+      addBashCandidate(out, target, 'redirection', segmentDirectory, segmentEnv);
+    }
+    const eff = bashEffectiveCommand(seg.words, hostPlatform);
+    if (!eff) continue;
+    const { cmd, args } = eff;
+
+    if (cmd === 'new-item' || (hostPlatform === 'win32' && cmd === 'ni')) {
+      for (const operand of powershellNewItemOperands(args)) {
+        if (operand.uncertain) out.push({ raw: operand.raw, reason: cmd, dynamic: true });
+        else addBashCandidate(out, operand.raw, cmd, segmentDirectory, segmentEnv);
+      }
+    } else if (POWERSHELL_CONTENT_WRITE_CMDS.has(cmd)) {
+      for (const operand of powershellContentWriteOperands(args)) {
+        addBashCandidate(out, operand, cmd, segmentDirectory, segmentEnv);
+      }
+    } else if (cmd === 'remove-item') {
+      for (const operand of powershellDeleteOperands(args)) {
+        addBashCandidate(out, operand, cmd, segmentDirectory, segmentEnv, true);
+      }
+    } else if (cmd === 'del' || cmd === 'erase') {
+      for (const operand of windowsDeleteOperands(args)) {
+        addBashCandidate(out, operand, cmd, segmentDirectory, segmentEnv, true);
+      }
+    } else if (cmd === 'mv') {
+      const { sources, destination } = bashMoveOperands(args);
+      for (const operand of sources) addBashCandidate(out, operand, 'mv source', segmentDirectory, segmentEnv, true,
+        movesLiteralEntry(args, operand, hostPlatform));
+      if (destination !== null) addBashCandidate(out, destination, 'mv destination', segmentDirectory, segmentEnv);
+    } else if (cmd === 'move-item' || cmd === 'copy-item') {
+      const { sources, destination } = powershellTransferOperands(args);
+      if (cmd === 'move-item') {
+        for (const operand of sources) addBashCandidate(out, operand, 'move-item source', segmentDirectory, segmentEnv, true);
+      }
+      if (destination !== null) addBashCandidate(out, destination, `${cmd} destination`, segmentDirectory, segmentEnv);
+    } else if (BASH_MUTATE_ALL_OPERANDS.has(cmd)) {
+      const removesSource = BASH_DELETE_MUTATION_CMDS.has(cmd) || cmd === 'shred';
+      const deletion = simpleDeletion(cmd, args, hostPlatform);
+      for (const operand of bashMutationOperands(cmd, args)) {
+        addBashCandidate(out, operand, cmd, segmentDirectory, segmentEnv, removesSource,
+          hostPlatform !== 'win32' && deletion?.kind === 'unlink' && isLiteralEntry(operand));
+      }
+    } else if (BASH_DEST_LAST_OPERAND.has(cmd)) {
+      const { destination } = bashMoveOperands(args);
+      if (destination !== null) addBashCandidate(out, destination, cmd, segmentDirectory, segmentEnv);
+    } else if (cmd === 'tee') {
+      for (const operand of bashNonFlagOperands(args, new Set(['-a', '-i', '-p', '--append', '--ignore-interrupts']))) {
+        addBashCandidate(out, operand, 'tee output', segmentDirectory, segmentEnv);
+      }
+    } else if (cmd === 'dd') {
+      for (const a of args) if (a.startsWith('of=')) addBashCandidate(out, a.slice(3), 'dd output', segmentDirectory, segmentEnv);
+    } else if (cmd === 'sed' && args.some((a) => a === '-i' || a.startsWith('-i'))) {
+      for (const operand of bashNonFlagOperands(args).filter((a) => {
+        const r = resolveBashCandidate(a, segmentDirectory, segmentEnv);
+        return r?.dynamic || (!!r?.abs && fs.existsSync(r.abs));
+      })) addBashCandidate(out, operand, 'sed in-place edit', segmentDirectory, segmentEnv);
+    } else if (cmd === 'perl' && args.some((a) => /^-.*i/.test(a))) {
+      for (const operand of bashNonFlagOperands(args).filter((a) => {
+        const r = resolveBashCandidate(a, segmentDirectory, segmentEnv);
+        return r?.dynamic || (!!r?.abs && fs.existsSync(r.abs));
+      })) addBashCandidate(out, operand, 'perl in-place edit', segmentDirectory, segmentEnv);
+    } else if (cmd === 'curl') {
+      addBashCurlTargets(out, args, segmentDirectory, segmentEnv);
+    } else if (cmd === 'wget') {
+      addBashWgetTargets(out, args, segmentDirectory, segmentEnv);
+    } else if (cmd === 'git' && args[0] === 'clone') {
+      const dest = gitCloneDestination(args);
+      if (dest) addBashCandidate(out, dest, 'git clone destination', segmentDirectory, segmentEnv);
+    } else if (cmd === 'gh' && args[0] === 'repo' && args[1] === 'clone') {
+      const dest = gitCloneDestination(args, true);
+      if (dest) addBashCandidate(out, dest, 'gh repo clone destination', segmentDirectory, segmentEnv);
+    } else if (cmd === 'tar' && args.some((a) => /^-.*x/.test(a) || a === '--extract')) {
+      const cIdx = args.findIndex((a) => a === '-C' || a === '--directory');
+      const eq = args.find((a) => a.startsWith('--directory='));
+      if (cIdx >= 0 && args[cIdx + 1]) addBashCandidate(out, args[cIdx + 1], 'tar extract directory', segmentDirectory, segmentEnv);
+      else if (eq) addBashCandidate(out, eq.slice('--directory='.length), 'tar extract directory', segmentDirectory, segmentEnv);
+    } else if (cmd === 'unzip') {
+      const dIdx = args.findIndex((a) => a === '-d');
+      if (dIdx >= 0 && args[dIdx + 1]) addBashCandidate(out, args[dIdx + 1], 'unzip output directory', segmentDirectory, segmentEnv);
+    }
+    for (const candidate of out.slice(firstCandidate)) {
+      if (!candidate.dynamic) continue;
+      const names = [...candidate.raw.matchAll(/\$(?:env:)?([A-Za-z_][A-Za-z0-9_]*)/gi)].slice(0, 4);
+      const expressions = names.map(match => seg.pathExpressions?.[match[1].toLowerCase()]).filter(Boolean);
+      if (expressions.length) candidate.detail = [...new Set(expressions)].join('; ');
+    }
+  }
+  return out;
+}
+
+function collectBashReadCandidates(
+  command: string,
+  workingDir: string,
+  env: Record<string, string>,
+  hostPlatform: NodeJS.Platform,
+): BashPathCandidate[] {
+  const out: BashPathCandidate[] = [];
+  for (const { segment: seg, env: segmentEnv, workingDir: segmentDirectory } of bashGuardPathSegments(command, env, hostPlatform, workingDir)) {
+    const firstCandidate = out.length;
+    for (const target of seg.inputTargets) {
+      if (hostPlatform !== 'win32' && isBashNullRedirection(target, hostPlatform)) continue;
+      addBashCandidate(out, target, 'input redirection', segmentDirectory, segmentEnv);
+    }
+    const eff = bashEffectiveCommand(seg.words, hostPlatform);
+    if (!eff) continue;
+    const { cmd, args } = eff;
+
+    if (cmd === 'find') {
+      for (const operand of findStartingPoints(args)) addBashCandidate(out, operand, cmd, segmentDirectory, segmentEnv);
+    } else if (BASH_READ_ALL_OPERANDS.has(cmd)) {
+      for (const operand of bashNonFlagOperands(args)) addBashCandidate(out, operand, cmd, segmentDirectory, segmentEnv);
+    } else if (BASH_READ_PATTERN_FIRST_CMDS.has(cmd)) {
+      for (const operand of grepReadOperands(args)) addBashCandidate(out, operand, cmd, segmentDirectory, segmentEnv);
+    } else if (cmd === 'sed') {
+      for (const operand of sedReadOperands(args)) addBashCandidate(out, operand, 'sed read', segmentDirectory, segmentEnv);
+    } else if (cmd === 'awk') {
+      for (const operand of awkReadOperands(args)) addBashCandidate(out, operand, 'awk read', segmentDirectory, segmentEnv);
+    } else if (cmd === 'cd' || cmd === 'pushd'
+      || (hostPlatform === 'win32' && ['chdir', 'sl', 'set-location', 'push-location'].includes(cmd))) {
+      const operand = bashNonFlagOperands(args)[0];
+      if (operand) addBashCandidate(out, operand, cmd, segmentDirectory, segmentEnv);
+    } else if (BASH_DEST_LAST_OPERAND.has(cmd)) {
+      for (const operand of bashMoveOperands(args).sources) addBashCandidate(out, operand, `${cmd} source`, segmentDirectory, segmentEnv);
+    } else if (cmd === 'copy-item') {
+      for (const operand of powershellTransferOperands(args).sources) {
+        addBashCandidate(out, operand, 'copy-item source', segmentDirectory, segmentEnv);
+      }
+    } else if (BASH_READ_SCRIPT_CMDS.has(cmd)) {
+      const operand = bashScriptOperand(cmd, args);
+      if (operand) addBashCandidate(out, operand, `${cmd} script`, segmentDirectory, segmentEnv);
+    } else if (cmd === 'tar') {
+      const operand = tarFileOperand(args);
+      if (operand) addBashCandidate(out, operand, 'tar archive', segmentDirectory, segmentEnv);
+    } else if (cmd === 'unzip') {
+      const operand = bashNonFlagOperands(args)[0];
+      if (operand) addBashCandidate(out, operand, 'unzip archive', segmentDirectory, segmentEnv);
+    }
+    for (const candidate of out.slice(firstCandidate)) {
+      if (!candidate.dynamic) continue;
+      const names = [...candidate.raw.matchAll(/\$(?:env:)?([A-Za-z_][A-Za-z0-9_]*)/gi)].slice(0, 4);
+      const expressions = names.map(match => seg.pathExpressions?.[match[1].toLowerCase()]).filter(Boolean);
+      if (expressions.length) candidate.detail = [...new Set(expressions)].join('; ');
+    }
+  }
+  return out;
+}
+
+function bashScopedRootsFor(opts: LocalToolsOpts, workingDir: string): string[] {
+  if (localAccessAllowsOutsideWorkspace()) return [];
+  const roots = allowedRootsFor(opts);
+  if (!opts.userId && workingDir) roots.push(workingDir);
+  if (opts.analysisInputRoots?.length) {
+    for (const root of opts.analysisInputRoots) if (root) roots.push(root);
+  }
+  return roots;
+}
+
+function bashWritableRootsFor(opts: LocalToolsOpts, workingDir: string): string[] {
+  if (localAccessAllowsOutsideWorkspace()) return [];
+  const roots = allowedRootsFor(opts);
+  if (!opts.userId && workingDir) roots.push(workingDir);
+  return roots;
+}
+
+function guardBashScopedPath(opts: LocalToolsOpts, abs: string, workingDir: string, access: 'read' | 'write', pathOptions: PathAllowedOptions = {}): string | null {
+  if (access === 'write') {
+    const protectedRoot = protectedRootForPath(opts, abs)
+      || (pathOptions.followFinalSymlink === false ? protectedRootForPath(opts, resolveSandboxEntry(abs)) : null);
+    if (protectedRoot) return protectedWriteError(abs, protectedRoot);
+  }
+  const roots = access === 'read'
+    ? bashScopedRootsFor(opts, workingDir)
+    : bashWritableRootsFor(opts, workingDir);
+  if (!roots.length) {
+    return localAccessAllowsOutsideWorkspace()
+      ? null
+      : errText('E_NO_SCOPE', `no ${access === 'read' ? 'readable' : 'writable'} roots for this bash command`);
+  }
+  if (isPathAllowed(abs, roots, pathOptions)) return null;
+  if (!localAccessAllowsOutsideWorkspace()) {
+    return errText(
+      'E_PATH_OUT_OF_SCOPE',
+      `bash target is outside the current workspace/attachment scope and the current access mode only allows workspace files: ${abs}`,
+    );
+  }
+  return null;
+}
+
+function guardBashWritablePath(opts: LocalToolsOpts, abs: string, workingDir: string): string | null {
+  return guardBashScopedPath(opts, abs, workingDir, 'write');
+}
+
+async function gateBashPathAccess(
+  opts: LocalToolsOpts,
+  abs: string,
+  workingDir: string,
+  access: 'read' | 'write',
+  ctx?: ToolContext,
+  pathOptions: PathAllowedOptions = {},
+): Promise<BashPathGateResult> {
+  const denied = guardBashScopedPath(opts, abs, workingDir, access, pathOptions);
+  if (denied) return { error: denied, approvedReasons: [] };
+  if (opts.analysisInputRoots?.length && isPathAllowed(abs, opts.analysisInputRoots)) {
+    return { error: null, approvedReasons: [] };
+  }
+  return gateSensitiveLocalPathDetailed(opts, abs, 'bash', access, ctx);
+}
+
+/**
+ * Same rule as `delete_file`, enforced on the shell.
+ *
+ * `delete_file` makes removing a file outside the writable workspace cost a
+ * user click. Nothing used to apply that rule to `bash`, so `rm <file>` and
+ * especially `mv <file> /tmp/...` walked the same file out of the user's repo
+ * with no prompt at all — the confirm card was one `bash` call away from
+ * irrelevant, and a model that hits the card reliably finds the shell next.
+ *
+ * Scope is deliberately narrow: inside the writable workspace nothing
+ * changes (both tools remove outright there), and only paths that actually
+ * exist are gated, so a `rm -f` over a missing file stays quiet.
+ */
+async function gateBashSourceRemoval(
+  opts: LocalToolsOpts,
+  ctx: ToolContext | undefined,
+  command: string,
+  candidate: BashPathCandidate,
+): Promise<{ error: string | null; approvedReasons: LocalAccessRiskCategory[] }> {
+  if (!candidate.removesSource || !candidate.abs) return { error: null, approvedReasons: [] };
+  if (!localAccessRequiresSensitiveApproval()) return { error: null, approvedReasons: [] };
+  if (isInWritableWorkspaceScope(opts, candidate.abs, { followFinalSymlink: !candidate.operatesOnEntry })) return { error: null, approvedReasons: [] };
+  if (candidate.operatesOnEntry) {
+    try { fs.lstatSync(candidate.abs); }
+    catch { return { error: null, approvedReasons: [] }; }
+  } else if (!fs.existsSync(candidate.abs)) return { error: null, approvedReasons: [] };
+  const decision = await requestBashDecision({
+    uid: opts.userId ?? '',
+    cid: opts.cid ?? '',
+    agentId: opts.agentId ?? '',
+    agentName: opts.agentName ?? opts.agentId ?? '',
+    command,
+    operation: candidate.reason,
+    subject: candidate.abs,
+    reasons: ['destructive'],
+    onWaiting: permissionWaitProgress(ctx, 'bash'),
+  });
+  if (decision !== 'deny') return { error: null, approvedReasons: ['destructive'] };
+  return {
+    error: errText(
+      'E_BASH_RISK_DENIED',
+      `the user declined to remove "${candidate.abs}", which is outside the writable workspace. `
+      + 'Do not retry, and do not move, rename, or overwrite it as a way around the prompt; '
+      + 'explain in prose what you intended and ask the user how to proceed.',
+    ),
+    approvedReasons: [],
+  };
+}
+
+function mergeRiskReasons(target: LocalAccessRiskCategory[], source: readonly LocalAccessRiskCategory[]): void {
+  for (const reason of source) if (!target.includes(reason)) target.push(reason);
+}
+
+const EXTERNAL_MUTATION_SCRIPT_MAX_BYTES = 512 * 1024;
+
+async function dataImportShadowed(root: string, modules: readonly string[]): Promise<boolean> {
+  // Native and sourceless modules can shadow the data libraries too. Bound the
+  // directory work for the stronger proof; uncertainty retains approval.
+  let entries = 1024;
+  for (const folder of [root, ...modules.map(name => path.join(root, name))]) {
+    try {
+      const directory = await fs.promises.opendir(folder);
+      for await (const entry of directory) {
+        if (--entries < 0) return true;
+        const names = folder === root ? modules : ['__init__'];
+        const candidate = entry.name.toLowerCase();
+        if (names.some(name => candidate.startsWith(name + '.')
+          && ['.so', '.pyd', '.pyc'].some(extension => candidate.endsWith(extension)))) return true;
+      }
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      // A file in sys.path can be a zip importer. Its contents are unresolved.
+      if (code !== 'ENOENT' && !(code === 'ENOTDIR' && folder !== root)) return true;
+    }
+  }
+  return false;
+}
+
+async function classifyBashRiskIncludingScripts(command: string, workingDir: string, opts: LocalToolsOpts, ctx?: ToolContext) {
+  const heredocs = analyzeBashHeredocs(command);
+  const base = classifyBashCommand(heredocs.shellSurface);
+  const ordinaryRoots = allowedRootsFor(opts);
+  if (!opts.userId) ordinaryRoots.push(workingDir);
+  const ordinary = ordinaryBashReasons(command, {
+    cwd: workingDir,
+    platform: opts.hostPlatform ?? process.platform,
+    canWrite: file => {
+      const abs = resolveSandboxRoot(file);
+      return !ordinaryRoots.some(root => resolveSandboxRoot(root) === abs)
+        && !protectedRootForPath(opts, abs) && isPathAllowed(abs, ordinaryRoots)
+        && sensitivePathReasons(abs, 'write', { trustedRoots: ordinaryRoots }).length === 0;
+    },
+    isProduced: file => opts.hasProducedPath?.(file) === true || taskFileOwnership.get(opts)?.canRemoveTree(file) === true,
+    ownsTree: file => taskFileOwnership.get(opts)?.canRemoveTree(file) === true,
+  });
+  base.reasons = base.reasons.filter(reason => !ordinary.has(reason));
+  if (ordinary.has('destructive')) base.irreversible = [];
+  if (ordinary.has('external_mutation')) base.externalMutations = [];
+  let scope: ReturnType<typeof bashGuardPathSegments> | undefined;
+  // This parser masks heredocs itself; passing an already masked surface
+  // would lose its terminators and hide commands following the first body.
+  const scriptScope = () => scope ??= bashGuardPathSegments(command, bashEnvForPathResolution(ctx, workingDir), opts.hostPlatform ?? process.platform, workingDir);
+  const externalMutations: ExternalMutationFinding[] = [...base.externalMutations];
+  for (const payload of heredocs.nonShellPayloads) {
+    if (!payload.fileTarget) externalMutations.push(...classifyExternalMutationScript(payload.source, payload));
+  }
+  // File contents cannot declare shell entrypoints. Inspect the shell surface
+  // and include not-yet-written sources when a script is invoked in this call.
+  const scriptRefs = referencedExecutableScripts(heredocs.shellSurface);
+  const filePayloads = heredocs.nonShellPayloads.filter(payload => payload.fileTarget);
+  if (filePayloads.length) {
+    const scopes = scriptScope();
+    const dirs = [...new Set(scopes.map(scope => scope.workingDir))];
+    const uncertain = dirs.includes(null) || dirs.length > 32
+      || scriptRefs.some(ref => bashLiteralAssignmentValue(ref) === null);
+    // A pipeline can feed a pending file into an interpreter without naming
+    // that file as its script operand. Preserve conservative inspection for
+    // these consumers instead of granting an exemption from a filename match.
+    const pipelineInterpreter = scopes.some(({ segment }, index) => {
+      const previous = scopes[index - 1]?.segment.separatorAfter;
+      const effective = bashEffectiveCommand(segment.words);
+      return (previous === '|' || previous === '|&') && effective
+        && /^(?:python(?:3(?:\.\d+)?)?|py|node|ruby|perl|php|bash|dash|ksh|sh|zsh|eval|source|\.)$/.test(effective.cmd);
+    });
+    const referenced = new Set(scriptRefs.flatMap(ref => (uncertain ? [workingDir] : dirs)
+      .map(dir => resolveSandboxRoot(path.resolve(dir!, ref)))));
+    for (const payload of filePayloads) {
+      if ((uncertain && scriptRefs.length) || pipelineInterpreter
+        || dirs.some(dir => dir !== null && referenced.has(resolveSandboxRoot(path.resolve(dir, payload.fileTarget!))))) {
+        externalMutations.push(...classifyExternalMutationScript(payload.source, {
+          language: path.extname(payload.fileTarget!) === '.py' ? 'python' : undefined,
+        }));
+      }
+    }
+  }
+  for (const scriptRef of scriptRefs) {
+    const abs = path.isAbsolute(scriptRef) ? path.resolve(scriptRef) : path.resolve(workingDir, scriptRef);
+    try {
+      const stat = await fs.promises.stat(abs);
+      if (!stat.isFile() || stat.size <= 0 || stat.size > EXTERNAL_MUTATION_SCRIPT_MAX_BYTES) continue;
+      const source = await fs.promises.readFile(abs, 'utf8');
+      const findings = classifyExternalMutationScript(source, { language: path.extname(abs) === '.py' ? 'python' : undefined });
+      const exactSource = !findings.some(f => f.resource) || path.isAbsolute(scriptRef)
+        || scriptScope().every(s => s.workingDir === workingDir);
+      externalMutations.push(...findings.map(f => exactSource ? f : (({ resource: _resource, ...rest }) => rest)(f)));
+    } catch {
+      // Missing/unreadable scripts are not evidence of a specific mutation;
+      // the execution layer will surface the canonical launch/read failure.
+    }
+  }
+  const segments = externalMutations.some(f => f.resource) ? scriptScope() : [];
+  const directories = [...new Set(segments.map(s => s.workingDir))];
+  const uncertainDirectory = segments.some(({ segment }) => segment.words.some(word =>
+    ['pushd', 'popd', 'set-location', 'chdir', '--chdir'].includes(word.split('=')[0].toLowerCase()) || word.startsWith('-C')));
+  const roots = allowedRootsFor(opts);
+  if (!opts.userId) roots.push(workingDir);
+  // A workspace module can shadow Python's standard library. Such an import
+  // does not establish a SQLite connection, even with a familiar module name.
+  const importRoots = [...new Set([
+    ...directories.filter((dir): dir is string => dir !== null),
+    ...scriptRefs.map(ref => path.dirname(path.resolve(workingDir, ref))),
+    ...segments.flatMap(s => (s.env.PYTHONPATH || '').split(path.delimiter).filter(Boolean).map(p => path.resolve(s.workingDir || workingDir, p))),
+  ])];
+  const importCandidates = [...new Set(externalMutations.flatMap(f => f.resource?.imports ?? ['sqlite3', 'pathlib']))]
+    .flatMap(name => [name + '.py', name + '/__init__.py']);
+  let shadowedImport = externalMutations.some(f => f.resource) && (importRoots.length > 32 || importRoots.some(root =>
+    importCandidates.some(name =>
+      fs.existsSync(path.join(root, name)) || filePayloads.some(payload =>
+        directories.some(dir => dir !== null && path.resolve(dir, payload.fileTarget!) === path.join(root, name))))));
+  const dataModules = [...new Set(externalMutations.flatMap(f => f.resource?.imports ?? []))];
+  if (!shadowedImport && dataModules.length) {
+    const nativeOrBytecode = (file: string, root: string) => dataModules.some(name => {
+      const relative = path.relative(root, file).split(path.sep).join('/').toLowerCase();
+      return !relative || [name + '.', name + '/__init__.'].some(prefix => relative.startsWith(prefix)
+        && !relative.slice(prefix.length).includes('/') && ['.so', '.pyd', '.pyc'].some(ext => relative.endsWith(ext)));
+    });
+    for (const root of importRoots) {
+      if (await dataImportShadowed(root, dataModules) || filePayloads.some(payload =>
+        directories.some(dir => dir !== null && nativeOrBytecode(path.resolve(dir, payload.fileTarget!), root)))) {
+        shadowedImport = true;
+        break;
+      }
+    }
+  }
+  const localResources = new Map<string, boolean>();
+  const isLocal = (database: string): boolean => {
+    if (shadowedImport || uncertainDirectory || !directories.length || directories.some(dir => dir === null)) return false;
+    if (localResources.has(database)) return localResources.get(database)!;
+    let allowed = database === ':memory:';
+    // URI/VFS options and foreign path syntaxes need their existing approval;
+    // never resolve a URI or a Windows path as an innocuous POSIX filename.
+    if (!allowed && database && !/[\x00-\x1f]/.test(database) && !/^file:|^[a-z]+:\/\//i.test(database)
+      && !(process.platform !== 'win32' && (path.win32.isAbsolute(database) || database.includes('\\')))
+      && !uncertainDirectory && directories.length > 0 && directories.every(Boolean)) {
+      allowed = directories.every(dir => {
+        const abs = resolveSandboxRoot(path.resolve(dir!, database));
+        return !protectedRootForPath(opts, abs) && isPathAllowed(abs, roots)
+          && sensitivePathReasons(abs, 'write', { trustedRoots: roots }).length === 0;
+      });
+    }
+    localResources.set(database, allowed);
+    return allowed;
+  };
+  const seen = new Set<string>();
+  const remaining = externalMutations.filter(f => !f.resource || !isLocal(f.resource.database)).flatMap(f => {
+    const { resource: _resource, ...finding } = f;
+    const key = JSON.stringify(finding);
+    if (seen.has(key)) return [];
+    seen.add(key);
+    return [finding];
+  });
+  const reasons: typeof base.reasons = base.reasons.filter(reason => reason !== 'external_mutation');
+  if (remaining.length) reasons.push('external_mutation');
+  return {
+    ...base,
+    reasons,
+    risky: reasons.length > 0,
+    externalMutations: remaining,
+    shellSurface: heredocs.shellSurface,
+  };
+}
+
+async function guardBashPathCandidates(
+  opts: LocalToolsOpts,
+  ctx: ToolContext,
+  workingDir: string,
+  candidates: BashPathCandidate[],
+  access: 'read' | 'write',
+  command = '',
+  allowUnresolvedPaths = false,
+): Promise<BashFilesystemGuardResult> {
+  const approvedReasons: LocalAccessRiskCategory[] = [];
+  const seen = new Set<string>();
+  // Unknown paths are an approval fact, not unsupported shell syntax. Check
+  // known targets first so an approval never overrides a concrete scope denial.
+  const unresolvedPaths = !allowUnresolvedPaths && candidates.some((c) => c.dynamic || !c.abs);
+  for (const c of candidates) {
+    const key = `${c.removesSource ? 'remove' : 'access'}:${c.operatesOnEntry ? 'entry' : 'target'}:${c.abs}`;
+    if (!c.abs || seen.has(key)) continue;
+    seen.add(key);
+    const gated = await gateBashPathAccess(opts, c.abs, workingDir, access, ctx, {
+      followFinalSymlink: !c.operatesOnEntry,
+    });
+    mergeRiskReasons(approvedReasons, gated.approvedReasons);
+    if (gated.error) {
+      log.warn(access === 'write' ? 'bash filesystem mutation scope reject' : 'bash filesystem read scope reject', {
+        user_id: maskId(opts.userId),
+        path: logPathRef(c.abs),
+        reason: c.reason,
+      });
+      return {
+        result: {
+          content: errText(
+            access === 'write' ? 'E_BASH_PATH_OUT_OF_SCOPE' : 'E_BASH_READ_PATH_OUT_OF_SCOPE',
+            `bash ${c.reason} target is not ${access === 'write' ? 'writable' : 'readable'}: ${c.raw} -> ${c.abs}. ${gated.error}`,
+          ),
+          isError: true,
+        },
+        approvedReasons,
+      };
+    }
+    const removal = await gateBashSourceRemoval(opts, ctx, command, c);
+    mergeRiskReasons(approvedReasons, removal.approvedReasons);
+    if (removal.error) {
+      log.warn('bash out-of-workspace removal denied', {
+        user_id: maskId(opts.userId),
+        cid: maskId(opts.cid),
+        path: logPathRef(c.abs),
+        reason: c.reason,
+      });
+      return { result: { content: removal.error, isError: true }, approvedReasons };
+    }
+  }
+  return {
+    result: null, approvedReasons, unresolvedPaths,
+    keyFacts: candidates.map((candidate) => ({
+      kind: candidate.removesSource ? 'remove' : access,
+      operation: candidate.reason,
+      target: candidate.abs || candidate.raw,
+      ...(candidate.detail ? { detail: candidate.detail } : {}),
+      ...((candidate.dynamic || !candidate.abs) ? { unresolved: true } : {}),
+    })),
+  };
+}
+
+/**
+ * `interactive_cli` deliberately skips the full path-scope guard: the login
+ * flows it exists for legitimately write outside the workspace (`~/.config`,
+ * keychains, token caches). Removals are a different question. Without this,
+ * `interactive_cli` would be the one shell entry point where a file can leave
+ * the user's disk without the confirmation `delete_file` and `bash` both ask
+ * for — and a gate with one open door is not a gate.
+ */
+async function guardInteractiveRemovalTargets(
+  opts: LocalToolsOpts,
+  ctx: ToolContext,
+  workingDir: string,
+  command: string,
+): Promise<BashFilesystemGuardResult> {
+  const env = bashEnvForPathResolution(ctx, workingDir);
+  const removals = collectBashMutationCandidates(
+    command,
+    workingDir,
+    env,
+    opts.hostPlatform ?? process.platform,
+  ).filter((candidate) => candidate.removesSource);
+  if (!removals.length) return { result: null, approvedReasons: [] };
+  return guardBashPathCandidates(
+    opts, ctx, workingDir, removals, 'write', command,
+    !localAccessRequiresSensitiveApproval(),
+  );
+}
+
+async function guardBashFilesystemTargets(
+  opts: LocalToolsOpts,
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+  workingDir: string,
+  allowUnresolvedPaths: boolean,
+): Promise<BashFilesystemGuardResult> {
+  const command = String(input.command ?? '');
+  const env = bashEnvForPathResolution(ctx, workingDir);
+  const approvedReasons: LocalAccessRiskCategory[] = [];
+  const mutation = await guardBashPathCandidates(
+    opts,
+    ctx,
+    workingDir,
+    collectBashMutationCandidates(command, workingDir, env, opts.hostPlatform ?? process.platform),
+    'write',
+    command,
+    allowUnresolvedPaths,
+  );
+  mergeRiskReasons(approvedReasons, mutation.approvedReasons);
+  if (mutation.result) return { result: mutation.result, approvedReasons };
+
+  const read = await guardBashPathCandidates(
+    opts,
+    ctx,
+    workingDir,
+    collectBashReadCandidates(command, workingDir, env, opts.hostPlatform ?? process.platform),
+    'read',
+    '',
+    allowUnresolvedPaths,
+  );
+  mergeRiskReasons(approvedReasons, read.approvedReasons);
+  if (read.result) return { result: read.result, approvedReasons };
+  return {
+    result: null, approvedReasons, unresolvedPaths: mutation.unresolvedPaths || read.unresolvedPaths,
+    keyFacts: [...(mutation.keyFacts ?? []), ...(read.keyFacts ?? [])],
+  };
+}
+
+function countOccurrences(haystack: string, needle: string): number {
+  if (!needle) return 0;
+  let count = 0;
+  let idx = 0;
+  while ((idx = haystack.indexOf(needle, idx)) !== -1) {
+    count++;
+    idx += needle.length;
+  }
+  return count;
+}
+
+function editableFileHash(body: string): string {
+  return `sha256:${crypto.createHash('sha256').update(body, 'utf8').digest('hex')}`;
+}
+
+/**
+ * One graded fallback for `edit_file`: match again ignoring TRAILING
+ * whitespace at each internal line break, and only when that lands on exactly
+ * one span.
+ *
+ * `old_string` is byte-exact, so a multi-line block whose only difference is a
+ * stray space before a newline fails with E_NO_MATCH and costs a round trip —
+ * a re-read plus a retry. Claude Code measures a 6-7% Edit error rate as its
+ * normal baseline (`utils/file.ts`, compact-prefix soak); a VideoStudio run on
+ * 2026-08-07 hit 2 in 16. Codex's apply_patch already relaxes the same way
+ * (`apply-patch/src/seek_sequence.rs`: exact, then rstrip, then trim).
+ *
+ * Deliberately narrow:
+ *  - LEADING whitespace is never relaxed. Indentation carries meaning in
+ *    Python and YAML, and relaxing it lets a needle match a differently
+ *    nested block that reads the same.
+ *  - Single-line needles are never relaxed. There is no internal line break to
+ *    disagree about, and a bare `foo` would start matching `foo   `.
+ *  - A relaxed match that is not unique is refused, so the fallback can never
+ *    pick between candidates the caller did not distinguish.
+ */
+function findTrailingWhitespaceRelaxedMatch(
+  body: string,
+  needle: string,
+): { text: string; count: number } | null {
+  if (!needle.includes('\n')) return null;
+  const escape = (raw: string): string => raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Strip the needle's own line-end whitespace as well, so the relaxation is
+  // symmetric: it repairs a needle that dropped spaces the file has AND a
+  // needle that added spaces the file does not have.
+  const pattern = needle
+    .split('\n')
+    .map((line) => escape(line.replace(/[ \t]+$/, '')))
+    .join('[ \\t]*\\r?\\n');
+  let matches: RegExpMatchArray | null;
+  try {
+    matches = body.match(new RegExp(pattern, 'g'));
+  } catch {
+    return null;
+  }
+  if (!matches?.length) return null;
+  return { text: matches[0], count: matches.length };
+}
+
+function deletedFileObservation(abs: string, st: fs.Stats): FileChangeObservation {
+  if (kindOf(abs) === 'text') {
+    try {
+      const beforeContent = fs.readFileSync(abs, 'utf8');
+      return {
+        operation: 'delete',
+        sourcePath: abs,
+        beforeExists: true,
+        afterExists: false,
+        beforeHash: editableFileHash(beforeContent),
+        beforeBytes: Buffer.byteLength(beforeContent),
+        beforeContent,
+        coverage: 'exact',
+      };
+    } catch { /* metadata-only fallback below */ }
+  }
+  return {
+    operation: 'delete',
+    sourcePath: abs,
+    beforeExists: true,
+    afterExists: false,
+    beforeBytes: st.size,
+    binary: true,
+    coverage: 'exact',
+  };
+}
+
+/**
+ * Why this `old_string` did not match, computed rather than left to the caller.
+ *
+ * Both strings are already in hand, so the comparison the caller would have to
+ * make by eye costs nothing here. 2026-08-08: after reading one region eight
+ * times a caller sent a block whose fourth line — a JS comment it had built
+ * from an HTML comment elsewhere in the file — existed nowhere; it got 1,200
+ * characters of surrounding text and "retry with an old_string copied from
+ * this current raw context", tried a hand-shortened fragment, failed again,
+ * and burned two round trips at roughly 30 seconds each. "Line 4 is not in the
+ * file" ends that immediately.
+ */
+function editNoMatchReason(body: string, needle: string): string {
+  const shorten = (text: string): string => (text.length > 90 ? `${text.slice(0, 90)}…` : text);
+  const needleLines = needle.split(/\r?\n/);
+  const bodyLines = new Set(body.split(/\r?\n/).map((line) => line.trim()));
+  for (const [index, line] of needleLines.entries()) {
+    const trimmed = line.trim();
+    // A fragment the caller sliced out of a longer line is still present, so
+    // `includes` has to clear it before the line counts as invented.
+    if (!trimmed || bodyLines.has(trimmed) || body.includes(trimmed)) continue;
+    return `Line ${index + 1} of \`old_string\` appears nowhere in the file: ${JSON.stringify(shorten(trimmed))}.`;
+  }
+  const deindent = (text: string): string => text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^[ \t]+/, ''))
+    .join('\n');
+  if (needleLines.length > 1 && deindent(body).includes(deindent(needle))) {
+    return 'Every line matches once leading indentation is removed, so `old_string` has different indentation from the file. Leading whitespace is never relaxed — copy the lines exactly.';
+  }
+  if (body.replace(/\r\n/g, '\n').includes(needle.replace(/\r\n/g, '\n'))) {
+    return 'The block matches apart from line endings: the file and `old_string` disagree on CRLF vs LF.';
+  }
+  return needleLines.filter((line) => line.trim()).length > 1
+    ? 'Every line of `old_string` exists in the file, but not as one consecutive block — something sits between them, or they appear in a different order.'
+    : '';
+}
+
+function editRecoveryContext(body: string, needle: string, fileHash: string): string {
+  const maxChars = 1_200;
+  let matchAt = body.indexOf(needle);
+  if (matchAt < 0) {
+    const candidates = needle
+      .split(/\r?\n/)
+      .map((part) => part.trim())
+      .filter((part) => part.length >= 8)
+      .sort((a, b) => b.length - a.length);
+    for (const candidate of candidates) {
+      matchAt = body.indexOf(candidate.slice(0, 160));
+      if (matchAt >= 0) break;
+    }
+  }
+  let start = 0;
+  let end = Math.min(body.length, maxChars);
+  if (body.length > maxChars && matchAt >= 0) {
+    start = Math.max(0, Math.min(body.length - maxChars, matchAt - Math.floor(maxChars / 3)));
+    end = Math.min(body.length, start + maxChars);
+  }
+  const content = body.slice(start, end);
+  const omittedTail = end < body.length ? `\n...[${body.length - end} chars omitted]` : '';
+  return [
+    `<edit-recovery file_hash="${fileHash}" char_start="${start}" char_end="${end}" total_chars="${body.length}">`,
+    content + omittedTail,
+    '</edit-recovery>',
+    `Retry with expected_hash="${fileHash}" and an old_string copied from this current raw context.`,
+  ].join('\n');
+}
+
+/** Read a POSIX command substitution as syntax; never evaluate it. */
+function shellCommandSubstitution(input: string, start: number, depth = 0): { body: string; end: number } | null {
+  if (depth >= 16) return null;
+  if (input[start] === '`') {
+    for (let i = start + 1; i < input.length; i++) {
+      if (input[i] === '\\') { i++; continue; }
+      if (input[i] === '`') return { body: input.slice(start + 1, i), end: i };
+    }
+    return null;
+  }
+  if (!input.startsWith('$(', start)) return null;
+  let nesting = 1;
+  let quote: "'" | '"' | null = null;
+  for (let i = start + 2; i < input.length; i++) {
+    const ch = input[i];
+    if (quote === "'") { if (ch === "'") quote = null; continue; }
+    if (ch === '\\') { i++; continue; }
+    const nested = (input.startsWith('$(', i) || ch === '`')
+      ? shellCommandSubstitution(input, i, depth + 1) : null;
+    if (nested) { i = nested.end; continue; }
+    if (quote === '"') { if (ch === '"') quote = null; continue; }
+    if (ch === "'" || ch === '"') { quote = ch; continue; }
+    if (ch === '(') nesting++;
+    if (ch === ')' && --nesting === 0) return { body: input.slice(start + 2, i), end: i };
+  }
+  return null;
+}
+
+function extractRunSkillRefs(command: string, depth = 0, hostPlatform: NodeJS.Platform = process.platform): string[] {
+  const out: string[] = [];
+  // Unquoted heredocs expand command substitutions before stdin reaches the
+  // receiver. Quotes and comment markers inside that payload are ordinary data.
+  // Quoted delimiters suppress expansion; plain filename mentions remain data.
+  if (hostPlatform !== 'win32' && depth < 4) {
+    const heredocs = analyzeBashHeredocs(command);
+    for (const [surface, payload] of [[heredocs.shellSurface, false],
+      ...heredocs.unquotedPayloads.map(body => [body, true] as const)] as const) {
+      let quote: "'" | '"' | null = null;
+      for (let i = 0; i < surface.length; i++) {
+        const ch = surface[i];
+        if (!payload && quote === "'") { if (ch === "'") quote = null; continue; }
+        if (ch === '\\') { i++; continue; }
+        if (!payload && !quote && ch === '#' && (i === 0 || /[\s;&|]/.test(surface[i - 1]))) {
+          while (i < surface.length && surface[i] !== '\n') i++;
+          continue;
+        }
+        const substitution = (surface.startsWith('$(', i) || ch === '`')
+          ? shellCommandSubstitution(surface, i) : null;
+        if (substitution) {
+          out.push(...extractRunSkillRefs(substitution.body, depth + 1, hostPlatform));
+          i = substitution.end;
+          continue;
+        }
+        if (!payload && quote === '"') { if (ch === '"') quote = null; continue; }
+        if (!payload && (ch === "'" || ch === '"')) quote = ch;
+      }
+    }
+  }
+  const basename = (value: string): string => value.replace(/\\/g, '/').split('/').pop()!.toLowerCase();
+  const nodeValueOptions = new Set(['-r', '--require', '--import', '--loader', '--experimental-loader', '--conditions', '-C']);
+  // Inspect executable/argv positions, never an arbitrary filename mention.
+  // In particular, `find ... -name run-skill.cjs -type f` does not invoke a
+  // Skill named "-type". The shared lexer also excludes redirected data.
+  for (const segment of bashPathSegments(command, true)) {
+    let start = 0;
+    while (segment.rawWords[start] === segment.words[start]
+      && ['if', 'then', 'elif', 'else', 'do', '!'].includes(segment.words[start])) start++;
+    const effective = bashEffectiveCommand(segment.words.slice(start));
+    if (!effective) continue;
+    const cmd = basename(effective.cmd);
+    const args = effective.args;
+    if (/^(?:bash|dash|ksh|sh|zsh|pwsh|powershell)(?:\.exe)?$/.test(cmd)) {
+      const isPowerShell = /^(?:pwsh|powershell)/.test(cmd);
+      const commandAt = args.findIndex((arg) => isPowerShell
+        ? /^(?:-command|-c)$/i.test(arg)
+        : /^-[a-z]*c[a-z]*$/i.test(arg));
+      if (depth < 4 && commandAt >= 0 && args[commandAt + 1]) {
+        out.push(...extractRunSkillRefs(args[commandAt + 1], depth + 1, isPowerShell ? 'win32' : 'linux'));
+      }
+      continue;
+    }
+    let ref: string | undefined;
+    if (cmd === 'run-skill.cjs') {
+      ref = args[0];
+    } else if (/^(?:node|nodejs)(?:\.exe)?$/.test(cmd)
+      || /^(?:\$(?:env:)?orkas_node|\$\{(?:env:)?orkas_node\}|%orkas_node%)$/.test(cmd)) {
+      for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        // Eval/print/check modes do not execute the following script operand.
+        if (/^(?:-[epc]|--eval|--print|--check)(?:=|$)/.test(arg) || /^-[ep].+/.test(arg)) break;
+        if (nodeValueOptions.has(arg)) { i++; continue; }
+        if (arg === '--') {
+          if (basename(args[i + 1] || '') === 'run-skill.cjs') ref = args[i + 2];
+          break;
+        }
+        if (arg.startsWith('-')) continue;
+        if (basename(arg) === 'run-skill.cjs') ref = args[i + 1];
+        break;
+      }
+    }
+    if (ref?.trim()) out.push(ref.trim());
+  }
+  return out;
+}
+
+type RunSkillRuntimeResolution = {
+  binding?: SkillRuntimeBinding;
+  error?: string;
+  diagnostic?: FileFailureDiagnostic;
+};
+
+function resolveRunSkillRuntimeBinding(
+  opts: LocalToolsOpts,
+  command: string,
+): RunSkillRuntimeResolution {
+  const refs = extractRunSkillRefs(command, 0, opts.hostPlatform ?? process.platform);
+  if (!refs.length || opts.skillRuntimeBindings === undefined) return {};
+  if (new RegExp(
+    `\\b(?:ORKAS_RUN_SKILL_DIR|${DEEP_RESEARCH_EVIDENCE_ENV})\\b`,
+  ).test(command)) {
+    return {
+      error: errText(
+        'E_SKILL_RUNTIME_ENV_RESERVED',
+        'run-scoped Skill environment is host-managed and cannot be read, set, or unset by the command.',
+      ),
+    };
+  }
+  const roots = new Set<string>();
+  const bindings: SkillRuntimeBinding[] = [];
+  for (const ref of refs) {
+    const lookup = lookupSkillRuntimeRef(ref, opts.skillRuntimeBindings);
+    if (lookup.error) return lookup;
+    const binding = lookup.binding!;
+    roots.add(path.resolve(binding.root));
+    bindings.push(binding);
+  }
+  if (roots.size > 1) {
+    return {
+      error: errText(
+        'E_SKILL_MULTI_ROOT',
+        'one shell command cannot execute scripts from multiple run-scoped Skills; run each Skill command separately.',
+      ),
+    };
+  }
+  return { binding: bindings[0] };
+}
+
+function withRunSkillRuntimeEnv(
+  ctx: ToolContext,
+  binding?: SkillRuntimeBinding,
+): () => void {
+  if (!binding) return () => {};
+  const original = ctx.state.sandboxEnv as Record<string, string> | undefined;
+  const evidenceFile = ctx.state[DEEP_RESEARCH_EVIDENCE_STATE_KEY];
+  ctx.state.sandboxEnv = {
+    ...(original ?? {}),
+    ORKAS_RUN_SKILL_DIR: binding.root,
+    ...(binding.id === DEEP_RESEARCH_SKILL_ID
+      && typeof evidenceFile === 'string'
+      && evidenceFile ? {
+        [DEEP_RESEARCH_EVIDENCE_ENV]: evidenceFile,
+      } : {}),
+  };
+  return () => {
+    if (original) ctx.state.sandboxEnv = original;
+    else delete ctx.state.sandboxEnv;
+  };
+}
+
+function readSkillDisplayNameForDisabledGuard(skillDir: string): string {
+  try {
+    const md = fs.readFileSync(path.join(skillDir, 'SKILL.md'), 'utf8');
+    if (!md.startsWith('---')) return '';
+    const end = md.indexOf('\n---', 3);
+    if (end < 0) return '';
+    for (const line of md.slice(3, end).split(/\r?\n/)) {
+      if (!line || /^\s/.test(line)) continue;
+      const match = /^name\s*:\s*(.*)$/.exec(line);
+      if (!match) continue;
+      const raw = match[1].trim();
+      if (raw.startsWith('"')) {
+        try {
+          const parsed = JSON.parse(raw);
+          return typeof parsed === 'string' ? parsed : '';
+        } catch { return ''; }
+      }
+      if (raw.startsWith("'") && raw.endsWith("'")) {
+        return raw.slice(1, -1).replace(/''/g, "'");
+      }
+      return raw;
+    }
+  } catch { /* unreadable/missing skill metadata is not an alias match */ }
+  return '';
+}
+
+/** Roots the standalone runner may resolve for this actor, in the same
+ * precedence order. Component disable checks must inspect this complete set;
+ * otherwise an open Skill whose directory id differs from its authored name
+ * can be invoked by alias after the UI marks its canonical id disabled. */
+function installedSkillRootsForDisabledGuard(opts: LocalToolsOpts): string[] {
+  const uid = opts.userId || '';
+  if (!uid) return [];
+  const roots = [userMarketplaceSkillsDir(uid), userSkillsDir(uid)];
+  const agentId = String(opts.agentId || '').trim();
+  if (agentId && agentId !== '.' && agentId !== '..' && !/[\\/\0]/.test(agentId)) {
+    roots.push(
+      userMarketplaceAgentSkillsDir(uid, agentId),
+      agentPrivateSkillsDir(uid, agentId),
+    );
+  }
+  try { roots.push(...enabledPackageSkillRoots(uid)); }
+  catch { /* unreadable package registry → runner cannot resolve it either */ }
+  if (getGlobalSkillRootsEnabledForUser(uid)) roots.push(...globalSkillRoots());
+  return [...new Set(roots.map((root) => path.resolve(root)))];
+}
+
+/**
+ * Resolve only an unambiguous authored-name alias. Exact directory ids take
+ * precedence (matching run-skill.cjs), and ambiguous names are left alone so
+ * an enabled custom skill cannot be blocked by a disabled platform namesake.
+ */
+function uniqueInstalledSkillAliasId(opts: LocalToolsOpts, ref: string): string | null {
+  if (!ref || ref === '.' || ref === '..' || /[\\/\0]/.test(ref)) return null;
+  const roots = installedSkillRootsForDisabledGuard(opts);
+  for (const root of roots) {
+    try {
+      if (fs.statSync(path.join(root, ref)).isDirectory()) return null;
+    } catch { /* no exact id in this root */ }
+  }
+
+  const ids = new Set<string>();
+  for (const root of roots) {
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(root, { withFileTypes: true });
+    } catch { continue; }
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+      if (readSkillDisplayNameForDisabledGuard(path.join(root, entry.name)) === ref) ids.add(entry.name);
+      if (ids.size > 1) return null;
+    }
+  }
+  return ids.size === 1 ? [...ids][0] : null;
+}
+
+function commandMentionsSkillRoot(command: string, opts: LocalToolsOpts, skillId: string): boolean {
+  const unescaped = command.replace(/\\([\\ "'$`])/g, '$1');
+  const roots = [
+    ...installedSkillRootsForDisabledGuard(opts).map((root) => path.resolve(root, skillId)),
+    path.posix.join('cloud', 'skills', skillId),
+    path.posix.join('local', 'marketplace', 'skills', skillId),
+  ];
+  return roots.some((root) => unescaped.includes(root));
+}
+
+function guardDisabledSkillBash(opts: LocalToolsOpts, command: string): string | null {
+  const uid = opts.userId;
+  if (!uid || !command) return null;
+
+  const disabled = readDisabledSets(uid).skills;
+  if (!disabled.size) return null;
+
+  for (const ref of extractRunSkillRefs(command, 0, opts.hostPlatform ?? process.platform)) {
+    const bound = opts.skillRuntimeBindings?.get(ref);
+    if (bound) {
+      if (disabled.has(bound.id)) {
+        return errText(
+          'E_SKILL_DISABLED',
+          `skill "${bound.id}" (invoked as "${ref}") is disabled for this user; re-enable it before running its workflow.`,
+        );
+      }
+      continue;
+    }
+    if (disabled.has(ref)) {
+      return errText(
+        'E_SKILL_DISABLED',
+        `skill "${ref}" is disabled for this user; re-enable it before running its workflow.`,
+      );
+    }
+    const aliasId = uniqueInstalledSkillAliasId(opts, ref);
+    if (aliasId && disabled.has(aliasId)) {
+      return errText(
+        'E_SKILL_DISABLED',
+        `skill "${aliasId}" (invoked as "${ref}") is disabled for this user; re-enable it before running its workflow.`,
+      );
+    }
+  }
+
+  for (const skillId of disabled) {
+    if (commandMentionsSkillRoot(command, opts, skillId)) {
+      return errText(
+        'E_SKILL_DISABLED',
+        `skill "${skillId}" is disabled for this user; re-enable it before running its workflow.`,
+      );
+    }
+  }
+
+  return null;
+}
+
+function commandStartsNoBrowserAuthLogin(command: string): boolean {
+  const normalized = String(command || '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return false;
+  const startsAuthLogin =
+    /\bgcloud\s+auth\s+(?:application-default\s+)?login\b/i.test(normalized)
+    || /\bgws\s+auth\s+login\b/i.test(normalized);
+  const requestsManualCode =
+    /(?:^|\s)--no-launch-browser(?:\s|$|=true\b)/i.test(normalized)
+    || /(?:^|\s)--no-browser(?:\s|$|=true\b)/i.test(normalized);
+  return startsAuthLogin && requestsManualCode;
+}
+
+function guardUnsupportedAuthCodeFlow(command: string): string | null {
+  if (!commandStartsNoBrowserAuthLogin(command)) return null;
+  return errText(
+    'E_INTERACTIVE_AUTH_CODE_UNSUPPORTED',
+    'this command starts a one-time browser verification-code flow that cannot be completed reliably through chat. '
+    + 'Do not ask the user to paste verification codes into the conversation or keep a background process waiting. '
+    + 'Use interactive_cli with action="start" for commands that need live user input, use a browser/callback OAuth flow that completes on its own, '
+    + 'use an Orkas connector OAuth flow, or stop and give the user a one-time terminal command to run.',
+  );
+}
+
+function guardInteractiveNoBrowserAuthFlow(command: string, allowNoBrowserAuth: boolean): string | null {
+  if (allowNoBrowserAuth || !commandStartsNoBrowserAuthLogin(command)) return null;
+  return errText(
+    'E_INTERACTIVE_AUTH_NO_BROWSER_UNSUPPORTED',
+    'this interactive command disables the browser OAuth callback flow. Start the same login without --no-browser/--no-launch-browser so the CLI can open the browser and complete after the user authorizes. '
+    + 'Do not switch to another OAuth method, ask for codes in chat, or install alternate auth libraries unless the user explicitly asks for a no-browser flow.',
+  );
+}
+
+/** Detect commands that are valid POSIX shell but invalid in Windows
+ * PowerShell 5.1, the host shell used by the compatibility-named `bash` tool.
+ * Keep this conservative: reject only high-confidence syntax mismatches and
+ * return rewrite guidance before paying for a real failed process. */
+export function windowsPowerShellCompatibilityError(
+  command: string,
+  platform: NodeJS.Platform = process.platform,
+): string | null {
+  if (platform !== 'win32') return null;
+  const target = resolveShellTarget(defaultShellForPlatform(platform), command, platform);
+  if (!target.legacyPowerShell) return null;
+  const lexical = scanPowerShell(String(command || ''));
+  const chain = parsePowerShellChain(String(command || ''), lexical);
+  const surface = chain.kind === 'chain'
+    ? lexical.surface.replace(/&&|\|\|/g, '\n')
+    : lexical.surface;
+  const findings: string[] = [];
+  if (chain.kind === 'unsupported' || /&&|\|\|/.test(surface)) findings.push('unsupported complex &&/|| chain');
+  if (/<<-?/.test(surface)) findings.push('POSIX heredoc');
+  if (/(?:^|[;({\r\n])\s*(?:source|export)\b/m.test(surface)) findings.push('source/export');
+  if (/(?:^|[;|({\r\n])\s*head(?:\s|$)/m.test(surface)) findings.push('head');
+  if (/(?:^|[;|({\r\n])\s*mktemp(?:\s|$)/m.test(surface)) findings.push('mktemp');
+  const curlAliasWithSilentFlag = /(?:^|[;|&({\r\n])\s*curl\s+-s(?=\s|$)/mi.test(surface);
+  if (curlAliasWithSilentFlag) findings.push('PowerShell curl alias with Unix -s');
+  if (/(?:^|[;|&({\r\n])\s*mkdir\s+-p(?:\s|$)/m.test(surface)) findings.push('POSIX mkdir -p');
+  if (/>\s*\/dev\/null(?=\s|[;|&)]|$)/.test(surface)) findings.push('/dev/null');
+  if (/^\s*[A-Za-z_][A-Za-z0-9_]*=[^\s;]+\s+\S/m.test(surface)) findings.push('POSIX inline environment assignment');
+  if (!findings.length) return null;
+  if (curlAliasWithSilentFlag && findings.length === 1) {
+    return errText(
+      'E_SHELL_SYNTAX_MISMATCH',
+      'In Windows PowerShell 5.1, `curl` resolves to `Invoke-WebRequest`, so `curl -s` does not use curl flags. Use `curl.exe -s` or `Invoke-WebRequest` with PowerShell parameters.',
+    );
+  }
+  return errText(
+    'E_SHELL_SYNTAX_MISMATCH',
+    `host shell is Windows PowerShell, but the command contains ${findings.join(', ')}. `
+    + 'Simple single-line &&/|| command chains are supported. For complex control flow, use PowerShell: '
+    + '`;` runs unconditionally; `if ($?) { ... }` runs after success; `if (-not $?) { ... }` runs after failure. '
+    + 'Use `$env:NAME = value` for environment variables, '
+    + '`$null` for discarded output, `Select-Object -First N` for head, and a `[System.IO.Path]::GetTempFileName()` or '
+    + '`New-Item` temporary path. Create directories with `New-Item -ItemType Directory -Force -Path ...`. '
+    + (curlAliasWithSilentFlag ? 'In Windows PowerShell 5.1, `curl` resolves to `Invoke-WebRequest`; use `curl.exe -s` for curl flags or use `Invoke-WebRequest` parameters. ' : '')
+    + 'For a multi-line script, write a `.ps1` file and invoke it with PowerShell.',
+  );
+}
+
+/** Wrapped `bash` tool — identical schema, permission-gated, host-shell wording. */
+function createBashTool(opts: LocalToolsOpts): AgentTool {
+  const hostPlatform = opts.hostPlatform ?? process.platform;
+  const windowsShellDescription = hostPlatform === 'win32'
+    ? ' On Windows this compatibility-named tool runs PowerShell; use PowerShell syntax and invoke quoted executables with `&`.'
+    : '';
+  const outputDirDescription = hostPlatform === 'win32'
+    ? '`$env:ORKAS_OUTPUT_DIR`'
+    : '`$ORKAS_OUTPUT_DIR`';
+
+  return {
+    name: 'bash',
+    // Adjacent bash calls overlap only when each command is provably
+    // read-only (2026-09-18); everything else is a barrier, as before the
+    // 2026-09-17 opt-in. The predicate runs on the model's input and never
+    // replaces the permission gates inside execute().
+    executionMode: 'parallel',
+    parallelWhen: (input) => bashCommandIsProvablyReadOnly(String(input.command ?? '')),
+    description:
+      'Run one shell command on the user\'s local machine and return its output. '
+      + (hostPlatform === 'win32' ? 'On Windows, this compatibility-named `bash` tool runs Windows PowerShell 5.1 by default. ' : '')
+      + 'Built-in Python and Node.js are available as `python` and `node`; use a script for deterministic transformations over many local files or records, and a dedicated tool for a targeted operation. ' +
+      'A running result includes a session_id for process_session; use interactive_cli for user-entered secrets or OAuth.',
+    inputSchema: {
+      ...(coreBashTool.inputSchema as Record<string, unknown>),
+      properties: {
+        ...(((coreBashTool.inputSchema as Record<string, unknown>).properties || {}) as Record<string, unknown>),
+        command: {
+          type: 'string',
+          description:
+            `Shell command. Prefer simple, direct commands that are easy to verify. Write final script-generated deliverables under ${outputDirDescription}.`
+            + windowsShellDescription,
+        },
+      },
+    },
+    async execute(input, ctx) {
+      const mode = getLocalExecMode();
+      const command = String(input.command ?? '');
+      const shellMismatch = windowsPowerShellCompatibilityError(command, opts.hostPlatform ?? process.platform);
+      if (shellMismatch) {
+        log.warn('bash host shell syntax reject', {
+          user_id: maskId(opts.userId),
+          cid: maskId(opts.cid),
+          command_chars: command.length,
+        });
+        return { content: shellMismatch, isError: true } as ToolResult;
+      }
+      const disabledSkillErr = guardDisabledSkillBash(opts, command);
+      if (disabledSkillErr) {
+        log.warn('bash disabled skill reject', {
+          user_id: maskId(opts.userId),
+          command_chars: command.length,
+        });
+        return { content: disabledSkillErr, isError: true };
+      }
+      const protectedMention = protectedRootMentionedByCommand(opts, command);
+      if (protectedMention && !bashProtectedRootMentionIsProvablyReadOnly(command)) {
+        log.warn('bash protected root reject', {
+          user_id: maskId(opts.userId),
+          command_chars: command.length,
+          root: logPathRef(protectedMention),
+        });
+        return {
+          content: protectedWriteError(protectedMention, protectedMention),
+          isError: true,
+        };
+      }
+      const unsupportedAuthErr = guardUnsupportedAuthCodeFlow(command);
+      if (unsupportedAuthErr) {
+        log.warn('bash unsupported auth-code flow reject', {
+          user_id: maskId(opts.userId),
+          command_chars: command.length,
+        });
+        return { content: unsupportedAuthErr, isError: true };
+      }
+      const workingDirForGuard = path.resolve(ctx.workingDir ?? '.');
+      const filesystemGate = await guardBashFilesystemTargets(
+        opts,
+        input,
+        ctx,
+        workingDirForGuard,
+        !localAccessRequiresSensitiveApproval(mode),
+      );
+      if (filesystemGate.result) return filesystemGate.result;
+      // Approval modes prompt for configured sensitive categories. Host/global
+      // package changes still enter approval in the otherwise non-prompting
+      // all_files_auto mode; project-local dependencies are not in that class.
+      if (command.trim()) {
+        const base = await classifyBashRiskIncludingScripts(command, workingDirForGuard, opts, ctx);
+        const approvalMode = localAccessRequiresSensitiveApproval(mode);
+        const pathApprovalCoveredSensitive = filesystemGate.approvedReasons.includes('sensitive_path');
+        // The per-path removal gate above already asked about this command's
+        // out-of-workspace deletions, and named the exact file. Re-asking at
+        // command level is the same question twice.
+        const pathApprovalCoveredDestructive = filesystemGate.approvedReasons.includes('destructive');
+        // `all_files_auto` drops prompts for operations the user can look at
+        // and put back afterwards. An irreversible one offers no such review:
+        // the removed tree is not listed anywhere and the killed processes
+        // took their state with them, both before the user could see the
+        // command. Those stay in approval for the same reason host/global
+        // package changes already do.
+        let baseReasons = approvalMode ? base.reasons : base.reasons.filter(
+          (reason) => reason === 'system_package_change'
+            || reason === 'external_mutation'
+            || (reason === 'destructive' && base.irreversible.length > 0),
+        );
+        if (pathApprovalCoveredSensitive) {
+          baseReasons = baseReasons.filter((reason) => reason !== 'sensitive_path');
+        }
+        if (baseReasons.includes('destructive')) {
+          const pathEnv = bashEnvForPathResolution(ctx, workingDirForGuard);
+          if (bashDestructiveRiskIsOnlyWorkspaceFileDeletion(
+            command,
+            workingDirForGuard,
+            pathEnv,
+            opts,
+          ) || bashDestructiveRiskIsOnlyProducedFileDeletion(
+            command,
+            workingDirForGuard,
+            pathEnv,
+            opts.hasProducedPath,
+            opts.hostPlatform ?? process.platform,
+          )) {
+            baseReasons = baseReasons.filter((reason) => reason !== 'destructive');
+          }
+        }
+        const reasons = (approvalMode
+          ? classifyConfiguredBashCommand(base.shellSurface, baseReasons, {
+            structuredDefaults: true,
+            includePathPatterns: !pathApprovalCoveredSensitive,
+          })
+          : baseReasons
+        ).filter((reason) => reason !== 'destructive' || !pathApprovalCoveredDestructive);
+        if (reasons.length || filesystemGate.unresolvedPaths) {
+          const decision = await requestBashDecision({
+            uid: opts.userId ?? '',
+            cid: opts.cid ?? '',
+            agentId: opts.agentId ?? '',
+            agentName: opts.agentName ?? opts.agentId ?? '',
+            command,
+            reasons,
+            unresolvedPaths: filesystemGate.unresolvedPaths,
+            workingDirectory: workingDirForGuard,
+            keyFacts: [
+              ...(filesystemGate.keyFacts ?? []),
+              ...base.evidence.filter((fact) => reasons.includes(fact.reason)).map((fact) => ({ kind: 'risk' as const, ...fact })),
+            ],
+            // Only meaningful while `destructive` survived the filter above;
+            // the dialog uses it to say why a non-prompting mode is asking.
+            ...(reasons.includes('destructive') && base.irreversible.length
+              ? { irreversible: base.irreversible }
+              : {}),
+            externalMutations: base.externalMutations,
+            onWaiting: permissionWaitProgress(ctx, 'bash'),
+          });
+          if (decision === 'deny') {
+            log.warn('bash risk denied', {
+              user_id: maskId(opts.userId),
+              cid: maskId(opts.cid),
+              agent_id: maskId(opts.agentId),
+              command_chars: command.length,
+              reasons,
+              unresolved_paths: filesystemGate.unresolvedPaths === true,
+            });
+            return {
+              content: errText(
+                'E_BASH_RISK_DENIED',
+                `this command was not approved (flagged: ${[...reasons, ...(filesystemGate.unresolvedPaths ? ['unresolved paths'] : [])].join(', ')}). `
+                + 'Do not retry the same command or work around the prompt; explain in prose what you intended and ask the user how to proceed.',
+              ),
+              isError: true,
+            };
+          }
+        }
+      }
+      // Materialize lazy workspaces only when a command needs one. Cleanup is
+      // shared by overlapping calls and waits for the last terminal result.
+      if (!ctx.workingDir) {
+        ctx = { ...ctx, state: { ...ctx.state } };
+        const skillRuntime = resolveRunSkillRuntimeBinding(opts, command);
+        if (skillRuntime.error) return { content: skillRuntime.error, isError: true, observations: { fileFailure: skillRuntime.diagnostic } };
+        const restoreSkillRuntimeEnv = withRunSkillRuntimeEnv(
+          ctx,
+          skillRuntime.binding,
+        );
+        try {
+          return translateFixedBashError(await coreBashTool.execute(input, {
+            ...ctx, state: { ...ctx.state, commandSessionEnabled: managedCommandsEnabled(ctx),
+              processSessionOwner: `${opts.userId ?? ''}:${opts.cid ?? ''}` },
+          }));
+        } finally {
+          restoreSkillRuntimeEnv();
+        }
+      }
+      return executeCoreBashWithOutputTracking(opts, input, ctx, path.resolve(ctx.workingDir));
+    },
+  };
+}
+
+async function gateInteractiveCliStart(
+  opts: LocalToolsOpts,
+  command: string,
+  settings?: {
+    allowNoBrowserAuth?: boolean;
+    workingDir?: string;
+    approvedReasons?: readonly LocalAccessRiskCategory[];
+    unresolvedPaths?: boolean;
+    keyFacts?: BashPermissionFact[];
+  },
+  ctx?: ToolContext,
+): Promise<ToolResult | null> {
+  const mode = getLocalExecMode();
+  const shellMismatch = windowsPowerShellCompatibilityError(command, opts.hostPlatform ?? process.platform);
+  if (shellMismatch) return { content: shellMismatch, isError: true };
+  const disabledSkillErr = guardDisabledSkillBash(opts, command);
+  if (disabledSkillErr) {
+    log.warn('interactive_cli_start disabled skill reject', {
+      user_id: maskId(opts.userId),
+      command_chars: command.length,
+    });
+    return { content: disabledSkillErr, isError: true };
+  }
+  const protectedMention = protectedRootMentionedByCommand(opts, command);
+  if (protectedMention) {
+    log.warn('interactive_cli_start protected root reject', {
+      user_id: maskId(opts.userId),
+      command_chars: command.length,
+      root: logPathRef(protectedMention),
+    });
+    return {
+      content: protectedWriteError(protectedMention, protectedMention),
+      isError: true,
+    };
+  }
+  const unsupportedNoBrowserAuthErr = guardInteractiveNoBrowserAuthFlow(
+    command,
+    settings?.allowNoBrowserAuth === true,
+  );
+  if (unsupportedNoBrowserAuthErr) {
+    log.warn('interactive_cli_start unsupported no-browser auth reject', {
+      user_id: maskId(opts.userId),
+      command_chars: command.length,
+    });
+    return { content: unsupportedNoBrowserAuthErr, isError: true };
+  }
+  const skillRuntime = resolveRunSkillRuntimeBinding(opts, command);
+  if (skillRuntime.error) return { content: skillRuntime.error, isError: true, observations: { fileFailure: skillRuntime.diagnostic } };
+  if (skillRuntime.binding) {
+    return {
+      content: errText(
+        'E_SKILL_EXECUTION_MODE',
+        'run-scoped Skill scripts must use the one-shot bash tool so the host can bind the exact Skill root for that command.',
+      ),
+      isError: true,
+    };
+  }
+  if (command.trim()) {
+    const base = await classifyBashRiskIncludingScripts(command, path.resolve(settings?.workingDir ?? '.'), opts, ctx);
+    const approvalMode = localAccessRequiresSensitiveApproval(mode);
+    const approvedReasons = settings?.approvedReasons ?? [];
+    let baseReasons = (approvalMode ? base.reasons : base.reasons.filter(
+      (reason) => reason === 'system_package_change'
+        || reason === 'external_mutation'
+        || (reason === 'destructive' && base.irreversible.length > 0),
+    )).filter((reason) => !approvedReasons.includes(reason));
+    const workingDir = path.resolve(settings?.workingDir ?? '.');
+    if (baseReasons.includes('destructive')) {
+      const pathEnv = bashEnvForPathResolution(ctx, workingDir);
+      if (bashDestructiveRiskIsOnlyWorkspaceFileDeletion(command, workingDir, pathEnv, opts)
+        || bashDestructiveRiskIsOnlyProducedFileDeletion(
+          command,
+          workingDir,
+          pathEnv,
+          opts.hasProducedPath,
+          opts.hostPlatform ?? process.platform,
+        )) {
+        baseReasons = baseReasons.filter((reason) => reason !== 'destructive');
+      }
+    }
+    const reasons = (approvalMode
+      ? classifyConfiguredBashCommand(base.shellSurface, baseReasons, {
+        structuredDefaults: true,
+        includePathPatterns: !approvedReasons.includes('sensitive_path'),
+      })
+      : baseReasons
+    ).filter((reason) => !approvedReasons.includes(reason));
+    if (reasons.length || (approvalMode && settings?.unresolvedPaths)) {
+      const decision = await requestBashDecision({
+        uid: opts.userId ?? '',
+        cid: opts.cid ?? '',
+        agentId: opts.agentId ?? '',
+        agentName: opts.agentName ?? opts.agentId ?? '',
+        command,
+        reasons,
+        unresolvedPaths: settings?.unresolvedPaths,
+        workingDirectory: workingDir,
+        keyFacts: [
+          ...(settings?.keyFacts ?? []),
+          ...base.evidence.filter((fact) => reasons.includes(fact.reason)).map((fact) => ({ kind: 'risk' as const, ...fact })),
+        ],
+        ...(reasons.includes('destructive') && base.irreversible.length
+          ? { irreversible: base.irreversible }
+          : {}),
+        externalMutations: base.externalMutations,
+        onWaiting: permissionWaitProgress(ctx, 'interactive_cli_start'),
+      });
+      if (decision === 'deny') {
+        log.warn('interactive_cli_start risk denied', {
+          user_id: maskId(opts.userId),
+          cid: maskId(opts.cid),
+          agent_id: maskId(opts.agentId),
+          command_chars: command.length,
+          reasons,
+          unresolved_paths: settings?.unresolvedPaths === true,
+        });
+        return {
+          content: errText(
+            'E_BASH_RISK_DENIED',
+            `this interactive command was not approved (flagged: ${[...reasons, ...(settings?.unresolvedPaths ? ['unresolved paths'] : [])].join(', ')}). `
+            + 'Do not retry the same command or work around the prompt; explain in prose what you intended and ask the user how to proceed.',
+          ),
+          isError: true,
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function jsonToolResult(value: unknown): ToolResult {
+  return { content: JSON.stringify(value, null, 2) };
+}
+
+function interactiveCliUserActionState(view: InteractiveCliSessionView): {
+  userActionRequired: boolean;
+  reason?: string;
+  nextStep: string;
+} {
+  if (view.status !== 'running') {
+    return {
+      userActionRequired: false,
+      nextStep:
+        view.status === 'error'
+          ? 'The interactive command ended with an error before user input was needed. Explain the problem and next step to the user in prose; do not wait for input in the panel.'
+          : 'The interactive command already finished. Continue the task or summarize the result to the user.',
+    };
+  }
+
+  const output = String(view.output || '');
+  const urls = Array.isArray(view.urls) ? view.urls.join('\n') : '';
+  const authBrowser =
+    /browser has been opened|opened to visit|complete the sign-in prompts|accounts\.google\.com\/o\/oauth2|redirect_uri=http/i.test(output)
+    || /accounts\.google\.com\/o\/oauth2|redirect_uri=http|code_challenge=/i.test(urls);
+  if (authBrowser) {
+    return {
+      userActionRequired: true,
+      reason: 'browser_auth',
+      nextStep:
+        'The CLI has already opened or shown the browser authorization page. Stop tool use now. Do not call open/xdg-open/start, do not restart or close this auth command, do not check auth status, do not install alternate auth libraries, and do not switch to another OAuth method such as ADC or Python OAuth. Tell the user to finish authorization in the browser; continue only after the user replies, cancels, or the session exits.',
+    };
+  }
+  if (view.prompt_kind) {
+    return {
+      userActionRequired: true,
+      reason: view.prompt_kind,
+      nextStep:
+        'The CLI is waiting for user input. Stop tool use now and ask the user to enter the requested value in the Orkas interactive CLI panel, not in chat. Do not close this command, retry with another auth method, or install alternate auth libraries while it is waiting. Continue only after the user replies, cancels, or the session output changes.',
+    };
+  }
+  return {
+    userActionRequired: false,
+    nextStep:
+      'Use interactive_cli with action="read" only after meaningful progress is expected, such as after waiting or after the user has acted. Do not repeat identical reads in a tight loop.',
+  };
+}
+
+function interactiveCliToolPayload(view: InteractiveCliSessionView): Record<string, unknown> {
+  const state = interactiveCliUserActionState(view);
+  return {
+    session_id: view.session_id,
+    ...(view.purpose ? { purpose: view.purpose } : {}),
+    status: view.status,
+    ...(view.status !== 'running' ? { exit_code: view.exit_code ?? null } : {}),
+    output: view.output,
+    urls: view.urls,
+    ...(view.prompt_kind ? { prompt_kind: view.prompt_kind } : {}),
+    ...(typeof view.sensitive_hint === 'boolean' ? { sensitive_hint: view.sensitive_hint } : {}),
+    user_action_required: state.userActionRequired,
+    agent_should_stop: state.userActionRequired,
+    ...(state.reason ? { user_action_reason: state.reason } : {}),
+    next_step: state.nextStep,
+  };
+}
+
+function createInteractiveCliStartTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'interactive_cli_start',
+    description:
+      'Start a local CLI command that needs live user stdin, such as OAuth/device-code login, password prompts, confirmations, or setup wizards. Use bash for one-shot commands, --help, validation, and installs. Tell users to enter secrets/codes in the interactive CLI panel, not chat. Avoid full-screen TUI programs.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        command: {
+          type: 'string',
+          description: process.platform === 'win32'
+            ? 'PowerShell command to start in the conversation workspace. Invoke a quoted executable path with `&`. Required.'
+            : 'Shell command to start in the conversation workspace. Required.',
+        },
+        max_lifetime_ms: {
+          type: 'number',
+          description: 'Optional maximum session lifetime. Defaults to 30 minutes; values below 10 minutes are raised to 10 minutes; hard cap is 2 hours.',
+        },
+        purpose: {
+          type: 'string',
+          description: 'Short user-facing title for the interactive panel. Do not put the raw command here.',
+        },
+        allow_no_browser_auth: {
+          type: 'boolean',
+          description: 'Only set true when the user explicitly says browser OAuth cannot be used. Otherwise OAuth login commands with --no-browser/--no-launch-browser are rejected.',
+        },
+      },
+      required: ['command'],
+    },
+    async execute(input, ctx) {
+      const command = String(input.command ?? '').trim();
+      if (!command) return { content: errText('E_BAD_INPUT', '`command` is required'), isError: true };
+      const workingDir = path.resolve(ctx.workingDir ?? '.');
+      const removalGate = await guardInteractiveRemovalTargets(opts, ctx, workingDir, command);
+      if (removalGate.result) return removalGate.result;
+      const gate = await gateInteractiveCliStart(opts, command, {
+        allowNoBrowserAuth: input.allow_no_browser_auth === true,
+        workingDir,
+        approvedReasons: removalGate.approvedReasons,
+        unresolvedPaths: removalGate.unresolvedPaths,
+        keyFacts: removalGate.keyFacts,
+      }, ctx);
+      if (gate) return gate;
+      try { fs.mkdirSync(workingDir, { recursive: true }); }
+      catch { /* spawn will report the canonical error */ }
+      const view = startInteractiveCliSession({
+        presentation: 'agent_terminal',
+        uid: opts.userId ?? '',
+        cid: opts.cid,
+        agentId: opts.agentId,
+        agentName: opts.agentName ?? opts.agentId,
+        purpose: typeof input.purpose === 'string' ? input.purpose : undefined,
+        command,
+        cwd: workingDir,
+        sandboxEnv: (ctx.state.sandboxEnv ?? {}) as Record<string, string>,
+        maxLifetimeMs: Number(input.max_lifetime_ms),
+      });
+      const observeDeadline = Date.now() + (process.platform === 'win32' ? 5_000 : 1_000);
+      let latest = view;
+      do {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        latest = readInteractiveCliSession(opts.userId ?? '', view.session_id);
+      } while (
+        latest.status === 'running'
+        && !latest.output
+        && Date.now() < observeDeadline
+      );
+      if (latest.status !== 'running') {
+        const result = interactiveCliToolPayload(latest);
+        return {
+          content: JSON.stringify(result, null, 2),
+          isError: latest.status === 'error',
+        };
+      }
+      const result = interactiveCliToolPayload(latest);
+      return {
+        content: JSON.stringify(result, null, 2),
+        ...(result.agent_should_stop === true ? { endTurn: true, endTurnReason: 'waiting_input' as const } : {}),
+      };
+    },
+  };
+}
+
+function createInteractiveCliReadTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'interactive_cli_read',
+    description:
+      'Read the current status and recent output of an interactive CLI session started with interactive_cli_start. ' +
+      'Use this after waiting or after the user has entered input in the interactive CLI panel.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session_id: { type: 'string', description: 'Session id returned by interactive_cli_start.' },
+      },
+      required: ['session_id'],
+    },
+    async execute(input) {
+      const sessionId = String(input.session_id ?? '').trim();
+      if (!sessionId) return { content: errText('E_BAD_INPUT', '`session_id` is required'), isError: true };
+      try {
+        const result = interactiveCliToolPayload(
+          readInteractiveCliSession(opts.userId ?? '', sessionId),
+        );
+        return {
+          content: JSON.stringify(result, null, 2),
+          ...(result.agent_should_stop === true ? { endTurn: true, endTurnReason: 'waiting_input' as const } : {}),
+        };
+      } catch (err) {
+        return { content: errText('E_INTERACTIVE_CLI', (err as Error).message), isError: true };
+      }
+    },
+  };
+}
+
+function createInteractiveCliSendTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'interactive_cli_send',
+    description:
+      'Send non-secret input to an interactive CLI session stdin. ' +
+      'Use for agent-known responses such as y/n, menu choices, or pressing Enter. ' +
+      'Do not use this for OAuth authorization codes, passwords, tokens, API keys, or other user secrets; ask the user to type those in the Orkas interactive CLI panel instead.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session_id: { type: 'string', description: 'Session id returned by interactive_cli_start.' },
+        input: { type: 'string', description: 'Input to send to stdin.' },
+        add_newline: { type: 'boolean', description: 'Default true. Append a newline after input.' },
+      },
+      required: ['session_id', 'input'],
+    },
+    async execute(input) {
+      const sessionId = String(input.session_id ?? '').trim();
+      if (!sessionId) return { content: errText('E_BAD_INPUT', '`session_id` is required'), isError: true };
+      try {
+        const view = sendInteractiveCliInput(opts.userId ?? '', sessionId, String(input.input ?? ''), {
+          addNewline: input.add_newline !== false,
+          sensitive: false,
+        });
+        return jsonToolResult({ session_id: view.session_id, status: view.status, sent: true });
+      } catch (err) {
+        return { content: errText('E_INTERACTIVE_CLI', (err as Error).message), isError: true };
+      }
+    },
+  };
+}
+
+function createInteractiveCliCloseTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'interactive_cli_close',
+    description:
+      'Close an interactive CLI session and terminate its process tree. Use when setup is done, the command is stuck, or the user cancels. ' +
+      'Do not close a session that is waiting for browser authorization or user input unless the user explicitly cancels; in that case set force=true and provide a brief reason.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session_id: { type: 'string', description: 'Session id returned by interactive_cli_start.' },
+        force: {
+          type: 'boolean',
+          description: 'Required to close a running session that is currently waiting for user action. Use only after explicit user cancellation or test cleanup.',
+        },
+        reason: {
+          type: 'string',
+          description: 'Brief reason for forcing close, for example "user cancelled authorization".',
+        },
+      },
+      required: ['session_id'],
+    },
+    async execute(input) {
+      const sessionId = String(input.session_id ?? '').trim();
+      if (!sessionId) return { content: errText('E_BAD_INPUT', '`session_id` is required'), isError: true };
+      try {
+        const current = readInteractiveCliSession(opts.userId ?? '', sessionId);
+        const state = interactiveCliUserActionState(current);
+        if (current.status === 'running' && state.userActionRequired && input.force !== true) {
+          return {
+            content: errText(
+              'E_INTERACTIVE_CLI_WAITING_FOR_USER',
+              'this interactive CLI session is waiting for the user. Do not close, restart, poll, or switch to another auth method before the user acts. '
+              + 'Only close it with force=true after the user explicitly cancels.',
+            ),
+            isError: true,
+          };
+        }
+        if (input.force === true) {
+          const reason = String(input.reason || '').replace(/\s+/g, ' ').trim();
+          log.info('interactive_cli_close force requested', {
+            user_id: maskId(opts.userId),
+            session_id: maskId(sessionId),
+            reason_chars: reason.length,
+          });
+        }
+        return jsonToolResult(interactiveCliToolPayload(closeInteractiveCliSession(opts.userId ?? '', sessionId)));
+      } catch (err) {
+        return { content: errText('E_INTERACTIVE_CLI', (err as Error).message), isError: true };
+      }
+    },
+  };
+}
+
+function createInteractiveCliTool(opts: LocalToolsOpts): AgentTool {
+  const start = createInteractiveCliStartTool(opts);
+  const read = createInteractiveCliReadTool(opts);
+  const send = createInteractiveCliSendTool(opts);
+  const close = createInteractiveCliCloseTool(opts);
+  type InteractiveCliAction = 'start' | 'read' | 'send' | 'close';
+  const actionFields: Readonly<Record<InteractiveCliAction, ReadonlySet<string>>> = {
+    start: new Set(['action', 'command', 'max_lifetime_ms', 'purpose', 'allow_no_browser_auth']),
+    read: new Set(['action', 'session_id']),
+    send: new Set(['action', 'session_id', 'input', 'add_newline']),
+    close: new Set(['action', 'session_id', 'force', 'reason']),
+  };
+  return {
+    name: 'interactive_cli',
+    description:
+      'Manage a local CLI session that needs live user input such as OAuth, passwords, confirmations, or setup. Send only agent-known non-secret input; users enter secrets in the interactive panel. Never close a waiting session unless the user cancelled and force=true.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['start', 'read', 'send', 'close'],
+          description: 'start: command; read: session_id; send: session_id/input; close: session_id/force/reason. Known unused fields are ignored and listed in ignored_fields; session_id selects an existing session.',
+        },
+        command: { type: 'string', description: 'Start only. Shell command to launch.' },
+        max_lifetime_ms: {
+          type: 'number',
+          description: 'Start only. Default 30 minutes; minimum 10 minutes; maximum 2 hours.',
+        },
+        purpose: { type: 'string', description: 'Start only. Short user-facing panel title, not the raw command.' },
+        allow_no_browser_auth: {
+          type: 'boolean',
+          description: 'Start only. True only when the user explicitly says browser OAuth cannot be used.',
+        },
+        session_id: { type: 'string', description: 'Required for read, send, and close.' },
+        input: { type: 'string', description: 'Send only. Agent-known non-secret stdin.' },
+        add_newline: { type: 'boolean', description: 'Send only. Append a newline; default true.' },
+        force: {
+          type: 'boolean',
+          description: 'Close only. Required when a running session is waiting for user action; use only after explicit cancellation.',
+        },
+        reason: { type: 'string', description: 'Close only. Brief reason for a forced close.' },
+      },
+      required: ['action'],
+    },
+    async execute(input, ctx) {
+      const action = String(input.action ?? '') as InteractiveCliAction;
+      if (!(['start', 'read', 'send', 'close'] as const).includes(action)) {
+        return {
+          content: errText('E_BAD_INPUT', '`action` must be start, read, send, or close'),
+          isError: true,
+        };
+      }
+      const unexpected = Object.keys(input)
+        .filter((key) => !Object.values(actionFields).some((fields) => fields.has(key))
+          || (action === 'start' && key === 'session_id'))
+        .sort();
+      if (unexpected.length) {
+        return {
+          content: errText(
+            'E_BAD_INPUT',
+            `interactive_cli(${action}) does not accept: ${unexpected.join(', ')}`,
+          ),
+          isError: true,
+        };
+      }
+      const ignoredFields = Object.keys(input).filter((key) => !actionFields[action].has(key)).sort();
+      const notice = ignoredFields.length ? `ignored_fields: ${JSON.stringify(ignoredFields)}\n` : '';
+      input = Object.fromEntries(Object.entries(input).filter(([key]) => actionFields[action].has(key)));
+      const withNotice = (result: ToolResult): ToolResult => {
+        if (!notice) return result;
+        try {
+          const payload: unknown = JSON.parse(result.content);
+          if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+            return { ...result, content: JSON.stringify({ ...payload, ignored_fields: ignoredFields }) };
+          }
+        } catch { /* Preserve non-JSON errors with a text receipt. */ }
+        return { ...result, content: `${notice}${result.content}` };
+      };
+      if (action === 'start') return withNotice(await start.execute(input, ctx));
+      if (action === 'read') return withNotice(await read.execute(input, ctx));
+      if (action === 'send') return withNotice(await send.execute(input, ctx));
+      if (action === 'close') return withNotice(await close.execute(input, ctx));
+      return close.execute(input, ctx);
+    },
+  };
+}
+
+function processSessionContext(opts: LocalToolsOpts, ctx: ToolContext): ToolContext {
+  const workingDir = path.resolve(ctx.workingDir ?? '.');
+  return {
+    ...ctx,
+    state: {
+      ...ctx.state,
+      processSessionOwner: `${opts.userId ?? ''}:${opts.cid ?? ''}`,
+      sandboxAllowedDirs: bashWritableRootsFor(opts, workingDir),
+    },
+  };
+}
+
+/** PC binds continuation calls to the current conversation. Command startup,
+ * approval and produced-file tracking belong to bash's managed command path. */
+function createHostProcessTools(opts: LocalToolsOpts): AgentTool[] {
+  return getProcessSessionTools().map((coreTool) => ({
+    ...coreTool,
+    inspectReadContinuation(input, ctx) {
+      return coreTool.inspectReadContinuation?.(input, processSessionContext(opts, ctx));
+    },
+    async execute(input, ctx) {
+      return coreTool.execute(input, processSessionContext(opts, ctx));
+    },
+  }));
+}
+
+/** Wrapped `write_file` tool — uniquify-on-collision + onFileWritten emit. */
+function createWriteFileTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'write_file',
+    description:
+      'Create a UTF-8 text file in the workspace, including parent directories, and return its final path and revision. Foreign path collisions are auto-suffixed. Use edit_file or apply_patch for existing files, or append_file to continue a long new file.',
+    inputSchema: coreWriteFileTool.inputSchema,
+    async execute(input, ctx) {
+      const inputPath = String(input.path ?? '');
+      if (!inputPath) return { content: errText('E_BAD_INPUT', '`path` is required'), isError: true };
+      const inputAbs = resolveAbs(ctx, inputPath);
+      const scopeErr = await gateEditPath(opts, inputAbs, ctx);
+      if (scopeErr) {
+        log.warn('write_file scope reject', { user_id: maskId(opts.userId), path: logPathRef(inputAbs) });
+        return { content: scopeErr, isError: true };
+      }
+      // Read before the write decides it: once uniquify has run, an overwrite
+      // of the user's own file and a fresh create look identical on disk.
+      const targetExistedBeforeWrite = fs.existsSync(inputAbs);
+      const ownership = taskFileOwnership.get(opts);
+      // Probe+write hold one per-path lock: a concurrent same-target writer
+      // (parallel agent turn in the same conversation workspace) must see this
+      // write when it uniquifies, not race past the probe and clobber it.
+      const { finalPath, renamed, result } = await uniquifyPathForWrite(
+        inputAbs, isMineFor(opts),
+        async (decision) => {
+          const beforeCreation = ownership?.beforeWrite(decision.finalPath);
+          const result = await coreWriteFileTool.execute(
+            decision.finalPath !== inputAbs ? { ...input, path: decision.finalPath } : input,
+            ctx,
+          );
+          if (!result.isError && beforeCreation) ownership?.afterWrite(decision.finalPath, beforeCreation);
+          return { ...decision, result };
+        },
+      );
+      const rewritten = finalPath !== inputAbs
+        ? { ...input, path: finalPath }
+        : input;
+      if (!result.isError) {
+        const written = Buffer.from(String(rewritten.content ?? ''), 'utf8');
+        const fileHash = fileBufferHash(written);
+        // Stamp the just-written bytes so a follow-up edit_file accepts an edit
+        // without an intervening read_files call (the model already knows the content
+        // it wrote), and so OCC compares against this write, not a stale read.
+        recordRead(ctx, finalPath, undefined, fileHash);
+        if (opts.onFileWritten) {
+          try {
+            // A uniquified path is new by construction, and overwriting our own
+            // earlier output is still production. Only an in-place write over a
+            // target the user already had keeps their file.
+            await opts.onFileWritten(finalPath, {
+              preExisting: finalPath === inputAbs
+                && targetExistedBeforeWrite
+                && !isMineFor(opts)(finalPath),
+            });
+          } catch (err) {
+            log.warn('onFileWritten callback failed', { error: logErrorRef(err) });
+          }
+        }
+        const revision = issueFileRevision(ctx, finalPath, written.length, fileHash);
+        const receipt = `<file path="${finalPath}" total_bytes="${written.length}" file_hash="${fileHash}" revision="${revision}"/>`;
+        return {
+          ...result,
+          content: [
+            result.content ?? '',
+            receipt,
+            ...(renamed ? [renderRenameSignal(inputAbs, finalPath)] : []),
+          ].filter(Boolean).join('\n'),
+        };
+      }
+      return result;
+    },
+  };
+}
+
+function fileBufferHash(body: Buffer, suffix?: Buffer): string {
+  const hash = crypto.createHash('sha256').update(body);
+  if (suffix) hash.update(suffix);
+  return `sha256:${hash.digest('hex')}`;
+}
+
+function appendFileReceipt(
+  abs: string,
+  appendedBytes: number,
+  totalBytes: number,
+  fileHash: string,
+  revision: string,
+  replayed: boolean,
+): string {
+  return `<file path="${abs}" appended_bytes="${appendedBytes}" total_bytes="${totalBytes}" file_hash="${fileHash}" revision="${revision}" replayed="${replayed}"/>`;
+}
+
+/** Admit timers and cancellation before reading a version or holding a file
+ * transaction. Once admitted, freshness, write and receipt state stay in the
+ * existing synchronous critical section. Cancelling a queued caller returns
+ * its eventual lease through the shared lock helper without starting a write. */
+async function acquireFileEditLock(abs: string, ctx: ToolContext): Promise<() => void> {
+  ctx.signal?.throwIfAborted();
+  await new Promise<void>(resolve => setImmediate(resolve));
+  return ctx.signal
+    ? acquireWithAbort(() => fileEditLock(abs).acquire(), ctx.signal)
+    : fileEditLock(abs).acquire();
+}
+
+/** Append one complete text chunk with revision-first OCC and replay idempotency. */
+function createAppendFileTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'append_file',
+    compatibilityInputFields: ['expected_size'],
+    description:
+      'Append one complete UTF-8 chunk to an existing text file with optimistic concurrency and replay-safe behavior. Use edit_file or apply_patch for targeted changes.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Existing absolute or workspace-relative UTF-8 text file path.',
+        },
+        content: {
+          type: 'string',
+          description: 'Complete UTF-8 text chunk to append.',
+        },
+        base_revision: {
+          type: 'string',
+          description: 'Opaque revision from the preceding file-tool result. Stale revisions fail without writing; exact replay is idempotent.',
+          pattern: '^file_rev_[A-Za-z0-9_-]{16}$',
+        },
+      },
+      required: ['path', 'content', 'base_revision'],
+    },
+    async execute(input, ctx) {
+      const rawPath = String(input.path ?? '');
+      const content = typeof input.content === 'string' ? input.content : null;
+      const baseRevision = typeof input.base_revision === 'string' ? input.base_revision.trim() : '';
+      if (input.expected_size !== undefined) return { content: errText('E_BAD_INPUT', 'expected_size is unsupported; use base_revision'), isError: true };
+      if (!rawPath) return { content: errText('E_BAD_INPUT', '`path` is required'), isError: true };
+      if (content === null || content.length === 0) {
+        return { content: errText('E_BAD_INPUT', '`content` must be a non-empty string'), isError: true };
+      }
+      if (!baseRevision) {
+        return {
+          content: errText('E_BAD_INPUT', 'base_revision from the preceding file result is required'),
+          isError: true,
+          observations: fileFailure('E_BAD_INPUT', 'append_precondition', { stage: 'input', revision_provided: false }),
+        };
+      }
+
+      const abs = resolveAbs(ctx, rawPath);
+      const scopeErr = await gateEditPath(opts, abs, ctx);
+      if (scopeErr) {
+        log.warn('append_file scope reject', { user_id: maskId(opts.userId), path: logPathRef(abs) });
+        return { content: scopeErr, isError: true };
+      }
+
+      const release = await acquireFileEditLock(abs, ctx);
+      try {
+        ctx.signal?.throwIfAborted();
+        let st: fs.Stats;
+        try { st = fs.lstatSync(abs); }
+        catch (err) {
+          log.warn('append_file not found', { user_id: maskId(opts.userId), path: logPathRef(abs), error: logErrorRef(err) });
+          return {
+            content: errText('E_NOT_FOUND', `${abs}: file does not exist (use write_file for the first chunk)`),
+            isError: true,
+          };
+        }
+        if (!st.isFile() || st.isSymbolicLink()) {
+          return { content: errText('E_NOT_EDITABLE', `${abs}: not a regular non-symlink file`), isError: true };
+        }
+        if (kindOf(abs) !== 'text') {
+          return { content: errText('E_NOT_EDITABLE', `${abs}: append_file supports UTF-8 text files only`), isError: true };
+        }
+
+        let before: Buffer;
+        try { before = fs.readFileSync(abs); }
+        catch (err) {
+          return { content: errText('E_APPEND_FAILED', `${abs}: read failed: ${(err as Error).message}`), isError: true };
+        }
+        if (!isUtf8(before)) {
+          return { content: errText('E_NOT_EDITABLE', `${abs}: file is not valid UTF-8 text`), isError: true };
+        }
+        const chunk = Buffer.from(content, 'utf8');
+        // Keep only this call's verified snapshot state for the post-append hash.
+        const appendHash = crypto.createHash('sha256').update(before);
+        const currentHash = `sha256:${appendHash.copy().digest('hex')}`;
+        const currentRevision = issueFileRevision(ctx, abs, before.length, currentHash);
+        const chunkHash = fileBufferHash(chunk);
+        const revisionRecord = resolveFileRevision(ctx, baseRevision);
+
+        const replay = findAppendReplay(ctx, baseRevision, chunkHash);
+        if (revisionRecord?.path !== canonicalFileRevisionPath(abs)) {
+          return {
+            content: `${errText(
+              revisionRecord ? 'E_REVISION_PATH_MISMATCH' : 'E_REVISION_UNKNOWN',
+              revisionRecord
+                ? `${abs}: base_revision belongs to a different file; no bytes were written`
+                : `${abs}: base_revision is not available in this run; use the returned current revision`,
+            )}\n<file path="${abs}" total_bytes="${before.length}" file_hash="${currentHash}" revision="${currentRevision}"/>`,
+            isError: true,
+            observations: fileFailure(revisionRecord ? 'E_REVISION_PATH_MISMATCH' : 'E_REVISION_UNKNOWN', revisionRecord ? 'revision_path' : 'revision_unknown', { stage: 'freshness', revision_provided: true, revision_found: !!revisionRecord }),
+          };
+        }
+        if (revisionRecord.hash !== currentHash || revisionRecord.size !== before.length) {
+          const replayEnd = replay?.baseSize != null
+            ? replay.baseSize + replay.appendedBytes
+            : revisionRecord.size + chunk.length;
+          const replayed = !!replay
+            && replay.baseSize === revisionRecord.size
+            && replay.appendedBytes === chunk.length
+            && replayEnd <= before.length
+            && before.subarray(replay.baseSize, replayEnd).equals(chunk);
+          if (replayed) {
+            recordRead(ctx, abs, st, currentHash);
+            return {
+              content: appendFileReceipt(
+                abs,
+                chunk.length,
+                before.length,
+                currentHash,
+                currentRevision,
+                true,
+              ),
+            };
+          }
+          return {
+            content: `${errText(
+              'E_STALE',
+              `${abs}: base_revision no longer matches the current file; no bytes were written`,
+            )}\n<file path="${abs}" total_bytes="${before.length}" file_hash="${currentHash}" revision="${currentRevision}"/>`,
+            isError: true,
+            observations: fileFailure('E_STALE', 'revision_changed', { stage: 'freshness', revision_provided: true, revision_found: true, revision_matches: false }),
+          };
+        }
+
+        try { fs.appendFileSync(abs, chunk); }
+        catch (err) {
+          return { content: errText('E_APPEND_FAILED', `${abs}: write failed: ${(err as Error).message}`), isError: true };
+        }
+
+        // Continue the same snapshot hash without scanning the old bytes twice.
+        const beforeHash = currentHash;
+        const afterBytes = before.length + chunk.length;
+        const afterHash = `sha256:${appendHash.update(chunk).digest('hex')}`;
+        const nextStat = fs.statSync(abs);
+        recordRead(ctx, abs, nextStat, afterHash);
+        const nextRevision = issueFileRevision(ctx, abs, afterBytes, afterHash);
+        recordAppendReplay(ctx, {
+          baseRevision,
+          contentHash: chunkHash,
+          baseSize: before.length,
+          appendedBytes: chunk.length,
+          resultRevision: nextRevision,
+          resultHash: afterHash,
+        });
+        // append_file refuses a path it cannot read, so the target always
+        // pre-existed.
+        try { await opts.onFileWritten?.(abs, { preExisting: true }); }
+        catch (err) { log.warn('onFileWritten callback failed', { error: logErrorRef(err) }); }
+        return {
+          content: appendFileReceipt(abs, chunk.length, afterBytes, afterHash, nextRevision, false),
+          observations: {
+            fileChanges: [{
+              operation: 'update',
+              sourcePath: abs,
+              beforeExists: true,
+              afterExists: true,
+              beforeHash,
+              afterHash,
+              beforeBytes: before.length,
+              afterBytes,
+              coverage: 'exact',
+            }],
+          },
+        };
+      } finally {
+        release();
+      }
+    },
+  };
+}
+
+function patchRecoveryContext(body: string, fileHash: string): string {
+  const maxChars = 1_600;
+  const excerpt = body.slice(0, maxChars);
+  return [
+    `<patch-recovery file_hash="${fileHash}" total_chars="${body.length}">`,
+    excerpt + (body.length > maxChars ? `\n...[${body.length - maxChars} chars omitted]` : ''),
+    '</patch-recovery>',
+    'Read the current file and rebuild the patch against these bytes; do not retry the unchanged patch.',
+  ].join('\n');
+}
+
+/** PC host adapter for core-agent's generic patch transaction. The core owns
+ * parsing, hunk application, staging, commit, and rollback; this layer only
+ * injects Orkas permission, path, OCC, lock, and produced-file policies. */
+function createHostApplyPatchTool(opts: LocalToolsOpts): AgentTool {
+  const coreTool = createCoreApplyPatchTool({
+    async validatePath(check, ctx) {
+      const scopeErr = await gateEditPath(opts, check.path, ctx);
+      return scopeErr ? { content: scopeErr, isError: true } : undefined;
+    },
+    async acquirePaths(paths) {
+      const releases: Array<() => void> = [];
+      for (const abs of [...paths].sort()) releases.push(await fileEditLock(abs).acquire());
+      return () => {
+        for (const release of releases.reverse()) release();
+      };
+    },
+    validateExisting(snapshot, _check, ctx) {
+      if (kindOf(snapshot.path) !== 'text') {
+        return {
+          content: errText('E_NOT_EDITABLE', `${snapshot.path}: apply_patch supports regular text files only`),
+          isError: true,
+        };
+      }
+      const freshness = checkEditFreshness(ctx, snapshot.path, snapshot.stat, {
+        currentHash: snapshot.hash,
+      });
+      if (!freshness) return undefined;
+      const baseline = editBaselineFacts(ctx, snapshot.path, snapshot.stat, snapshot.hash);
+      recordRead(ctx, snapshot.path, snapshot.stat, snapshot.hash);
+      // checkEditFreshness also serves edit_file, whose retry accepts an
+      // expected_hash parameter. apply_patch has no such parameter: its safe
+      // recovery is to rebuild the patch against the returned current bytes.
+      // Keep the shared failure classification while avoiding an impossible
+      // instruction in this tool-specific response.
+      const patchFreshnessMessage = freshness.code === 'E_NOT_READ'
+        ? `${snapshot.path}: not read in this run, so the proposed patch cannot be checked against the real current contents.`
+        : `${snapshot.path}: file changed on disk since you read it (another worker, a command, or an external edit).`;
+      return {
+        content:
+          `${errText(freshness.code, patchFreshnessMessage)}\n`
+          + patchRecoveryContext(snapshot.content, snapshot.hash),
+        isError: true,
+        observations: fileFailure(freshness.code, freshness.code === 'E_NOT_READ' ? 'not_read' : 'file_changed', { stage: 'freshness', ...baseline }),
+      };
+    },
+    async onCommitted(file: ApplyPatchCommittedFile, ctx) {
+      if (file.operation === 'delete' || file.destinationPath !== file.sourcePath) {
+        forgetRead(ctx, file.sourcePath);
+      }
+      if (file.operation !== 'delete') {
+        recordRead(ctx, file.destinationPath, undefined, file.afterHash);
+        await opts.onFileWritten?.(file.destinationPath, {
+          preExisting: file.operation !== 'add',
+        });
+      }
+    },
+  });
+  return {
+    ...coreTool,
+    description:
+      'Apply multiple known edits in one transactional patch to one or more existing or new text files. Existing targets require an unchanged baseline from this run: read_files and successful file-tool writes establish it; bash reads/writes do not. Validation or conflicts leave every target unchanged. Use edit_file for one small replacement.',
+    async execute(input, ctx) {
+      const result = await coreTool.execute(input, ctx);
+      if (result.isError) return result;
+      // The core owns the transaction; run-scoped revision receipts belong to
+      // this host. Use committed observations, never re-read potentially newer
+      // bytes and silently grant an append against an unseen external edit.
+      const revisions = new Map<string, string>();
+      for (const file of result.observations?.fileChanges ?? []) {
+        if (file.afterExists && file.afterHash && file.afterBytes !== undefined) {
+          revisions.set(file.sourcePath, issueFileRevision(
+            ctx, file.destinationPath ?? file.sourcePath, file.afterBytes, file.afterHash,
+          ));
+        }
+      }
+      const receipt = JSON.parse(result.content);
+      for (const file of receipt.files) {
+        const revision = revisions.get(file.path);
+        if (revision) file.revision = revision;
+      }
+      return { ...result, content: JSON.stringify(receipt) };
+    },
+  };
+}
+
+/** Diagnostic snapshot before recovery refreshes the read baseline. */
+function editBaselineFacts(ctx: ToolContext, abs: string, st: fs.Stats, currentHash: string) {
+  const seen = getReadState(ctx)?.get(abs);
+  return {
+    baseline_present: !!seen,
+    ...(seen ? { baseline_changed: readStampChanged(seen, st, currentHash) } : {}),
+  };
+}
+
+/** Wrapped `edit_file` tool — in-place string replacement on existing text files.
+ *  Sandbox-checked, permission-gated, no uniquify (semantics is "modify in place").
+ *  Non-text and extracted kinds are rejected. */
+function createEditFileTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'edit_file',
+    description:
+      'Replace one text pattern in an existing UTF-8 file. Requires an unchanged baseline from this run or a matching expected_hash. read_files and successful file-tool writes establish a baseline; bash reads/writes and earlier turns alone do not. Use write_file to create files and apply_patch for multiple known edits in one or more files.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Absolute or workspace-relative path to an existing file.' },
+        old_string: { type: 'string', description: 'Exact text to find; must be unique unless replace_all=true. If exact matching fails, one unique trailing-whitespace-insensitive match is accepted.' },
+        new_string: { type: 'string', description: 'Replacement text. May be empty.' },
+        replace_all: { type: 'boolean', description: 'Default false. When true, every occurrence of old_string is replaced.' },
+        expected_hash: {
+          type: 'string',
+          description: 'Optional sha256 file_hash from read_files or a prior edit recovery response. Enables optimistic concurrency: the call fails without writing if current content differs.',
+          pattern: '^sha256:[a-f0-9]{64}$',
+        },
+      },
+      required: ['path', 'old_string', 'new_string'],
+    },
+    async execute(input, ctx) {
+      const rawPath = String(input.path ?? '');
+      if (!rawPath) return { content: errText('E_BAD_INPUT', '`path` is required'), isError: true };
+      const oldStr = typeof input.old_string === 'string' ? input.old_string : null;
+      const newStr = typeof input.new_string === 'string' ? input.new_string : null;
+      if (oldStr === null || newStr === null) {
+        return { content: errText('E_BAD_INPUT', '`old_string` and `new_string` are both required strings'), isError: true };
+      }
+      if (oldStr.length === 0 && oldStr !== newStr) {
+        return { content: errText('E_BAD_INPUT', '`old_string` must be non-empty'), isError: true };
+      }
+      const replaceAll = input.replace_all === true;
+      const expectedHash = typeof input.expected_hash === 'string' ? input.expected_hash.trim() : '';
+      if (expectedHash && !/^sha256:[a-f0-9]{64}$/.test(expectedHash)) {
+        return { content: errText('E_BAD_INPUT', '`expected_hash` must be a lowercase sha256:<64 hex> file hash'), isError: true };
+      }
+
+      const abs = resolveAbs(ctx, rawPath);
+      const scopeErr = await gateEditPath(opts, abs, ctx);
+      if (scopeErr) {
+        log.warn('edit_file scope reject', { user_id: maskId(opts.userId), path: logPathRef(abs) });
+        return { content: scopeErr, isError: true };
+      }
+
+      // Serialize the read-modify-write per file: parallel workers share this
+      // process + filesystem, so two concurrent edits of the same file must not
+      // interleave stat→read→write (lost update). Distinct files never contend.
+      const release = await acquireFileEditLock(abs, ctx);
+      try {
+        ctx.signal?.throwIfAborted();
+        let st: fs.Stats;
+        try { st = fs.statSync(abs); }
+        catch (err) {
+          log.warn('edit_file not found', { user_id: maskId(opts.userId), path: logPathRef(abs), error: logErrorRef(err) });
+          return {
+            content: errText('E_NOT_FOUND', `${abs}: file does not exist (use write_file to create new files)`),
+            isError: true,
+          };
+        }
+        if (!st.isFile()) {
+          return { content: errText('E_NOT_FOUND', `${abs}: not a regular file`), isError: true };
+        }
+
+        const kind = kindOf(abs);
+        if (kind !== 'text') {
+          return {
+            content: errText(
+              'E_NOT_EDITABLE',
+              `${abs}: kind=${kind} is not editable in place (extracted format). Use write_file to overwrite the file if you really need to.`,
+            ),
+            isError: true,
+          };
+        }
+
+        let body: string;
+        try { body = fs.readFileSync(abs, 'utf8'); }
+        catch (err) {
+          const msg = (err as Error).message;
+          log.warn('edit_file read failed', { user_id: maskId(opts.userId), path: logPathRef(abs), error: logErrorRef(err) });
+          return { content: errText('E_EDIT_FAILED', `${abs}: read failed: ${msg}`), isError: true };
+        }
+        const currentHash = editableFileHash(body);
+        const baseline = editBaselineFacts(ctx, abs, st, currentHash);
+
+        // Read-before-edit + OCC: a run-scoped baseline or an explicit hash
+        // must identify the exact bytes being edited. A rejected attempt
+        // refreshes the baseline and returns bounded current context, so the
+        // next attempt can recover without another tool round.
+        const block = checkEditFreshness(ctx, abs, st, {
+          ...(expectedHash ? { expectedHash } : {}),
+          currentHash,
+        });
+        if (block) {
+          recordRead(ctx, abs, st, currentHash);
+          log.warn('edit_file freshness reject', { user_id: maskId(opts.userId), path: logPathRef(abs), code: block.code });
+          return {
+            content: `${errText(block.code, block.msg)}\n${editRecoveryContext(body, oldStr, currentHash)}`,
+            isError: true,
+            observations: fileFailure(block.code, block.code === 'E_NOT_READ' ? 'not_read' : expectedHash ? 'expected_hash_changed' : 'file_changed', { stage: 'freshness', ...baseline, expected_hash_provided: !!expectedHash }),
+          };
+        }
+
+        if (oldStr === newStr) {
+          // No replacement is needed; retain the verified version without a write.
+          recordRead(ctx, abs, st, currentHash);
+          const revision = issueFileRevision(ctx, abs, Buffer.byteLength(body, 'utf8'), currentHash);
+          return { content: `<file path="${abs}" edited="0" kind="${kind}" file_hash="${currentHash}" revision="${revision}"/>` };
+        }
+
+        let count = countOccurrences(body, oldStr);
+        // The text actually present in the file. It differs from `old_string`
+        // only when the trailing-whitespace fallback below resolves the match.
+        let matchText = oldStr;
+        let whitespaceRelaxed = false;
+        if (count === 0) {
+          const relaxed = findTrailingWhitespaceRelaxedMatch(body, oldStr);
+          if (relaxed?.count === 1) {
+            matchText = relaxed.text;
+            count = 1;
+            whitespaceRelaxed = true;
+          }
+        }
+        if (count === 0) {
+          recordRead(ctx, abs, st, currentHash);
+          return {
+            content: `${errText('E_NO_MATCH', [
+              `${abs}: \`old_string\` not found in the current file`,
+              editNoMatchReason(body, oldStr),
+            ].filter(Boolean).join(' '))}\n${editRecoveryContext(body, oldStr, currentHash)}`,
+            isError: true,
+            observations: fileFailure('E_NO_MATCH', 'no_match', { stage: 'match', ...baseline, expected_hash_provided: !!expectedHash, match_count: 0 }),
+          };
+        }
+        if (count > 1 && !replaceAll) {
+          return {
+            content: `${errText(
+              'E_MULTIPLE_MATCHES',
+              `${abs}: \`old_string\` matches ${count} occurrences. Provide more surrounding context to make it unique, or set replace_all=true.`,
+            )}\n<edit-recovery>\n${matchRecoveryContext(body, currentHash, firstMatchOffsets(body, matchText), count, 1200)}\n</edit-recovery>`,
+            isError: true,
+            observations: fileFailure('E_MULTIPLE_MATCHES', 'ambiguous_match', { stage: 'match', ...baseline, match_count: count }),
+          };
+        }
+
+        const next = replaceAll ? body.split(matchText).join(newStr) : body.replace(matchText, () => newStr);
+        try {
+          fs.writeFileSync(abs, next, 'utf8');
+        } catch (err) {
+          const msg = (err as Error).message;
+          log.warn('edit_file write failed', { user_id: maskId(opts.userId), path: logPathRef(abs), error: logErrorRef(err) });
+          return { content: errText('E_EDIT_FAILED', `${abs}: write failed: ${msg}`), isError: true };
+        }
+
+        // Refresh the baseline to the post-edit bytes so a follow-up edit in a
+        // later round doesn't trip OCC on this same intended change.
+        const nextHash = editableFileHash(next);
+        recordRead(ctx, abs, undefined, nextHash);
+        const nextBytes = Buffer.byteLength(next, 'utf8');
+        const revision = issueFileRevision(ctx, abs, nextBytes, nextHash);
+
+        const replaced = replaceAll ? count : 1;
+        log.info('edit_file applied', { user_id: maskId(opts.userId), path: logPathRef(abs), replaced });
+
+        if (opts.onFileWritten) {
+          // edit_file only ever modifies a file that already had the matched
+          // text, so its target is never an Orkas-produced deliverable.
+          try { await opts.onFileWritten(abs, { preExisting: true }); }
+          catch (err) { log.warn('onFileWritten callback failed', { error: logErrorRef(err) }); }
+        }
+
+        return {
+          // `match="whitespace_relaxed"` says the edit landed on text that
+          // differs from `old_string` in line-end whitespace only, so a caller
+          // comparing its own string against the file is not left guessing.
+          content: `<file path="${abs}" edited="${replaced}" kind="${kind}"${whitespaceRelaxed ? ' match="whitespace_relaxed"' : ''} file_hash="${nextHash}" revision="${revision}"/>`,
+          observations: {
+            fileChanges: [{
+              operation: 'update',
+              sourcePath: abs,
+              beforeExists: true,
+              afterExists: true,
+              beforeHash: currentHash,
+              afterHash: nextHash,
+              beforeBytes: Buffer.byteLength(body),
+              afterBytes: nextBytes,
+              beforeContent: body,
+              afterContent: next,
+              coverage: 'exact',
+            }],
+          },
+        };
+      } finally {
+        release();
+      }
+    },
+  };
+}
+
+/** Declare the complete user-facing deliverable set for the current turn.
+ * This tool does not read or write files. The group-chat owner filters each
+ * normalized path to files eligible for user-facing resource display. */
+function createPublishOutputsTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'publish_outputs',
+    description:
+      'Declare the complete user-facing file deliverables created by this actor in the current turn.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        paths: {
+          type: 'array',
+          items: { type: 'string' },
+          maxItems: 50,
+          description: 'Complete final file paths, absolute or relative to $working_dir. Exclude previews, caches, logs, and working files; empty means none, and each call replaces the prior declaration.',
+        },
+      },
+      required: ['paths'],
+    },
+    async execute(input, ctx) {
+      if (!input || !Array.isArray(input.paths)) {
+        return { content: errText('E_BAD_INPUT', '`paths` must be an array'), isError: true };
+      }
+      const rawPaths = input.paths;
+      const normalized: string[] = [];
+      const seen = new Set<string>();
+      for (const raw of rawPaths.slice(0, 50)) {
+        if (typeof raw !== 'string' || !raw.trim()) continue;
+        const abs = resolveAbs(ctx, raw.trim());
+        if (seen.has(abs)) continue;
+        seen.add(abs);
+        normalized.push(abs);
+      }
+      if (rawPaths.length > 0 && normalized.length === 0) {
+        return { content: errText('E_BAD_INPUT', '`paths` must be empty or contain valid file paths'), isError: true };
+      }
+      if (!opts.onOutputsPublished) {
+        return { content: errText('E_OUTPUT_PUBLICATION_UNAVAILABLE', 'this conversation cannot publish file outputs'), isError: true };
+      }
+      try {
+        const accepted = await opts.onOutputsPublished(normalized);
+        return {
+          content: JSON.stringify(outputPublicationReceipt(normalized, Array.isArray(accepted) ? accepted : [])),
+        };
+      } catch (err) {
+        return {
+          content: errText('E_OUTPUT_PUBLICATION_FAILED', (err as Error).message || String(err)),
+          isError: true,
+        };
+      }
+    },
+  };
+}
+
+/** `library_save` — copy a file the agent produced this turn into the project
+ *  资料库 (`contexts/`), where it becomes a durable, cloud-synced, KB-indexed
+ *  deliverable the user can open and review. Only offered in project
+ *  conversations (`opts.projectId` set). Delegates the copy + indexing + sync to
+ *  the `project_files` feature so the owning module keeps its invariants. */
+function createLibrarySaveTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'library_save',
+    description:
+      'Copy a file produced in this turn from the active workspace into the project Library as a ' +
+      'durable, searchable deliverable, returning its Library path. Use this for finished deliverables, ' +
+      'not scratch files. Checkout provides an editable workspace copy and a revision for explicit replacement.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        source_path: { type: 'string', description: 'Workspace file, absolute or relative to $working_dir. Save reads it; checkout creates it without overwriting.' },
+        name: { type: 'string', description: 'Optional library filename (defaults to the source filename).' },
+        action: { type: 'string', enum: ['save', 'checkout'], description: 'Default save creates a new Library file. Checkout requires name and copies an existing file to source_path.' },
+        expected_revision: { type: 'string', description: 'Save only: revision from checkout to replace that unchanged Library file. Omit to keep create-only behavior.' },
+      },
+      required: ['source_path'],
+    },
+    async execute(input, ctx): Promise<ToolResult> {
+      const fieldError = librarySaveFieldError(input);
+      if (fieldError) return { content: errText('E_BAD_INPUT', fieldError), isError: true };
+      if (!opts.userId || !opts.projectId) {
+        return { content: errText('E_NO_PROJECT', 'library_save is only available inside a project conversation'), isError: true };
+      }
+      const rawSource = typeof input.source_path === 'string' ? input.source_path.trim() : '';
+      if (!rawSource) return { content: errText('E_BAD_INPUT', 'source_path must be a non-empty string'), isError: true };
+      const sourceAbs = resolveAbs(ctx, rawSource);
+      // Path sandbox at entry: only a file the agent produced inside its own
+      // workspace may be copied into the shared, synced project library.
+      if (!isInWritableWorkspaceScope(opts, sourceAbs)) {
+        return { content: errText('E_PATH_OUT_OF_SCOPE', `source_path must be a file inside your workspace: ${sourceAbs}`), isError: true };
+      }
+      const name = typeof input.name === 'string' ? input.name.trim() : '';
+      const targetName = name || path.basename(sourceAbs);
+      if (input.action === 'checkout' && (!name || input.expected_revision !== undefined)) {
+        return { content: errText('E_BAD_INPUT', !name ? 'name must be a non-empty string for checkout' : 'expected_revision is not accepted for checkout'), isError: true };
+      }
+      if (input.action === 'checkout' || input.expected_revision !== undefined) {
+        const result = input.action === 'checkout'
+          ? await projectFiles.checkoutProjectFile(opts.userId, opts.projectId, name, sourceAbs)
+          : await projectFiles.replaceProjectFileFromPath(opts.userId, opts.projectId, sourceAbs, targetName, input.expected_revision as string);
+        return { content: JSON.stringify(result.ok ? { ...result, path: result.name } : result), isError: !result.ok };
+      }
+      const r = await projectFiles.copyProjectEntryFromPath(opts.userId, opts.projectId, sourceAbs, targetName);
+      if (!r.ok) return { content: errText('E_LIBRARY_SAVE_FAILED', (r as { error: string }).error), isError: true };
+      return { content: JSON.stringify({ ok: true, path: r.name, bytes: r.bytes }) };
+    },
+  };
+}
+
+/** `markdown_to_pdf` — zero-dependency built-in channel. */
+function createMarkdownToPdfTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'markdown_to_pdf',
+    description:
+      'Render Markdown content to a PDF file at the given path. ' +
+      'Supports headings, paragraphs, bold, italic, inline code, fenced code blocks, ' +
+      'ordered and unordered lists, horizontal rules, and links. ' +
+      'For tables or custom styling, generate HTML yourself and call `html_to_pdf` instead. ' +
+      'No external tools required (no pandoc / wkhtmltopdf). ' +
+      'If the target path already exists and was not written by you earlier in this turn, ' +
+      'the basename is automatically suffixed (`-2 / -3 / ...`) to avoid clobbering, and ' +
+      'the rename is surfaced in a `<file-renamed>` block in the tool result.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Output PDF path (absolute or relative to the workspace).' },
+        markdown: { type: 'string', description: 'Markdown source text.' },
+        title: { type: 'string', description: 'Optional document title (shown in the PDF metadata).' },
+        pageSize: { type: 'string', description: 'A4 | A3 | Letter | Legal | Tabloid. Default: A4.' },
+        landscape: { type: 'boolean', description: 'Default: false.' },
+      },
+      required: ['path', 'markdown'],
+    },
+    async execute(input, ctx) {
+      const rawPath = String(input.path ?? '');
+      if (!rawPath) return { content: errText('E_BAD_INPUT', '`path` is required'), isError: true };
+      const inputAbs = resolveAbs(ctx, rawPath);
+      const scopeErr = await gateEditPath(opts, inputAbs, ctx);
+      if (scopeErr) {
+        log.warn('markdown_to_pdf scope reject', { user_id: maskId(opts.userId), path: logPathRef(inputAbs) });
+        return { content: scopeErr, isError: true };
+      }
+      const markdown = String(input.markdown ?? '');
+      const footerText = producedDocumentFooterText({ userId: opts.userId, cid: opts.cid, source: 'markdown_to_pdf' });
+      const renderOptions = {
+        ...(typeof input.title === 'string' ? { title: input.title } : {}),
+        ...(typeof input.pageSize === 'string' ? { pageSize: input.pageSize as any } : {}),
+        ...(typeof input.landscape === 'boolean' ? { landscape: input.landscape } : {}),
+        ...(footerText ? { footerText } : {}),
+      };
+      const outcome = await uniquifyPathForWrite(
+        inputAbs,
+        isMineFor(opts),
+        async (decision): Promise<
+          { kind: 'scope'; err: string }
+          | { kind: 'render'; err: string }
+          | ({ kind: 'ok' } & typeof decision)
+        > => {
+          if (decision.finalPath !== inputAbs) {
+            const finalScopeErr = await gateEditPath(opts, decision.finalPath, ctx);
+            if (finalScopeErr) return { kind: 'scope', err: finalScopeErr };
+          }
+          try {
+            await markdownToPdf(markdown, decision.finalPath, renderOptions);
+          } catch (err) {
+            return { kind: 'render', err: `Error generating PDF: ${(err as Error).message}` };
+          }
+          return { kind: 'ok', ...decision };
+        },
+      );
+      if (outcome.kind === 'scope') {
+        log.warn('markdown_to_pdf final scope reject', { user_id: maskId(opts.userId), path: logPathRef(inputAbs) });
+        return { content: outcome.err, isError: true };
+      }
+      if (outcome.kind === 'render') return { content: outcome.err, isError: true };
+      const { finalPath, renamed } = outcome;
+      try { await opts.onFileWritten?.(finalPath); }
+      catch (err) { log.warn('PDF publication callback failed', { error: logErrorRef(err) }); }
+      const base = `PDF written: ${finalPath}`;
+      return { content: renamed ? `${base}${renderRenameSignal(inputAbs, finalPath)}` : base };
+    },
+  };
+}
+
+/** `html_to_pdf` — escape hatch for hand-crafted HTML (tables, custom CSS, etc.). */
+function createHtmlToPdfTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'html_to_pdf',
+    description:
+      'Render an HTML document to a PDF file at the given path. ' +
+      'Use this when you need tables, custom styling, or layout beyond what `markdown_to_pdf` supports. ' +
+      'The input should be a complete HTML document including <html>, <head>, and <body> tags. ' +
+      'If the target path already exists and was not written by you earlier in this turn, ' +
+      'the basename is automatically suffixed (`-2 / -3 / ...`) to avoid clobbering, and ' +
+      'the rename is surfaced in a `<file-renamed>` block in the tool result.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Output PDF path (absolute or relative to the workspace).' },
+        html: { type: 'string', description: 'Complete HTML document source.' },
+        pageSize: { type: 'string', description: 'A4 | A3 | Letter | Legal | Tabloid. Default: A4.' },
+        landscape: { type: 'boolean', description: 'Default: false.' },
+      },
+      required: ['path', 'html'],
+    },
+    async execute(input, ctx) {
+      const rawPath = String(input.path ?? '');
+      if (!rawPath) return { content: errText('E_BAD_INPUT', '`path` is required'), isError: true };
+      const inputAbs = resolveAbs(ctx, rawPath);
+      const scopeErr = await gateEditPath(opts, inputAbs, ctx);
+      if (scopeErr) {
+        log.warn('html_to_pdf scope reject', { user_id: maskId(opts.userId), path: logPathRef(inputAbs) });
+        return { content: scopeErr, isError: true };
+      }
+      const html = String(input.html ?? '');
+      const footerText = producedDocumentFooterText({ userId: opts.userId, cid: opts.cid, source: 'html_to_pdf' });
+      const renderOptions = {
+        ...(typeof input.pageSize === 'string' ? { pageSize: input.pageSize as any } : {}),
+        ...(typeof input.landscape === 'boolean' ? { landscape: input.landscape } : {}),
+        ...(footerText ? { footerText } : {}),
+      };
+      const outcome = await uniquifyPathForWrite(
+        inputAbs,
+        isMineFor(opts),
+        async (decision): Promise<
+          { kind: 'scope'; err: string }
+          | { kind: 'render'; err: string }
+          | ({ kind: 'ok' } & typeof decision)
+        > => {
+          if (decision.finalPath !== inputAbs) {
+            const finalScopeErr = await gateEditPath(opts, decision.finalPath, ctx);
+            if (finalScopeErr) return { kind: 'scope', err: finalScopeErr };
+          }
+          try {
+            await htmlToPdf(html, decision.finalPath, renderOptions);
+          } catch (err) {
+            return { kind: 'render', err: `Error generating PDF: ${(err as Error).message}` };
+          }
+          return { kind: 'ok', ...decision };
+        },
+      );
+      if (outcome.kind === 'scope') {
+        log.warn('html_to_pdf final scope reject', { user_id: maskId(opts.userId), path: logPathRef(inputAbs) });
+        return { content: outcome.err, isError: true };
+      }
+      if (outcome.kind === 'render') return { content: outcome.err, isError: true };
+      const { finalPath, renamed } = outcome;
+      try { await opts.onFileWritten?.(finalPath); }
+      catch (err) { log.warn('PDF publication callback failed', { error: logErrorRef(err) }); }
+      const base = `PDF written: ${finalPath}`;
+      return { content: renamed ? `${base}${renderRenameSignal(inputAbs, finalPath)}` : base };
+    },
+  };
+}
+
+function createPdfTool(opts: LocalToolsOpts): AgentTool {
+  const markdown = createMarkdownToPdfTool(opts);
+  const html = createHtmlToPdfTool(opts);
+  return {
+    name: 'create_pdf',
+    description:
+      'Create a CJK-capable PDF from Markdown or complete HTML and return its collision-safe saved path. Use this built-in path exclusively; if it fails, report the failure instead of substituting reportlab, pdfkit, wkhtmltopdf, or LaTeX, which do not preserve its CJK/font behavior.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        path: { type: 'string', description: 'Output .pdf path; absolute or workspace-relative.' },
+        source_type: { type: 'string', enum: ['markdown', 'html'], description: 'Use markdown for ordinary prose or html for custom layout, tables, and CSS.' },
+        content: { type: 'string', description: 'Markdown text or complete HTML matching source_type.' },
+        title: { type: 'string', description: 'Markdown only. Optional PDF metadata title.' },
+        pageSize: { type: 'string', description: 'A4 | A3 | Letter | Legal | Tabloid. Default A4.' },
+        landscape: { type: 'boolean', description: 'Default false.' },
+      },
+      required: ['path', 'source_type', 'content'],
+    },
+    async execute(input, ctx) {
+      const sourceType = String(input.source_type ?? '');
+      if (sourceType === 'markdown') {
+        return markdown.execute({ ...input, markdown: String(input.content ?? '') }, ctx);
+      }
+      if (sourceType === 'html') {
+        return html.execute({ ...input, html: String(input.content ?? '') }, ctx);
+      }
+      return {
+        content: errText('E_BAD_INPUT', '`source_type` must be markdown or html'),
+        isError: true,
+      };
+    },
+  };
+}
+
+const HTML_PREVIEW_MAX_ENTRY_BYTES = 2 * 1024 * 1024;
+
+function htmlPreviewViewport(
+  name: HtmlPreviewViewport['name'],
+  input: unknown,
+  fallback: { width: number; height: number },
+): HtmlPreviewViewport | string {
+  const value = input && typeof input === 'object'
+    ? input as Record<string, unknown>
+    : {};
+  const widthBounds = name === 'desktop' ? [768, 1920] : [320, 480];
+  const width = Number(defaultNumericRange(value.width === undefined ? fallback.width : value.width, fallback.width, widthBounds[0], widthBounds[1]));
+  const height = Number(defaultNumericRange(value.height === undefined ? fallback.height : value.height, fallback.height, 480, 1400));
+  if (
+    !Number.isInteger(width)
+    || width < widthBounds[0]
+    || width > widthBounds[1]
+  ) {
+    return errText(
+      'E_BAD_INPUT',
+      `${name}.width must be an integer from ${widthBounds[0]} to ${widthBounds[1]}`,
+    );
+  }
+  if (!Number.isInteger(height) || height < 480 || height > 1400) {
+    return errText('E_BAD_INPUT', `${name}.height must be an integer from 480 to 1400`);
+  }
+  return { name, width, height };
+}
+
+function guardHtmlPreviewPath(opts: LocalToolsOpts, abs: string): string | null {
+  const roots = [
+    ...allowedRootsFor(opts),
+    ...(opts.readOnlyExtraRoots ?? []),
+    ...(opts.runtimeReadOnlyRoots ?? []),
+  ];
+  if (roots.length && isPathAllowed(abs, roots)) return null;
+  if (!localAccessAllowsOutsideWorkspace()) {
+    return errText(
+      'E_PATH_OUT_OF_SCOPE',
+      `HTML path is outside the current workspace/attachment scope: ${abs}`,
+    );
+  }
+  return null;
+}
+
+function createHtmlPreviewTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'html_preview',
+    description:
+      'Audit local HTML or a current-conversation app in an isolated browser and return runtime, resource, overflow, layout, focus, and interaction findings.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: 'Existing local .html/.htm entry path, absolute or relative to $working_dir. Supply exactly one of path or artifact_id.',
+        },
+        artifact_id: {
+          type: 'string',
+          description: 'App ID returned by create_artifact in the current conversation. Previews its index.html. Supply exactly one of artifact_id or path.',
+        },
+        target: {
+          type: 'string',
+          enum: ['responsive', 'desktop', 'mobile'],
+          default: 'desktop',
+          description: 'Optional deliverable target. Defaults to desktop. Use responsive only when viewport-dependent reflow is explicitly requested.',
+        },
+        screenshots: {
+          type: 'boolean',
+          default: false,
+          description: 'Whether a passing result should include lossless viewport screenshots as model-visible image blocks. Defaults to false. This never invokes a separate vision API, and failed checks never include images.',
+        },
+        interactions: {
+          type: 'boolean',
+          default: true,
+          description: 'Whether to exercise bounded controls, forms, links, and downloads. Defaults to true. Set false for visual-only UI review; runtime, resource, layout, focus, and screenshot checks still run.',
+        },
+        desktop: {
+          type: 'object',
+          description: 'Optional desktop viewport; defaults to 1440x900.',
+          properties: {
+            width: { type: 'number', description: 'Desktop width from 768 to 1920.' },
+            height: { type: 'number', description: 'Desktop height from 480 to 1400.' },
+          },
+        },
+        mobile: {
+          type: 'object',
+          description: 'Optional mobile viewport; defaults to 390x844.',
+          properties: {
+            width: { type: 'number', description: 'Mobile width from 320 to 480.' },
+            height: { type: 'number', description: 'Mobile height from 480 to 1400.' },
+          },
+        },
+      },
+      required: [],
+    },
+    async execute(input, ctx) {
+      const artifactMode = input.artifact_id !== undefined;
+      if (artifactMode === (input.path !== undefined)) {
+        return { content: errText('E_BAD_INPUT', 'supply exactly one of `path` or `artifact_id`'), isError: true };
+      }
+      let abs: string;
+      let artifactId: string | undefined;
+      if (artifactMode) {
+        if (typeof input.artifact_id !== 'string' || !input.artifact_id.trim()) {
+          return { content: errText('E_BAD_INPUT', '`artifact_id` must be a non-empty app ID'), isError: true };
+        }
+        artifactId = input.artifact_id.trim();
+        if (!opts.userId || !opts.cid || getActiveUserId() !== opts.userId) {
+          return { content: errText('E_NO_CONVERSATION', 'artifact preview requires the current account and conversation'), isError: true };
+        }
+        const resolved = chatArtifacts.resolveArtifactFilePath(opts.userId, opts.cid, artifactId, 'index.html');
+        if (!resolved.ok) {
+          return { content: errText('E_HTML_PREVIEW_NOT_FOUND', 'app is unavailable in the current conversation'), isError: true };
+        }
+        abs = resolved.absPath;
+      } else {
+        const rawPath = String(input.path ?? '').trim();
+        if (!rawPath) return { content: errText('E_BAD_INPUT', '`path` is required'), isError: true };
+        abs = resolveAbs(ctx, rawPath);
+      }
+      if (!/\.html?$/i.test(abs)) {
+        return {
+          content: errText('E_BAD_INPUT', '`path` must point to an .html or .htm file'),
+          isError: true,
+        };
+      }
+      // Artifact access is confined by its owning resolver, independently of workspace access.
+      const scopeError = artifactMode ? null : guardHtmlPreviewPath(opts, abs);
+      if (scopeError) return { content: scopeError, isError: true };
+      const sensitiveError = await gateSensitiveLocalPath(
+        opts,
+        abs,
+        'html_preview',
+        'read',
+        ctx,
+      );
+      if (sensitiveError) return { content: sensitiveError, isError: true };
+
+      let stat: fs.Stats;
+      try {
+        stat = fs.lstatSync(abs);
+      } catch (error) {
+        return {
+          content: errText('E_HTML_PREVIEW_NOT_FOUND', artifactMode ? 'app entry is unavailable' : (error as Error).message),
+          isError: true,
+        };
+      }
+      if (!stat.isFile() || stat.isSymbolicLink()) {
+        return {
+          content: errText('E_HTML_PREVIEW_NOT_FILE', 'entry must be a regular non-symlink file'),
+          isError: true,
+        };
+      }
+      if (stat.size <= 0 || stat.size > HTML_PREVIEW_MAX_ENTRY_BYTES) {
+        return {
+          content: errText(
+            'E_HTML_PREVIEW_SIZE',
+            `entry must be between 1 byte and ${HTML_PREVIEW_MAX_ENTRY_BYTES} bytes`,
+          ),
+          isError: true,
+        };
+      }
+
+      const target = input.target === undefined || input.target === null
+        ? 'desktop'
+        : input.target;
+      if (target !== 'responsive' && target !== 'desktop' && target !== 'mobile') {
+        return {
+          content: errText(
+            'E_BAD_INPUT',
+            '`target` must be responsive, desktop, or mobile when provided',
+          ),
+          isError: true,
+        };
+      }
+      if (input.screenshots !== undefined && typeof input.screenshots !== 'boolean') {
+        return {
+          content: errText('E_BAD_INPUT', '`screenshots` must be a boolean when provided'),
+          isError: true,
+        };
+      }
+      if (input.interactions !== undefined && typeof input.interactions !== 'boolean') {
+        return {
+          content: errText('E_BAD_INPUT', '`interactions` must be a boolean when provided'),
+          isError: true,
+        };
+      }
+      const viewports: HtmlPreviewViewport[] = [];
+      if (target === 'responsive' || target === 'desktop') {
+        const desktop = htmlPreviewViewport('desktop', input.desktop, { width: 1440, height: 900 });
+        if (typeof desktop === 'string') return { content: desktop, isError: true };
+        viewports.push(desktop);
+      }
+      if (target === 'responsive' || target === 'mobile') {
+        const mobile = htmlPreviewViewport('mobile', input.mobile, { width: 390, height: 844 });
+        if (typeof mobile === 'string') return { content: mobile, isError: true };
+        viewports.push(mobile);
+      }
+
+      try {
+        const options = artifactMode ? { bridgeJavaScript: chatArtifacts.BRIDGE_JS } : { fileViewer: true };
+        const rendered = await renderResponsiveHtmlPreview(abs, viewports, {}, {
+          ...options,
+          ...(input.interactions === false ? { interactions: false } : {}),
+        });
+        const { entryPath: _entryPath, ...artifactEvidence } = rendered.evidence;
+        const evidence = artifactMode ? { ...artifactEvidence, artifact_id: artifactId } : rendered.evidence;
+        if (!rendered.evidence.ok) {
+          return {
+            content: JSON.stringify({
+              ...evidence,
+              visual_evidence: {
+                attached: false,
+                reason: 'deterministic_checks_failed',
+                policy: 'attach_only_after_requested_preview_checks_pass',
+              },
+            }),
+            isError: true,
+          };
+        }
+        if (input.screenshots !== true) {
+          return {
+            content: JSON.stringify({
+              ...evidence,
+              visual_evidence: {
+                attached: false,
+                reason: 'not_requested',
+                policy: 'attach_only_when_requested_after_preview_checks_passed',
+              },
+            }),
+          };
+        }
+        const modelScreenshots = await Promise.all(
+          rendered.screenshots.map((data) => prepareLosslessModelImage(data)),
+        );
+        return {
+          content: JSON.stringify({
+            ...evidence,
+            visual_evidence: {
+              attached: true,
+              viewports: rendered.evidence.viewports.map((viewport) => viewport.name),
+              policy: 'attached_when_requested_after_preview_checks_passed',
+            },
+          }),
+          images: modelScreenshots.map((image) => ({
+            data: image.buf.toString('base64'),
+            mediaType: image.mediaType,
+          })),
+        };
+      } catch (error) {
+        const detail = (error as Error).message || String(error);
+        const code = /^E_HTML_PREVIEW_BROWSER_UNAVAILABLE\b/.test(detail)
+          ? 'E_HTML_PREVIEW_BROWSER_UNAVAILABLE'
+          : 'E_HTML_PREVIEW_FAILED';
+        return {
+          content: errText(
+            code,
+            artifactMode ? 'app preview could not complete; retry after checking the app' : detail,
+          ),
+          isError: true,
+        };
+      }
+    },
+  };
+}
+
+/** `create_artifact` — build an interactive multi-file app shown live
+ *  inside the chat bubble (sandboxed `<iframe>` over the `chat-app://`
+ *  protocol). Permission-gated like the other write-style tools; writes only
+ *  into the current conversation's artifact pool (`chat_artifacts/<cid>/`),
+ *  never the workspace. On success fires `onArtifactCreated` so the caller
+ *  attaches it to the assistant message record. */
+function createCreateArtifactTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'create_artifact',
+    description:
+      'Create an interactive HTML/CSS/JS app rendered in chat, with preview diagnostics. Bundled resources and external HTTP(S) URLs are supported; use a dashboard for static summaries.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        artifact_id: { type: ['string', 'null'], description: 'For a correction, an app ID returned to this creator in the current conversation. Replaces that app with the complete files array, retaining its identity. Omitted, null or blank allocates a new app ID.' },
+        title: { type: 'string', description: 'Short title above the embedded app. Omit to retain a revised app title; new apps default to "Interactive app".' },
+        appType: {type:'string',enum:opts.lockedAppType?[opts.lockedAppType]:['local','web'],description:'Omit to retain the revised app type or inherit the selected task/editing source; otherwise defaults to local. Web apps use browser and common data interfaces only; read web-app-sdk for the matching contract.'},
+        files: {
+          type: 'array',
+          description: 'Relative files with top-level index.html. Local apps receive __orkas/bridge.js for send and resize unless provided or self-sizing. If supplying a CSP, allow that same-origin script in the effective script-src/script-src-elem directive while retaining other restrictions.',
+          items: {
+            type: 'object',
+            properties: {
+              path: { type: 'string', description: 'Forward-slash relative path, e.g. "index.html" or "assets/app.js". No "..", no leading "/", no dotfiles, no "__orkas/...".' },
+              content: { type: 'string', description: 'File contents. UTF-8 text by default; for a binary extension set "encoding":"base64" and pass base64.' },
+              encoding: { type: 'string', enum: ['utf8', 'base64'], description: 'Default "utf8". Use "base64" for binary resources.' },
+            },
+            required: ['path', 'content'],
+          },
+        },
+      },
+      required: ['files'],
+    },
+    async execute(input) {
+      const uid = opts.userId;
+      const cid = opts.cid;
+      if (!uid || !cid) {
+        return { content: errText('E_NO_CONVERSATION', 'create_artifact is only available inside a conversation.'), isError: true };
+      }
+      let finalizationFailed = false;
+      const r = await chatArtifacts.createArtifact(uid, cid, opts.agentId || '', {
+        artifactId: (input as { artifact_id?: unknown }).artifact_id,
+        title: (input as { title?: unknown }).title,
+        appType: (input as {appType?:unknown}).appType,
+        files: (input as { files?: unknown }).files,
+      }, async (stagedDir, artifactId) => {
+        try {
+          await finalizeProducedArtifact(stagedDir, { userId: uid, cid, artifactId, source: 'create_artifact' });
+        } catch (err) { finalizationFailed = true; throw err; }
+      });
+      if (!r.ok) {
+        // Cast in the error branch — `strictNullChecks: false` keeps the
+        // whole `Result<>` union here (codebase-wide workaround).
+        const errMsg = (r as { error?: string }).error || 'invalid artifact';
+        log.warn('create_artifact reject', {
+          user_id: maskId(uid),
+          cid: maskId(cid),
+          agent_id: maskId(opts.agentId),
+          error: logErrorRef(new Error(errMsg)),
+        });
+        return { content: errText(finalizationFailed ? 'E_ARTIFACT_FINALIZE_FAILED' : 'E_BAD_ARTIFACT', errMsg), isError: true };
+      }
+      const resolved = chatArtifacts.resolveArtifactDir(uid, cid, r.artifactId);
+      if (!resolved.ok) {
+        return { content: errText('E_ARTIFACT_FINALIZE_FAILED', 'artifact directory could not be resolved after creation'), isError: true };
+      }
+      let smoke: ArtifactInteractionSmokeResult;
+      try {
+        const runSmoke = opts.artifactInteractionSmoke ?? (async (entryPath: string) => {
+          const rendered = await renderInteractiveHtmlSmoke(entryPath, {}, {
+            bridgeJavaScript: chatArtifacts.BRIDGE_JS,
+          });
+          const interactions = rendered.evidence.interactions;
+          return {
+            ok: rendered.evidence.ok,
+            sdkByViewport: rendered.evidence.sdkByViewport,
+            blockers: rendered.evidence.blockers,
+            warnings: rendered.evidence.warnings,
+            controlsExercised: interactions.controlsExercised,
+            observableEffects:
+              interactions.stateChangesObserved
+              + interactions.artifactMessagesObserved
+              + interactions.downloads.length,
+          };
+        });
+        smoke = await runSmoke(path.join(resolved.dirPath, 'index.html'));
+      } catch (err) {
+        log.warn('create_artifact preview unavailable', { error: logErrorRef(err) });
+        smoke = { ok: false, blockers: ['Preview unavailable; verify the application in its window.'] };
+      }
+      if (opts.onArtifactCreated) {
+        try { opts.onArtifactCreated({ id: r.artifactId, title: r.title, revision: r.revision }); }
+        catch (err) { log.warn('onArtifactCreated callback failed', { artifact_id: maskId(r.artifactId), error: logErrorRef(err) }); }
+      }
+      log.info('create_artifact created', {
+        user_id: maskId(uid),
+        cid: maskId(cid),
+        agent_id: maskId(opts.agentId),
+        artifact_id: maskId(r.artifactId),
+        file_count: Array.isArray((input as { files?: unknown }).files) ? ((input as { files: unknown[] }).files.length) : undefined,
+      });
+      // The frame contract belongs here, not only in the `files` parameter
+      // description: this is the text the model actually reads back, and an
+      // artifact that does not know the box it lands in writes a full-screen
+      // shell and ships it clipped.
+      const smokeWarnings = [...smoke.blockers, ...(smoke.warnings ?? [])];
+      // Preserve bounded facts even when the app handles an SDK error itself.
+      // Neither denial nor unavailable preview capabilities block delivery.
+      const sdkObservations = [...new Set((smoke.sdkByViewport ?? []).flatMap(view =>
+        view.calls.filter(call => call.code !== 'OK').map(call => `${view.viewport} ${call.method}: ${call.code}`)))];
+      const web=chatArtifacts.readArtifactMeta(uid,cid,r.artifactId)?.appType==='web';
+      return {
+        content:
+          `Artifact "${r.title}" ${r.revision > 1 ? 'updated' : 'created'} (id ${r.artifactId}); revision ${r.revision}; preview ${smoke.ok ? 'completed' : 'reported issues'} ` +
+          `(${smoke.controlsExercised ?? 0} control(s), ${smoke.observableEffects ?? 0} observable effect(s)) ` +
+          `at desktop, chat-embed, and mobile viewports. This bounded preview is not a full functional verification. ` +
+          (sdkObservations.length ? `SDK observations (temporary preview data): ${sdkObservations.slice(0, 12).join(' | ')}${sdkObservations.length > 12 ? ` | ${sdkObservations.length - 12} more observation(s)` : ''}. ` : '') +
+          `It is now shown to the user inside this reply, so do NOT paste its HTML in your message. ` +
+          `For corrections, call create_artifact with artifact_id "${r.artifactId}" and the complete files array to update this same app. ` +
+          `Frame: the card opens ${chatArtifacts.ARTIFACT_FRAME.defaultHeight}px tall and grows to at most ` +
+          `${chatArtifacts.ARTIFACT_FRAME.maxHeight}px, at roughly ${chatArtifacts.ARTIFACT_FRAME.smokeWidth}px wide. ` +
+          (web ? `Web app: use browser and common data interfaces. Keep content within the embedded frame; taller content scrolls. ` :
+          `\`${chatArtifacts.BRIDGE_RELPATH}\` is injected for you and reports the content height, so lay the app out ` +
+          `at its natural height — a \`100vh\` or fixed full-screen shell takes whatever height the frame happens to ` +
+          `have and gets cut off. Content taller than the cap scrolls inside the frame. `) +
+          (smokeWarnings.length ? `Review: ${smokeWarnings.join(' | ')}. ` : '') +
+          (web ? '' : `To receive what the user does in it, the app calls ` +
+          `parent.postMessage({ __orkasArtifact: true, type: "submit", payload: <json-serialisable value> }, "*") ` +
+          `(or window.orkasArtifact.send(payload) through the injected bridge); ` +
+          `that becomes the user's next message to you.`),
+      };
+    },
+  };
+}
+
+/** Wrapped `delete_file` tool — single-file unlink, sandboxed identically to
+ *  `edit_file` (workspace + current attachment dir + writable extraRoots).
+ *  Files inside that writable workspace scope are removed immediately.
+ *  Destructive deletes outside that scope keep a per-call user click in the
+ *  inline confirm card. The renderer may group multiple pending per-file
+ *  tokens from the same turn into one card, but the tool still consumes one
+ *  token per file.
+ *
+ *  Async token model (does NOT block the LLM turn — see
+ *  delete-file-confirm.ts header):
+ *    - First call: `delete_file({path})` (no token). Tool mints a token,
+ *      emits/adds to a card, waits briefly for renderer visibility ack, and
+ *      then returns with `requires_user_confirmation` so the LLM can keep
+ *      doing other tool calls / finish the turn.
+ *      Skill-creator authoring rules require the LLM to stop in prose
+ *      after this and ask the user; never retry in the same turn.
+ *    - Second call: `delete_file({path, confirmation_token})`. Tool
+ *      checks the token's state:
+ *        granted → unlink
+ *        pending → tell LLM the user hasn't clicked yet
+ *        denied  → tell LLM the user said no
+ *        invalid → token expired / wrong path; mint a fresh one
+ */
+function createDeleteFileTool(opts: LocalToolsOpts): AgentTool {
+  return {
+    name: 'delete_file',
+    description:
+      'Delete one visible file. Files inside the current workspace/attachment/editor scope are deleted immediately. Files outside that scope use a two-step user confirmation flow: first call with path only to request a confirm card and get confirmation_token; after the user confirms, call again with path and token. Use this instead of bash rm.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description:
+            'Relative or absolute path to the file to delete. Resolved against the conversation working directory.',
+        },
+        confirmation_token: {
+          type: 'string',
+          description:
+            "Token returned by a prior delete_file call's `requires_user_confirmation` result. Pass it back on the second call to actually perform the unlink after the user has clicked the confirm card. Omit on the first call.",
+        },
+      },
+      required: ['path'],
+    },
+    async execute(input, ctx) {
+      const rawPath = String(input.path ?? '');
+      if (!rawPath) return { content: errText('E_BAD_INPUT', '`path` is required'), isError: true };
+      const token = typeof input.confirmation_token === 'string' && input.confirmation_token.trim()
+        ? input.confirmation_token.trim()
+        : '';
+
+      const abs = resolveAbs(ctx, rawPath);
+      const scopeErr = guardDeletePath(opts, abs);
+      if (scopeErr) {
+        log.warn('delete_file scope reject', { user_id: maskId(opts.userId), path: logPathRef(abs) });
+        return { content: scopeErr, isError: true };
+      }
+      const requiresConfirmation = deleteRequiresUserConfirmation(opts, abs);
+
+      // ── Step 2: token-bearing call → consume + unlink if granted.
+      if (token && requiresConfirmation) {
+        const outcome = consumeGrantedConfirmation(token, abs);
+        if (outcome.outcome === 'pending') {
+          return {
+            content: errText(
+              'E_AWAITING_USER',
+              `${abs}: the user has not clicked the confirmation card yet. Stop the turn here, ask the user to confirm, and retry with the same confirmation_token after they reply.`,
+            ),
+            isError: true,
+          };
+        }
+        if (outcome.outcome === 'denied') {
+          log.info('delete_file denied by user', { user_id: maskId(opts.userId), path: logPathRef(abs) });
+          return {
+            content: errText(
+              'E_USER_DENIED',
+              `${abs}: the user declined the deletion. Do not retry; treat the file as kept.`,
+            ),
+            isError: true,
+          };
+        }
+        if (outcome.outcome === 'invalid') {
+          return {
+            content: errText(
+              'E_INVALID_TOKEN',
+              `${abs}: the confirmation_token is unknown / expired / mismatched with the path. Call delete_file again WITHOUT the token to mint a fresh card.`,
+            ),
+            isError: true,
+          };
+        }
+        // granted — verify file still exists and unlink.
+        let st: fs.Stats;
+        try { st = fs.statSync(abs); }
+        catch (err) {
+          log.warn('delete_file granted but missing', { user_id: maskId(opts.userId), path: logPathRef(abs), error: logErrorRef(err) });
+          return {
+            content: errText('E_NOT_FOUND', `${abs}: file no longer exists (already removed?)`),
+            isError: true,
+          };
+        }
+        if (!st.isFile()) {
+          return {
+            content: errText('E_NOT_FILE', `${abs}: not a regular file`),
+            isError: true,
+          };
+        }
+        const observation = deletedFileObservation(abs, st);
+        try { fs.unlinkSync(abs); }
+        catch (err) {
+          const msg = (err as Error).message;
+          log.warn('delete_file unlink failed', { user_id: maskId(opts.userId), path: logPathRef(abs), error: logErrorRef(err) });
+          return {
+            content: errText('E_DELETE_FAILED', `${abs}: unlink failed: ${msg}`),
+            isError: true,
+          };
+        }
+        log.info('delete_file removed', { user_id: maskId(opts.userId), path: logPathRef(abs) });
+        return { content: `Deleted ${abs}`, observations: { fileChanges: [observation] } };
+      }
+
+      // ── Step 1: no token → check file exists, mint token + emit card.
+      let st: fs.Stats;
+      try { st = fs.statSync(abs); }
+      catch (err) {
+        log.warn('delete_file not found', { user_id: maskId(opts.userId), path: logPathRef(abs), error: logErrorRef(err) });
+        return {
+          content: errText('E_NOT_FOUND', `${abs}: file does not exist`),
+          isError: true,
+        };
+      }
+      if (!st.isFile()) {
+        return {
+          content: errText('E_NOT_FILE', `${abs}: not a regular file (refuse to recursively delete directories from this tool)`),
+          isError: true,
+        };
+      }
+      if (!requiresConfirmation) {
+        const observation = deletedFileObservation(abs, st);
+        try { fs.unlinkSync(abs); }
+        catch (err) {
+          const msg = (err as Error).message;
+          log.warn('delete_file unlink failed', { user_id: maskId(opts.userId), path: logPathRef(abs), error: logErrorRef(err) });
+          return {
+            content: errText('E_DELETE_FAILED', `${abs}: unlink failed: ${msg}`),
+            isError: true,
+          };
+        }
+        log.info('delete_file removed without confirmation', {
+          user_id: maskId(opts.userId),
+          path: logPathRef(abs),
+          reason: isInWritableWorkspaceScope(opts, abs) ? 'workspace_scope' : 'all_files_auto',
+        });
+        return { content: `Deleted ${abs}`, observations: { fileChanges: [observation] } };
+      }
+      const newToken = requestDeleteConfirmation(abs, {
+        display_path: rawPath,
+        cid: opts.cid,
+        turn_id: opts.turnId,
+      });
+      // Tri-state, not a boolean. `mounted` means the card exists but the
+      // user is on another view — it becomes clickable the moment they come
+      // back, so killing the token there strands a live card and forces the
+      // model to look for a way around the gate. Only `absent` (no renderer
+      // ack at all → nothing to click, ever) fails closed.
+      const cardVisibility = await waitForDeleteConfirmationVisible(newToken);
+      if (cardVisibility === 'absent') {
+        cancelDeleteConfirmation(newToken);
+        log.warn('delete_file confirmation card unavailable', {
+          user_id: maskId(opts.userId),
+          cid: maskId(opts.cid),
+          turn_id: maskId(opts.turnId),
+          path: logPathRef(abs),
+          confirmation_id: maskId(newToken),
+        });
+        return {
+          content: errText(
+            'E_CONFIRMATION_UNAVAILABLE',
+            `${abs}: could not display the delete confirmation card, so no file was deleted. Tell the user the confirmation card did not appear and ask them to retry when the chat is visible.`,
+          ),
+          isError: true,
+        };
+      }
+      log.info('delete_file confirmation requested', {
+        user_id: maskId(opts.userId),
+        cid: maskId(opts.cid),
+        turn_id: maskId(opts.turnId),
+        path: logPathRef(abs),
+        confirmation_id: maskId(newToken),
+        visibility: cardVisibility,
+      });
+      return {
+        content:
+          `requires_user_confirmation: "${rawPath}" is outside the current writable workspace scope and needs the user's confirmation card.\n` +
+          `confirmation_token: ${newToken}\n` +
+          (cardVisibility === 'mounted'
+            ? 'The card is mounted but off-screen right now (the user is on another view). It stays valid — ask them to open this conversation and click it.\n'
+            : '') +
+          `Next step: stop calling tools this turn after requesting all intended deletes. In your reply prose, tell the user what you plan to delete and ask them to click the card. ` +
+          `On the user's next reply, call delete_file again with BOTH \`path\` and \`confirmation_token\` set to complete the deletion.`,
+      };
+    },
+  };
+}
+
+/** Build the array of local-machine tools for a single runner. */
+export function createLocalTools(opts: LocalToolsOpts = {}): AgentTool[] {
+  // A fresh tools instance owns fresh evidence, even if a caller reuses opts.
+  opts = { ...opts };
+  taskFileOwnership.set(opts, new TaskFileOwnership());
+  const tools: AgentTool[] = [
+    createBashTool(opts),
+    ...createHostProcessTools(opts),
+    createInteractiveCliTool(opts),
+    createWriteFileTool(opts),
+    createAppendFileTool(opts),
+    createHostApplyPatchTool(opts),
+    createEditFileTool(opts),
+    createDeleteFileTool(opts),
+    createPdfTool(opts),
+    createHtmlPreviewTool(opts),
+  ];
+  if (opts.onOutputsPublished) tools.push(createPublishOutputsTool(opts));
+  // Project-only: save a produced file into the project library (`contexts/`).
+  if (opts.projectId) tools.push(createLibrarySaveTool(opts));
+  // `create_artifact` only makes sense on a conversation surface that
+  // renders the embedded result and routes interactions back — i.e. a `cid`
+  // plus an `onArtifactCreated` sink (group chat). Edit chats / ad-hoc runs
+  // don't pass the sink, so the tool isn't offered there.
+  if (opts.cid && opts.onArtifactCreated) tools.push(createCreateArtifactTool(opts));
+  return tools;
+}
+
+export { createFileTools, createProgramSourceLoader } from './file-tools';
+
+```
+
+## src/main/model/core-agent/tool-result-tools.ts
+
+Source: https://github.com/Orkas-AI/Orkas/blob/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/tool-result-tools.ts
+
+SHA-256: `ce48544f02d3e69a8c5bca1c12d8251f7260c8aaea34f301bd34ff6877f87be3`
+
+```
+/**
+ * Bounded retrieval for persisted tool results.
+ *
+ * Persisted outputs are addressed by an opaque ref, never by a model-chosen
+ * path. Search locates text, query computes deterministic aggregates over
+ * recognized records, read returns an exact cursor range, and materialize
+ * creates an isolated working copy for bash/Node processing. Every operation
+ * accepts a bounded batch. Model-facing reads use a runner-provided shared inline
+ * ledger with duplicate suppression; reads retained inside run_program use
+ * that runtime's stricter call/result/wall-clock limits instead.
+ */
+
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { createHash } from 'node:crypto';
+import { StringDecoder } from 'node:string_decoder';
+import { Worker } from 'node:worker_threads';
+import { parameterErrorContent } from '../../../../bin/tool-parameter-errors.cjs';
+import type { AgentTool, ToolContext, ToolResult } from '#core-agent';
+import { createLogger } from '../../logger';
+import { fileEditLock } from '../../util/locks';
+import { sha256OfFileStream } from '../../util/sha256';
+import { DEFAULT_INLINE_RESULT_TOKENS, withRetrievalBudget, estimateToolResultTokens } from '../../util/tool-result-cap';
+import {
+  TOOL_RESULT_QUERY_MAX_INPUT_BYTES,
+  TOOL_RESULT_QUERY_TOO_LARGE_MESSAGE,
+  aggregateToolResultData,
+  type ToolResultAggregateRequest,
+  type ToolResultAggregateResult,
+  type ToolResultQueryFilter,
+} from '../../util/tool-result-data';
+
+// Compatibility exports all use the ordinary per-result ceiling; none adds a step quota.
+export const TOOL_RESULT_CHUNK_DEFAULT_TOKENS = DEFAULT_INLINE_RESULT_TOKENS;
+export const TOOL_RESULT_CHUNK_MAX_TOKENS = DEFAULT_INLINE_RESULT_TOKENS;
+export const TOOL_RESULT_SEARCH_MAX_TOKENS = DEFAULT_INLINE_RESULT_TOKENS;
+export const TOOL_RESULT_ROUND_MAX_TOKENS = DEFAULT_INLINE_RESULT_TOKENS;
+export const TOOL_RESULT_BATCH_MAX_ITEMS = 8;
+export const TOOL_RESULT_REF_SCHEMA_PATTERN = '^[a-zA-Z0-9_-]{1,48}\\.(?:[a-f0-9]{16}|[a-f0-9]{64})$';
+const TOOL_RESULT_REF_RE = new RegExp(TOOL_RESULT_REF_SCHEMA_PATTERN);
+const TOOL_RESULT_FILE_SCAN_BYTES = 64 * 1024;
+const TOOL_RESULT_REF_DESCRIPTION =
+  'Literal opaque ref from <persisted-output ref="...">. It has tool.hash form; never use a tool-call ID such as call_...';
+const TOOL_RESULT_QUERY_WORKER_SOURCE = String.raw`
+'use strict';
+const { parentPort, workerData } = require('node:worker_threads');
+require(workerData.tsxCjsPath);
+const { aggregateToolResultData } = require(workerData.dataModulePath);
+parentPort.on('message', (message) => {
+  try {
+    const bytes = message.bytes;
+    const content = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength).toString('utf8');
+    parentPort.postMessage({
+      id: message.id,
+      result: aggregateToolResultData(content, message.request),
+    });
+  } catch {
+    parentPort.postMessage({ id: message && message.id, failed: true });
+  }
+});
+`;
+const log = createLogger('tool-result-query');
+
+export type ToolResultReadLedger = {
+  epoch: number;
+  remainingTokens: number;
+  readKeys: Set<string>;
+};
+
+type ToolResultToolsOpts = {
+  toolResultsDir: string;
+  materializeDir: string;
+  queryExecutor?: PersistedToolResultQueryExecutor;
+  isProgrammaticToolCallContext: (ctx: ToolContext) => boolean;
+};
+
+type PersistedToolResultQueryExecutor = (
+  filePath: string,
+  request: ToolResultAggregateRequest,
+  signal?: AbortSignal,
+) => Promise<ToolResultAggregateResult>;
+
+type PendingWorkerQuery = {
+  worker: Worker;
+  resolve: (result: ToolResultAggregateResult) => void;
+  reject: (reason: Error) => void;
+  cleanup: () => void;
+};
+
+class PersistedToolResultQueryWorker {
+  private worker: Worker | null = null;
+  private nextId = 1;
+  private readonly pending = new Map<number, PendingWorkerQuery>();
+  private disposed = false;
+
+  async query(
+    filePath: string,
+    request: ToolResultAggregateRequest,
+    signal?: AbortSignal,
+  ): Promise<ToolResultAggregateResult> {
+    throwIfQueryAborted(signal);
+    const stat = await fs.promises.stat(filePath);
+    if (stat.size > TOOL_RESULT_QUERY_MAX_INPUT_BYTES) return queryTooLargeResult();
+    const bytes = await fs.promises.readFile(filePath, signal ? { signal } : undefined);
+    throwIfQueryAborted(signal);
+    if (bytes.byteLength > TOOL_RESULT_QUERY_MAX_INPUT_BYTES) return queryTooLargeResult();
+    return this.aggregate(bytes, request, signal);
+  }
+
+  async dispose(): Promise<void> {
+    this.disposed = true;
+    const worker = this.worker;
+    this.worker = null;
+    if (!worker) return;
+    const error = new Error('Persisted-result query worker disposed.');
+    for (const [id, pending] of this.pending) {
+      if (pending.worker !== worker) continue;
+      this.pending.delete(id);
+      pending.cleanup();
+      pending.reject(error);
+    }
+    await worker.terminate();
+  }
+
+  private aggregate(
+    bytes: Buffer,
+    request: ToolResultAggregateRequest,
+    signal?: AbortSignal,
+  ): Promise<ToolResultAggregateResult> {
+    throwIfQueryAborted(signal);
+    const worker = this.ensureWorker();
+    const id = this.nextId++;
+    return new Promise<ToolResultAggregateResult>((resolve, reject) => {
+      const onAbort = () => {
+        const reason = queryAbortError(signal);
+        this.failWorker(worker, reason);
+        void worker.terminate();
+      };
+      const cleanup = () => signal?.removeEventListener('abort', onAbort);
+      this.pending.set(id, { worker, resolve, reject, cleanup });
+      signal?.addEventListener('abort', onAbort, { once: true });
+      if (signal?.aborted) {
+        onAbort();
+        return;
+      }
+      try {
+        const transfer = bytes.buffer instanceof ArrayBuffer ? [bytes.buffer] : [];
+        worker.postMessage({ id, bytes, request }, transfer);
+      } catch {
+        this.pending.delete(id);
+        cleanup();
+        reject(new Error('Persisted-result query worker could not accept input.'));
+      }
+    });
+  }
+
+  private ensureWorker(): Worker {
+    if (this.disposed) throw new Error('Persisted-result query worker is closed.');
+    if (this.worker) return this.worker;
+    const worker = new Worker(TOOL_RESULT_QUERY_WORKER_SOURCE, {
+      eval: true,
+      workerData: {
+        tsxCjsPath: require.resolve('tsx/cjs'),
+        dataModulePath: require.resolve('../../util/tool-result-data.ts'),
+      },
+    });
+    worker.on('message', (message: unknown) => this.onMessage(worker, message));
+    worker.once('error', () => {
+      this.failWorker(worker, new Error('Persisted-result query worker failed.'));
+    });
+    worker.once('exit', (code) => {
+      if (this.disposed || (this.worker !== worker && !this.hasPendingFor(worker))) return;
+      this.failWorker(worker, new Error(`Persisted-result query worker exited with code ${code}.`));
+    });
+    this.worker = worker;
+    return worker;
+  }
+
+  private onMessage(worker: Worker, raw: unknown): void {
+    if (!raw || typeof raw !== 'object') {
+      this.failWorker(worker, new Error('Persisted-result query worker returned an invalid response.'));
+      void worker.terminate();
+      return;
+    }
+    const message = raw as { id?: unknown; result?: unknown; failed?: unknown };
+    if (!Number.isInteger(message.id)) {
+      this.failWorker(worker, new Error('Persisted-result query worker omitted its request id.'));
+      void worker.terminate();
+      return;
+    }
+    const id = Number(message.id);
+    const pending = this.pending.get(id);
+    if (!pending || pending.worker !== worker) return;
+    this.pending.delete(id);
+    pending.cleanup();
+    const result = message.result as ToolResultAggregateResult | undefined;
+    if (message.failed === true || !result || typeof result.ok !== 'boolean') {
+      pending.reject(new Error('Persisted-result query worker could not process the input.'));
+      return;
+    }
+    pending.resolve(result);
+  }
+
+  private failWorker(worker: Worker, reason: Error): void {
+    if (this.worker === worker) this.worker = null;
+    for (const [id, pending] of this.pending) {
+      if (pending.worker !== worker) continue;
+      this.pending.delete(id);
+      pending.cleanup();
+      pending.reject(reason);
+    }
+  }
+
+  private hasPendingFor(worker: Worker): boolean {
+    return [...this.pending.values()].some((pending) => pending.worker === worker);
+  }
+}
+
+export function createToolResultTools(opts: ToolResultToolsOpts): AgentTool[] {
+  const tool = createToolResultTool(opts);
+  return [{ ...tool, execute: (input, ctx) => opts.isProgrammaticToolCallContext(ctx)
+    ? tool.execute(input, ctx)
+    : withRetrievalBudget(ctx, (child) => tool.execute(input, child)) }];
+}
+
+type ToolResultAction = 'search' | 'query' | 'read' | 'materialize';
+
+const TOOL_RESULT_ACTION_REQUEST_FIELDS: Readonly<Record<ToolResultAction, ReadonlySet<string>>> = {
+  search: new Set(['ref', 'query']),
+  query: new Set([
+    'ref', 'operation', 'dataset', 'explode', 'field', 'filters', 'group_by',
+    'order', 'limit', 'match', 'count_unit',
+  ]),
+  read: new Set(['ref', 'cursor', 'max_tokens']),
+  materialize: new Set(['ref']),
+};
+
+function toolResultActionRequestError(
+  action: ToolResultAction,
+  requests: unknown,
+): RetrievalItemResult | null {
+  if (!Array.isArray(requests)) return null;
+  const allowed = TOOL_RESULT_ACTION_REQUEST_FIELDS[action];
+  for (let index = 0; index < requests.length; index++) {
+    const item = requests[index];
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+    const ignored = action === 'read' ? ['query'] : ['cursor', 'max_tokens'];
+    const unexpected = Object.keys(item).filter((key) => !allowed.has(key) && !ignored.includes(key)).sort();
+    if (!unexpected.length) continue;
+    return { content: parameterErrorContent(
+      `tool_result(${action}) request ${index + 1}: unsupported field(s): ${unexpected.join(', ')}. `
+      + 'Use only the fields advertised for the selected action.',
+      unexpected.map(field => ({ field: `requests[${index}].${field}`, reason: 'unsupported_field',
+        expected: `Allowed fields: ${[...allowed].join(', ')}. Unused compatibility fields: ${ignored.join(', ')}.` })),
+    ), isError: true };
+  }
+  return null;
+}
+
+function createToolResultTool(opts: ToolResultToolsOpts): AgentTool {
+  const search = createSearchTool(opts);
+  const read = createReadChunkTool(opts);
+  const query = createQueryTool(opts);
+  const refProperty = () => ({
+    type: 'string',
+    pattern: TOOL_RESULT_REF_SCHEMA_PATTERN,
+  });
+  const structuredQueryProperties = () => ({
+    ref: refProperty(),
+    dataset: {
+      type: 'string',
+      description: 'Dataset advertised by the marker. Required only when multiple datasets are advertised.',
+    },
+    explode: {
+      type: 'string',
+      description: 'Expand one advertised array by its record-relative path; no dataset prefix or []. With explode, field, filters.field and group_by use $item.<field>, $parent.<field>, or $index; scalar items use $item.',
+    },
+    field: {
+      type: 'string',
+      description: 'Dotted numeric field. Required for sum, average, minimum, and maximum; optional for count.',
+    },
+    filters: {
+      type: 'array',
+      maxItems: 8,
+      description: 'Up to eight structured predicates combined with AND.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          field: { type: 'string' },
+          op: { type: 'string', enum: ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'contains', 'exists'] },
+          value: { type: ['string', 'number', 'boolean', 'null'] },
+        },
+        required: ['field', 'op'],
+      },
+    },
+    group_by: {
+      type: 'array',
+      maxItems: 3,
+      items: { type: 'string' },
+      description: 'Up to three dotted fields used to group a structured aggregate.',
+    },
+    order: { type: 'string', enum: ['asc', 'desc'], description: 'Structured aggregate sort order; default desc.' },
+    limit: { type: 'integer', minimum: 1, maximum: 100, description: 'Maximum structured result groups; default 20.' },
+  });
+  // Conditional requirements and incompatible fields are checked by the
+  // action executor, independently of provider schema validation.
+  const requestSchema = {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      ...structuredQueryProperties(),
+      query: {
+        type: 'string',
+        description: 'Required for search: narrow text expression under 256 estimated tokens.',
+      },
+      operation: {
+        type: 'string',
+        enum: ['count', 'sum', 'average', 'minimum', 'maximum'],
+        description: 'Required for query. Structured count needs no field; numeric aggregates require field. Unstructured text supports only count with match and count_unit; omit both for structured data.',
+      },
+      match: {
+        type: 'string',
+        description: 'Required exact case-insensitive text. Use only for unstructured-text count.',
+      },
+      count_unit: {
+        type: 'string',
+        enum: ['matching_lines', 'occurrences'],
+        description: 'Required count unit. Use only for unstructured-text count.',
+      },
+      cursor: { type: 'integer', minimum: 0, description: 'Required for read: exact non-negative character cursor. Do not prefetch sequential chunks.' },
+      max_tokens: {
+        type: 'integer',
+        minimum: 256,
+        maximum: TOOL_RESULT_CHUNK_MAX_TOKENS,
+        description: 'Read slice budget including framing; defaults to 10000.',
+      },
+    },
+    required: ['ref'],
+    description: 'Use only fields for the selected action. materialize takes ref only. Unused read/query fields are listed by request in ignored_fields; other incompatible fields are errors.',
+  };
+  const actionProperty = {
+    type: 'string',
+    enum: ['search', 'query', 'read', 'materialize'],
+    description: 'search: narrow text lookup; query: deterministic aggregates; read: exact source excerpts; materialize: session-scoped UTF-8 copies for full-data calculations that query cannot express. Use one operation per call.',
+  };
+  return {
+    name: 'tool_result',
+    description:
+      'Inspect oversized tool results retained in the current agent session using the literal opaque tool.hash ref from a prior <persisted-output ref="..."> marker, not read_files. Make at most one tool_result call per model step and batch up to eight currently needed same-action requests. Use only the selected action; never use a tool-call ID such as call_....',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        action: actionProperty,
+        requests: {
+          type: 'array',
+          minItems: 1,
+          maxItems: TOOL_RESULT_BATCH_MAX_ITEMS,
+          description: 'One to eight same-action requests. The whole batch shares 10000 tokens and remaining model-step capacity; earlier items use space first.',
+          items: requestSchema,
+        },
+      },
+      required: ['action', 'requests'],
+    },
+    async execute(input, ctx) {
+      const action = String(input.action ?? '') as ToolResultAction;
+      const requests = Array.isArray(input.requests)
+        ? input.requests.map((item) => item && typeof item === 'object' && !Array.isArray(item)
+          ? item as Record<string, unknown>
+          : {})
+        : input.requests;
+      if (!['search', 'query', 'read', 'materialize'].includes(action)) {
+        return error('E_BAD_INPUT', '`action` must be search, query, read, or materialize.');
+      }
+      const shapeError = toolResultActionRequestError(action, requests);
+      if (shapeError) return shapeError;
+      const ignored = Array.isArray(requests) ? requests.flatMap((item, index) => {
+        const fields = Object.keys(item).filter((key) => !TOOL_RESULT_ACTION_REQUEST_FIELDS[action].has(key)).sort();
+        return fields.length ? [{ request: index + 1, fields }] : [];
+      }) : [];
+      const notice = ignored.length ? `ignored_fields: ${JSON.stringify(ignored)}\n` : '';
+      const effectiveRequests = Array.isArray(requests)
+        ? requests.map((item) => Object.fromEntries(Object.entries(item).filter(([key]) => TOOL_RESULT_ACTION_REQUEST_FIELDS[action].has(key))))
+        : requests;
+      if (action === 'search') return search.execute({ queries: effectiveRequests, notice }, ctx);
+      if (action === 'query') return query.execute({ queries: effectiveRequests, notice }, ctx);
+      if (action === 'read') {
+        const chunks = Array.isArray(effectiveRequests)
+          ? effectiveRequests.map((item) => ({ ...item, maxTokens: item.max_tokens }))
+          : effectiveRequests;
+        return read.execute({ chunks, notice }, ctx);
+      }
+      if (action === 'materialize') {
+        const result = await materializeToolResults(opts, effectiveRequests);
+        if (!notice) return result;
+        try {
+          const payload: unknown = JSON.parse(result.content);
+          if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+            return { ...result, content: JSON.stringify({ ...payload, ignored_fields: ignored }) };
+          }
+        } catch { /* Preserve non-JSON errors with a text receipt. */ }
+        return { ...result, content: `${result.content}\n${notice.trimEnd()}` };
+      }
+      return error('E_BAD_INPUT', '`action` must be search, query, read, or materialize.');
+    },
+  };
+}
+
+async function materializeToolResults(
+  opts: ToolResultToolsOpts,
+  requests: unknown,
+): Promise<RetrievalItemResult> {
+  const batch = batchItems({ requests }, 'requests');
+  if (batch.error) return batch.error;
+
+  const sources: Array<{ ref: string; path: string; bytes: number }> = [];
+  for (const item of batch.items) {
+    const ref = String(item.ref || '').trim();
+    if (!ref) return error('E_BAD_INPUT', '`ref` is required.');
+    const resolved = resolveToolResultRef(opts.toolResultsDir, ref);
+    if (resolved.ok === false) return error(resolved.code, resolved.message);
+    try {
+      const stat = await fs.promises.stat(resolved.path);
+      if (!stat.isFile()) return error('E_RESULT_REF_NOT_FILE', 'Tool-result ref is not a regular file.');
+      sources.push({ ref, path: resolved.path, bytes: stat.size });
+    } catch {
+      log.warn('persisted-result materialization failed', { phase: 'read' });
+      return error(
+        'E_RESULT_MATERIALIZE_READ',
+        'The persisted result could not be read. Re-run the original tool to regenerate the data.',
+      );
+    }
+  }
+
+  const created: string[] = [];
+  let release: (() => void) | undefined;
+  try {
+    await fs.promises.mkdir(opts.materializeDir, { recursive: true });
+    const root = await fs.promises.realpath(path.resolve(opts.materializeDir));
+    // Publication and rollback share one session-root lock: simultaneous
+    // batches must not replace or remove each other's deterministic copies.
+    release = await fileEditLock(root).acquire();
+    const files: Array<{ ref: string; path: string; bytes: number; encoding: 'utf8' }> = [];
+    for (const source of sources) {
+      // One working copy per ref: persisted results are write-once, so a
+      // repeat materialize of the same ref in a long session reuses the copy
+      // instead of stacking identical files until the conversation is deleted.
+      // Working copies are writable. Reuse only an independent regular file
+      // whose bytes still match; size alone misses same-length edits.
+      const destination = path.join(root, `result-${createHash('sha256').update(source.ref).digest('hex')}.txt`);
+      if (!isInside(root, destination)) {
+        throw new Error('materialized result path escaped its session root');
+      }
+      let reusable = false;
+      try {
+        const existing = await fs.promises.lstat(destination);
+        if (existing.isFile() && existing.nlink === 1 && existing.size === source.bytes) {
+          const sourceHash = await sha256OfFileStream(source.path);
+          reusable = sourceHash === await sha256OfFileStream(destination);
+        }
+      } catch { /* not materialized yet */ }
+      if (!reusable) {
+        await fs.promises.rm(destination, { force: true });
+        await fs.promises.copyFile(source.path, destination, fs.constants.COPYFILE_EXCL);
+        created.push(destination);
+      }
+      files.push({ ref: source.ref, path: destination, bytes: source.bytes, encoding: 'utf8' });
+    }
+    return { content: JSON.stringify({ files, dataContract: {
+      sourceBytes: 'unchanged',
+      validation: 'not-performed',
+      calculation: 'Validate required container structure and operand types before arithmetic; field presence alone is insufficient. '
+        + 'Missing/null containers are not empty collections, and missing/null operands are not zero. '
+        + 'Use only defaults explicitly defined by the task\'s rules.',
+    } }) };
+  } catch {
+    log.warn('persisted-result materialization failed', { phase: 'write' });
+    for (const file of created) {
+      try { await fs.promises.unlink(file); } catch { /* best-effort rollback */ }
+    }
+    return error(
+      'E_RESULT_MATERIALIZE_WRITE',
+      'The persisted result could not be materialized. Retry once or use search/read instead.',
+    );
+  } finally {
+    release?.();
+  }
+}
+
+function createQueryTool(opts: ToolResultToolsOpts): AgentTool {
+  return {
+    // Internal executor used only by the canonical tool_result action.
+    name: 'tool_result_query',
+    description: 'Compute a bounded deterministic aggregate over a persisted tool result.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        queries: { type: 'array', minItems: 1, maxItems: TOOL_RESULT_BATCH_MAX_ITEMS },
+      },
+      required: ['queries'],
+    },
+    async execute(input, ctx) {
+      const ledger = readLedger(ctx, opts);
+      const batch = batchItems(input, 'queries');
+      if (batch.error) return batch.error;
+      const worker = opts.queryExecutor ? null : new PersistedToolResultQueryWorker();
+      const queryExecutor = opts.queryExecutor ?? worker!.query.bind(worker);
+      try {
+        return await executeBatch(batch.items, ledger, (item, maxOutputTokens) =>
+          executeQueryItem(opts, item, ledger, maxOutputTokens, queryExecutor, ctx.signal), String(input.notice ?? ''));
+      } finally {
+        try {
+          await worker?.dispose();
+        } catch {
+          log.warn('persisted-result query worker cleanup failed', { phase: 'terminate' });
+        }
+      }
+    },
+  };
+}
+
+function createSearchTool(opts: ToolResultToolsOpts): AgentTool {
+  return {
+    name: 'tool_result_search',
+    description: 'Search an oversized tool result referenced by a prior <persisted-output ref="..."> marker. Never use a tool-call ID such as call_... as a result ref.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        queries: {
+          type: 'array',
+          minItems: 1,
+          maxItems: TOOL_RESULT_BATCH_MAX_ITEMS,
+          description: 'One to eight searches sharing a 4K-token round budget. Each item contains an opaque ref and a narrow query.',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              ref: {
+                type: 'string',
+                pattern: TOOL_RESULT_REF_SCHEMA_PATTERN,
+                description: TOOL_RESULT_REF_DESCRIPTION,
+              },
+              query: { type: 'string' },
+            },
+            required: ['ref', 'query'],
+          },
+        },
+      },
+      required: ['queries'],
+    },
+    async execute(input, ctx) {
+      const ledger = readLedger(ctx, opts);
+      const batch = batchItems(input, 'queries');
+      if (batch.error) return batch.error;
+      return executeBatch(batch.items, ledger, (item, maxOutputTokens) =>
+        executeSearchItem(opts, item, ledger, maxOutputTokens), String(input.notice ?? ''));
+    },
+  };
+}
+
+function createReadChunkTool(opts: ToolResultToolsOpts): AgentTool {
+  return {
+    name: 'tool_result_read_chunk',
+    description: 'Read exact chunks from an oversized tool result referenced by a prior <persisted-output ref="..."> marker. Never use a tool-call ID such as call_... as a result ref.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        chunks: {
+          type: 'array',
+          minItems: 1,
+          maxItems: TOOL_RESULT_BATCH_MAX_ITEMS,
+          description: 'One to eight exact reads sharing the ordinary result and model-step budgets. Each item contains ref, cursor, and optional maxTokens.',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              ref: {
+                type: 'string',
+                pattern: TOOL_RESULT_REF_SCHEMA_PATTERN,
+                description: TOOL_RESULT_REF_DESCRIPTION,
+              },
+              cursor: { type: 'number' },
+              maxTokens: { type: 'number' },
+            },
+            required: ['ref', 'cursor'],
+          },
+        },
+      },
+      required: ['chunks'],
+    },
+    async execute(input, ctx) {
+      const ledger = readLedger(ctx, opts);
+      const batch = batchItems(input, 'chunks');
+      if (batch.error) return batch.error;
+      return executeBatch(batch.items, ledger, (item, maxOutputTokens) =>
+        executeReadChunkItem(opts, item, ledger, maxOutputTokens), String(input.notice ?? ''));
+    },
+  };
+}
+
+type RetrievalItemResult = Pick<ToolResult, 'content' | 'isError' | 'observations'>;
+
+function batchItems(
+  input: Record<string, unknown>,
+  batchKey: 'queries' | 'chunks' | 'requests',
+): { items: Record<string, unknown>[]; error?: never } | { items?: never; error: RetrievalItemResult } {
+  const rawBatch = input[batchKey];
+  if (!Array.isArray(rawBatch) || rawBatch.length < 1 || rawBatch.length > TOOL_RESULT_BATCH_MAX_ITEMS) {
+    return { error: error('E_BAD_INPUT', `\`${batchKey}\` must contain 1-${TOOL_RESULT_BATCH_MAX_ITEMS} requests.`) };
+  }
+  return { items: rawBatch.map((item) => item && typeof item === 'object' && !Array.isArray(item)
+    ? item as Record<string, unknown> : {}) };
+}
+
+async function executeBatch(
+  items: Record<string, unknown>[],
+  ledger: ToolResultReadLedger | null,
+  executeItem: (
+    item: Record<string, unknown>,
+    maxOutputTokens: number,
+  ) => RetrievalItemResult | Promise<RetrievalItemResult>,
+  notice = '',
+): Promise<RetrievalItemResult> {
+  const outputs: string[] = [];
+  let successes = 0;
+  const failures: Array<{ index: number; code: string }> = [];
+  let remainingOutputTokens = Math.min(
+    TOOL_RESULT_ROUND_MAX_TOKENS,
+    ledger?.remainingTokens ?? TOOL_RESULT_ROUND_MAX_TOKENS,
+  );
+  const noticeTokens = estimateToolResultTokens(notice);
+  remainingOutputTokens = Math.max(0, remainingOutputTokens - estimateToolResultTokens(`\n<retrieval-batch next_request="done"/>`) - noticeTokens);
+  for (let index = 0; index < items.length; index++) {
+    const item = items[index];
+    const separatorTokens = outputs.length ? estimateToolResultTokens('\n') : 0;
+    const itemBudget = Math.max(0, remainingOutputTokens - separatorTokens);
+    if (itemBudget < 128) break;
+    const result = await executeItem(item, itemBudget);
+    // Inspect the owning item's status before rendering/truncation. Source
+    // excerpts may themselves quote tool-error text; those are not failures.
+    if (result.isError) failures.push({ index,
+      code: /^<tool-error code="([A-Z][A-Z0-9_]{0,63})">/.exec(result.content)?.[1]
+        ?? 'E_RESULT_ITEM_FAILED' });
+    const content = prefixWithinTokenBudget(result.content, itemBudget);
+    outputs.push(content);
+    remainingOutputTokens = Math.max(
+      0,
+      remainingOutputTokens - separatorTokens - estimateToolResultTokens(content),
+    );
+    if (!result.isError) successes++;
+  }
+  const observations = { resultRetrievalBatch: {
+    requested: items.length, attempted: outputs.length, succeeded: successes,
+    failed: failures.length, skipped: items.length - outputs.length, failures,
+  } };
+  if (notice && ledger) ledger.remainingTokens = Math.max(0, ledger.remainingTokens - noticeTokens);
+  if (!outputs.length) {
+    const result = budgetError();
+    return { ...result, content: notice ? `${result.content}\n${notice.trimEnd()}` : result.content, observations };
+  }
+  return {
+    content: outputs.join('\n') + '\n' + notice + `<retrieval-batch next_request="${outputs.length < items.length ? outputs.length : 'done'}"/>`,
+    observations,
+    ...(successes === 0 ? { isError: true as const } : {}),
+  };
+}
+
+async function executeQueryItem(
+  opts: ToolResultToolsOpts,
+  input: Record<string, unknown>,
+  ledger: ToolResultReadLedger | null,
+  maxOutputTokens: number,
+  queryExecutor: PersistedToolResultQueryExecutor,
+  signal?: AbortSignal,
+): Promise<RetrievalItemResult> {
+  const ref = String(input.ref || '').trim();
+  const operation = String(input.operation || '').trim() as ToolResultAggregateRequest['operation'];
+  if (!ref || !operation) return error('E_BAD_INPUT', '`ref` and `operation` are required.');
+  const resolved = resolveToolResultRef(opts.toolResultsDir, ref);
+  if (resolved.ok === false) return error(resolved.code, resolved.message);
+  const request: ToolResultAggregateRequest = {
+    operation,
+    ...(typeof input.dataset === 'string' ? { dataset: input.dataset } : {}),
+    ...(typeof input.explode === 'string' ? { explode: input.explode } : {}),
+    ...(typeof input.field === 'string' ? { field: input.field } : {}),
+    ...(Array.isArray(input.filters) ? {
+      filters: input.filters.map((filter) => (
+        filter && typeof filter === 'object' && !Array.isArray(filter)
+          ? filter as ToolResultQueryFilter
+          : { field: '', op: 'eq' }
+      )),
+    } : {}),
+    ...(Array.isArray(input.group_by) ? { groupBy: input.group_by.map(String) } : {}),
+    ...(input.order === 'asc' || input.order === 'desc' ? { order: input.order } : {}),
+    ...(input.limit !== undefined ? { limit: Number(input.limit) } : {}),
+    ...(typeof input.match === 'string' ? { match: input.match } : {}),
+    ...(input.count_unit === 'matching_lines' || input.count_unit === 'occurrences'
+      ? { countUnit: input.count_unit }
+      : {}),
+  };
+  const key = `${ledger?.epoch ?? 0}:query:${ref}:${canonicalAggregateRequest(request)}`;
+  const duplicate = rejectDuplicate(ledger, key);
+  if (duplicate) return duplicate;
+  const budget = availableBudget(ledger, Math.min(TOOL_RESULT_SEARCH_MAX_TOKENS, maxOutputTokens));
+  if (budget < 128) return budgetError();
+
+  let content: string;
+  try {
+    const result = await queryExecutor(resolved.path, request, signal);
+    if (result.ok === false) return error(result.code, result.message);
+    content = renderAggregateResult(ref, request, result, budget);
+  } catch (queryError) {
+    if (signal?.aborted || isQueryAbortError(queryError)) throw queryError;
+    log.warn('persisted-result query failed', { phase: 'read_or_worker' });
+    return error(
+      'E_RESULT_QUERY_READ',
+      'The persisted result could not be read for querying. Use a different retained result ref; retrieval does not rerun the original tool.',
+    );
+  }
+  commitRead(ledger, key, estimateToolResultTokens(content));
+  return { content };
+}
+
+function queryTooLargeResult(): Extract<ToolResultAggregateResult, { ok: false }> {
+  return {
+    ok: false,
+    code: 'E_RESULT_QUERY_TOO_LARGE',
+    message: TOOL_RESULT_QUERY_TOO_LARGE_MESSAGE,
+  };
+}
+
+function queryAbortError(signal?: AbortSignal): Error {
+  if (signal?.reason instanceof Error) return signal.reason;
+  return Object.assign(new Error('Persisted-result query aborted.'), {
+    name: 'AbortError',
+    code: 'ABORT_ERR',
+  });
+}
+
+function throwIfQueryAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw queryAbortError(signal);
+}
+
+function isQueryAbortError(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false;
+  const errorValue = value as { name?: unknown; code?: unknown };
+  return errorValue.name === 'AbortError' || errorValue.code === 'ABORT_ERR';
+}
+
+function renderAggregateResult(
+  ref: string,
+  request: ToolResultAggregateRequest,
+  result: Extract<ReturnType<typeof aggregateToolResultData>, { ok: true }>,
+  budget: number,
+): string {
+  const render = (rows: typeof result.rows, truncated: boolean): string => (
+    `<tool-result-query ref="${escapeAttr(ref)}" operation="${escapeAttr(request.operation)}" dataset="${escapeAttr(result.dataset)}" `
+    + `${request.explode ? `explode="${escapeAttr(request.explode)}" ` : ''}`
+    + `source_type="${escapeAttr(result.kind)}" unit="${escapeAttr(result.unit)}" scanned="${result.scanned}" matched="${result.matched}" groups="${result.groups}" truncated="${truncated ? 'true' : 'false'}">\n`
+    + `${JSON.stringify(rows)}\n`
+    + '</tool-result-query>'
+  );
+  let rows = result.rows;
+  let output = render(rows, result.truncated);
+  while (rows.length > 1 && estimateToolResultTokens(output) > budget) {
+    rows = rows.slice(0, Math.ceil(rows.length / 2));
+    output = render(rows, true);
+  }
+  if (estimateToolResultTokens(output) > budget) output = render([], true);
+  return prefixWithinTokenBudget(output, budget);
+}
+
+function canonicalAggregateRequest(request: ToolResultAggregateRequest): string {
+  return JSON.stringify({
+    operation: request.operation,
+    dataset: request.dataset || '',
+    explode: request.explode || '',
+    field: request.field || '',
+    filters: request.filters || [],
+    groupBy: request.groupBy || [],
+    order: request.order || 'desc',
+    limit: request.limit || 20,
+    match: request.match || '',
+    countUnit: request.countUnit || '',
+  });
+}
+
+function executeSearchItem(
+  opts: ToolResultToolsOpts,
+  input: Record<string, unknown>,
+  ledger: ToolResultReadLedger | null,
+  maxOutputTokens: number,
+): RetrievalItemResult {
+  const ref = String(input.ref || '').trim();
+  const query = String(input.query || '').trim();
+  if (!ref || !query) return error('E_BAD_INPUT', '`ref` and `query` are required.');
+  if (estimateToolResultTokens(query) > 256) {
+    return error('E_BAD_INPUT', '`query` must be a narrow search expression under 256 estimated tokens.');
+  }
+  const resolved = resolveToolResultRef(opts.toolResultsDir, ref);
+  if (resolved.ok === false) return error(resolved.code, resolved.message);
+
+  const key = `${ledger?.epoch ?? 0}:search:${ref}:${canonicalSearchQuery(query)}`;
+  const duplicate = rejectDuplicate(ledger, key);
+  if (duplicate) return duplicate;
+  const budget = availableBudget(ledger, Math.min(TOOL_RESULT_SEARCH_MAX_TOKENS, maxOutputTokens));
+  if (budget < 128) return budgetError();
+
+  const output = searchResultFile(resolved.path, ref, query, budget);
+  commitRead(ledger, key, estimateToolResultTokens(output));
+  return { content: output };
+}
+
+/** Shared exact reader for authorized historical execution records. The
+ * caller owns admission; this returns a source range, never another spill. */
+type ReadChunkPresentation = {
+  continuation?: (cursor: number | 'done') => string;
+  history?: { recordId: string; toolCallId: string };
+};
+
+export function readToolResultExcerpt(toolResultsDir: string, ref: string, cursor: number, budget: number, ctx: ToolContext, presentation?: ReadChunkPresentation): ToolResult {
+  const opts = { toolResultsDir, materializeDir: toolResultsDir, isProgrammaticToolCallContext: () => false };
+  return executeReadChunkItem(opts, { ref, cursor, maxTokens: budget }, readLedger(ctx, opts), budget, presentation);
+}
+
+function executeReadChunkItem(
+  opts: ToolResultToolsOpts,
+  input: Record<string, unknown>,
+  ledger: ToolResultReadLedger | null,
+  maxOutputTokens: number,
+  presentation?: ReadChunkPresentation,
+): RetrievalItemResult {
+  const ref = String(input.ref || '').trim();
+  const cursor = Number(input.cursor);
+  if (!ref || !Number.isInteger(cursor) || cursor < 0) {
+    return error('E_BAD_INPUT', '`ref` and a non-negative integer `cursor` are required.');
+  }
+  const resolved = resolveToolResultRef(opts.toolResultsDir, ref);
+  if (resolved.ok === false) return error(resolved.code, resolved.message);
+
+  const key = `${ledger?.epoch ?? 0}:chunk:${ref}:${cursor}`;
+  const duplicate = rejectDuplicate(ledger, key);
+  if (duplicate) return duplicate;
+  const requested = Number.isFinite(Number(input.maxTokens))
+    ? Math.trunc(Number(input.maxTokens))
+    : TOOL_RESULT_CHUNK_DEFAULT_TOKENS;
+  const perCall = clamp(requested, 256, TOOL_RESULT_CHUNK_MAX_TOKENS);
+  const budget = availableBudget(ledger, Math.min(perCall, maxOutputTokens));
+  if (budget < 128) return budgetError();
+
+  const source = resultCharacterIndex(resolved.path);
+  const totalChars = source.totalChars;
+  const candidate = readIndexedCharacterRange(resolved.path, source, cursor, cursor + budget * 4);
+  if (cursor > totalChars) {
+    return error('E_RESULT_CURSOR_RANGE', `cursor ${cursor} exceeds total_chars ${totalChars}.`);
+  }
+  const { continuation, history } = presentation ?? {};
+  const tag = history ? 'history-tool-output' : 'tool-result-chunk';
+  const identity = history
+    ? `record_id="${escapeAttr(history.recordId)}" tool_call_id="${escapeAttr(history.toolCallId)}"`
+    : `ref="${escapeAttr(ref)}"`;
+  const emptyEnvelope =
+    `<${tag} ${identity} total_chars="${totalChars}" covered="${cursor}-${cursor}" next_cursor="done">\n\n` +
+    `</${tag}>` + (continuation?.('done') ?? '');
+  const payloadBudget = budget - estimateToolResultTokens(emptyEnvelope);
+  if (payloadBudget < 64) return budgetError();
+  // The cursor/end attributes grow with the selected payload, so reserving
+  // an envelope built with `covered="cursor-cursor"` can be one or two
+  // tokens short once real offsets are inserted. Bound the FINAL envelope,
+  // not only its text payload, so the ordinary per-result ceiling is a
+  // strict invariant rather than an approximate one.
+  const payloadCandidate = prefixWithinTokenBudget(candidate, payloadBudget);
+  const render = (text: string): string => {
+    const end = cursor + text.length;
+    const next = end < totalChars ? String(end) : 'done';
+    return (
+      `<${tag} ${identity} total_chars="${totalChars}" covered="${cursor}-${end}" next_cursor="${next}">\n` +
+      `${text}\n` +
+      `</${tag}>` + (continuation?.(end < totalChars ? end : 'done') ?? '')
+    );
+  };
+  let lo = 0;
+  let hi = payloadCandidate.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (estimateToolResultTokens(render(payloadCandidate.slice(0, mid))) <= budget) lo = mid;
+    else hi = mid - 1;
+  }
+  if (lo > 0 && /[\uD800-\uDBFF]/.test(payloadCandidate[lo - 1])) lo--;
+  const output = render(payloadCandidate.slice(0, lo));
+  commitRead(ledger, key, estimateToolResultTokens(output));
+  return { content: output };
+}
+
+export function resolveToolResultRef(
+  toolResultsDir: string,
+  ref: string,
+): { ok: true; path: string } | { ok: false; code: string; message: string } {
+  // Accept legacy 64-bit refs plus the current full SHA-256 refs. New writes
+  // always use 64 hex chars; compatibility here keeps existing conversations
+  // and persisted markers readable after upgrade. Validate that persisted
+  // shape before diagnosing bare `call_...` IDs: connector results are
+  // legitimately named `call_connector_tool.<hash>`.
+  if (!TOOL_RESULT_REF_RE.test(ref)) {
+    if (/^call[_-]/i.test(ref)) {
+      return {
+        ok: false,
+        code: 'E_RESULT_REF_NOT_PERSISTED',
+        message:
+          'A tool-call ID is not a persisted-output ref. Use only the opaque ref from '
+          + '<persisted-output ref="...">; otherwise read the task file/ledger directly.',
+      };
+    }
+    return { ok: false, code: 'E_RESULT_REF_INVALID', message: 'Invalid tool-result ref.' };
+  }
+  const root = path.resolve(toolResultsDir);
+  const candidate = path.resolve(root, `${ref}.txt`);
+  if (!isInside(root, candidate)) {
+    return { ok: false, code: 'E_RESULT_REF_SCOPE', message: 'Tool-result ref resolves outside the active session.' };
+  }
+  try {
+    const realRoot = fs.realpathSync(root);
+    const real = fs.realpathSync(candidate);
+    if (!isInside(realRoot, real)) {
+      return { ok: false, code: 'E_RESULT_REF_SCOPE', message: 'Tool-result ref resolves outside the active session.' };
+    }
+    if (!fs.statSync(real).isFile()) {
+      return { ok: false, code: 'E_RESULT_REF_NOT_FILE', message: 'Tool-result ref is not a regular file.' };
+    }
+    return { ok: true, path: real };
+  } catch {
+    return {
+      ok: false,
+      code: 'E_RESULT_REF_MISSING',
+      message: 'The retained result is unavailable (missing, expired under an older retention policy, or never captured). Retrieval does not rerun the original tool.',
+    };
+  }
+}
+
+function searchResultFile(filePath: string, ref: string, query: string, budget: number): string {
+  const terms = Array.from(new Set(
+    normalizeQuery(query).match(/[\p{L}\p{N}_-]{2,}/gu) || [normalizeQuery(query)],
+  )).filter(Boolean).slice(0, 12);
+  const ranges: Array<{ start: number; end: number; score: number }> = [];
+  const foundByTerm = new Map(terms.map((term) => [term, 0]));
+  const overlapChars = Math.max(0, ...terms.map((term) => term.length - 1));
+  let carry = '';
+  const totalChars = scanUtf8File(filePath, (text, chunkStart) => {
+    const window = carry + text;
+    const windowStart = chunkStart - carry.length;
+    const lower = window.toLocaleLowerCase();
+    for (const term of terms) {
+      let found = foundByTerm.get(term) ?? 0;
+      if (found >= 20) continue;
+      let from = 0;
+      while (from < lower.length && found < 20) {
+        const index = lower.indexOf(term, from);
+        if (index < 0) break;
+        const globalIndex = windowStart + index;
+        // Matches wholly inside carry were emitted with the prior chunk.
+        if (globalIndex + term.length > chunkStart) {
+          ranges.push({
+            start: Math.max(0, globalIndex - 500),
+            end: globalIndex + term.length + 1_000,
+            score: term.length,
+          });
+          found++;
+        }
+        from = index + Math.max(1, term.length);
+      }
+      foundByTerm.set(term, found);
+    }
+    carry = overlapChars ? window.slice(-overlapChars) : '';
+  });
+  for (const range of ranges) range.end = Math.min(totalChars, range.end);
+  ranges.sort((a, b) => b.score - a.score || a.start - b.start);
+  const selected: Array<{ start: number; end: number }> = [];
+  for (const range of ranges) {
+    if (selected.some((s) => range.start < s.end && range.end > s.start)) continue;
+    selected.push(range);
+    if (selected.length >= 3) break;
+  }
+
+  const header = `<tool-result-search ref="${escapeAttr(ref)}" query="${escapeAttr(query)}" total_chars="${totalChars}" matches="${selected.length}">`;
+  const closing = '</tool-result-search>';
+  if (!selected.length) return `${header}\nNo matching text found. Refine the query; do not scan the whole result.\n${closing}`;
+  const excerpts = readUtf8CharacterRanges(filePath, selected);
+  const pieces: string[] = [header];
+  for (let i = 0; i < selected.length; i++) {
+    const range = selected[i];
+    const wrapper = `<match covered="${range.start}-${range.end}">\n\n</match>`;
+    const remaining = budget
+      - estimateToolResultTokens([...pieces, closing].join('\n'))
+      - estimateToolResultTokens(wrapper);
+    if (remaining < 64) break;
+    const excerpt = prefixWithinTokenBudget(excerpts[i], remaining);
+    if (!excerpt) break;
+    pieces.push(`<match covered="${range.start}-${range.start + excerpt.length}">\n${excerpt}\n</match>`);
+  }
+  pieces.push(closing);
+  return pieces.join('\n');
+}
+
+/** Decode a Result Store file incrementally. `chunkStart` and the returned
+ * total use JavaScript UTF-16 character cursors, matching String#slice and the
+ * public cursor contract, while resident memory stays bounded by one 64KB
+ * byte buffer plus whatever the callback deliberately retains. */
+type ResultCharacterIndex = { stamp: string; totalChars: number; points: Array<{ char: number; byte: number }> };
+const resultCharacterIndexes = new Map<string, ResultCharacterIndex>();
+function resultStamp(file: string): string {
+  const stat = fs.statSync(file);
+  return [stat.dev, stat.ino, stat.size, stat.mtimeMs, stat.ctimeMs].join(':');
+}
+function resultCharacterIndex(file: string): ResultCharacterIndex {
+  const existing = resultCharacterIndexes.get(file);
+  if (existing?.stamp === resultStamp(file)) return existing;
+  scanUtf8File(file, () => {});
+  return resultCharacterIndexes.get(file)!;
+}
+function readIndexedCharacterRange(file: string, index: ResultCharacterIndex, start: number, end: number): string {
+  if (start >= index.totalChars) return '';
+  let low = 0, high = index.points.length - 1;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (index.points[mid].char <= start) low = mid; else high = mid - 1;
+  }
+  const point = index.points[low];
+  const fd = fs.openSync(file, 'r');
+  const decoder = new StringDecoder('utf8');
+  const bytes = Buffer.allocUnsafe(TOOL_RESULT_FILE_SCAN_BYTES);
+  let byte = point.byte, char = point.char;
+  const pieces: string[] = [];
+  try {
+    while (char < end) {
+      const count = fs.readSync(fd, bytes, 0, bytes.length, byte);
+      if (!count) break;
+      byte += count;
+      const text = decoder.write(bytes.subarray(0, count));
+      if (char + text.length > start) pieces.push(text.slice(Math.max(0, start - char), Math.max(0, end - char)));
+      char += text.length;
+    }
+    if (resultStamp(file) !== index.stamp) throw new Error('Stored result changed during retrieval; retry the original ref.');
+    return pieces.join('');
+  } finally { fs.closeSync(fd); }
+}
+
+function scanUtf8File(
+  filePath: string,
+  onText: (text: string, chunkStart: number) => void,
+): number {
+  const fd = fs.openSync(filePath, 'r');
+  const decoder = new StringDecoder('utf8');
+  const bytes = Buffer.allocUnsafe(TOOL_RESULT_FILE_SCAN_BYTES);
+  let chars = 0;
+  let byte = 0;
+  const stamp = resultStamp(filePath);
+  const points: ResultCharacterIndex['points'] = [];
+  const emit = (text: string) => {
+    if (!text) return;
+    const start = chars;
+    points.push({ char: start, byte });
+    byte += Buffer.byteLength(text);
+    chars += text.length;
+    onText(text, start);
+  };
+  try {
+    while (true) {
+      const read = fs.readSync(fd, bytes, 0, bytes.length, null);
+      if (!read) break;
+      emit(decoder.write(bytes.subarray(0, read)));
+    }
+    emit(decoder.end());
+  } finally {
+    fs.closeSync(fd);
+  }
+  if (resultStamp(filePath) !== stamp) throw new Error('Stored result changed during retrieval; retry the original ref.');
+  if (resultCharacterIndexes.size >= 32) resultCharacterIndexes.delete(resultCharacterIndexes.keys().next().value!);
+  resultCharacterIndexes.set(filePath, { stamp, totalChars: chars, points: points.length ? points : [{ char: 0, byte: 0 }] });
+  return chars;
+}
+
+function readUtf8CharacterRanges(
+  filePath: string,
+  ranges: ReadonlyArray<{ start: number; end: number }>,
+): string[] {
+  const index = resultCharacterIndex(filePath);
+  return ranges.map((range) => readIndexedCharacterRange(filePath, index, range.start, range.end));
+
+}
+
+function readLedger(ctx: ToolContext, opts: ToolResultToolsOpts): ToolResultReadLedger | null {
+  // Program child results stay inside the isolated runtime and are governed
+  // by run_program's call/result/wall-clock limits. Do not charge those bytes
+  // to the model-facing shared inline ledger; only run_program's final compact
+  // output crosses into conversation context.
+  if (opts.isProgrammaticToolCallContext(ctx)) return null;
+  const value = ctx.state.toolResultReadLedger;
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Partial<ToolResultReadLedger>;
+  if (!(record.readKeys instanceof Set) || !Number.isFinite(record.remainingTokens)) return null;
+  return record as ToolResultReadLedger;
+}
+
+function rejectDuplicate(ledger: ToolResultReadLedger | null, key: string): ReturnType<typeof error> | null {
+  if (!ledger?.readKeys.has(key)) return null;
+  return error(
+    'E_RESULT_CHUNK_ALREADY_READ',
+    'This result range/query was already read in the current compaction epoch. Reuse the prior observation or request a different narrow range/query.',
+  );
+}
+
+function availableBudget(ledger: ToolResultReadLedger | null, requested: number): number {
+  return Math.max(0, Math.min(requested, ledger?.remainingTokens ?? TOOL_RESULT_ROUND_MAX_TOKENS));
+}
+
+function commitRead(ledger: ToolResultReadLedger | null, key: string, usedTokens: number): void {
+  if (!ledger) return;
+  ledger.readKeys.add(key);
+  ledger.remainingTokens = Math.max(0, ledger.remainingTokens - usedTokens);
+}
+
+function budgetError(): ReturnType<typeof error> {
+  return error(
+    'E_RESULT_READ_BUDGET',
+    'The available tool-result budget is exhausted. No source data was read. Retry the same source cursor when budget is available.',
+  );
+}
+
+function error(code: string, message: string): { content: string; isError: true } {
+  if (code === 'E_BAD_INPUT') return { content: parameterErrorContent(message), isError: true };
+  return { content: `<tool-error code="${code}">${message}</tool-error>`, isError: true };
+}
+
+function prefixWithinTokenBudget(text: string, maxTokens: number): string {
+  if (estimateToolResultTokens(text) <= maxTokens) return text;
+  let lo = 0;
+  let hi = text.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (estimateToolResultTokens(text.slice(0, mid)) <= maxTokens) lo = mid;
+    else hi = mid - 1;
+  }
+  return text.slice(0, lo);
+}
+
+function normalizeQuery(value: string): string {
+  return value.toLocaleLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/** Search matching already treats whitespace-separated terms as an unordered
+ * OR-set, so the duplicate key should do the same. This prevents a model from
+ * spending another round merely by changing term order/case/spacing. */
+function canonicalSearchQuery(value: string): string {
+  const normalized = normalizeQuery(value);
+  const terms = normalized.match(/[\p{L}\p{N}_-]{2,}/gu);
+  return terms?.length
+    ? Array.from(new Set(terms)).sort().join(' ')
+    : normalized;
+}
+
+function isInside(root: string, candidate: string): boolean {
+  const rel = path.relative(root, candidate);
+  return rel === '' || (!rel.startsWith(`..${path.sep}`) && rel !== '..' && !path.isAbsolute(rel));
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function escapeAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+```
+
+## src/main/model/core-agent/tool-surface.ts
+
+Source: https://github.com/Orkas-AI/Orkas/blob/7a3d04eef90244637dd19e2e23363b71bb353535/src/main/model/core-agent/tool-surface.ts
+
+SHA-256: `ef6fa5c40709d94a4fe519ca2cd174900bea2999bfc8d218845c16d148965404`
+
+```
+import type { AgentTool, ToolResult, ToolSurfaceState } from '#core-agent';
+import {
+  AGENT_FALLBACK_TOOL_GROUP_IDS,
+  LOADABLE_TOOL_GROUP_IDS,
+  TOOL_CATALOG,
+  canonicalizeAgentToolGroups,
+  canonicalizeToolGroups,
+  expandToolGroups,
+  getToolCatalogEntry,
+  hostManagedToolNames,
+  isAgentFallbackToolGroup,
+  isLoadableToolGroup,
+  toolNamesForGroups,
+  type ToolGroupId,
+} from './tool-catalog';
+import { TOOL_CATALOG_REVISION } from './tool-catalog-revision';
+
+/** Stamped into the persisted sidecar for eval evidence, not for runtime:
+ * production-regression contracts pin captured tool-surface evidence to the
+ * catalog revision it ran against (a drift ratchet — bumping the catalog
+ * forces those contracts red until evidence is re-reviewed), and the
+ * migration scenarios encode older revisions. Runtime never uses the value
+ * to activate tools: v3 dynamic groups are turn-local and durable groups stay
+ * empty. Reviewed 2026-08-16 (F-13): keep. */
+export { TOOL_CATALOG_REVISION } from './tool-catalog-revision';
+
+export type ToolLoadingMode = 'legacy' | 'scoped';
+
+export function configuredToolLoadingMode(): ToolLoadingMode {
+  // Scoped is the production default for eligible new sessions. Operators can
+  // still force the old full surface while rolling back an incident; existing
+  // conversations are separately preserved as legacy_all below.
+  return process.env.ORKAS_TOOL_LOADING_MODE === 'legacy' ? 'legacy' : 'scoped';
+}
+
+export interface ToolSurfaceController {
+  readonly mode: 'scoped' | 'legacy_all';
+  /** Whether this actor may expand its surface during the session. */
+  readonly dynamicLoading: boolean;
+  readonly dynamicLoadPolicy: 'loadable' | 'agent-dependency';
+  isActive(name: string): boolean;
+  activeToolNames(): string[];
+  loadedGroups(): ToolGroupId[];
+  /** Groups this actor may load in this runtime, after policy and actual
+   * tool-availability filtering. This is the single source for the prompt,
+   * tool schema, and execute-time validation. */
+  loadableGroups(): ToolGroupId[];
+  /** Recovery hints must respect this actor's actual model-loadable surface. */
+  loadableGroupsForTool(name: string): ToolGroupId[];
+  runtimeStats(): {
+    loadCalls: number;
+    newlyLoadedGroups: ToolGroupId[];
+    /** Tools that became active specifically because of successful
+     * model-triggered tool_load calls. Host runtime grants are excluded. */
+    newlyActivatedToolNames: string[];
+  };
+  load(groups: readonly unknown[]): ToolResult;
+}
+
+export function createToolSurfaceController(input: {
+  availableToolNames: readonly string[];
+  /** Tools eligible for model-triggered fallback loading. Defaults to every
+   * available executor. Hosts may retain a broader dormant executor set for
+   * explicit runtime grants without advertising those tools to tool_load. */
+  dynamicLoadableToolNames?: readonly string[];
+  configuredGroups?: readonly string[];
+  hostPreloadGroups?: readonly string[];
+  /** Mutable, host-owned current-turn grants. Trusted ingress may extend this
+   * array after construction when the user explicitly selects a capability
+   * such as a Connector; this path takes precedence over Agent fallback load. */
+  runtimeGrantedGroups?: readonly string[];
+  hostRequiredToolNames?: readonly string[];
+  restoredState?: ToolSurfaceState;
+  preserveLegacySession?: boolean;
+  scopedEligible: boolean;
+  /** Fixed actors use only configured + host groups. They ignore restored
+   * dynamic groups and cannot be widened by the legacy rollback switch. */
+  dynamicLoading?: boolean;
+  /** Commander may load every loadable group. Named Agents use the narrower
+   * Agent-dependency policy so fallback loading cannot reach management or
+   * runtime-only capabilities. */
+  dynamicLoadPolicy?: 'loadable' | 'agent-dependency';
+  /** The legacy-all rollback is Commander-only. A named Agent keeps its
+   * authored baseline even when the global rollback switch is set. */
+  allowLegacyAll?: boolean;
+  persist?: (state: ToolSurfaceState) => void;
+}): ToolSurfaceController {
+  const available = new Set(input.availableToolNames);
+  const dynamicLoadable = new Set(
+    (input.dynamicLoadableToolNames ?? input.availableToolNames)
+      .filter((name) => available.has(name)),
+  );
+  const dynamicLoading = input.dynamicLoading !== false;
+  const allowLegacyAll = input.allowLegacyAll !== false;
+  const dynamicLoadPolicy = input.dynamicLoadPolicy ?? 'loadable';
+  const acceptsDynamicGroup = (id: ToolGroupId): boolean => (
+    dynamicLoadPolicy === 'agent-dependency'
+      ? isAgentFallbackToolGroup(id)
+      : isLoadableToolGroup(id)
+  );
+  const legacy = !input.scopedEligible || (dynamicLoading && allowLegacyAll && (
+    configuredToolLoadingMode() === 'legacy'
+    || input.restoredState?.mode === 'legacy_all'
+    || input.preserveLegacySession === true
+  ));
+
+  if (legacy) {
+    return {
+      mode: 'legacy_all',
+      dynamicLoading: false,
+      dynamicLoadPolicy,
+      isActive: (name) => available.has(name),
+      activeToolNames: () => [...available],
+      loadedGroups: () => [...LOADABLE_TOOL_GROUP_IDS],
+      loadableGroups: () => [],
+      loadableGroupsForTool: () => [],
+      runtimeStats: () => ({
+        loadCalls: 0,
+        newlyLoadedGroups: [],
+        newlyActivatedToolNames: [],
+      }),
+      load: () => ({ content: JSON.stringify({ ok: true, mode: 'legacy_all', already_loaded: ['all'] }) }),
+    };
+  }
+
+  const required = new Set([
+    ...hostManagedToolNames(),
+    ...(input.hostRequiredToolNames ?? []),
+  ].filter((name) => available.has(name)));
+  // Persisted Agent dependencies accept only authorable groups. Host policy
+  // may still preload runtime-only groups for a specialized execution path.
+  const configuredGroupRefs = canonicalizeAgentToolGroups(input.configuredGroups ?? []);
+  const hostPreloadGroupRefs = canonicalizeToolGroups(input.hostPreloadGroups ?? []);
+  // Dynamic loads are deliberately scoped to this controller, which is built
+  // once per user turn. Persisted v1/v2 groups are ignored so an optional tool
+  // must be selected again on a later turn.
+  const dynamicGroupCandidates = dynamicLoadPolicy === 'agent-dependency'
+    ? AGENT_FALLBACK_TOOL_GROUP_IDS
+    : LOADABLE_TOOL_GROUP_IDS;
+  const availableDynamicGroupRefs = dynamicGroupCandidates.filter((group) => (
+    toolNamesForGroups([group]).some((name) => dynamicLoadable.has(name))
+  ));
+  const availableDynamicGroups = new Set(availableDynamicGroupRefs);
+  let turnLoadedGroupRefs: ToolGroupId[] = [];
+  let loadCalls = 0;
+  const toolLoadActivatedToolNames = new Set<string>();
+  let runtimeGrantedGroupsKey = JSON.stringify(input.runtimeGrantedGroups ?? []);
+  let runtimeGrantedGroupRefs = canonicalizeAgentToolGroups(input.runtimeGrantedGroups ?? []);
+  const computeEffectiveGroupRefs = (): ToolGroupId[] => canonicalizeToolGroups([
+    ...configuredGroupRefs,
+    ...hostPreloadGroupRefs,
+    // User-selected runtime grants may expand only Agent-authorable groups;
+    // malformed or host/runtime-only values never become capabilities.
+    ...runtimeGrantedGroupRefs,
+    ...turnLoadedGroupRefs,
+  ]);
+  const computeModelBaselineGroupRefs = (): ToolGroupId[] => canonicalizeToolGroups([
+    ...configuredGroupRefs,
+    ...hostPreloadGroupRefs,
+  ]);
+  let effectiveGroupRefs = computeEffectiveGroupRefs();
+  let active = recomputeActive(
+    available,
+    dynamicLoadable,
+    required,
+    computeModelBaselineGroupRefs(),
+    runtimeGrantedGroupRefs,
+    turnLoadedGroupRefs,
+  );
+  const refreshRuntimeGrants = (): void => {
+    const key = JSON.stringify(input.runtimeGrantedGroups ?? []);
+    if (key === runtimeGrantedGroupsKey) return;
+    runtimeGrantedGroupsKey = key;
+    runtimeGrantedGroupRefs = canonicalizeAgentToolGroups(input.runtimeGrantedGroups ?? []);
+    effectiveGroupRefs = computeEffectiveGroupRefs();
+    active = recomputeActive(
+      available,
+      dynamicLoadable,
+      required,
+      computeModelBaselineGroupRefs(),
+      runtimeGrantedGroupRefs,
+      turnLoadedGroupRefs,
+    );
+  };
+
+  const durableState: ToolSurfaceState = {
+    version: 3,
+    mode: 'scoped',
+    loadedGroups: [],
+    catalogRevision: TOOL_CATALOG_REVISION,
+  };
+  const restoredAlreadyCurrent = input.restoredState?.version === durableState.version
+    && input.restoredState.mode === durableState.mode
+    && input.restoredState.catalogRevision === durableState.catalogRevision
+    && input.restoredState.loadedGroups.length === 0;
+
+  // Establish or migrate the durable marker once. Rebuilding an unchanged
+  // runner must not synchronously rewrite the same sidecar every turn.
+  if (!restoredAlreadyCurrent) input.persist?.(durableState);
+
+  return {
+    mode: 'scoped',
+    dynamicLoading,
+    dynamicLoadPolicy,
+    isActive: (name) => {
+      refreshRuntimeGrants();
+      return active.has(name);
+    },
+    activeToolNames: () => {
+      refreshRuntimeGrants();
+      return [...active];
+    },
+    loadedGroups: () => {
+      refreshRuntimeGrants();
+      return [...effectiveGroupRefs];
+    },
+    loadableGroups: () => dynamicLoading ? [...availableDynamicGroupRefs] : [],
+    loadableGroupsForTool: (name) => dynamicLoading && dynamicLoadable.has(name)
+      ? (getToolCatalogEntry(name)?.loadGroups ?? [])
+        .filter((group) => availableDynamicGroups.has(group))
+      : [],
+    runtimeStats: () => ({
+      loadCalls,
+      newlyLoadedGroups: [...turnLoadedGroupRefs],
+      newlyActivatedToolNames: [...toolLoadActivatedToolNames],
+    }),
+    load(groups) {
+      refreshRuntimeGrants();
+      const activeBeforeLoad = new Set(active);
+      loadCalls += 1;
+      if (!dynamicLoading) {
+        return {
+          content: JSON.stringify({ ok: false, error: 'E_TOOL_LOADING_DISABLED' }),
+          isError: true,
+        };
+      }
+      if (groups.length > 8) {
+        return {
+          content: JSON.stringify({ ok: false, error: 'E_TOOL_GROUP_LIMIT', max_groups: 8 }),
+          isError: true,
+        };
+      }
+      const requested: ToolGroupId[] = [];
+      const unavailable: string[] = [];
+      const seen = new Set<ToolGroupId>();
+      const duplicates = new Set<string>();
+      for (const raw of groups) {
+        const id = typeof raw === 'string' ? raw.trim() as ToolGroupId : undefined;
+        if (!id || !acceptsDynamicGroup(id) || !availableDynamicGroups.has(id)) {
+          unavailable.push(typeof raw === 'string' ? raw : '<invalid>');
+          continue;
+        }
+        if (seen.has(id)) {
+          duplicates.add(id);
+          continue;
+        }
+        seen.add(id);
+        requested.push(id);
+      }
+      if (duplicates.size) {
+        return {
+          content: JSON.stringify({
+            ok: false,
+            error: 'E_TOOL_GROUP_DUPLICATE',
+            duplicates: [...duplicates],
+          }),
+          isError: true,
+        };
+      }
+      // Validate the complete batch before changing activation state. A failed
+      // receipt must never conceal a successful subset that needs no retry.
+      if (!requested.length || unavailable.length) {
+        return {
+          content: JSON.stringify({
+            ok: false,
+            error: 'E_TOOL_GROUP_INVALID',
+            unavailable,
+            available_groups: [...availableDynamicGroupRefs],
+          }),
+          isError: true,
+        };
+      }
+      const beforeExpanded = new Set(expandToolGroups(effectiveGroupRefs));
+      const requestedCanonical = canonicalizeToolGroups(requested);
+      const eligibleRequested = requestedCanonical;
+      const newlyLoaded = eligibleRequested.filter((group) => !beforeExpanded.has(group));
+      const alreadyLoaded = eligibleRequested.filter((group) => beforeExpanded.has(group));
+      if (newlyLoaded.length) {
+        turnLoadedGroupRefs = canonicalizeToolGroups([
+          ...turnLoadedGroupRefs,
+          ...newlyLoaded,
+        ]);
+        effectiveGroupRefs = computeEffectiveGroupRefs();
+        active = recomputeActive(
+          available,
+          dynamicLoadable,
+          required,
+          computeModelBaselineGroupRefs(),
+          runtimeGrantedGroupRefs,
+          turnLoadedGroupRefs,
+        );
+        for (const name of active) {
+          if (!activeBeforeLoad.has(name)) toolLoadActivatedToolNames.add(name);
+        }
+      }
+      return {
+        content: JSON.stringify({
+          ok: unavailable.length === 0,
+          newly_loaded: newlyLoaded,
+          already_loaded: alreadyLoaded,
+          unavailable,
+          activated_tools: active.size,
+          newly_activated_tools: [...active].filter((name) => !activeBeforeLoad.has(name)),
+        }),
+      };
+    },
+  };
+}
+
+function recomputeActive(
+  available: ReadonlySet<string>,
+  dynamicLoadable: ReadonlySet<string>,
+  required: ReadonlySet<string>,
+  modelBaselineGroups: readonly string[],
+  runtimeGrantedGroups: readonly string[],
+  turnLoadedGroups: readonly string[],
+): Set<string> {
+  const active = new Set<string>();
+  for (const name of required) if (available.has(name)) active.add(name);
+  for (const name of toolNamesForGroups(modelBaselineGroups)) {
+    if (dynamicLoadable.has(name)) active.add(name);
+  }
+  // Runtime grants originate from an accepted host/user selection and may
+  // activate an executor intentionally retained outside model fallback.
+  for (const name of toolNamesForGroups(runtimeGrantedGroups)) {
+    if (available.has(name)) active.add(name);
+  }
+  for (const name of toolNamesForGroups(turnLoadedGroups)) {
+    if (dynamicLoadable.has(name)) active.add(name);
+  }
+  return active;
+}
+
+export function createToolLoadTool(
+  controller: ToolSurfaceController,
+  options: {
+    /** Bounded host context that lets the model use a group immediately after loading it. */
+    contextByGroup?: Partial<Record<ToolGroupId, string>>;
+  } = {},
+): AgentTool {
+  const policy = controller.dynamicLoadPolicy;
+  const allowedGroups = controller.loadableGroups();
+  const description = policy === 'agent-dependency'
+    ? 'Fallback only for an in-domain request: activate missing Agent-dependency tool groups for this user turn. This does not expand the Agent domain or execution permissions. Include every clearly needed group in one call.'
+    : 'Activate in one call the groups containing needed tools that are not currently exposed. Their full tool definitions become available on the next model round, for the current user turn only. Loading never grants execution permissions.';
+  return {
+    name: 'tool_load',
+    description,
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        groups: {
+          type: 'array',
+          minItems: 1,
+          maxItems: 8,
+          uniqueItems: true,
+          items: { type: 'string', enum: [...allowedGroups] },
+          description: 'Exact loadable group ids from this enum.',
+        },
+      },
+      required: ['groups'],
+    },
+    async execute(raw) {
+      const groups = Array.isArray(raw?.groups) ? raw.groups : [];
+      const result = controller.load(groups);
+      if (result.isError || !options.contextByGroup || typeof result.content !== 'string') {
+        return result;
+      }
+      const activeGroups = new Set(expandToolGroups(controller.loadedGroups()));
+      const loadedGroupContext: Partial<Record<ToolGroupId, string>> = {};
+      for (const rawGroup of groups) {
+        const group = typeof rawGroup === 'string' ? rawGroup.trim() as ToolGroupId : undefined;
+        const context = group ? options.contextByGroup[group]?.trim() : '';
+        if (group && context && activeGroups.has(group)) loadedGroupContext[group] = context;
+      }
+      if (!Object.keys(loadedGroupContext).length) return result;
+      try {
+        const receipt = JSON.parse(result.content) as Record<string, unknown>;
+        return {
+          ...result,
+          content: JSON.stringify({
+            ...receipt,
+            loaded_group_context: loadedGroupContext,
+          }),
+        };
+      } catch {
+        // Controller receipts are JSON by contract. Preserve the original
+        // result if a future controller implementation violates that shape.
+        return result;
+      }
+    },
+  };
+}
+
+export function catalogedToolNames(): string[] {
+  return TOOL_CATALOG.map((entry) => entry.name);
+}
+
+```

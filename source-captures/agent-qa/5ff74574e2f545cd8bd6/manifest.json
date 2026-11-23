@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "agent-qa",
+  "agent": "agent-qa",
+  "repository": "vostride/agent-qa",
+  "snapshot": "5ff74574e2f545cd8bd6",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:31.407499+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "94a42363eed08153e06b0eb8ee7624ef2f509b79",
+      "path": "packages/runner/src/loop/prompts.ts",
+      "sha256": "fde19069577e725a5e655f12dcca5b97714d8dcc4acb0efd6bb36e4b93fd0eba",
+      "roles": [
+        "prompt",
+        "tools"
+      ],
+      "archive_path": "files/94a42363eed08153e06b0eb8ee7624ef2f509b79/packages/runner/src/loop/prompts.ts",
+      "url": "https://github.com/vostride/agent-qa/blob/94a42363eed08153e06b0eb8ee7624ef2f509b79/packages/runner/src/loop/prompts.ts"
+    }
+  ]
+}

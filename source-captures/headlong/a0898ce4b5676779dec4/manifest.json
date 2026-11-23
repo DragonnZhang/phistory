@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "headlong",
+  "agent": "Headlong",
+  "repository": "laude-institute/headlong",
+  "snapshot": "a0898ce4b5676779dec4",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:26.165816+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2",
+      "path": "bin/shellm",
+      "sha256": "d3e494b41732f90b8670f6716c92fce8dd8b8cf8d4c96361e93e7f3ff46dce92",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2/bin/shellm",
+      "url": "https://github.com/laude-institute/headlong/blob/8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2/bin/shellm"
+    },
+    {
+      "commit": "8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2",
+      "path": "thinkers/monolith/prompt.md",
+      "sha256": "9b1e442b9465aacbf2a34a5a82ad8bd04bf38db25bf241002ebe01fee947d070",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2/thinkers/monolith/prompt.md",
+      "url": "https://github.com/laude-institute/headlong/blob/8db84fd2a9a4c63eebb49f7a34f24c5c88f59df2/thinkers/monolith/prompt.md"
+    }
+  ]
+}

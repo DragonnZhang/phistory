@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "openinterpreter",
+  "agent": "openinterpreter",
+  "repository": "openinterpreter/openinterpreter",
+  "snapshot": "69f0866ef4f715465599",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:28.381134+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "a786d8474b0d7289320c16f00e852679fae7866e",
+      "path": "codex-rs/core/gpt-5.2-codex_prompt.md",
+      "sha256": "1b3dd697043a7f613c691a3721a450251626685b3e97ac3ad3d35ea62758a31e",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a786d8474b0d7289320c16f00e852679fae7866e/codex-rs/core/gpt-5.2-codex_prompt.md",
+      "url": "https://github.com/openinterpreter/openinterpreter/blob/a786d8474b0d7289320c16f00e852679fae7866e/codex-rs/core/gpt-5.2-codex_prompt.md"
+    },
+    {
+      "commit": "a786d8474b0d7289320c16f00e852679fae7866e",
+      "path": "codex-rs/core/src/harness/minimal.rs",
+      "sha256": "4e2564f16580817186e4a1915fabfb45693597bfe5c04a8f734f0f1e63cfbf40",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/a786d8474b0d7289320c16f00e852679fae7866e/codex-rs/core/src/harness/minimal.rs",
+      "url": "https://github.com/openinterpreter/openinterpreter/blob/a786d8474b0d7289320c16f00e852679fae7866e/codex-rs/core/src/harness/minimal.rs"
+    },
+    {
+      "commit": "a786d8474b0d7289320c16f00e852679fae7866e",
+      "path": "codex-rs/core/src/tools/handlers/harness_aliases.rs",
+      "sha256": "0fc3b8c76806107e2305b348dd05be55b62dce9598cc9a114d7b9c7a85469435",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a786d8474b0d7289320c16f00e852679fae7866e/codex-rs/core/src/tools/handlers/harness_aliases.rs",
+      "url": "https://github.com/openinterpreter/openinterpreter/blob/a786d8474b0d7289320c16f00e852679fae7866e/codex-rs/core/src/tools/handlers/harness_aliases.rs"
+    },
+    {
+      "commit": "a786d8474b0d7289320c16f00e852679fae7866e",
+      "path": "codex-rs/core/src/tools/spec_plan.rs",
+      "sha256": "ed4f11cb9bcc002df5f61422c9ade4eec49dec706129cbe754d55996fb2d0bfc",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/a786d8474b0d7289320c16f00e852679fae7866e/codex-rs/core/src/tools/spec_plan.rs",
+      "url": "https://github.com/openinterpreter/openinterpreter/blob/a786d8474b0d7289320c16f00e852679fae7866e/codex-rs/core/src/tools/spec_plan.rs"
+    }
+  ]
+}

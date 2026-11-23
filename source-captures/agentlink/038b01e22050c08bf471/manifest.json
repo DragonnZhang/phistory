@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "archive_kind": "source-files",
+  "scope": "Complete copies of the selected upstream source files, including prompt templates and tool registration code. These are source archives, not assembled system messages or captured API tool schemas. No CLI or model request was executed.",
+  "agent_id": "agentlink",
+  "agent": "agentlink",
+  "repository": "reefbarman/agentlink",
+  "snapshot": "038b01e22050c08bf471",
+  "selection": "latest-default-branch",
+  "archived_at": "2026-11-23T14:39:29.605373+00:00",
+  "archive_host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "github_actions": {
+      "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45196418147",
+      "sha": "b3bde47161c4ad57dff1c78dcefe22821f00c86d"
+    }
+  },
+  "files": [
+    {
+      "commit": "275fd94380d5cc7f483b56208fed2a70cc32fe5d",
+      "path": "packages/core/src/systemPromptSections.ts",
+      "sha256": "3b3c8ffee4236c503299008299aee3919cac32d9f6b75a8fdcb73095980d9cfe",
+      "roles": [
+        "prompt"
+      ],
+      "archive_path": "files/275fd94380d5cc7f483b56208fed2a70cc32fe5d/packages/core/src/systemPromptSections.ts",
+      "url": "https://github.com/reefbarman/agentlink/blob/275fd94380d5cc7f483b56208fed2a70cc32fe5d/packages/core/src/systemPromptSections.ts"
+    },
+    {
+      "commit": "275fd94380d5cc7f483b56208fed2a70cc32fe5d",
+      "path": "src/shared/toolRegistry.ts",
+      "sha256": "b868a12aca330e13fc3dd6192e43b5ab98ec6b5fa37a41282c4ba0d4a0ef8db3",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/275fd94380d5cc7f483b56208fed2a70cc32fe5d/src/shared/toolRegistry.ts",
+      "url": "https://github.com/reefbarman/agentlink/blob/275fd94380d5cc7f483b56208fed2a70cc32fe5d/src/shared/toolRegistry.ts"
+    },
+    {
+      "commit": "275fd94380d5cc7f483b56208fed2a70cc32fe5d",
+      "path": "src/tools/executeCommand.ts",
+      "sha256": "fae93d70e72106e8c550616b4f7c65aa47fd488f107ca1458fe46242a7d52880",
+      "roles": [
+        "tools"
+      ],
+      "archive_path": "files/275fd94380d5cc7f483b56208fed2a70cc32fe5d/src/tools/executeCommand.ts",
+      "url": "https://github.com/reefbarman/agentlink/blob/275fd94380d5cc7f483b56208fed2a70cc32fe5d/src/tools/executeCommand.ts"
+    }
+  ]
+}

@@ -1,0 +1,1424 @@
+"""Unified MCP file-tool handlers for both E2B (sandbox) and non-E2B (local) modes.
+
+When E2B is active, Read/Write/Edit/Glob/Grep route to the sandbox so that
+all file operations share the same ``/home/user`` and ``/tmp`` filesystems
+as ``bash_exec``.
+
+In non-E2B mode (no sandbox), Read/Write/Edit operate on the SDK working
+directory (``/tmp/copilot-<session>/``), providing the same truncation
+detection and path-validation guarantees.
+
+SDK-internal paths (``~/.claude/projects/…/tool-results/``) are handled
+by the separate ``Read`` MCP tool registered in ``tool_adapter.py``.
+"""
+
+import asyncio
+import base64
+import collections
+import contextlib
+import functools
+import hashlib
+import itertools
+import json
+import logging
+import os
+import shlex
+import threading
+from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING, Any, Callable, cast
+
+if TYPE_CHECKING:
+    from e2b import AsyncSandbox
+
+from backend.copilot.context import (
+    E2B_ALLOWED_DIRS,
+    E2B_ALLOWED_DIRS_STR,
+    E2B_WORKDIR,
+    get_current_sandbox,
+    get_sdk_cwd,
+    is_allowed_local_path,
+    is_sdk_tool_path,
+    is_within_allowed_dirs,
+    resolve_allowed_local_path,
+    resolve_executor_path,
+)
+from backend.copilot.context import resolve_sandbox_path as resolve_sandbox_path
+from backend.copilot.host_fs import open_no_follow
+from backend.copilot.sdk.local_pc_file_tools import (
+    is_local_pc,
+    list_via_shim,
+    run_argv_via_shim,
+    stat_via_shim,
+)
+from backend.copilot.sdk.sandbox_image_read import read_sandbox_image
+from backend.copilot.tool_image import (
+    BINARY_IMAGE_READ_GUIDANCE,
+    IMAGE_EXTENSIONS,
+    IMAGE_READ_DESCRIPTION,
+    IMAGE_TOO_LARGE_MESSAGE,
+    MAX_IMAGE_BYTES,
+    ImageReadError,
+    prepare_image,
+)
+from backend.util.sandbox_login import run_internal
+from backend.util.sandbox_output import read_sandbox_file
+from backend.util.settings import Config
+
+logger = logging.getLogger(__name__)
+
+# Default number of lines returned by ``read_file`` when the caller does not
+# specify a limit.  Also used as the threshold in ``bridge_to_sandbox`` to
+# decide whether the model is requesting the full file (and thus whether the
+# bridge copy is worthwhile).
+_DEFAULT_READ_LIMIT = 2000
+
+# Per-file lock for edit operations to prevent parallel lost updates.
+# When MCP tools are dispatched in parallel (readOnlyHint=True annotation),
+# two Edit calls on the same file could race through read-modify-write
+# and silently drop one change.  Keyed by the file: its resolved absolute
+# path, or its executor and path there (see _executor_file_key).
+# Bounded to _EDIT_LOCKS_MAX entries (LRU eviction) to prevent unbounded
+# memory growth across long-running server processes.
+_EDIT_LOCKS_MAX = 1_000
+_EDIT_LOCK_POLL_SECONDS = 0.02
+_edit_locks: collections.OrderedDict[str, threading.Lock] = collections.OrderedDict()
+_edit_locks_guard = threading.Lock()
+
+# Inline content above this threshold triggers a warning — it survived this
+# time but is dangerously close to the API output-token truncation limit.
+_LARGE_CONTENT_WARN_CHARS = 50_000
+
+_READ_BINARY_EXTENSIONS = frozenset(
+    {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".bmp",
+        ".ico",
+        ".webp",
+        ".pdf",
+        ".zip",
+        ".gz",
+        ".tar",
+        ".bz2",
+        ".xz",
+        ".7z",
+        ".exe",
+        ".dll",
+        ".so",
+        ".dylib",
+        ".bin",
+        ".o",
+        ".a",
+        ".pyc",
+        ".pyo",
+        ".class",
+        ".wasm",
+        ".mp3",
+        ".mp4",
+        ".avi",
+        ".mov",
+        ".mkv",
+        ".wav",
+        ".flac",
+        ".sqlite",
+        ".db",
+    }
+)
+
+
+def _is_likely_binary(path: str) -> bool:
+    """Heuristic check for binary files by extension."""
+    _, ext = os.path.splitext(path)
+    return ext.lower() in _READ_BINARY_EXTENSIONS
+
+
+def _binary_read_guidance(path: str) -> str:
+    if os.path.splitext(path)[1].lower() in {".pdf", ".mp4", ".avi", ".mov", ".mkv"}:
+        return BINARY_IMAGE_READ_GUIDANCE
+    return (
+        "This binary file has not been viewed. "
+        "Use bash_exec with 'file' or 'xxd' to inspect it."
+    )
+
+
+# Read and Edit hold a file whole; past this they refuse it, and Edit refuses
+# to build a result past it.
+_MAX_READ_BYTES = Config().max_file_size_mb * 1024 * 1024
+
+
+def _read_capped_text(path: str) -> str | None:
+    """A host file as text; ``None`` past ``_MAX_READ_BYTES``."""
+    with open(path, encoding="utf-8", opener=open_no_follow) as fh:
+        if os.fstat(fh.fileno()).st_size > _MAX_READ_BYTES:
+            return None
+        text = fh.read(_MAX_READ_BYTES + 1)
+    return None if len(text) > _MAX_READ_BYTES else text
+
+
+def _read_capped_lines(path: str, offset: int, limit: int) -> list[str] | None:
+    """Lines ``offset`` to ``offset + limit`` of a host file, reading no further;
+    ``None`` past ``_MAX_READ_BYTES``."""
+    with open(path, encoding="utf-8", errors="replace", opener=open_no_follow) as fh:
+        if os.fstat(fh.fileno()).st_size > _MAX_READ_BYTES:
+            return None
+        budget = _MAX_READ_BYTES
+        selected: list[str] = []
+        for index in range(offset + limit):
+            line = fh.readline(budget + 1)
+            if not line:
+                break
+            budget -= len(line)
+            if budget < 0:
+                return None
+            if index >= offset:
+                selected.append(line)
+    return selected
+
+
+def _too_large(path: str, done: str) -> str:
+    return (
+        f"{os.path.basename(path)} is larger than {_MAX_READ_BYTES // 2**20} MB "
+        f"and cannot be {done} whole. Use bash_exec with head, tail, "
+        "sed -n or split to work on parts of it."
+    )
+
+
+def _utf8_len(text: str) -> int:
+    return len(text.encode("utf-8", errors="surrogatepass"))
+
+
+def _edit_too_large(
+    path: str, content: str, old_string: str, new_string: str, replacements: int
+) -> str | None:
+    """Refusal text when the edited file would pass ``_MAX_READ_BYTES``,
+    worked out before the result is built."""
+    size = _utf8_len(content) + replacements * (
+        _utf8_len(new_string) - _utf8_len(old_string)
+    )
+    if size <= _MAX_READ_BYTES:
+        return None
+    return (
+        f"Editing {os.path.basename(path)} would make it {size:,} bytes, over "
+        f"the {_MAX_READ_BYTES // 2**20} MB limit for files that can be read "
+        "or edited whole. Nothing was changed."
+    )
+
+
+_PARTIAL_TRUNCATION_MSG = (
+    "Your Write call was truncated (file_path missing but content "
+    "was present). The content was too large for a single tool call. "
+    "Write in chunks: use bash_exec with "
+    "'cat > file << \"EOF\"\\n...\\nEOF' for the first section, "
+    "'cat >> file << \"EOF\"\\n...\\nEOF' to append subsequent "
+    "sections, then reference the file with "
+    "@@agptfile:/path/to/file if needed."
+)
+
+_COMPLETE_TRUNCATION_MSG = (
+    "Your Write call had empty arguments — this means your previous "
+    "response was too long and the tool call was truncated by the API. "
+    "Break your work into smaller steps. For large content, write "
+    "section-by-section using bash_exec with "
+    "'cat > file << \"EOF\"\\n...\\nEOF' and "
+    "'cat >> file << \"EOF\"\\n...\\nEOF'."
+)
+
+_EDIT_PARTIAL_TRUNCATION_MSG = (
+    "Your Edit call was truncated (file_path missing but old_string/new_string "
+    "were present). The arguments were too large for a single tool call. "
+    "Break your edit into smaller replacements, or use bash_exec with "
+    "'sed' for large-scale find-and-replace."
+)
+
+
+def _check_truncation(file_path: str, content: str) -> dict[str, Any] | None:
+    """Return an error response if the args look truncated, else ``None``."""
+    if not file_path:
+        if content:
+            return _mcp(_PARTIAL_TRUNCATION_MSG, error=True)
+        return _mcp(_COMPLETE_TRUNCATION_MSG, error=True)
+    return None
+
+
+def _resolve_and_validate(
+    file_path: str, sdk_cwd: str
+) -> tuple[str, None] | tuple[None, dict[str, Any]]:
+    """Resolve *file_path* against *sdk_cwd* and validate it stays within bounds.
+
+    Returns ``(resolved_path, None)`` on success, or ``(None, error_response)``
+    on failure.  Open the result with ``open_no_follow``.
+    """
+    resolved = resolve_allowed_local_path(file_path, sdk_cwd)
+    if resolved is None:
+        return None, _mcp(
+            f"Path must be within the working directory: {os.path.basename(file_path)}",
+            error=True,
+        )
+    return resolved, None
+
+
+async def _check_sandbox_symlink_escape(
+    sandbox: Any,
+    parent: str,
+) -> str | None:
+    """Resolve the canonical parent path inside the sandbox to detect symlink escapes.
+
+    For E2B: ``readlink -f`` follows symlinks on the POSIX sandbox FS.
+    For LocalPCShim: FILE_STAT(follow_symlinks=True) returns the canonical
+    path per the shim's per-OS realpath (handles junctions on Windows,
+    firmlinks on macOS — see
+    ``autogpt-local-executor/docs/CROSS_PLATFORM.md`` Path Jail Strategy).
+
+    Returns the canonical parent path, or ``None`` if the path escapes
+    the executor's allowed dirs.
+
+    Note: There is an inherent TOCTOU window between this check and the
+    subsequent ``sandbox.files.write()`` — a symlink could be replaced
+    between the two ops. Acceptable for E2B (single-user, ephemeral) and
+    for the shim (single-user with per-op shim-side jail re-check).
+    """
+    if is_local_pc(sandbox):
+        try:
+            stat = await stat_via_shim(
+                sandbox, parent or sandbox.allowed_root, follow_symlinks=True
+            )
+        except (OSError, ValueError):
+            return None
+        if not stat.get("exists"):
+            return None
+        # Shim jail-check already passed; return the input parent so the
+        # caller's `os.path.join(parent, basename)` produces a path the
+        # next FILE_WRITE will re-validate against the same jail.
+        return parent or sandbox.allowed_root
+
+    canonical_res = await run_internal(
+        sandbox,
+        f"readlink -f {shlex.quote(parent or E2B_WORKDIR)}",
+        cwd=E2B_WORKDIR,
+        timeout=5,
+    )
+    canonical_parent = (canonical_res.stdout or "").strip()
+    if (
+        canonical_res.exit_code != 0
+        or not canonical_parent
+        or not is_within_allowed_dirs(canonical_parent)
+    ):
+        return None
+    return canonical_parent
+
+
+def _get_sandbox():
+    return get_current_sandbox()
+
+
+async def _read_remote(sandbox: Any, remote: str, max_bytes: int) -> bytes:
+    """At most ``max_bytes + 1`` bytes of *remote*, so a longer result means the
+    file is over the limit: a Local PC's companion is asked for no more, and an
+    E2B file stops streaming one byte past it."""
+    if is_local_pc(sandbox):
+        return await sandbox.files.read_capped(remote, max_bytes)
+    return await read_sandbox_file(sandbox, remote, max_bytes)
+
+
+async def _remote_file_size(sandbox: Any, remote: str) -> int:
+    """Size of *remote* on the executor: FILE_STAT on a Local PC, the files
+    API on E2B."""
+    if is_local_pc(sandbox):
+        stat = await stat_via_shim(sandbox, remote, follow_symlinks=True)
+        return int(stat.get("size_bytes") or 0)
+    return (await sandbox.files.get_info(remote)).size
+
+
+def _is_allowed_local(path: str) -> bool:
+    return is_allowed_local_path(path, get_sdk_cwd())
+
+
+def _mcp(
+    text: str, *, error: bool = False, outside: tuple[str, ...] | None = None
+) -> dict[str, Any]:
+    if error:
+        text = json.dumps({"error": text, "type": "error"})
+    result = {"content": [{"type": "text", "text": text}], "isError": error}
+    return result if outside is None else DeclaredResult(result, outside=outside)
+
+
+class DeclaredResult(dict[str, Any]):
+    """An MCP result whose ``outside`` names what in it came from outside
+    AutoGPT (see ``ToolResponseBase.from_outside``). The wrapper reads it
+    before the cap, which builds a plain dict."""
+
+    def __init__(self, result: dict[str, Any], *, outside: tuple[str, ...]):
+        super().__init__(result)
+        self.outside = outside
+
+
+def _get_sandbox_and_path(
+    file_path: str,
+) -> tuple[Any, str] | dict[str, Any]:
+    """Common preamble: get sandbox + resolve path, or return MCP error.
+
+    Path resolution is executor-aware: E2B paths resolve under `/home/user`
+    + `/tmp`, LocalPCShim paths resolve under the shim's `allowed_root`
+    advertised in HELLO.
+    """
+    sandbox = _get_sandbox()
+    if sandbox is None:
+        return _mcp("No sandbox available", error=True)
+    try:
+        remote = resolve_executor_path(file_path, sandbox)
+    except ValueError as exc:
+        return _mcp(str(exc), error=True)
+    return sandbox, remote
+
+
+async def _sandbox_write(sandbox: Any, path: str, content: str | bytes) -> None:
+    """Write *content* to *path* inside the sandbox.
+
+    The E2B filesystem API (``sandbox.files.write``) and the command API
+    (``sandbox.commands.run``) run as **different users**.  On ``/tmp``
+    (which has the sticky bit set) this means ``sandbox.files.write`` can
+    create new files but cannot overwrite files previously created by
+    ``sandbox.commands.run`` (or itself), because the sticky bit restricts
+    deletion/rename to the file owner.
+
+    To work around this, writes targeting ``/tmp`` are performed via
+    ``tee`` through the command API, which runs as the sandbox ``user``
+    and can therefore always overwrite user-owned files.
+
+    *content* may be ``str`` (text) or ``bytes`` (binary).  Both paths
+    are handled correctly: text is encoded to bytes for the base64 shell
+    pipe, and raw bytes are passed through without any encoding.
+    """
+    # LocalPCShim runs FILE and COMMAND ops as the same OS user, so the
+    # E2B sticky-bit/`/tmp` workaround below doesn't apply — just write.
+    if is_local_pc(sandbox):
+        await sandbox.files.write(path, content)
+        return
+
+    if path == "/tmp" or path.startswith("/tmp/"):
+        raw = content.encode() if isinstance(content, str) else content
+        encoded = base64.b64encode(raw).decode()
+        result = await run_internal(
+            sandbox,
+            f"echo {shlex.quote(encoded)} | base64 -d > {shlex.quote(path)}",
+            cwd=E2B_WORKDIR,
+            timeout=10,
+        )
+        if result.exit_code != 0:
+            raise RuntimeError(
+                f"shell write failed (exit {result.exit_code}): "
+                + (result.stderr or "").strip()
+            )
+    else:
+        await sandbox.files.write(path, content)
+
+
+# Tool handlers
+
+
+async def _handle_read_file(args: dict[str, Any]) -> dict[str, Any]:
+    """Read lines from a file — E2B sandbox, local SDK working dir, or SDK-internal paths."""
+    if not args:
+        return _mcp(
+            "Your read_file call had empty arguments \u2014 this means your previous "
+            "response was too long and the tool call was truncated by the API. "
+            "Break your work into smaller steps.",
+            error=True,
+        )
+    file_path: str = args.get("file_path", "")
+    try:
+        offset: int = max(0, int(args.get("offset", 0)))
+        limit: int = max(1, int(args.get("limit", _DEFAULT_READ_LIMIT)))
+    except (ValueError, TypeError):
+        return _mcp("Invalid offset/limit \u2014 must be integers.", error=True)
+
+    if not file_path:
+        if "offset" in args or "limit" in args:
+            return _mcp(
+                "Your read_file call was truncated (file_path missing but "
+                "offset/limit were present). Resend with the full file_path.",
+                error=True,
+            )
+        return _mcp("file_path is required", error=True)
+
+    # SDK-internal tool-results/tool-outputs paths are on the host filesystem in
+    # both E2B and non-E2B mode — always read them locally.
+    # When E2B is active, also copy the file into the sandbox so bash_exec can
+    # process it further.
+    # NOTE: when E2B is active we intentionally use `is_sdk_tool_path` (not
+    # `_is_allowed_local`) so that sdk_cwd-relative paths (e.g. "output.txt")
+    # are NOT captured here.  In E2B mode the agent's working directory is the
+    # sandbox, not sdk_cwd on the host, so relative paths should be read from
+    # the sandbox below.
+    sandbox_active = _get_sandbox() is not None
+    local_check = (
+        is_sdk_tool_path(file_path) if sandbox_active else _is_allowed_local(file_path)
+    )
+    if local_check:
+        result = await asyncio.to_thread(
+            _read_local, file_path, offset, limit if "limit" in args else None
+        )
+        if not result.get("isError"):
+            sandbox = _get_sandbox()
+            if sandbox is not None:
+                annotation = await bridge_and_annotate(
+                    sandbox, file_path, offset, limit
+                )
+                if annotation:
+                    result["content"][0]["text"] += annotation
+        return result
+
+    sandbox = _get_sandbox()
+    if sandbox is not None:
+        # E2B path — read from sandbox filesystem
+        result = _get_sandbox_and_path(file_path)
+        if isinstance(result, dict):
+            return result
+        sandbox, remote = result
+
+        try:
+            ext = os.path.splitext(remote)[1].lower()
+            if ext in IMAGE_EXTENSIONS:
+                if await _remote_file_size(sandbox, remote) > MAX_IMAGE_BYTES:
+                    return _mcp(
+                        IMAGE_TOO_LARGE_MESSAGE,
+                        error=True,
+                        outside=(),
+                    )
+            elif _is_likely_binary(remote):
+                return _mcp(
+                    _binary_read_guidance(remote),
+                    error=True,
+                    outside=(),
+                )
+            if ext in IMAGE_EXTENSIONS:
+                raw = (
+                    await sandbox.files.read_capped(remote, MAX_IMAGE_BYTES)
+                    if is_local_pc(sandbox)
+                    else await read_sandbox_image(sandbox, remote)
+                )
+                return await asyncio.to_thread(
+                    _image_result, raw, offset, args.get("limit")
+                )
+            raw = await _read_remote(sandbox, remote, _MAX_READ_BYTES)
+            content = raw.decode("utf-8", errors="replace")
+        except Exception as exc:
+            return _mcp(f"Failed to read {os.path.basename(remote)}: {exc}", error=True)
+        if len(raw) > _MAX_READ_BYTES:
+            return _mcp(_too_large(remote, "read"), error=True)
+
+        lines = content.splitlines(keepends=True)
+        selected = list(itertools.islice(lines, offset, offset + limit))
+        numbered = "".join(
+            f"{i + offset + 1:>6}\t{line}" for i, line in enumerate(selected)
+        )
+        return _mcp(numbered, outside=(numbered,))
+
+    # Non-E2B path — read from SDK working directory
+    sdk_cwd = get_sdk_cwd()
+    if not sdk_cwd:
+        return _mcp("No SDK working directory available", error=True)
+
+    resolved, err = _resolve_and_validate(file_path, sdk_cwd)
+    if err is not None:
+        return err
+    assert resolved is not None
+
+    if os.path.splitext(resolved)[1].lower() in IMAGE_EXTENSIONS:
+        return await asyncio.to_thread(
+            _read_local_image, resolved, offset, args.get("limit")
+        )
+
+    if _is_likely_binary(resolved):
+        return _mcp(
+            _binary_read_guidance(resolved),
+            error=True,
+            outside=(),
+        )
+
+    try:
+        selected = _read_capped_lines(resolved, offset, limit)
+    except FileNotFoundError:
+        return _mcp(f"File not found: {file_path}", error=True)
+    except PermissionError:
+        return _mcp(f"Permission denied: {file_path}", error=True)
+    except Exception as exc:
+        return _mcp(f"Failed to read {file_path}: {exc}", error=True)
+    if selected is None:
+        return _mcp(_too_large(resolved, "read"), error=True)
+
+    numbered = "".join(
+        f"{i + offset + 1:>6}\t{line}" for i, line in enumerate(selected)
+    )
+    return _mcp(numbered, outside=(numbered,))
+
+
+async def _handle_write_file(args: dict[str, Any]) -> dict[str, Any]:
+    """Write content to a file — E2B sandbox or local SDK working directory."""
+    if not args:
+        return _mcp(_COMPLETE_TRUNCATION_MSG, error=True)
+    file_path: str = args.get("file_path", "")
+    content: str = args.get("content", "")
+
+    truncation_err = _check_truncation(file_path, content)
+    if truncation_err is not None:
+        return truncation_err
+
+    sandbox = _get_sandbox()
+    if sandbox is not None:
+        # E2B path — write to sandbox filesystem
+        try:
+            remote = resolve_executor_path(file_path, sandbox)
+        except ValueError as exc:
+            return _mcp(str(exc), error=True)
+
+        try:
+            parent = os.path.dirname(remote)
+            if not is_local_pc(sandbox):
+                e2b_sandbox = cast("AsyncSandbox", sandbox)
+                if parent and parent not in E2B_ALLOWED_DIRS:
+                    await e2b_sandbox.files.make_dir(parent)
+                canonical_parent = await _check_sandbox_symlink_escape(
+                    e2b_sandbox, parent
+                )
+                if canonical_parent is None:
+                    return _mcp(
+                        f"Path must be within {E2B_ALLOWED_DIRS_STR}: "
+                        f"{os.path.basename(parent)}",
+                        error=True,
+                    )
+                remote = os.path.join(canonical_parent, os.path.basename(remote))
+            await _sandbox_write(sandbox, remote, content)
+        except Exception as exc:
+            return _mcp(
+                f"Failed to write {os.path.basename(remote)}: {exc}", error=True
+            )
+
+        msg = f"Successfully wrote to {file_path}"
+        if len(content) > _LARGE_CONTENT_WARN_CHARS:
+            logger.warning(
+                "[Write] large inline content (%d chars) for %s",
+                len(content),
+                remote,
+            )
+            msg += (
+                f"\n\nWARNING: The content was very large ({len(content)} chars). "
+                "Next time, write large files in sections using bash_exec with "
+                "'cat > file << EOF ... EOF' and 'cat >> file << EOF ... EOF' "
+                "to avoid output-token truncation."
+            )
+        return _mcp(msg)
+
+    # Non-E2B path — write to SDK working directory
+    sdk_cwd = get_sdk_cwd()
+    if not sdk_cwd:
+        return _mcp("No SDK working directory available", error=True)
+
+    resolved, err = _resolve_and_validate(file_path, sdk_cwd)
+    if err is not None:
+        return err
+    assert resolved is not None
+
+    try:
+        with open(
+            resolved,
+            "w",
+            encoding="utf-8",
+            opener=functools.partial(open_no_follow, make_parents=True),
+        ) as f:
+            f.write(content)
+    except Exception as exc:
+        logger.error("Write failed for %s: %s", resolved, exc, exc_info=True)
+        return _mcp(
+            f"Failed to write {os.path.basename(resolved)}: {type(exc).__name__}",
+            error=True,
+        )
+
+    msg = f"Successfully wrote to {file_path}"
+    if len(content) > _LARGE_CONTENT_WARN_CHARS:
+        logger.warning(
+            "[Write] large inline content (%d chars) for %s",
+            len(content),
+            resolved,
+        )
+        msg += (
+            f"\n\nWARNING: The content was very large ({len(content)} chars). "
+            "Next time, write large files in sections using bash_exec with "
+            "'cat > file << EOF ... EOF' and 'cat >> file << EOF ... EOF' "
+            "to avoid output-token truncation."
+        )
+    return _mcp(msg)
+
+
+async def _handle_edit_file(args: dict[str, Any]) -> dict[str, Any]:
+    """Replace a substring in a file — E2B sandbox or local SDK working directory."""
+    if not args:
+        return _mcp(
+            "Your Edit call had empty arguments \u2014 this means your previous "
+            "response was too long and the tool call was truncated by the API. "
+            "Break your work into smaller steps.",
+            error=True,
+        )
+    file_path: str = args.get("file_path", "")
+    old_string: str = args.get("old_string", "")
+    new_string: str = args.get("new_string", "")
+    replace_all: bool = args.get("replace_all", False)
+
+    # Partial truncation: file_path missing but edit strings present
+    if not file_path:
+        if old_string or new_string:
+            return _mcp(_EDIT_PARTIAL_TRUNCATION_MSG, error=True)
+        return _mcp(
+            "Your Edit call had empty arguments \u2014 this means your previous "
+            "response was too long and the tool call was truncated by the API. "
+            "Break your work into smaller steps.",
+            error=True,
+        )
+
+    if not old_string:
+        return _mcp("old_string is required", error=True)
+
+    sandbox = _get_sandbox()
+    if sandbox is not None:
+        # E2B path — edit in sandbox filesystem
+        try:
+            remote = resolve_executor_path(file_path, sandbox)
+        except ValueError as exc:
+            return _mcp(str(exc), error=True)
+
+        if not is_local_pc(sandbox):
+            parent = os.path.dirname(remote)
+            try:
+                canonical_parent = await _check_sandbox_symlink_escape(sandbox, parent)
+            except Exception as exc:
+                return _mcp(
+                    f"Failed to edit {os.path.basename(remote)}: {exc}", error=True
+                )
+            if canonical_parent is None:
+                return _mcp(
+                    f"Path must be within {E2B_ALLOWED_DIRS_STR}: "
+                    f"{os.path.basename(parent)}",
+                    error=True,
+                )
+            remote = os.path.join(canonical_parent, os.path.basename(remote))
+
+        # The CLI runs one message's calls in parallel, and chats bound to one
+        # Local PC folder share its files: take turns, as the SDK path does.
+        async with _edit_lock(_executor_file_key(sandbox, remote)):
+            return await _edit_on_executor(
+                sandbox, remote, file_path, old_string, new_string, replace_all
+            )
+
+    # Non-E2B path — edit in SDK working directory
+    sdk_cwd = get_sdk_cwd()
+    if not sdk_cwd:
+        return _mcp("No SDK working directory available", error=True)
+
+    resolved, err = _resolve_and_validate(file_path, sdk_cwd)
+    if err is not None:
+        return err
+    assert resolved is not None
+
+    async with _edit_lock(resolved):
+        try:
+            content = _read_capped_text(resolved)
+        except FileNotFoundError:
+            return _mcp(f"File not found: {file_path}", error=True)
+        except PermissionError:
+            return _mcp(f"Permission denied: {file_path}", error=True)
+        except Exception as exc:
+            return _mcp(f"Failed to read {file_path}: {exc}", error=True)
+        if content is None:
+            return _mcp(_too_large(resolved, "edited"), error=True)
+
+        count = content.count(old_string)
+        if count == 0:
+            return _mcp(f"old_string not found in {file_path}", error=True)
+        if count > 1 and not replace_all:
+            return _mcp(
+                f"old_string appears {count} times in {file_path}. "
+                "Use replace_all=true or provide a more unique string.",
+                error=True,
+            )
+
+        too_large = _edit_too_large(
+            resolved, content, old_string, new_string, count if replace_all else 1
+        )
+        if too_large:
+            return _mcp(too_large, error=True)
+
+        updated = (
+            content.replace(old_string, new_string)
+            if replace_all
+            else content.replace(old_string, new_string, 1)
+        )
+
+        # Yield to the event loop between the read and write phases so other
+        # coroutines waiting on this lock can be scheduled.  The lock above
+        # ensures they cannot enter the critical section until we release it.
+        await asyncio.sleep(0)
+
+        try:
+            with open(resolved, "w", encoding="utf-8", opener=open_no_follow) as f:
+                f.write(updated)
+        except Exception as exc:
+            return _mcp(f"Failed to write {file_path}: {exc}", error=True)
+
+    return _mcp(f"Edited {file_path} ({count} replacement{'s' if count > 1 else ''})")
+
+
+@contextlib.asynccontextmanager
+async def _edit_lock(key: str) -> AsyncIterator[None]:
+    """Edits of one file take turns, so parallel edits can't race through the
+    read-modify-write and drop a change.
+
+    Each copilot worker thread runs its own event loop, and chats bound to one
+    Local PC machine share its files across workers. So this is a thread lock,
+    polled without blocking the loop: an asyncio.Lock binds to the first loop
+    that waits on it and refuses every other, and a release from another
+    thread doesn't wake its waiter.
+    """
+    lock = _file_lock(key)
+    while not lock.acquire(blocking=False):
+        await asyncio.sleep(_EDIT_LOCK_POLL_SECONDS)
+    try:
+        yield
+    finally:
+        lock.release()
+
+
+def _file_lock(key: str) -> threading.Lock:
+    """One file's edit lock. LRU-bounded, so the locks don't grow without
+    limit in a long-running server process."""
+    with _edit_locks_guard:
+        lock = _edit_locks.get(key)
+        if lock is None:
+            if len(_edit_locks) >= _EDIT_LOCKS_MAX:
+                _edit_locks.popitem(last=False)
+            lock = _edit_locks[key] = threading.Lock()
+        else:
+            _edit_locks.move_to_end(key)
+        return lock
+
+
+def _executor_file_key(sandbox: Any, remote: str) -> str:
+    """One key per file on one executor: a Local PC folder is shared by every
+    chat bound to that machine, an E2B box is its chat's own."""
+    if is_local_pc(sandbox):
+        return f"local_pc:{sandbox.machine_id}:{remote}"
+    return f"e2b:{sandbox.sandbox_id}:{remote}"
+
+
+async def _edit_on_executor(
+    sandbox: Any,
+    remote: str,
+    file_path: str,
+    old_string: str,
+    new_string: str,
+    replace_all: bool,
+) -> dict[str, Any]:
+    """Read, replace and write one file on the E2B box or the Local PC."""
+    try:
+        raw = await _read_remote(sandbox, remote, _MAX_READ_BYTES)
+    except Exception as exc:
+        return _mcp(f"Failed to read {os.path.basename(remote)}: {exc}", error=True)
+    if len(raw) > _MAX_READ_BYTES:
+        return _mcp(_too_large(remote, "edited"), error=True)
+    try:
+        content = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        # Edit writes text back as UTF-8, so bytes that aren't would come back
+        # as U+FFFD: on a Local PC, the person's own file changed outside the edit.
+        return _mcp(
+            f"{os.path.basename(remote)} isn't UTF-8 text, and Edit would change its "
+            "other bytes too. Nothing was changed.",
+            error=True,
+        )
+
+    count = content.count(old_string)
+    if count == 0:
+        return _mcp(f"old_string not found in {file_path}", error=True)
+    if count > 1 and not replace_all:
+        return _mcp(
+            f"old_string appears {count} times in {file_path}. "
+            "Use replace_all=true or provide a more unique string.",
+            error=True,
+        )
+    too_large = _edit_too_large(
+        remote, content, old_string, new_string, count if replace_all else 1
+    )
+    if too_large is not None:
+        return _mcp(too_large, error=True)
+
+    updated = (
+        content.replace(old_string, new_string)
+        if replace_all
+        else content.replace(old_string, new_string, 1)
+    )
+    try:
+        await _sandbox_write(sandbox, remote, updated)
+    except Exception as exc:
+        return _mcp(f"Failed to write {os.path.basename(remote)}: {exc}", error=True)
+
+    return _mcp(f"Edited {file_path} ({count} replacement{'s' if count > 1 else ''})")
+
+
+async def _handle_glob(args: dict[str, Any]) -> dict[str, Any]:
+    """Find files matching a name pattern inside the sandbox using ``find``."""
+    if not args:
+        return _mcp(
+            "Your glob call had empty arguments \u2014 this means your previous "
+            "response was too long and the tool call was truncated by the API. "
+            "Break your work into smaller steps.",
+            error=True,
+        )
+    pattern: str = args.get("pattern", "")
+    path: str = args.get("path", "")
+
+    if not pattern:
+        return _mcp("pattern is required", error=True)
+
+    sandbox = _get_sandbox()
+    if sandbox is None:
+        return _mcp("No sandbox available", error=True)
+
+    try:
+        search_dir = (
+            resolve_executor_path(path, sandbox)
+            if path
+            else (sandbox.allowed_root if is_local_pc(sandbox) else E2B_WORKDIR)
+        )
+    except ValueError as exc:
+        return _mcp(str(exc), error=True)
+
+    # LocalPCShim: use the wire FILE_LIST op (per-OS portable, no POSIX shell).
+    if is_local_pc(sandbox):
+        try:
+            resp = await list_via_shim(
+                sandbox,
+                search_dir,
+                glob=pattern,
+                recursive=True,
+                max_entries=_GLOB_MAX_ENTRIES,
+            )
+        except Exception as exc:
+            return _mcp(f"Glob failed: {exc}", error=True)
+        files = [e.get("path", "") for e in resp.get("entries", []) if e.get("is_file")]
+        text = json.dumps(files, indent=2)
+        if resp.get("truncated"):
+            text += (
+                f"\n\n[The listing stopped at {_GLOB_MAX_ENTRIES} entries, so "
+                "more matches exist. Narrow the path or the pattern to see them.]"
+            )
+        return _mcp(text, outside=tuple(files))
+
+    cmd = f"find {shlex.quote(search_dir)} -name {shlex.quote(pattern)} -type f 2>/dev/null | head -500"
+    try:
+        result = await run_internal(sandbox, cmd, cwd=E2B_WORKDIR, timeout=10)
+    except Exception as exc:
+        return _mcp(f"Glob failed: {exc}", error=True)
+
+    files = [line for line in (result.stdout or "").strip().splitlines() if line]
+    return _mcp(json.dumps(files, indent=2), outside=tuple(files))
+
+
+_GLOB_MAX_ENTRIES = 500
+_GREP_TIMEOUT_SECONDS = 15
+_GREP_ERROR_CHARS = 1_000
+
+
+async def _handle_grep(args: dict[str, Any]) -> dict[str, Any]:
+    """Search file contents by regex inside the sandbox using ``grep -rn``."""
+    if not args:
+        return _mcp(
+            "Your grep call had empty arguments \u2014 this means your previous "
+            "response was too long and the tool call was truncated by the API. "
+            "Break your work into smaller steps.",
+            error=True,
+        )
+    pattern: str = args.get("pattern", "")
+    path: str = args.get("path", "")
+    include: str = args.get("include", "")
+
+    if not pattern:
+        return _mcp("pattern is required", error=True)
+
+    sandbox = _get_sandbox()
+    if sandbox is None:
+        return _mcp("No sandbox available", error=True)
+
+    try:
+        search_dir = (
+            resolve_executor_path(path, sandbox)
+            if path
+            else (sandbox.allowed_root if is_local_pc(sandbox) else E2B_WORKDIR)
+        )
+    except ValueError as exc:
+        return _mcp(str(exc), error=True)
+
+    parts = ["grep", "-rn", "--color=never"]
+    if include:
+        parts.extend(["--include", include])
+    parts.extend([pattern, search_dir])
+
+    # LocalPCShim: send the pre-built argv so the shim's per-OS subprocess
+    # path handles quoting. Falls through with SHELL_NOT_AVAILABLE on
+    # Windows-without-Git-Bash; the LLM can retry via bash_exec.
+    if is_local_pc(sandbox):
+        try:
+            result = await run_argv_via_shim(
+                sandbox, parts, cwd=sandbox.allowed_root, timeout=_GREP_TIMEOUT_SECONDS
+            )
+        except Exception as exc:
+            return _mcp(f"Grep failed: {exc}", error=True)
+        return _local_grep_result(result)
+
+    cmd = " ".join(shlex.quote(p) for p in parts) + " 2>/dev/null | head -200"
+    try:
+        result = await run_internal(
+            sandbox, cmd, cwd=E2B_WORKDIR, timeout=_GREP_TIMEOUT_SECONDS
+        )
+    except Exception as exc:
+        return _mcp(f"Grep failed: {exc}", error=True)
+
+    output = (result.stdout or "").strip()
+    if not output:
+        return _mcp("No matches found.", outside=())
+    return _mcp(output, outside=(output,))
+
+
+def _local_grep_result(result: Any) -> dict[str, Any]:
+    """Read a Local PC grep by its exit status: 0 found matches, 1 found none,
+    and anything else (a bad pattern, an unreadable file, a timeout) is an
+    error that must not read as "No matches found."."""
+    output = (result.stdout or "").strip()
+    # Past the companion's output cap the matches shown are not all of them.
+    truncated = (
+        "\n\n[Output truncated: more matches exist. Narrow the pattern, path "
+        "or include filter to see them.]"
+        if result.output_truncated
+        else ""
+    )
+    if result.exit_code in (0, 1) and not result.timed_out:
+        if not output:
+            return _mcp("No matches found.", outside=())
+        return _mcp(f"{output}{truncated}", outside=(output,))
+    if result.timed_out:
+        errors = f"timed out after {_GREP_TIMEOUT_SECONDS} seconds"
+    else:
+        stderr = (result.stderr or "").strip()
+        errors = stderr[:_GREP_ERROR_CHARS] or f"exit code {result.exit_code}"
+    if not output:
+        return _mcp(f"Grep failed: {errors}", error=True)
+    # Matches in the files grep could read are still real results.
+    return _mcp(
+        f"{output}{truncated}\n\n[grep reported errors: {errors}]",
+        outside=(output, errors),
+    )
+
+
+# Bridging: copy SDK-internal files into E2B sandbox
+
+# Files larger than this are written to /home/user/ via sandbox.files.write()
+# instead of /tmp/ via shell base64, to avoid shell argument length limits
+# and E2B command timeouts.  Base64 expands content by ~33%, so keep this
+# well under the typical Linux ARG_MAX (128 KB).
+_BRIDGE_SHELL_MAX_BYTES = 32 * 1024  # 32 KB
+# Files larger than this are skipped entirely to avoid excessive transfer times.
+_BRIDGE_SKIP_BYTES = 50 * 1024 * 1024  # 50 MB
+
+
+async def bridge_to_sandbox(
+    sandbox: Any,
+    file_path: str,
+    offset: int,
+    limit: int,
+    content: str | None = None,
+) -> str | None:
+    """Best-effort copy of a host-side SDK file into the E2B sandbox.
+
+    When the model reads an SDK-internal file (e.g. tool-results), it often
+    wants to process the data with bash.  Copying the file into the sandbox
+    under a stable name lets ``bash_exec`` access it without extra steps.
+
+    Only copies when offset=0 and limit is large enough to indicate the model
+    wants the full file.  Errors are logged but never propagated.
+
+    *content*, when given, is written in place of the file's bytes, so a
+    caller that showed the model a transformed view of the file (e.g. an
+    unwrapped MCP envelope) can give bash the same text.
+
+    Returns the sandbox path on success, or ``None`` on skip/failure.
+
+    Size handling:
+    - <= 32 KB: written to ``/tmp/<hash>-<basename>`` via shell base64
+      (``_sandbox_write``).  Kept small to stay within ARG_MAX.
+    - 32 KB - 50 MB: written to ``/home/user/<hash>-<basename>`` via
+      ``sandbox.files.write()`` to avoid shell argument length limits.
+    - > 50 MB: skipped entirely with a warning.
+
+    The sandbox filename is prefixed with a short hash of the full source
+    path to avoid collisions when different source files share the same
+    basename (e.g. multiple ``result.json`` files).
+    """
+    if offset != 0 or limit < _DEFAULT_READ_LIMIT:
+        return None
+    # A Local PC is the user's own machine, outside any sandbox: platform
+    # files are never copied onto it unasked.
+    if is_local_pc(sandbox):
+        return None
+    try:
+        expanded = os.path.realpath(os.path.expanduser(file_path))
+        basename = os.path.basename(expanded)
+        source = f"{expanded}:transformed" if content is not None else expanded
+        source_id = hashlib.sha256(source.encode()).hexdigest()[:12]
+        unique_name = f"{source_id}-{basename}"
+        read = (
+            await _read_host_file(expanded, _BRIDGE_SKIP_BYTES)
+            if content is None
+            else (content, len(content.encode("utf-8")))
+        )
+        if read is None or read[1] > _BRIDGE_SKIP_BYTES:
+            logger.warning(
+                "[E2B] Skipping bridge for file over %d bytes: %s",
+                _BRIDGE_SKIP_BYTES,
+                basename,
+            )
+            return None
+
+        data, file_size = read
+        if file_size <= _BRIDGE_SHELL_MAX_BYTES:
+            sandbox_path = f"/tmp/{unique_name}"
+            await _sandbox_write(sandbox, sandbox_path, data)
+        else:
+            sandbox_path = f"/home/user/{unique_name}"
+            await sandbox.files.write(sandbox_path, data)
+        logger.info(
+            "[E2B] Bridged SDK file to sandbox: %s -> %s", basename, sandbox_path
+        )
+        return sandbox_path
+    except Exception:
+        logger.warning(
+            "[E2B] Failed to bridge SDK file to sandbox: %s",
+            file_path,
+            exc_info=True,
+        )
+        return None
+
+
+async def bridge_and_annotate(
+    sandbox: Any,
+    file_path: str,
+    offset: int,
+    limit: int,
+    content: str | None = None,
+) -> str | None:
+    """Bridge a host file to the sandbox and return a newline-prefixed annotation.
+
+    Combines ``bridge_to_sandbox`` with the standard annotation suffix so
+    callers don't need to duplicate the pattern.  Returns a string like
+    ``"\\n[Sandbox copy available at /tmp/abc-file.txt]"`` on success, or
+    ``None`` if bridging was skipped or failed.
+    """
+    sandbox_path = await bridge_to_sandbox(sandbox, file_path, offset, limit, content)
+    if sandbox_path is None:
+        return None
+    return f"\n[Sandbox copy available at {sandbox_path}]"
+
+
+async def _read_host_file(path: str, limit: int) -> tuple[str | bytes, int] | None:
+    """The file as text when it decodes as UTF-8, else its raw bytes, with its
+    size; ``None`` when it holds more than *limit* bytes."""
+
+    def _read_bytes() -> bytes | None:
+        with open(path, "rb", opener=open_no_follow) as fh:
+            if os.fstat(fh.fileno()).st_size > limit:
+                return None
+            raw = fh.read(limit + 1)
+        return None if len(raw) > limit else raw
+
+    raw_content = await asyncio.to_thread(_read_bytes)
+    if raw_content is None:
+        return None
+    try:
+        return raw_content.decode("utf-8"), len(raw_content)
+    except UnicodeDecodeError:
+        return raw_content, len(raw_content)
+
+
+# Local read (for SDK-internal paths)
+
+
+def _read_local(file_path: str, offset: int, limit: int | None) -> dict[str, Any]:
+    """Read from the host filesystem (defence-in-depth path check)."""
+    expanded = resolve_allowed_local_path(file_path, get_sdk_cwd())
+    if expanded is None:
+        return _mcp(f"Path not allowed: {file_path}", error=True)
+    if os.path.splitext(expanded)[1].lower() in IMAGE_EXTENSIONS:
+        return _read_local_image(expanded, offset, limit)
+    if _is_likely_binary(expanded):
+        return _mcp(
+            _binary_read_guidance(expanded),
+            error=True,
+            outside=(),
+        )
+    try:
+        limit = _DEFAULT_READ_LIMIT if limit is None else limit
+        selected = _read_capped_lines(expanded, offset, limit)
+        if selected is None:
+            return _mcp(_too_large(expanded, "read"), error=True)
+        numbered = "".join(
+            f"{i + offset + 1:>6}\t{line}" for i, line in enumerate(selected)
+        )
+        return _mcp(numbered, outside=(numbered,))
+    except FileNotFoundError:
+        return _mcp(f"File not found: {file_path}", error=True)
+    except Exception as exc:
+        return _mcp(f"Error reading {file_path}: {exc}", error=True)
+
+
+def _read_local_image(path: str, offset: int, limit: int | None) -> dict[str, Any]:
+    try:
+        with open(path, "rb", opener=open_no_follow) as file:
+            raw = file.read(MAX_IMAGE_BYTES + 1)
+    except OSError:
+        return _mcp(f"Could not read image: {os.path.basename(path)}.", error=True)
+    return _image_result(raw, offset, limit)
+
+
+def _image_result(raw: bytes, offset: int, limit: int | None) -> dict[str, Any]:
+    if offset or limit is not None:
+        return _mcp(
+            "Image not shown: offset/limit only apply to text. Read the whole image.",
+            error=True,
+            outside=(),
+        )
+    try:
+        image = prepare_image(raw)
+    except ImageReadError as exc:
+        return _mcp(str(exc), error=True, outside=())
+    except ValueError as exc:
+        return _mcp(str(exc), error=True)
+    return {
+        "content": [
+            {"type": "text", "text": "Viewed image (first frame only)."},
+            image.mcp(),
+        ],
+        "isError": False,
+    }
+
+
+# Tool descriptors (name, description, schema, handler)
+
+E2B_FILE_TOOLS: list[tuple[str, str, dict[str, Any], Callable[..., Any]]] = [
+    (
+        "read_file",
+        "Read a file in the execution workspace: /home/user or /tmp in the "
+        "cloud, or this chat's Local PC folder. "
+        "Use offset and limit for large text files. " + IMAGE_READ_DESCRIPTION,
+        {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path, relative to the workspace root or absolute.",
+                },
+                "offset": {
+                    "type": "integer",
+                    "description": "Line to start reading from (0-indexed). Default: 0.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Number of lines to read. Default: 2000.",
+                },
+            },
+        },
+        _handle_read_file,
+    ),
+    (
+        "write_file",
+        "Write or create a file in the execution workspace. "
+        "Parent directories are created automatically. "
+        "To copy a user workspace file into the executor, use "
+        "read_workspace_file with save_to_path instead.",
+        {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path, relative to the workspace root or absolute.",
+                },
+                "content": {"type": "string", "description": "Content to write."},
+            },
+        },
+        _handle_write_file,
+    ),
+    (
+        "edit_file",
+        "Targeted text replacement in a workspace file. "
+        "old_string must appear in the file and is replaced with new_string.",
+        {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path, relative to the workspace root or absolute.",
+                },
+                "old_string": {"type": "string", "description": "Text to find."},
+                "new_string": {"type": "string", "description": "Replacement text."},
+                "replace_all": {
+                    "type": "boolean",
+                    "description": "Replace all occurrences (default: false).",
+                },
+            },
+        },
+        _handle_edit_file,
+    ),
+    (
+        "glob",
+        "Search for files by name pattern in the execution workspace.",
+        {
+            "type": "object",
+            "properties": {
+                "pattern": {
+                    "type": "string",
+                    "description": "Glob pattern (e.g. *.py).",
+                },
+                "path": {
+                    "type": "string",
+                    "description": "Directory to search. Default: workspace root.",
+                },
+            },
+        },
+        _handle_glob,
+    ),
+    (
+        "grep",
+        "Search file contents by regex in the execution workspace.",
+        {
+            "type": "object",
+            "properties": {
+                "pattern": {"type": "string", "description": "Regex pattern."},
+                "path": {
+                    "type": "string",
+                    "description": "File or directory. Default: workspace root.",
+                },
+                "include": {
+                    "type": "string",
+                    "description": "Glob to filter files (e.g. *.py).",
+                },
+            },
+        },
+        _handle_grep,
+    ),
+]
+
+E2B_FILE_TOOL_NAMES: list[str] = [name for name, *_ in E2B_FILE_TOOLS]
+
+
+# ---------------------------------------------------------------------------
+# Unified tool descriptors — used by tool_adapter.py in both E2B and non-E2B modes
+# ---------------------------------------------------------------------------
+
+WRITE_TOOL_NAME = "Write"
+WRITE_TOOL_DESCRIPTION = (
+    "Write or create a file. Parent directories are created automatically. "
+    "For large content (>2000 words), prefer writing in sections using "
+    "bash_exec with 'cat > file' and 'cat >> file' instead."
+)
+WRITE_TOOL_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "file_path": {
+            "type": "string",
+            "description": (
+                "The path to the file to write. "
+                "Relative paths are resolved against the working directory."
+            ),
+        },
+        "content": {
+            "type": "string",
+            "description": "The content to write to the file.",
+        },
+    },
+}
+
+READ_TOOL_NAME = "read_file"
+READ_TOOL_DESCRIPTION = (
+    "Read a file from the working directory. Returns content with line numbers "
+    "(cat -n format). Use offset and limit to read specific ranges for large text files. "
+    + IMAGE_READ_DESCRIPTION
+)
+READ_TOOL_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "file_path": {
+            "type": "string",
+            "description": (
+                "The path to the file to read. "
+                "Relative paths are resolved against the working directory."
+            ),
+        },
+        "offset": {
+            "type": "integer",
+            "description": (
+                "Line number to start reading from (0-indexed). Default: 0."
+            ),
+        },
+        "limit": {
+            "type": "integer",
+            "description": "Number of lines to read. Default: 2000.",
+        },
+    },
+}
+
+EDIT_TOOL_NAME = "Edit"
+EDIT_TOOL_DESCRIPTION = (
+    "Make targeted text replacements in a file. Finds old_string in the file "
+    "and replaces it with new_string. For replacing all occurrences, set "
+    "replace_all=true."
+)
+EDIT_TOOL_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "file_path": {
+            "type": "string",
+            "description": (
+                "The path to the file to edit. "
+                "Relative paths are resolved against the working directory."
+            ),
+        },
+        "old_string": {
+            "type": "string",
+            "description": "The text to find in the file.",
+        },
+        "new_string": {
+            "type": "string",
+            "description": "The replacement text.",
+        },
+        "replace_all": {
+            "type": "boolean",
+            "description": (
+                "Replace all occurrences of old_string (default: false). "
+                "When false, old_string must appear exactly once."
+            ),
+        },
+    },
+}
+
+
+def get_write_tool_handler() -> Callable[..., Any]:
+    """Return the Write handler for non-E2B mode."""
+    return _handle_write_file
+
+
+def get_read_tool_handler() -> Callable[..., Any]:
+    """Return the Read handler for non-E2B mode."""
+    return _handle_read_file
+
+
+def get_edit_tool_handler() -> Callable[..., Any]:
+    """Return the Edit handler for non-E2B mode."""
+    return _handle_edit_file
