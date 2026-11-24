@@ -1,0 +1,21 @@
+stdout:
+[claude-tap] MiniMax Code target: https://api.anthropic.com  (default)  protocols: anthropic
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:46095
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/minimax-code/3.1.18/variants/default/.tap/2026-11-24/trace_125332.jsonl
+
+[claude-tap] launching MiniMax Code: minimax-code
+[claude-tap] MINIMAX_CODE_BASE_URL=http://127.0.0.1:46095
+
+[claude-tap] MiniMax Code exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/minimax-code/3.1.18/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/minimax-code/3.1.18/variants/default/.tap/2026-11-24/trace_125332.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/minimax-code/3.1.18/variants/default/.tap/2026-11-24/trace_125332.log
+  view:         /home/runner/work/phistory/phistory/captures/minimax-code/3.1.18/variants/default/.tap/2026-11-24/trace_125332.html
+  prompt:       /home/runner/work/phistory/phistory/captures/minimax-code/3.1.18/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 

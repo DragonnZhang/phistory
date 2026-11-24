@@ -1,0 +1,28 @@
+stdout:
+[claude-tap] 'octomind' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] octomind target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:38263
+[claude-tap] CA cert: /tmp/phistory-home-w2i9fb17/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/octomind/0.73.2/variants/http/.tap/2026-11-24/trace_130432.jsonl
+
+[claude-tap] launching octomind: octomind run --format jsonl -c model.request_transport=http
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:38263
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-w2i9fb17/.local/share/claude-tap/ca.pem
+{"type":"assistant","content":"captured","session_id":"261124-phistory-work-6_wm0ufu-1304-722f"}
+{"type":"cost","session_tokens":0,"session_cost":0.0,"input_tokens":0,"output_tokens":0,"cache_read_tokens":0,"cache_write_tokens":0,"reasoning_tokens":0,"aux_input_tokens":0,"aux_output_tokens":0,"aux_cost":0.0,"supervisor_accounting":{"mechanics":{},"totals":{"chat_calls":0,"decision_calls":0,"wall_blocking_ms":0,"wall_background_ms":0,"api_ms":0,"input_tokens":0,"output_tokens":0,"reasoning_tokens":0,"cost":0.0},"turn_time":{"completed":0,"total_time_ms":0,"main_api_time_ms":0,"blocking_supervisor_time_ms":0}},"session_id":"261124-phistory-work-6_wm0ufu-1304-722f"}
+{"type":"cost","session_tokens":0,"session_cost":0.0,"input_tokens":0,"output_tokens":0,"cache_read_tokens":0,"cache_write_tokens":0,"reasoning_tokens":0,"aux_input_tokens":0,"aux_output_tokens":0,"aux_cost":0.0,"supervisor_accounting":{"mechanics":{},"totals":{"chat_calls":0,"decision_calls":0,"wall_blocking_ms":0,"wall_background_ms":0,"api_ms":0,"input_tokens":0,"output_tokens":0,"reasoning_tokens":0,"cost":0.0},"turn_time":{"completed":1,"total_time_ms":160,"main_api_time_ms":137,"blocking_supervisor_time_ms":0}},"session_id":"261124-phistory-work-6_wm0ufu-1304-722f"}
+
+[claude-tap] octomind exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/octomind/0.73.2/variants/http/prompt.md
+
+[claude-tap] summary:
+  api_calls:    5
+  trace:        /home/runner/work/phistory/phistory/captures/octomind/0.73.2/variants/http/.tap/2026-11-24/trace_130432.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/octomind/0.73.2/variants/http/.tap/2026-11-24/trace_130432.log
+  view:         /home/runner/work/phistory/phistory/captures/octomind/0.73.2/variants/http/.tap/2026-11-24/trace_130432.html
+  prompt:       /home/runner/work/phistory/phistory/captures/octomind/0.73.2/variants/http/prompt.md
+
+stderr:
+[claude-tap] warning: 
+plugin 'besydr' is off for this session: The manifest signature is not valid base64: Invalid symbol 123, offset 0.

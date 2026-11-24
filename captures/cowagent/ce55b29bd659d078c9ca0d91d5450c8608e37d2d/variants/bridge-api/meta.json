@@ -1,0 +1,76 @@
+{
+  "agent_id": "cowagent",
+  "agent": "CowAgent",
+  "package": "zhayujie/CowAgent",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [
+      "requirements.txt"
+    ],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "version": "ce55b29bd659d078c9ca0d91d5450c8608e37d2d",
+  "variant": {
+    "id": "bridge-api",
+    "label": "Native Bridge API · default agent profile",
+    "dimensions": {
+      "entry": "Bridge.fetch_agent_reply",
+      "model": "native DeepSeek default",
+      "config": "complete config template with fake credential"
+    }
+  },
+  "requested": {
+    "entry": "Bridge.fetch_agent_reply",
+    "model": "native DeepSeek default",
+    "config": "complete config template with fake credential"
+  },
+  "observed": {
+    "model": "deepseek-flash",
+    "tool_count": 18
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/zhayujie/CowAgent/archive/ce55b29bd659d078c9ca0d91d5450c8608e37d2d.tar.gz",
+  "binary_version": "ce55b29bd659d078c9ca0d91d5450c8608e37d2d",
+  "captured_at": "2026-11-24T13:32:21.053780+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45397585356",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45397585356"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 4.721,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nos.chdir(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nfrom config import load_config\nload_config()\nfrom bridge.bridge import Bridge\nfrom bridge.context import Context, ContextType\ntext = \"Reply with one short sentence.\"\ncontext = Context(ContextType.TEXT, text, kwargs={\"session_id\": \"phistory\"})\nprint(Bridge().fetch_agent_reply(text, context))\n"
+  ]
+}

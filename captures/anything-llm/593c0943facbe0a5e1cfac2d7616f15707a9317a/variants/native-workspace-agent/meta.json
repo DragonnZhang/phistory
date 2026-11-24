@@ -1,0 +1,118 @@
+{
+  "agent_id": "anything-llm",
+  "agent": "AnythingLLM",
+  "package": "Mintplex-Labs/anything-llm",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": [
+      [
+        "npx",
+        "--yes",
+        "yarn@1.22.19",
+        "--cwd",
+        "server",
+        "install",
+        "--frozen-lockfile",
+        "--production"
+      ],
+      [
+        "npx",
+        "--yes",
+        "yarn@1.22.19",
+        "--cwd",
+        "collector",
+        "install",
+        "--frozen-lockfile",
+        "--production"
+      ]
+    ]
+  },
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport os\nimport subprocess\nfrom pathlib import Path\nserver = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"]) / \"server\"\nstorage = server / \"storage\"\nstorage.mkdir(parents=True, exist_ok=True)\nenv = dict(os.environ, STORAGE_DIR=str(storage), NODE_ENV=\"production\")\nfor command in [\"generate\", \"migrate\"]:\n    args = [str(server / \"node_modules/.bin/prisma\"), command]\n    if command == \"migrate\":\n        args.append(\"deploy\")\n    subprocess.run([*args, \"--schema=./prisma/schema.prisma\"], cwd=server, env=env, check=True)\nsubprocess.run([\"node\", \"-e\", \"new (require('./utils/EmbeddingEngines/native').NativeEmbedder)().embedderClient().then(() => process.exit(0)).catch(e => {console.error(e);process.exit(1)})\"], cwd=server, env=env, check=True)\n"
+    ],
+    "environment": {}
+  },
+  "version": "593c0943facbe0a5e1cfac2d7616f15707a9317a",
+  "variant": {
+    "id": "native-workspace-agent",
+    "label": "Native workspace @agent API",
+    "dimensions": {
+      "entry": "native API key, workspace and @agent turn",
+      "model": "native OpenAI default / Responses",
+      "storage": "native SQLite, LanceDB and local Xenova embedder",
+      "tools": "native AIbitat defaults; no tool suppression"
+    }
+  },
+  "requested": {
+    "entry": "native API key, workspace and @agent turn",
+    "model": "native OpenAI default / Responses",
+    "storage": "native SQLite, LanceDB and local Xenova embedder",
+    "tools": "native AIbitat defaults; no tool suppression"
+  },
+  "observed": {
+    "model": "gpt-5.6-luna",
+    "tool_count": 4
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [
+      "Given the following conversation, relevant context, and a follow up question,"
+    ],
+    "required_user_text": [],
+    "required_tool_name_fragments": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/Mintplex-Labs/anything-llm/archive/593c0943facbe0a5e1cfac2d7616f15707a9317a.tar.gz",
+  "binary_version": "593c0943facbe0a5e1cfac2d7616f15707a9317a",
+  "captured_at": "2026-11-24T13:17:39.895129+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45397585356",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45397585356"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 703.134,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--target",
+    "https://api.openai.com",
+    "--port",
+    "50763",
+    "--",
+    "-c",
+    "\nimport os\nimport subprocess\nfrom pathlib import Path\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nenv = dict(os.environ, STORAGE_DIR=str(source / \"server/storage\"), NODE_ENV=\"production\", SERVER_PORT=os.environ[\"PHISTORY_SERVER_PORT\"], COLLECTOR_PORT=os.environ[\"PHISTORY_COLLECTOR_PORT\"], OPENAI_BASE_URL=\"http://127.0.0.1:\" + os.environ[\"PHISTORY_TAP_PORT\"] + \"/v1\")\nprocesses = []\ntry:\n    for name in [\"collector\", \"server\"]:\n        processes.append(subprocess.Popen([\"node\", \"index.js\"], cwd=source / name, env=env))\n    processes[-1].wait()\nfinally:\n    for process in processes:\n        if process.poll() is None:\n            process.terminate()\n    for process in processes:\n        process.wait(timeout=10)\n"
+  ],
+  "capture_environment": {
+    "LLM_PROVIDER": "openai"
+  }
+}
