@@ -1,0 +1,60 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:44195
+[claude-tap] CA cert: /tmp/phistory-home-qd6ydru2/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/bambooai/2.9.3/variants/sdk-free-quick/.tap/2026-11-25/trace_121550.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+from pathlib import Path
+from bambooai.cli import init_home, load_env
+state = Path(os.environ["PHISTORY_HOME"]) / "bambooai"
+init_home(str(state), quiet=True)
+load_env(str(state))
+os.chdir(state)
+from web_app.llm_config_builder import build_user_config
+assert build_user_config("phistory")
+from bambooai import BambooAI
+BambooAI(user_id="phistory").pd_agent_converse(question="Reply with one short sentence.", mode="quick")
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:44195
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-qd6ydru2/.local/share/claude-tap/ca.pem
+[2026-11-25 12:15:52] [INFO] [matplotlib.font_manager] Failed to extract font properties from /usr/share/fonts/truetype/noto/NotoColorEmoji.ttf: Non-scalable fonts are not supported
+[2026-11-25 12:15:52] [INFO] [matplotlib.font_manager] generated new fontManager
+[2026-11-25 12:15:53] [INFO] [web_app.llm_config_builder] Using FREE tier config with Groq models for user phistory
+[2026-11-25 12:15:53] [INFO] [web_app.llm_config_builder] Successfully built LLM config for user phistory with 12 agents
+[2026-11-25 12:15:54] [INFO] [bambooai.db.supabase_client] single-user mode: usage recorded in the local store
+[2026-11-25 12:15:54] [INFO] [bambooai.bambooai] Run log: /tmp/phistory-home-qd6ydru2/bambooai/logs/phistory/bambooai_run_log.json | consolidated: /tmp/phistory-home-qd6ydru2/bambooai/logs/phistory/consolidated_logs.json (cwd /tmp/phistory-home-qd6ydru2/bambooai)
+[2026-11-25 12:15:54] [INFO] [bambooai.bambooai] Analyst run: thread 1795608954, new chain 1795608954, parent None (fresh kernel), preset quick (4 turns)
+[2026-11-25 12:15:54] [INFO] [httpx2] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-11-25 12:15:54] [WARNING] [bambooai.models.openrouter_models] OpenRouter: deepseek/deepseek-v4.1-flash-1017 served by unknown at 13 tps (2 tokens in 0.2s) - below this model's preferred_min_throughput of 25; a repeat offender is a candidate for its routing "ignore" list.
+[2026-11-25 12:15:54] [WARNING] [analyst.session] Analyst turn 1: malformed reply (no ###ACTION### block): 'captured'
+[2026-11-25 12:15:54] [INFO] [httpx2] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-11-25 12:15:54] [INFO] [bambooai.models.openrouter_models] OpenRouter: deepseek/deepseek-v4.1-flash-1017 served by unknown at 223 tps (2 tokens in 0.0s)
+[2026-11-25 12:15:54] [WARNING] [analyst.session] Analyst turn 2: malformed reply (no ###ACTION### block): 'captured'
+[2026-11-25 12:15:54] [INFO] [httpx2] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-11-25 12:15:54] [INFO] [bambooai.models.openrouter_models] OpenRouter: deepseek/deepseek-v4.1-flash-1017 served by unknown at 245 tps (2 tokens in 0.0s)
+[2026-11-25 12:15:54] [WARNING] [analyst.session] Analyst turn 3: malformed reply (no ###ACTION### block): 'captured'
+[2026-11-25 12:15:54] [INFO] [httpx2] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-11-25 12:15:54] [INFO] [bambooai.models.openrouter_models] OpenRouter: deepseek/deepseek-v4.1-flash-1017 served by unknown at 253 tps (2 tokens in 0.0s)
+[2026-11-25 12:15:54] [WARNING] [analyst.session] Analyst turn 4: malformed reply (no ###ACTION### block): 'captured'
+[2026-11-25 12:15:54] [INFO] [httpx2] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-11-25 12:15:54] [INFO] [bambooai.models.openrouter_models] OpenRouter: deepseek/deepseek-v4.1-flash-1017 served by unknown at 258 tps (2 tokens in 0.0s)
+[2026-11-25 12:15:54] [INFO] [httpx2] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-11-25 12:15:54] [INFO] [bambooai.models.openrouter_models] OpenRouter: deepseek/deepseek-v4.1-flash-1017 served by unknown at 266 tps (2 tokens in 0.0s)
+[2026-11-25 12:15:55] [INFO] [bambooai.bambooai] Analyst run 1795608954 finished: status=answered, cells=0, replay=-, cost=$0.004, run log entries=6
+
+[claude-tap] python exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/bambooai/2.9.3/variants/sdk-free-quick/prompt.md
+
+[claude-tap] summary:
+  api_calls:    6
+  trace:        /home/runner/work/phistory/phistory/captures/bambooai/2.9.3/variants/sdk-free-quick/.tap/2026-11-25/trace_121550.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/bambooai/2.9.3/variants/sdk-free-quick/.tap/2026-11-25/trace_121550.log
+  view:         /home/runner/work/phistory/phistory/captures/bambooai/2.9.3/variants/sdk-free-quick/.tap/2026-11-25/trace_121550.html
+  prompt:       /home/runner/work/phistory/phistory/captures/bambooai/2.9.3/variants/sdk-free-quick/prompt.md
+
+stderr:
+[claude-tap] warning: 

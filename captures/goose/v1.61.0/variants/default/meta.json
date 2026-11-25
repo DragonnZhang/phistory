@@ -1,0 +1,68 @@
+{
+  "agent_id": "goose",
+  "agent": "Goose",
+  "package": "aaif-goose/goose",
+  "version": "v1.61.0",
+  "variant": {
+    "id": "default",
+    "label": "Default · OpenAI provider",
+    "dimensions": {
+      "provider": "openai",
+      "extensions": "platform developer"
+    }
+  },
+  "requested": {
+    "provider": "openai",
+    "extensions": "platform developer"
+  },
+  "observed": {
+    "model": "gpt-6.1-sol",
+    "tool_count": 17
+  },
+  "published_at": "2026-11-25T03:31:49Z",
+  "tarball_url": "https://github.com/aaif-goose/goose/releases/download/v1.61.0/goose-x86_64-unknown-linux-gnu.tar.gz",
+  "binary_version": "v1.61.0",
+  "captured_at": "2026-11-25T11:41:51.458255+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45606282180",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45606282180"
+  },
+  "tap_client": "goose",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 2.888,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "goose",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "run",
+    "--provider",
+    "openai",
+    "--text",
+    "Reply with one short sentence.",
+    "--no-session"
+  ],
+  "capture_environment": {
+    "GOOSE_DISABLE_KEYRING": "1"
+  }
+}
