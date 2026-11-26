@@ -11,7 +11,7 @@ The default diff includes the main request's prompts, all message roles, and too
 
 [Harness source archive](sources.html) preserves prompt templates, assembly code, and tool declarations for additional projects from the 95-agent survey. Source files have their own provenance and are kept separate from runtime request captures.
 
-> Checks for new releases daily. Archive last updated: **2026-11-25 12:16 UTC**.
+> Checks for new releases daily. Archive last updated: **2026-11-26 04:36 UTC**.
 
 ![Phistory prompt diff viewer](docs/screenshot.png)
 
@@ -92,7 +92,7 @@ uv run phistory render-site
 
 ## Capture Status
 
-Last capture update: 2026-11-25 12:16 UTC
+Last capture update: 2026-11-26 04:36 UTC
 
 | Agent | Latest | Versions | Snapshots | Last Captured |
 | --- | --- | ---: | ---: | --- |
@@ -102,7 +102,7 @@ Last capture update: 2026-11-25 12:16 UTC
 | Antigravity CLI | [1.5.17 - 2026-11-25](captures/antigravity/1.5.17/variants/default/prompt.md) | 92 | 92 | 2026-11-25 11:40 UTC |
 | Grok Build | [1.0.92 - 2026-11-20](captures/grok/1.0.92/variants/default/prompt.md) | 149 | 149 | 2026-11-21 10:08 UTC |
 | MiniMax Code | [3.1.19 - 2026-11-24](captures/minimax-code/3.1.19/variants/default/prompt.md) | 57 | 57 | 2026-11-25 11:40 UTC |
-| Kimi Code | [2.7.3 - 2026-11-23](captures/kimi-code/2.7.3/variants/default/prompt.md) | 97 | 97 | 2026-11-24 04:29 UTC |
+| Kimi Code | [2.8.0 - 2026-11-25](captures/kimi-code/2.8.0/variants/default/prompt.md) | 98 | 98 | 2026-11-26 04:36 UTC |
 | Qwen Code | [0.28.4 - 2026-11-22](captures/qwen-code/0.28.4/variants/default/prompt.md) | 158 | 158 | 2026-11-23 11:08 UTC |
 | Qoder CLI | [1.1.98 - 2026-11-25](captures/qoder/1.1.98/variants/default/prompt.md) | 207 | 207 | 2026-11-25 12:16 UTC |
 | MiMo Code | [0.1.17 - 2026-11-13](captures/mimo/0.1.17/variants/default/prompt.md) | 17 | 17 | 2026-11-13 09:55 UTC |
