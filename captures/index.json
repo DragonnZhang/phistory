@@ -1,7 +1,7 @@
 {
   "description": "Phistory automatically archives versioned system prompt snapshots from agent CLIs like Claude Code, Codex, Qwen Code, Qoder CLI, DeepSeek Harness, Antigravity, Grok Build, MiniMax Code, Kimi Code, MiMo Code, OpenClaw, Hermes, Kimi CLI, opencode, Pi, and Oh My Pi.",
   "site": "https://phistory.cc/",
-  "updated_at": "2026-11-26T04:36:40.081688Z",
+  "updated_at": "2026-11-26T04:38:33.862518Z",
   "agents": [
     {
       "agent_id": "claude-code",
@@ -99,8 +99,8 @@
       "latest_version": "2026.11.10",
       "latest_published_at": "2026-11-25T05:07:34.288Z",
       "latest_captured_at": "2026-11-25T11:41:37.093816+00:00",
-      "versions": 99,
-      "snapshots": 99
+      "versions": 100,
+      "snapshots": 100
     },
     {
       "agent_id": "hermes",
@@ -110702,6 +110702,24 @@
       "prompt": "captures/openclaw/2026.11.10/variants/default/prompt.md",
       "trace": "captures/openclaw/2026.11.10/variants/default/trace.jsonl",
       "meta": "captures/openclaw/2026.11.10/variants/default/meta.json"
+    },
+    {
+      "agent_id": "openclaw",
+      "agent": "OpenClaw",
+      "version": "2026.11.9",
+      "variant_id": "default",
+      "variant_label": "Default",
+      "variant_dimensions": {},
+      "observed": {
+        "model": "phistory-dummy",
+        "tool_count": 13
+      },
+      "capture_status": "captured",
+      "published_at": "2026-11-25T00:33:15.923Z",
+      "captured_at": "2026-11-26T04:38:33.862518+00:00",
+      "prompt": "captures/openclaw/2026.11.9/variants/default/prompt.md",
+      "trace": "captures/openclaw/2026.11.9/variants/default/trace.jsonl",
+      "meta": "captures/openclaw/2026.11.9/variants/default/meta.json"
     },
     {
       "agent_id": "openclaw",
