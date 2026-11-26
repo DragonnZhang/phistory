@@ -1,0 +1,15 @@
+{
+  "requested_image": "significantgravitas/autogpt:v0.12.1",
+  "image_id": "sha256:44ed4b0aaf9aaa8e8884e926f3a26c72daa76f444df826fe9ed94f73d1e512bd",
+  "repo_digests": [
+    "significantgravitas/autogpt@sha256:44ed4b0aaf9aaa8e8884e926f3a26c72daa76f444df826fe9ed94f73d1e512bd"
+  ],
+  "labels": {
+    "org.opencontainers.image.description": "Single-node AutoGPT Platform distribution",
+    "org.opencontainers.image.licenses": "LicenseRef-PolyForm-Shield-1.0.0 AND SSPL-1.0",
+    "org.opencontainers.image.revision": "0a0e0111fa9bca0bce3f932dfdde7c77338c96be",
+    "org.opencontainers.image.source": "https://github.com/Significant-Gravitas/AutoGPT",
+    "org.opencontainers.image.title": "AutoGPT Platform single-container",
+    "org.opencontainers.image.version": "sha-0a0e0111fa9bca0bce3f932dfdde7c77338c96be"
+  }
+}

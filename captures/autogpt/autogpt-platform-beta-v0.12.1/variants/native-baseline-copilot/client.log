@@ -1,0 +1,250 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://openrouter.ai  (from --target)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://172.17.0.1:48581
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/autogpt/autogpt-platform-beta-v0.12.1/variants/native-baseline-copilot/.tap/2026-11-26/trace_114612.jsonl
+
+[claude-tap] launching python: python -c 
+import json
+import os
+import subprocess
+import time
+from pathlib import Path
+name = os.environ["PHISTORY_DOCKER_APP_NAME"]
+port = os.environ["PHISTORY_SERVER_PORT"]
+gateway = "http://" + os.environ["PHISTORY_DOCKER_HOST"] + ":" + os.environ["PHISTORY_TAP_PORT"] + "/v1"
+values = {"AUTOGPT_PUBLIC_URL": "http://localhost:" + port, "AUTH_ALLOW_NEW_ACCOUNTS": "true", "AUTH_REQUIRE_EMAIL_VERIFICATION": "false", "CHAT_API_KEY": os.environ["OPENAI_API_KEY"], "OPENAI_API_KEY": os.environ["OPENAI_API_KEY"], "CHAT_USE_CLAUDE_AGENT_SDK": "false", "CHAT_USE_CLAUDE_CODE_SUBSCRIPTION": "false", "FORCE_FLAG_COPILOT_SDK": "false", "CHAT_USE_OPENROUTER": "true", "CHAT_USE_LOCAL": "false", "CHAT_BASE_URL": gateway, "CHAT_AUX_BASE_URL": gateway, "GRAPHITI_LLM_BASE_URL": gateway, "GRAPHITI_EMBEDDER_BASE_URL": gateway}
+args = ["docker", "run", "-d", "--name", name, "--shm-size", "2g", "--ulimit", "nofile=65536:65536", "-p", "127.0.0.1:" + port + ":3000"]
+for key, value in values.items():
+    args.extend(["-e", key + "=" + value])
+subprocess.run([*args, os.environ["PHISTORY_DOCKER_IMAGE"]], check=True)
+deadline = time.monotonic() + 900
+while time.monotonic() < deadline:
+    state = json.loads(subprocess.check_output(["docker", "inspect", name], text=True))[0]["State"]
+    if state.get("Health", {}).get("Status") == "healthy":
+        Path(os.environ["PHISTORY_NATIVE_READY"]).touch()
+        while True:
+            time.sleep(1)
+    if not state.get("Running"):
+        raise RuntimeError("native AutoGPT appliance exited during full startup")
+    time.sleep(2)
+raise TimeoutError("native AutoGPT appliance did not become healthy")
+
+12d1e5c7005d520b3133bf57643c0da014fe8a21409b0abc2b52c7df2cb8bb41
+
+[claude-tap] shutting down python... (Ctrl+C again to force)
+
+[claude-tap] python stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/autogpt/autogpt-platform-beta-v0.12.1/variants/native-baseline-copilot/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/autogpt/autogpt-platform-beta-v0.12.1/variants/native-baseline-copilot/.tap/2026-11-26/trace_114612.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/autogpt/autogpt-platform-beta-v0.12.1/variants/native-baseline-copilot/.tap/2026-11-26/trace_114612.log
+  view:         /home/runner/work/phistory/phistory/captures/autogpt/autogpt-platform-beta-v0.12.1/variants/native-baseline-copilot/.tap/2026-11-26/trace_114612.html
+  prompt:       /home/runner/work/phistory/phistory/captures/autogpt/autogpt-platform-beta-v0.12.1/variants/native-baseline-copilot/prompt.md
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/autogpt_platform/backend/backend/copilot/dream/community_sweep.py", line 62, in rebuild_due_communities
+    rows = await within_deadline(
+           ^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/app/autogpt_platform/backend/backend/copilot/dream/deadline.py", line 41, in within_deadline
+    async with timeout(REGISTRY_CALL_TIMEOUT_SECONDS):
+               ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/asyncio/timeouts.py", line 116, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+2026-11-26 11:48:19,076 INFO  Job "rebuild_due_communities_job (trigger: interval[1:00:00], next run at: 2026-11-26 12:48:02 UTC)" executed successfully
+2026-11-26 11:48:19,076 INFO  [Scheduler] Job rebuild_due_communities completed successfully.
+2026-11-26 11:48:19,781 WARNING  Block WordPressCreatePostBlock credential input 'credentials' provider 'wordpress' has no authentication methods configured - Disabling
+2026-11-26 11:48:19,781 WARNING  Block WordPressGetAllPostsBlock credential input 'credentials' provider 'wordpress' has no authentication methods configured - Disabling
+2026-11-26 11:48:19,858 INFO  Syncing provider costs to blocks...
+2026-11-26 11:48:19,870 INFO  Synced 122 costs to 122 blocks
+2026-11-26 11:48:20.485999+00:00 [info] <0.1275.0> accepting AMQP connection 127.0.0.1:35120 -> 127.0.0.1:5672
+2026-11-26 11:48:20.488052+00:00 [info] <0.1275.0> User 'autogpt' authenticated successfully
+2026-11-26 11:48:20.488583+00:00 [info] <0.1275.0> connection 127.0.0.1:35120 -> 127.0.0.1:5672: user 'autogpt' authenticated and granted access to vhost '/'
+2026-11-26 11:48:20.491870+00:00 [info] <0.1275.0> closing AMQP connection (127.0.0.1:35120 -> 127.0.0.1:5672, vhost: '/', user: 'autogpt', duration: '6ms')
+2026-11-26T11:48:20Z [single-container] watchdog waiting for initial healthy state
+probe failed: <urlopen error [Errno 111] Connection refused>
+2026-11-26T11:48:20Z [single-container] ERROR: one or more application health probes failed
+2026-11-26 11:48:20.909147+00:00 [info] <0.1284.0> accepting AMQP connection 127.0.0.1:35128 -> 127.0.0.1:5672
+2026-11-26 11:48:20.910884+00:00 [info] <0.1284.0> User 'autogpt' authenticated successfully
+2026-11-26 11:48:20.911332+00:00 [info] <0.1284.0> connection 127.0.0.1:35128 -> 127.0.0.1:5672: user 'autogpt' authenticated and granted access to vhost '/'
+2026-11-26 11:48:20.911865+00:00 [info] <0.1284.0> closing AMQP connection (127.0.0.1:35128 -> 127.0.0.1:5672, vhost: '/', user: 'autogpt', duration: '2ms')
+2026-11-26 11:48:21,872 INFO  Running job "deliver_background_subtasks (trigger: interval[0:00:05], next run at: 2026-11-26 11:48:26 UTC)" (scheduled at 2026-11-26 11:48:21.867623+00:00)
+2026-11-26 11:48:21,883 INFO  Job "deliver_background_subtasks (trigger: interval[0:00:05], next run at: 2026-11-26 11:48:26 UTC)" executed successfully
+2026-11-26 11:48:21,884 INFO  [Scheduler] Job deliver_background_subtasks completed successfully.
+2026-11-26 11:48:22.173312+00:00 [info] <0.1308.0> accepting AMQP connection 127.0.0.1:35138 -> 127.0.0.1:5672
+2026-11-26 11:48:22.176923+00:00 [info] <0.1308.0> User 'autogpt' authenticated successfully
+2026-11-26 11:48:22.177560+00:00 [info] <0.1308.0> connection 127.0.0.1:35138 -> 127.0.0.1:5672: user 'autogpt' authenticated and granted access to vhost '/'
+2026-11-26 11:48:22.180770+00:00 [info] <0.1308.0> closing AMQP connection (127.0.0.1:35138 -> 127.0.0.1:5672, vhost: '/', user: 'autogpt', duration: '7ms')
+2026-11-26T11:48:22Z [single-container] watchdog waiting for initial healthy state
+probe failed: <urlopen error [Errno 111] Connection refused>
+2026-11-26T11:48:22Z [single-container] ERROR: one or more application health probes failed
+2026-11-26 11:48:22,963 INFO  Migrating integration credentials for 0 users
+2026-11-26 11:48:22,963 INFO  Migrating LLM models
+2026-11-26 11:48:22,986 INFO  Migrated 0 node triggers to triggered presets
+2026-11-26 11:48:22,988 INFO  Org migration: starting personal org bootstrap
+2026-11-26 11:48:22,990 INFO  Org migration: all users already have personal orgs
+2026-11-26 11:48:22,993 INFO  Org migration: migrated 0 org balances
+2026-11-26 11:48:22,995 INFO  Org migration: migrated 0 credit transactions
+2026-11-26 11:48:23,024 INFO  Org migration: complete in 0.04s — 0 orgs created, 0 resources assigned
+2026-11-26 11:48:23,041 INFO  LLM catalog loaded: 155 models, 4 routing cells
+2026-11-26 11:48:23.832708+00:00 [info] <0.1323.0> accepting AMQP connection 127.0.0.1:35140 -> 127.0.0.1:5672
+2026-11-26 11:48:23.834325+00:00 [info] <0.1323.0> User 'autogpt' authenticated successfully
+2026-11-26 11:48:23.834870+00:00 [info] <0.1323.0> connection 127.0.0.1:35140 -> 127.0.0.1:5672: user 'autogpt' authenticated and granted access to vhost '/'
+2026-11-26 11:48:23.837830+00:00 [info] <0.1323.0> closing AMQP connection (127.0.0.1:35140 -> 127.0.0.1:5672, vhost: '/', user: 'autogpt', duration: '5ms')
+2026-11-26T11:48:24Z [single-container] watchdog waiting for initial healthy state
+probe failed: <urlopen error [Errno 111] Connection refused>
+2026-11-26T11:48:24Z [single-container] ERROR: one or more application health probes failed
+2026-11-26 11:48:24,550 INFO  [AgentServer] Froze 2472908 startup objects out of full garbage collections in 1.5s
+2026-11-26 11:48:24,552 INFO  MCP server created with 33 tools: ['create_agent', 'customize_agent', 'edit_agent', 'find_agent', 'find_library_agent', 'create_folder', 'list_folders', 'update_folder', 'move_folder', 'delete_folder', 'move_agents_to_folder', 'run_agent', 'list_schedules', 'delete_schedule', 'list_agent_triggers', 'setup_agent_webhook_trigger', 'list_presets', 'update_preset', 'delete_preset', 'view_agent_output', 'search_docs', 'get_doc_page', 'get_agent_building_guide', 'web_fetch', 'web_search', 'search_feature_requests', 'get_platform_info', 'validate_agent_graph', 'fix_agent_graph', 'list_workspace_files', 'read_workspace_file', 'write_workspace_file', 'delete_workspace_file']
+/app/autogpt_platform/backend/.venv/lib/python3.13/site-packages/pydantic_settings/sources/utils.py:47: IncompleteFieldDefinitionWarning: Field 'lifespan' has an incomplete definition: its annotation contains an unresolved forward reference, so settings sources may fail to correctly resolve its value. Call `model_rebuild()` on the model where the field is defined, once all the referenced types are defined.
+  warnings.warn(
+2026-11-26 11:48:24,574 INFO  StreamableHTTP session manager started
+2026-11-26 11:48:24,574 INFO  Application startup complete.
+2026-11-26 11:48:24,575 INFO  Uvicorn running on http://127.0.0.1:8006 (Press CTRL+C to quit)
+2026-11-26 11:48:24,968 WARNING  Failed to read /app/docs/content/contributing.md: [Errno 2] No such file or directory: '/app/docs/content/contributing.md'
+2026-11-26 11:48:24,968 WARNING  Failed to read /app/docs/content/code-of-conduct.md: [Errno 2] No such file or directory: '/app/docs/content/code-of-conduct.md'
+2026-11-26 11:48:24,991 WARNING  Failed to read /app/docs/content/forge/components/components.md: [Errno 2] No such file or directory: '/app/docs/content/forge/components/components.md'
+2026-11-26 11:48:24,992 WARNING  Failed to read /app/docs/content/forge/components/agents.md: [Errno 2] No such file or directory: '/app/docs/content/forge/components/agents.md'
+2026-11-26 11:48:25,006 INFO  [Scheduler] BLOCK: 491 items without embeddings (0.0% coverage)
+2026-11-26 11:48:25,006 INFO  [Scheduler] DOCUMENTATION: 6422 items without embeddings (0.0% coverage)
+2026-11-26 11:48:25,006 INFO  [Scheduler] Total: 6913 items without embeddings (0.0% coverage) - processing all
+2026-11-26 11:48:25,008 INFO  Processing BLOCK content type...
+2026-11-26 11:48:25,015 INFO  BLOCK: processed 100, success 0, failed 100
+2026-11-26 11:48:25,015 INFO  Processing STORE_AGENT content type...
+2026-11-26 11:48:25,017 INFO  Processing DOCUMENTATION content type...
+2026-11-26 11:48:25,022 WARNING  Failed to read /app/docs/content/contributing.md: [Errno 2] No such file or directory: '/app/docs/content/contributing.md'
+2026-11-26 11:48:25,022 WARNING  Failed to read /app/docs/content/code-of-conduct.md: [Errno 2] No such file or directory: '/app/docs/content/code-of-conduct.md'
+2026-11-26 11:48:25,050 WARNING  Failed to read /app/docs/content/forge/components/components.md: [Errno 2] No such file or directory: '/app/docs/content/forge/components/components.md'
+2026-11-26 11:48:25,050 WARNING  Failed to read /app/docs/content/forge/components/agents.md: [Errno 2] No such file or directory: '/app/docs/content/forge/components/agents.md'
+2026-11-26 11:48:25,078 INFO  DOCUMENTATION: processed 100, success 0, failed 100
+2026-11-26 11:48:25,079 INFO  Processing LIBRARY_AGENT content type...
+2026-11-26 11:48:25,082 INFO  Processing WORKSPACE_FILE content type...
+2026-11-26 11:48:25,084 INFO  Processing CHAT_SESSION content type...
+2026-11-26 11:48:25,086 ERROR  Embedding backfill errors: RuntimeError: No embedding-capable LLM client configured. Set ONE of: OPENAI_INTERNAL_API_KEY, OPEN_ROUTER_API_KEY, or CHAT_USE_LOCAL=true with a CHAT_BASE_URL that exposes /v1/embeddings (vLLM / LiteLLM proxy / Azure OpenAI / Ollama with an embedding model pulled). Override the model via STORE_EMBEDDING_MODEL (must emit 1536-dim vectors to match the pgvector column). (200x)
+2026-11-26 11:48:25,093 ERROR  [Scheduler] All 200 embedding attempts failed - stopping backfill
+2026-11-26 11:48:25,102 INFO  [Scheduler] Embedding backfill completed: 0/200 succeeded, 200 failed
+2026-11-26 11:48:25,102 INFO  [Scheduler] Running cleanup for orphaned embeddings (blocks/docs)...
+2026-11-26 11:48:25,107 INFO  BLOCK: No orphaned embeddings found
+2026-11-26 11:48:25,111 INFO  STORE_AGENT: No orphaned embeddings found
+2026-11-26 11:48:25,117 WARNING  Failed to read /app/docs/content/contributing.md: [Errno 2] No such file or directory: '/app/docs/content/contributing.md'
+2026-11-26 11:48:25,118 WARNING  Failed to read /app/docs/content/code-of-conduct.md: [Errno 2] No such file or directory: '/app/docs/content/code-of-conduct.md'
+2026-11-26 11:48:25,153 WARNING  Failed to read /app/docs/content/forge/components/components.md: [Errno 2] No such file or directory: '/app/docs/content/forge/components/components.md'
+2026-11-26 11:48:25,153 WARNING  Failed to read /app/docs/content/forge/components/agents.md: [Errno 2] No such file or directory: '/app/docs/content/forge/components/agents.md'
+2026-11-26 11:48:25,157 INFO  DOCUMENTATION: No orphaned embeddings found
+2026-11-26 11:48:25,160 INFO  LIBRARY_AGENT: No orphaned embeddings found
+2026-11-26 11:48:25,164 INFO  WORKSPACE_FILE: No orphaned embeddings found
+2026-11-26 11:48:25,166 INFO  CHAT_SESSION: No orphaned embeddings found
+2026-11-26 11:48:25,169 INFO  [Scheduler] Cleanup completed: no orphaned embeddings found
+2026-11-26 11:48:25,169 INFO  Job "ensure_embeddings_coverage (trigger: interval[6:00:00], next run at: 2026-11-26 17:48:01 UTC)" executed successfully
+2026-11-26 11:48:25,169 INFO  [Scheduler] Job ensure_embeddings_coverage completed successfully.
+2026-11-26 11:48:25.433186+00:00 [info] <0.1335.0> accepting AMQP connection 127.0.0.1:35144 -> 127.0.0.1:5672
+2026-11-26 11:48:25.440916+00:00 [info] <0.1335.0> User 'autogpt' authenticated successfully
+2026-11-26 11:48:25.442031+00:00 [info] <0.1335.0> connection 127.0.0.1:35144 -> 127.0.0.1:5672: user 'autogpt' authenticated and granted access to vhost '/'
+2026-11-26 11:48:25.444855+00:00 [info] <0.1335.0> closing AMQP connection (127.0.0.1:35144 -> 127.0.0.1:5672, vhost: '/', user: 'autogpt', duration: '11ms')
+2026-11-26T11:48:25Z [single-container] watchdog armed after initial healthy state; automatic fatal recovery requires a Docker restart policy
+2026-11-26 11:48:26,379 WARNING  Gate first stage is 'jev' but TYPESAFE_API_KEY is empty; the LLM supervisor judges every call
+2026-11-26 11:48:26.545610+00:00 [info] <0.1345.0> accepting AMQP connection 127.0.0.1:35152 -> 127.0.0.1:5672
+2026-11-26 11:48:26.547203+00:00 [info] <0.1345.0> User 'autogpt' authenticated successfully
+2026-11-26 11:48:26.547806+00:00 [info] <0.1345.0> connection 127.0.0.1:35152 -> 127.0.0.1:5672: user 'autogpt' authenticated and granted access to vhost '/'
+2026-11-26 11:48:26.548127+00:00 [info] <0.1345.0> closing AMQP connection (127.0.0.1:35152 -> 127.0.0.1:5672, vhost: '/', user: 'autogpt', duration: '3ms')
+2026-11-26 11:48:26,869 INFO  Running job "deliver_background_subtasks (trigger: interval[0:00:05], next run at: 2026-11-26 11:48:31 UTC)" (scheduled at 2026-11-26 11:48:26.867623+00:00)
+2026-11-26 11:48:26,876 INFO  Job "deliver_background_subtasks (trigger: interval[0:00:05], next run at: 2026-11-26 11:48:31 UTC)" executed successfully
+2026-11-26 11:48:26,876 INFO  [Scheduler] Job deliver_background_subtasks completed successfully.
+2026-11-26 11:48:27.007 UTC [3008] ERROR:  permission denied for function is_auth_access_blocked
+2026-11-26 11:48:27.007 UTC [3008] STATEMENT:  SELECT is_auth_access_blocked($1, $2::text[]) AS blocked
+Failed to read access blocks (pg 42501)
+2026-11-26T11:48:27.047Z WARN [Better Auth]: Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket. Ensure your runtime forwards a trusted client IP header, then set `advanced.ipAddress.ipAddressHeaders` or `advanced.ipAddress.trustedProxies` so the address can be resolved.
+2026-11-26 11:48:27.233 UTC [3009] ERROR:  permission denied for function is_auth_access_blocked
+2026-11-26 11:48:27.233 UTC [3009] STATEMENT:  SELECT is_auth_access_blocked($1, $2::text[]) AS blocked
+Failed to read access blocks (pg 42501)
+2026-11-26 11:48:27.259 UTC [3012] ERROR:  permission denied for function record_auth_ip_event
+2026-11-26 11:48:27.259 UTC [3012] STATEMENT:  SELECT record_auth_ip_event($1, $2, $3, $4)
+Failed to record a sign-in IP {
+  userId: '5b7dece8-6455-45bb-9e0f-8518b716ad39',
+  error: 'permission denied for function record_auth_ip_event'
+}
+2026-11-26 11:48:27.272 UTC [3013] ERROR:  permission denied for function record_auth_ip_event
+2026-11-26 11:48:27.272 UTC [3013] STATEMENT:  SELECT record_auth_ip_event($1, $2, $3, $4)
+Failed to record a sign-in IP {
+  userId: '5b7dece8-6455-45bb-9e0f-8518b716ad39',
+  error: 'permission denied for function record_auth_ip_event'
+}
+2026-11-26 11:48:27,386 INFO  [PID-163|THREAD-163|AgentServer|Redis-a79843ed-16a1-47e7-8120-382ddb1a6554] Acquiring cache connection started...
+2026-11-26 11:48:27,398 INFO  [PID-163|THREAD-163|AgentServer|Redis-a79843ed-16a1-47e7-8120-382ddb1a6554] Acquiring cache connection completed successfully.
+2026-11-26 11:48:27,429 INFO  Creating session with user_id: ...b716ad39
+2026-11-26 11:48:27,453 INFO  [TIMING] stream_chat_post STARTED, session=17a95342-20a9-4733-aef1-4528b003751d, user=5b7dece8-6455-45bb-9e0f-8518b716ad39, message_len=30
+2026-11-26 11:48:27,460 INFO  [PID-163|THREAD-163|AgentServer|AppService client-c198821c-6f70-445b-8398-a9b0f9179d01] Creating service client started...
+2026-11-26 11:48:27,460 INFO  [PID-163|THREAD-163|AgentServer|AppService client-c198821c-6f70-445b-8398-a9b0f9179d01] Creating service client completed successfully.
+2026-11-26 11:48:27,472 INFO  [TIMING] session validated in 19.6ms
+2026-11-26 11:48:27,473 INFO  [Scheduler] [APScheduler] Added job "Morning briefing for 5b7dece8-645" to job store "execution"
+2026-11-26 11:48:27,473 INFO  [Scheduler] Registered morning briefing job morning_briefing_5b7dece8-6455-45bb-9e0f-8518b716ad39 for user 5b7dece8-645 in tz UTC
+2026-11-26 11:48:27,510 INFO  Morning briefing: registered cron for user 5b7dece8-645 (tz=UTC)
+2026-11-26 11:48:27,518 INFO  Loading session 17a95342-20a9-4733-aef1-4528b003751d from cache: message_count=0, roles=[]
+2026-11-26 11:48:27,520 INFO  Saving 1 new messages to DB for session 17a95342-20a9-4733-aef1-4528b003751d: roles=['user'], start_sequence=0
+2026-11-26 11:48:27,528 INFO  [TIMING] create_session STARTED, session=17a95342-20a9-4733-aef1-4528b003751d, user=5b7dece8-6455-45bb-9e0f-8518b716ad39, turn_id=16564ed1-1a06-4be8-8fcf-09fba7df854f
+2026-11-26 11:48:27,528 INFO  [TIMING] get_redis_async took 0.0ms
+2026-11-26 11:48:27,528 INFO  [TIMING] redis.hset took 0.3ms
+2026-11-26 11:48:27,529 INFO  [TIMING] create_session COMPLETED in 1.2ms; session=17a95342-20a9-4733-aef1-4528b003751d
+2026-11-26 11:48:27,533 INFO  [PID-163|THREAD-163|AgentServer|AsyncRabbitMQ-e99954cc-ee80-488a-8ec2-053657063e24] Acquiring async connection started...
+2026-11-26 11:48:27.534057+00:00 [info] <0.1369.0> accepting AMQP connection 127.0.0.1:35162 -> 127.0.0.1:5672
+2026-11-26 11:48:27.535421+00:00 [info] <0.1369.0> User 'autogpt' authenticated successfully
+2026-11-26 11:48:27.536013+00:00 [info] <0.1369.0> connection 127.0.0.1:35162 -> 127.0.0.1:5672: user 'autogpt' authenticated and granted access to vhost '/'
+2026-11-26 11:48:27,539 INFO  [PID-163|THREAD-163|AgentServer|AsyncRabbitMQ-e99954cc-ee80-488a-8ec2-053657063e24] Acquiring async connection completed successfully.
+2026-11-26 11:48:27,545 INFO  [PID-123|THREAD-2600|CoPilotExecutor|Redis-4a1c7dca-24f1-41f7-be2f-574c5e562a91] Acquiring connection started...
+2026-11-26 11:48:27,547 INFO  [TIMING] Task enqueued to RabbitMQ, setup=94.4ms
+2026-11-26 11:48:27,547 INFO  [PID-163|THREAD-163|AgentServer|AppService client-c198821c-6f70-445b-8398-a9b0f9179d01] Creating service client started...
+2026-11-26 11:48:27,548 INFO  [PID-163|THREAD-163|AgentServer|AppService client-c198821c-6f70-445b-8398-a9b0f9179d01] Creating service client completed successfully.
+2026-11-26 11:48:27,555 INFO  [TIMING] event_generator STARTED, turn=16564ed1-1a06-4be8-8fcf-09fba7df854f, session=17a95342-20a9-4733-aef1-4528b003751d, user=5b7dece8-6455-45bb-9e0f-8518b716ad39
+2026-11-26 11:48:27,559 INFO  [PID-104|THREAD-2191|Scheduler|AsyncRedis-8b1334c1-8b3c-451b-9098-87139411a7c6] Acquiring connection started...
+2026-11-26 11:48:27,565 INFO  [TIMING] subscribe_to_session COMPLETED in 9.9ms; session=17a95342-20a9-4733-aef1-4528b003751d, status=running, n_messages_replayed=1, last_id=1795693707545-0
+2026-11-26 11:48:27,565 INFO  [TIMING] Starting to read from subscriber_queue
+2026-11-26 11:48:27,565 INFO  [TIMING] FIRST CHUNK from queue at 0.01s, type=StreamStatus
+2026-11-26 11:48:27,565 INFO  [TIMING] _stream_listener STARTED, session=17a95342-20a9-4733-aef1-4528b003751d, last_id=1795693707545-0
+2026-11-26 11:48:27,568 INFO  [PID-123|THREAD-2600|CoPilotExecutor|Redis-4a1c7dca-24f1-41f7-be2f-574c5e562a91] Acquiring connection completed successfully.
+2026-11-26 11:48:27,569 INFO  [CoPilotExecutor] Acquired cluster lock for 17a95342-20a9-4733-aef1-4528b003751d, executor_id=702218ab-ef5d-4e30-bdf5-e0a51abd8008 
+2026-11-26 11:48:27,572 INFO  [CoPilotExecutor] Worker 130094741841600 started 
+2026-11-26 11:48:27,572 INFO  [CoPilotExecutor|session_id:17a95342-20a9-4733-aef1-4528b003751d|user_id:5b7dece8-6455-45bb-9e0f-8518b716ad39] Starting execution 
+2026-11-26 11:48:27,595 INFO  [PID-104|THREAD-2191|Scheduler|AsyncRedis-8b1334c1-8b3c-451b-9098-87139411a7c6] Acquiring connection completed successfully.
+2026-11-26 11:48:27,633 INFO  Patched graphiti_core.label_propagation with bounded variant (max 50 iterations).
+2026-11-26 11:48:27,781 INFO  [PID-123|THREAD-3025|CoPilotExecutor|AppService client-2f2df670-0df5-423b-ab5d-f1f0d720ab9b] Creating service client started...
+2026-11-26 11:48:27,782 INFO  [PID-123|THREAD-3025|CoPilotExecutor|AppService client-2f2df670-0df5-423b-ab5d-f1f0d720ab9b] Creating service client completed successfully.
+2026-11-26 11:48:27,823 INFO  [PID-123|THREAD-3025|CoPilotExecutor|AsyncRedis-92916879-ec26-423e-a6fb-9cd9ea81e119] Acquiring connection started...
+2026-11-26 11:48:27,846 INFO  [PID-123|THREAD-3025|CoPilotExecutor|AsyncRedis-92916879-ec26-423e-a6fb-9cd9ea81e119] Acquiring connection completed successfully.
+2026-11-26 11:48:27,846 INFO  [TIMING] xread #1 returned 1 messages in 281.0ms
+2026-11-26 11:48:27,847 INFO  [TIMING] FIRST live message at 281.4ms, type=StreamStatus
+2026-11-26 11:48:27,849 INFO  Loading session 17a95342-20a9-4733-aef1-4528b003751d from cache: message_count=1, roles=['user']
+2026-11-26 11:48:27,858 INFO  Loading session 17a95342-20a9-4733-aef1-4528b003751d from cache: message_count=1, roles=['user']
+2026-11-26 11:48:27,858 INFO  [CoPilotExecutor|session_id:17a95342-20a9-4733-aef1-4528b003751d|user_id:5b7dece8-6455-45bb-9e0f-8518b716ad39] Using baseline service 
+2026-11-26 11:48:27,900 INFO  Loading session 17a95342-20a9-4733-aef1-4528b003751d from cache: message_count=1, roles=['user']
+2026-11-26 11:48:28,115 WARNING  Provider LINEAR implements OAuth but the required env vars LINEAR_CLIENT_ID and LINEAR_CLIENT_SECRET are not both set
+2026-11-26 11:48:28,170 WARNING  Failed to ensure chat session embedding for 17a95342-20a9-4733-aef1-4528b003751d: No embedding-capable LLM client configured. Set ONE of: OPENAI_INTERNAL_API_KEY, OPEN_ROUTER_API_KEY, or CHAT_USE_LOCAL=true with a CHAT_BASE_URL that exposes /v1/embeddings (vLLM / LiteLLM proxy / Azure OpenAI / Ollama with an embedding model pulled). Override the model via STORE_EMBEDDING_MODEL (must emit 1536-dim vectors to match the pgvector column).
+2026-11-26 11:48:28,171 INFO  [PID-123|THREAD-3025|CoPilotExecutor|AppService client-2f2df670-0df5-423b-ab5d-f1f0d720ab9b] Creating service client started...
+2026-11-26 11:48:28,171 INFO  [PID-123|THREAD-3025|CoPilotExecutor|AppService client-2f2df670-0df5-423b-ab5d-f1f0d720ab9b] Creating service client completed successfully.
+2026-11-26 11:48:28,246 INFO  [TIMING] xread #2 returned 1 messages in 399.5ms
+2026-11-26 11:48:28,247 INFO  [TIMING] publish_chunk StreamStart in 6.5ms (xadd=5.9ms)
+2026-11-26 11:48:28,248 INFO  [TIMING] xread #3 returned 1 messages in 1.1ms
+2026-11-26 11:48:28,254 INFO  [TIMING] xread #4 returned 1 messages in 6.3ms
+2026-11-26 11:48:28,256 INFO  [TIMING] _stream_listener CANCELLED after 691.1ms, delivered=4
+2026-11-26 11:48:28,256 INFO  [TIMING] _stream_listener FINISHED in 0.7s; session=17a95342-20a9-4733-aef1-4528b003751d, delivered=4, xread_count=5
+2026-11-26 11:48:28,257 INFO  [TIMING] event_generator FINISHED in 0.70s; turn=16564ed1-1a06-4be8-8fcf-09fba7df854f, session=17a95342-20a9-4733-aef1-4528b003751d, n_chunks=5
+2026-11-26 11:48:28,257 INFO  [Baseline] No streaming usage reported; estimated tokens: prompt=13956, completion=3
+2026-11-26 11:48:28,258 INFO  [Baseline] Turn usage: prompt=13956, completion=3, total=13959, cost_usd=None
+2026-11-26 11:48:28,264 INFO  [TIMING] publish_chunk StreamTextStart in 10.0ms (xadd=5.5ms)
+2026-11-26 11:48:28,265 INFO  [TIMING] publish_chunk StreamTextEnd in 0.5ms (xadd=0.2ms)
+2026-11-26 11:48:28,298 INFO  Saving 1 new messages to DB for session 17a95342-20a9-4733-aef1-4528b003751d: roles=['assistant'], start_sequence=1
+2026-11-26 11:48:28,312 INFO  Loading session 17a95342-20a9-4733-aef1-4528b003751d from cache: message_count=1, roles=['user']
+2026-11-26 11:48:28,320 INFO  Using local workspace storage: /data/workspaces
+2026-11-26 11:48:28,323 INFO  [Baseline] Uploaded CLI session (9125B, msg_count=2, mode=baseline)
+2026-11-26 11:48:28,339 INFO  release_turn_slot: session=17a95342-20a9-4733-aef1-4528b003751d user=5b7dece8-6455-45bb-9e0f-8518b716ad39 gave its running slot back
+phistory-95a9adc3b7cbd99a
+
+stderr:

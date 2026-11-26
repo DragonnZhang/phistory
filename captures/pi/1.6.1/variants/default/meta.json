@@ -1,0 +1,60 @@
+{
+  "agent_id": "pi",
+  "agent": "Pi",
+  "package": "@earendil-works/pi-coding-agent",
+  "version": "1.6.1",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 4
+  },
+  "published_at": "2026-11-25T13:41:09.982Z",
+  "tarball_url": "https://registry.npmjs.org/@earendil-works/pi-coding-agent/-/pi-coding-agent-1.6.1.tgz",
+  "binary_version": "1.6.1",
+  "captured_at": "2026-11-26T11:35:15.561310+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45810215712",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45810215712"
+  },
+  "tap_client": "pi",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 5.781,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "pi",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--",
+    "--provider",
+    "phistory",
+    "--model",
+    "gpt-4.1",
+    "--print",
+    "--mode",
+    "text",
+    "--no-session",
+    "Reply with one short sentence."
+  ]
+}

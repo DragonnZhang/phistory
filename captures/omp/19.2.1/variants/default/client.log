@@ -1,0 +1,24 @@
+stdout:
+[claude-tap] Oh My Pi target: https://api.openai.com/v1  (from Oh My Pi config)  protocols: anthropic,openai,gemini,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:42673
+[claude-tap] CA cert: /tmp/phistory-home-wn9uglpt/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/omp/19.2.1/variants/default/.tap/2026-11-26/trace_113518.jsonl
+
+[claude-tap] launching Oh My Pi: omp --print --mode text --no-session --approval-mode yolo --model phistory/gpt-4.1 Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:42673
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-wn9uglpt/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] Oh My Pi exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/omp/19.2.1/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    9
+  trace:        /home/runner/work/phistory/phistory/captures/omp/19.2.1/variants/default/.tap/2026-11-26/trace_113518.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/omp/19.2.1/variants/default/.tap/2026-11-26/trace_113518.log
+  view:         /home/runner/work/phistory/phistory/captures/omp/19.2.1/variants/default/.tap/2026-11-26/trace_113518.html
+  prompt:       /home/runner/work/phistory/phistory/captures/omp/19.2.1/variants/default/prompt.md
+
+stderr:
+Working...

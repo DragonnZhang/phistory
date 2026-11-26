@@ -1,0 +1,73 @@
+{
+  "agent_id": "octomind",
+  "agent": "Octomind",
+  "package": "Muvon/octomind",
+  "version": "0.74.0",
+  "variant": {
+    "id": "http",
+    "label": "Native assistant role · HTTP transport",
+    "dimensions": {
+      "transport": "HTTP",
+      "role": "native assistant:chief",
+      "model": "native octohub:auto"
+    }
+  },
+  "requested": {
+    "transport": "HTTP",
+    "role": "native assistant:chief",
+    "model": "native octohub:auto"
+  },
+  "observed": {
+    "model": "auto",
+    "tool_count": 5
+  },
+  "published_at": "2026-11-26T03:33:54Z",
+  "tarball_url": "https://github.com/Muvon/octomind/releases/download/0.74.0/octomind-0.74.0-x86_64-unknown-linux-musl.tar.gz",
+  "binary_version": "octomind 0.74.0",
+  "captured_at": "2026-11-26T11:44:27.833387+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45810215712",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45810215712"
+  },
+  "tap_client": "octomind",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 6.99,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "octomind",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "run",
+    "--format",
+    "jsonl",
+    "-c",
+    "model.request_transport=http"
+  ],
+  "stdin": "Reply with one short sentence.\n",
+  "capture_environment": {
+    "OCTOMIND_TELEMETRY": "0",
+    "PHISTORY_OCTOMIND_TAP_COMMIT": "6950a8f44594cfb8709cf327f9a45cfe94836ce4",
+    "PHISTORY_OCTOMIND_TAP_REPOSITORY": "https://github.com/muvon/octomind-tap",
+    "PHISTORY_OCTOMIND_DEPENDENCIES": "{\"octobrain\": {\"sha256\": \"aa551627f53fce0b8d229a290bed0256f383e490b6d25c7183ed7b842b2f158b\", \"version\": \"octobrain 0.15.3\"}}"
+  }
+}

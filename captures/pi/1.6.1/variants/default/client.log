@@ -1,0 +1,23 @@
+stdout:
+[claude-tap] Pi (pi-coding-agent) target: https://api.openai.com/v1  (from Pi (pi-coding-agent) config)  protocols: anthropic,openai,gemini,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:34467
+[claude-tap] CA cert: /tmp/phistory-home-s98im1tb/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/pi/1.6.1/variants/default/.tap/2026-11-26/trace_113515.jsonl
+
+[claude-tap] launching Pi (pi-coding-agent): pi --provider phistory --model gpt-4.1 --print --mode text --no-session Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:34467
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-s98im1tb/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] Pi (pi-coding-agent) exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/pi/1.6.1/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/pi/1.6.1/variants/default/.tap/2026-11-26/trace_113515.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/pi/1.6.1/variants/default/.tap/2026-11-26/trace_113515.log
+  view:         /home/runner/work/phistory/phistory/captures/pi/1.6.1/variants/default/.tap/2026-11-26/trace_113515.html
+  prompt:       /home/runner/work/phistory/phistory/captures/pi/1.6.1/variants/default/prompt.md
+
+stderr:
