@@ -1,0 +1,74 @@
+{
+  "agent_id": "deer-flow",
+  "agent": "DeerFlow",
+  "package": "bytedance/deer-flow",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": "backend",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "version": "46493c31f8d604f422ef01f1715d1304dc59b680",
+  "variant": {
+    "id": "embedded-openai",
+    "label": "Configured embedded SDK · OpenAI",
+    "dimensions": {
+      "entry": "DeerFlowClient.chat",
+      "model": "gpt-4.1",
+      "config": "complete official example with one enabled model"
+    }
+  },
+  "requested": {
+    "entry": "DeerFlowClient.chat",
+    "model": "gpt-4.1",
+    "config": "complete official example with one enabled model"
+  },
+  "observed": {
+    "model": "gpt-4.1",
+    "tool_count": 16
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/bytedance/deer-flow/archive/46493c31f8d604f422ef01f1715d1304dc59b680.tar.gz",
+  "binary_version": "46493c31f8d604f422ef01f1715d1304dc59b680",
+  "captured_at": "2026-11-27T11:41:30.287357+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45989427323",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45989427323"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 13.379,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nfrom pathlib import Path\nimport yaml\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\nos.chdir(source)\nconfig = yaml.safe_load((source / \"config.example.yaml\").read_text())\nconfig[\"models\"] = [{\n    \"name\": \"phistory-openai\", \"use\": \"langchain_openai:ChatOpenAI\",\n    \"model\": \"gpt-4.1\", \"api_key\": \"$OPENAI_API_KEY\",\n    \"base_url\": \"https://api.openai.com/v1\", \"supports_thinking\": False,\n    \"supports_vision\": True,\n}]\npath = source / \"config.yaml\"\npath.write_text(yaml.safe_dump(config, sort_keys=False))\nos.environ[\"DEER_FLOW_PROJECT_ROOT\"] = str(source)\nfrom deerflow.client import DeerFlowClient\nprint(DeerFlowClient(config_path=str(path)).chat(\"Reply with one short sentence.\"))\n"
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "agent_id": "autoref",
+  "agent": "AutoRef",
+  "package": "KuOnoda/AutoRef",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": ".",
+    "state": "isolated",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "version": "04321d2463ccf84b6427c29736326da2997939e2",
+  "variant": {
+    "id": "scene-planner-initial",
+    "label": "Native initial scene planner / owned reference image",
+    "dimensions": {
+      "entry": "autoref.generate CLI / native autoref_harness",
+      "model": "native gpt-5.5-2026-04-23",
+      "reference": "owned actual 64x64 PNG task input",
+      "scope": "first scene reasoning before GPU generator",
+      "protocol": "native user multimodal messages; zero JSON tools"
+    }
+  },
+  "requested": {
+    "entry": "autoref.generate CLI / native autoref_harness",
+    "model": "native gpt-5.5-2026-04-23",
+    "reference": "owned actual 64x64 PNG task input",
+    "scope": "first scene reasoning before GPU generator",
+    "protocol": "native user multimodal messages; zero JSON tools"
+  },
+  "observed": {
+    "model": "gpt-5.5-2026-04-23"
+  },
+  "capture_selection": {
+    "minimum_tools": 0,
+    "required_system_text": [],
+    "required_user_text": [
+      "Reference images, numbered in order:",
+      "1. SETTING:"
+    ],
+    "required_tool_name_fragments": []
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/KuOnoda/AutoRef/archive/04321d2463ccf84b6427c29736326da2997939e2.tar.gz",
+  "binary_version": "04321d2463ccf84b6427c29736326da2997939e2",
+  "captured_at": "2026-11-27T11:39:24.656176+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45989427323",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45989427323"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 23.859,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nimport sys\nfrom pathlib import Path\nfrom PIL import Image\nfrom autoref.generate import main\nstate = Path(os.environ[\"PHISTORY_HOME\"]) / \"autoref\"\nstate.mkdir(parents=True, exist_ok=True)\nreference = state / \"owned-reference.png\"\nImage.new(\"RGB\", (64, 64), (80, 120, 160)).save(reference)\nsys.argv = [\"autoref.generate\", \"--refs\", str(reference), \"--prompt\", \"Reply with one short sentence.\", \"--out\", str(state / \"out.png\")]\nmain()\n"
+  ],
+  "capture_environment": {
+    "HF_HUB_OFFLINE": "1"
+  }
+}

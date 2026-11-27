@@ -1,0 +1,57 @@
+{
+  "agent_id": "qwen-code",
+  "agent": "Qwen Code",
+  "package": "@qwen-code/qwen-code",
+  "version": "0.28.7",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "qwen3.8-max",
+    "tool_count": 10
+  },
+  "published_at": "2026-11-26T18:58:13.495Z",
+  "tarball_url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.28.7.tgz",
+  "binary_version": "0.28.7",
+  "captured_at": "2026-11-27T11:20:46.465181+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45989427323",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45989427323"
+  },
+  "tap_client": "qwen",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 7.74,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "qwen",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "reverse",
+    "--",
+    "--yolo",
+    "--prompt",
+    "Reply with one short sentence.",
+    "--output-format",
+    "text"
+  ]
+}

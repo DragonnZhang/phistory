@@ -1,0 +1,38 @@
+stdout:
+[claude-tap] 'python' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] python target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:42265
+[claude-tap] CA cert: /tmp/phistory-home-_nng_j91/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/autoref/04321d2463ccf84b6427c29736326da2997939e2/variants/scene-planner-initial/.tap/2026-11-27/trace_113923.jsonl
+
+[claude-tap] launching python: python -c 
+import os
+import sys
+from pathlib import Path
+from PIL import Image
+from autoref.generate import main
+state = Path(os.environ["PHISTORY_HOME"]) / "autoref"
+state.mkdir(parents=True, exist_ok=True)
+reference = state / "owned-reference.png"
+Image.new("RGB", (64, 64), (80, 120, 160)).save(reference)
+sys.argv = ["autoref.generate", "--refs", str(reference), "--prompt", "Reply with one short sentence.", "--out", str(state / "out.png")]
+main()
+
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:42265
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-_nng_j91/.local/share/claude-tap/ca.pem
+
+[claude-tap] shutting down python... (Ctrl+C again to force)
+
+[claude-tap] python stopped
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/autoref/04321d2463ccf84b6427c29736326da2997939e2/variants/scene-planner-initial/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/autoref/04321d2463ccf84b6427c29736326da2997939e2/variants/scene-planner-initial/.tap/2026-11-27/trace_113923.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/autoref/04321d2463ccf84b6427c29736326da2997939e2/variants/scene-planner-initial/.tap/2026-11-27/trace_113923.log
+  view:         /home/runner/work/phistory/phistory/captures/autoref/04321d2463ccf84b6427c29736326da2997939e2/variants/scene-planner-initial/.tap/2026-11-27/trace_113923.html
+  prompt:       /home/runner/work/phistory/phistory/captures/autoref/04321d2463ccf84b6427c29736326da2997939e2/variants/scene-planner-initial/prompt.md
+
+stderr:

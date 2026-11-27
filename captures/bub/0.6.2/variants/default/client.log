@@ -1,0 +1,371 @@
+stdout:
+[claude-tap] 'bub' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] bub target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:36457
+[claude-tap] CA cert: /tmp/phistory-home-in5rdn4p/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/bub/0.6.2/variants/default/.tap/2026-11-27/trace_112130.jsonl
+
+[claude-tap] launching bub: bub run Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:36457
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-in5rdn4p/.local/share/claude-tap/ca.pem
+
+[claude-tap] bub exited with code 1
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/bub/0.6.2/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/bub/0.6.2/variants/default/.tap/2026-11-27/trace_112130.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/bub/0.6.2/variants/default/.tap/2026-11-27/trace_112130.log
+  view:         /home/runner/work/phistory/phistory/captures/bub/0.6.2/variants/default/.tap/2026-11-27/trace_112130.html
+  prompt:       /home/runner/work/phistory/phistory/captures/bub/0.6.2/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 
+[32m2026-11-27 11:21:30.499 +00:00[0m | [1mINFO    [0m | [36mbub.core.agent[0m:[36m_run_steps[0m:[36m522[0m - [1mloop.step step=1 tape=3944f623cabdcdda__0b871d5e50e7c192 model=openrouter:openrouter/free[0m
+[32m2026-11-27 11:21:30.690 +00:00[0m | [1mINFO    [0m | [36mbub.core.store[0m:[36mmerge_back[0m:[36m371[0m - [1mMerged 6 entries into tape fork "3944f623cabdcdda__0b871d5e50e7c192"[0m
+[32m2026-11-27 11:21:30.690 +00:00[0m | [31m[1mERROR   [0m | [36mbub.framework[0m:[36mprocess_inbound[0m:[36m324[0m - [31m[1mError processing inbound message[0m
+[33m[1mTraceback (most recent call last):[0m
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/bin/bub", line 10, in <module>
+    sys.exit(main())
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/__main__.py", line 97, in main
+    create_cli_app()()
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/typer/main.py", line 1126, in __call__
+    return get_command(self)(*args, **kwargs)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/typer/_click/core.py", line 809, in __call__
+    return self.main(*args, **kwargs)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/typer/core.py", line 1305, in main
+    return _main(
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/typer/core.py", line 332, in _main
+    rv = self.invoke(ctx)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/typer/core.py", line 1227, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/typer/_click/core.py", line 748, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/typer/_click/core.py", line 490, in invoke
+    return callback(*args, **kwargs)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/typer/main.py", line 1445, in wrapper
+    return callback(**use_params)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/builtin/cli.py", line 63, in run
+    result = asyncio.run(_run())
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/asyncio/runners.py", line 196, in run
+    return runner.run(main)
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/asyncio/runners.py", line 119, in run
+    return self._loop.run_until_complete(task)
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/asyncio/base_events.py", line 713, in run_until_complete
+    self.run_forever()
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/asyncio/base_events.py", line 684, in run_forever
+    self._run_once()
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/asyncio/base_events.py", line 2061, in _run_once
+    handle._run()
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/asyncio/events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/builtin/cli.py", line 61, in _run
+    return await framework.process_inbound(inbound)
+> File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/framework.py", line 303, in process_inbound
+    model_output = await self._run_model(inbound, prompt, session_id, state, stream_output)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/framework.py", line 343, in _run_model
+    output = await self._hook_runtime.run_model(prompt=prompt, session_id=session_id, state=state)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/hooks/runtime.py", line 182, in run_model
+    async for event in stream:
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/streaming.py", line 57, in __anext__
+    return await anext(self._iterator)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/core/agent.py", line 530, in _run_steps
+    async for event in output:
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/core/agent.py", line 359, in run_once
+    async with self._traced_completion(tape, client, options, request, tools, state) as (
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/contextlib.py", line 214, in __aenter__
+    return await anext(self.gen)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/core/agent.py", line 657, in _traced_completion
+    provider, stream = await stack.enter_async_context(
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/contextlib.py", line 668, in enter_async_context
+    result = await _enter(cm)
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/contextlib.py", line 214, in __aenter__
+    return await anext(self.gen)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/builtin/model.py", line 170, in open_stream
+    raise completion_error from None
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/bub/builtin/model.py", line 162, in open_stream
+    stream = await stack.enter_async_context(
+  File "/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/python3.13/contextlib.py", line 668, in enter_async_context
+    result = await _enter(cm)
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/republic/_models.py", line 185, in __aenter__
+    self._received.append(await anext(self._events))
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/republic/providers/base.py", line 97, in wrap
+    async for event in events:
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/republic/_models.py", line 242, in _source
+    parser.finish()
+  File "/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/python3.13/site-packages/republic/formats/_base.py", line 210, in finish
+    raise StreamIncompleteError("Stream ended without a completion signal")
+[31m[1mrepublic.errors.StreamIncompleteError[0m:[1m Stream ended without a completion signal[0m
+[31m╭─[0m[31m────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────[0m[31m─╮[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/builtin/[0m[1mcli.py[0m:63 in run                         [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m 60 [0m[2m│   │   [0m[94masync[0m [94mwith[0m framework.running():                                [31m│[0m
+[31m│[0m   [2m 61 [0m[2m│   │   │   [0m[94mreturn[0m [94mawait[0m framework.process_inbound(inbound)            [31m│[0m
+[31m│[0m   [2m 62 [0m[2m│   [0m                                                                   [31m│[0m
+[31m│[0m [31m❱ [0m 63 [2m│   [0mresult = [1;4masyncio.run(_run())[0m                                       [31m│[0m
+[31m│[0m   [2m 64 [0m[2m│   [0m[94mfor[0m outbound [95min[0m result.outbounds:                                  [31m│[0m
+[31m│[0m   [2m 65 [0m[2m│   │   [0mrendered = [96mstr[0m(field_of(outbound, [33m"[0m[33mcontent[0m[33m"[0m, [33m"[0m[33m"[0m))              [31m│[0m
+[31m│[0m   [2m 66 [0m[2m│   │   [0mtarget_channel = [96mstr[0m(field_of(outbound, [33m"[0m[33mchannel[0m[33m"[0m, [33m"[0m[33mstdout[0m[33m"[0m))  [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/asyncio/[0m[1mrunners.py[0m:196 in run                                      [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m193 [0m[2m│   │   │   [0m[33m"[0m[33masyncio.run() cannot be called from a running event [0m      [31m│[0m
+[31m│[0m       [33mloop[0m[33m"[0m)                                                                 [31m│[0m
+[31m│[0m   [2m194 [0m[2m│   [0m                                                                   [31m│[0m
+[31m│[0m   [2m195 [0m[2m│   [0m[94mwith[0m Runner(debug=debug, loop_factory=loop_factory) [94mas[0m runner:     [31m│[0m
+[31m│[0m [31m❱ [0m196 [2m│   │   [0m[94mreturn[0m [1;4mrunner.run(main)[0m                                        [31m│[0m
+[31m│[0m   [2m197 [0m                                                                       [31m│[0m
+[31m│[0m   [2m198 [0m                                                                       [31m│[0m
+[31m│[0m   [2m199 [0m[94mdef[0m[90m [0m[92m_cancel_all_tasks[0m(loop):                                           [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/asyncio/[0m[1mrunners.py[0m:119 in run                                      [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m116 [0m[2m│   │   [0m                                                               [31m│[0m
+[31m│[0m   [2m117 [0m[2m│   │   [0m[96mself[0m._interrupt_count = [94m0[0m                                      [31m│[0m
+[31m│[0m   [2m118 [0m[2m│   │   [0m[94mtry[0m:                                                           [31m│[0m
+[31m│[0m [31m❱ [0m119 [2m│   │   │   [0m[94mreturn[0m [96mself[0m._loop.run_until_complete(task)                 [31m│[0m
+[31m│[0m   [2m120 [0m[2m│   │   [0m[94mexcept[0m exceptions.CancelledError:                              [31m│[0m
+[31m│[0m   [2m121 [0m[2m│   │   │   [0m[94mif[0m [96mself[0m._interrupt_count > [94m0[0m:                              [31m│[0m
+[31m│[0m   [2m122 [0m[2m│   │   │   │   [0muncancel = [96mgetattr[0m(task, [33m"[0m[33muncancel[0m[33m"[0m, [94mNone[0m)             [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/asyncio/[0m[1mbase_events.py[0m:726 in run_until_complete                   [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m 723 [0m[2m│   │   [0m[94mif[0m [95mnot[0m future.done():                                         [31m│[0m
+[31m│[0m   [2m 724 [0m[2m│   │   │   [0m[94mraise[0m [96mRuntimeError[0m([33m'[0m[33mEvent loop stopped before Future [0m     [31m│[0m
+[31m│[0m        [33mcompleted.[0m[33m'[0m)                                                          [31m│[0m
+[31m│[0m   [2m 725 [0m[2m│   │   [0m                                                              [31m│[0m
+[31m│[0m [31m❱ [0m 726 [2m│   │   [0m[94mreturn[0m [1;4mfuture.result()[0m                                        [31m│[0m
+[31m│[0m   [2m 727 [0m[2m│   [0m                                                                  [31m│[0m
+[31m│[0m   [2m 728 [0m[2m│   [0m[94mdef[0m[90m [0m[92mstop[0m([96mself[0m):                                                   [31m│[0m
+[31m│[0m   [2m 729 [0m[2;90m│   │   [0m[33m"""Stop running the event loop.[0m                               [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/builtin/[0m[1mcli.py[0m:61 in _run                        [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m 58 [0m[2m│   [0m                                                                   [31m│[0m
+[31m│[0m   [2m 59 [0m[2m│   [0m[94masync[0m [94mdef[0m[90m [0m[92m_run[0m() -> TurnResult:                                    [31m│[0m
+[31m│[0m   [2m 60 [0m[2m│   │   [0m[94masync[0m [94mwith[0m framework.running():                                [31m│[0m
+[31m│[0m [31m❱ [0m 61 [2m│   │   │   [0m[94mreturn[0m [1;4;94mawait[0m[1;4m framework.process_inbound(inbound)[0m            [31m│[0m
+[31m│[0m   [2m 62 [0m[2m│   [0m                                                                   [31m│[0m
+[31m│[0m   [2m 63 [0m[2m│   [0mresult = asyncio.run(_run())                                       [31m│[0m
+[31m│[0m   [2m 64 [0m[2m│   [0m[94mfor[0m outbound [95min[0m result.outbounds:                                  [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/[0m[1mframework.py[0m:303 in process_inbound              [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m300 [0m[2m│   │   │   [0mprompt = [94mawait[0m [96mself[0m.build_prompt(inbound, session_id,      [31m│[0m
+[31m│[0m       state)                                                                 [31m│[0m
+[31m│[0m   [2m301 [0m[2m│   │   │   [0mmodel_output = [33m"[0m[33m"[0m                                          [31m│[0m
+[31m│[0m   [2m302 [0m[2m│   │   │   [0m[94mtry[0m:                                                       [31m│[0m
+[31m│[0m [31m❱ [0m303 [2m│   │   │   │   [0mmodel_output = [94mawait[0m [96mself[0m._run_model(inbound, prompt,  [31m│[0m
+[31m│[0m       session_id, state, stream_output)                                      [31m│[0m
+[31m│[0m   [2m304 [0m[2m│   │   │   [0m[94mfinally[0m:                                                   [31m│[0m
+[31m│[0m   [2m305 [0m[2m│   │   │   │   [0m[94mawait[0m [96mself[0m._hook_runtime.call_many(                    [31m│[0m
+[31m│[0m   [2m306 [0m[2m│   │   │   │   │   [0m[33m"[0m[33msave_state[0m[33m"[0m,                                      [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/[0m[1mframework.py[0m:343 in _run_model                   [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m340 [0m[2m│   │   [0mstream_output: [96mbool[0m,                                           [31m│[0m
+[31m│[0m   [2m341 [0m[2m│   [0m) -> [96mstr[0m:                                                          [31m│[0m
+[31m│[0m   [2m342 [0m[2m│   │   [0m[94mif[0m [95mnot[0m stream_output:                                          [31m│[0m
+[31m│[0m [31m❱ [0m343 [2m│   │   │   [0moutput = [1;4;94mawait[0m[1;4m [0m[1;4;96mself[0m[1;4m._hook_runtime.run_model(prompt=prompt,[0m [31m│[0m
+[31m│[0m       [1;4msession_id=session_id, state=state)[0m                                    [31m│[0m
+[31m│[0m   [2m344 [0m[2m│   │   │   [0m[94mif[0m output [95mis[0m [94mNone[0m:                                         [31m│[0m
+[31m│[0m   [2m345 [0m[2m│   │   │   │   [0m[94mawait[0m [96mself[0m._hook_runtime.notify_error(                 [31m│[0m
+[31m│[0m   [2m346 [0m[2m│   │   │   │   │   [0mstage=[33m"[0m[33mrun_model[0m[33m"[0m,                                 [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/hooks/[0m[1mruntime.py[0m:182 in run_model                [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m179 [0m[2m│   │   │   │   [0mstream = [94mawait[0m [96mself[0m.call_first([33m"[0m[33mrun_model_stream[0m[33m"[0m,     [31m│[0m
+[31m│[0m       prompt=prompt, session_id=session_id, state=state)                     [31m│[0m
+[31m│[0m   [2m180 [0m[2m│   │   │   │   [0mtext = [33m"[0m[33m"[0m                                              [31m│[0m
+[31m│[0m   [2m181 [0m[2m│   │   │   │   [0m[94masync[0m [94mwith[0m aclosing(stream):                           [31m│[0m
+[31m│[0m [31m❱ [0m182 [2m│   │   │   │   │   [0m[94masync[0m [94mfor[0m event [95min[0m [1;4mstream[0m:                         [31m│[0m
+[31m│[0m   [2m183 [0m[2m│   │   │   │   │   │   [0m[94mif[0m event.kind == [33m"[0m[33mtext[0m[33m"[0m:                       [31m│[0m
+[31m│[0m   [2m184 [0m[2m│   │   │   │   │   │   │   [0mtext += [96mstr[0m(event.data.get([33m"[0m[33mdelta[0m[33m"[0m, [33m"[0m[33m"[0m))   [31m│[0m
+[31m│[0m   [2m185 [0m[2m│   │   │   │   [0m[94mreturn[0m text                                            [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/[0m[1mstreaming.py[0m:57 in __anext__                     [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m 54 [0m[2m│   │   [0m[94mtry[0m:                                                           [31m│[0m
+[31m│[0m   [2m 55 [0m[2m│   │   │   [0m[2m# Detach before returning an event to the consumer, even [0m  [31m│[0m
+[31m│[0m       [2macross tasks.[0m                                                          [31m│[0m
+[31m│[0m   [2m 56 [0m[2m│   │   │   [0m[94mwith[0m [96mself[0m._span.activate() [94mif[0m [96mself[0m._span [94melse[0m              [31m│[0m
+[31m│[0m       nullcontext():                                                         [31m│[0m
+[31m│[0m [31m❱ [0m 57 [2m│   │   │   │   [0m[94mreturn[0m [94mawait[0m anext([96mself[0m._iterator)                     [31m│[0m
+[31m│[0m   [2m 58 [0m[2m│   │   [0m[94mexcept[0m [96mStopAsyncIteration[0m:                                     [31m│[0m
+[31m│[0m   [2m 59 [0m[2m│   │   │   [0m[94mawait[0m [96mself[0m._close()                                        [31m│[0m
+[31m│[0m   [2m 60 [0m[2m│   │   │   [0m[94mraise[0m                                                      [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/core/[0m[1magent.py[0m:530 in _run_steps                  [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m527 [0m[2m│   │   │   │   │   [0m)                                                  [31m│[0m
+[31m│[0m   [2m528 [0m[2m│   │   │   │   │   [0mpending = []                                       [31m│[0m
+[31m│[0m   [2m529 [0m[2m│   │   │   │   │   [0m[94masync[0m [94mwith[0m aclosing(output):                       [31m│[0m
+[31m│[0m [31m❱ [0m530 [2m│   │   │   │   │   │   [0m[94masync[0m [94mfor[0m event [95min[0m output:                     [31m│[0m
+[31m│[0m   [2m531 [0m[2m│   │   │   │   │   │   │   [0mtracker.observe(event)                     [31m│[0m
+[31m│[0m   [2m532 [0m[2m│   │   │   │   │   │   │   [0m[94myield[0m event                                [31m│[0m
+[31m│[0m   [2m533 [0m[2m│   │   │   │   │   │   │   [0m[94mif[0m event.kind == [33m"[0m[33merror[0m[33m"[0m:                  [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/core/[0m[1magent.py[0m:359 in run_once                    [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m356 [0m[2m│   │   │   [0m[94mreturn[0m                                                     [31m│[0m
+[31m│[0m   [2m357 [0m[2m│   │   [0mcompletion_started = time.monotonic()                          [31m│[0m
+[31m│[0m   [2m358 [0m[2m│   │   [0mfirst_chunk_at: [96mfloat[0m | [94mNone[0m = [94mNone[0m                            [31m│[0m
+[31m│[0m [31m❱ [0m359 [2m│   │   [0m[94masync[0m [94mwith[0m [1;4;96mself[0m[1;4m._traced_completion(tape, client, options, [0m     [31m│[0m
+[31m│[0m       [1;4mrequest, tools, state)[0m [94mas[0m (                                            [31m│[0m
+[31m│[0m   [2m360 [0m[2m│   │   │   [0mprovider,                                                  [31m│[0m
+[31m│[0m   [2m361 [0m[2m│   │   │   [0mcompletion,                                                [31m│[0m
+[31m│[0m   [2m362 [0m[2m│   │   │   [0mevents,                                                    [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/[0m[1mcontextlib.py[0m:214 in __aenter__                                    [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m211 [0m[2m│   │   [0m[2m# they are only needed for recreation, which is not possible [0m  [31m│[0m
+[31m│[0m       [2manymore[0m                                                                [31m│[0m
+[31m│[0m   [2m212 [0m[2m│   │   [0m[94mdel[0m [96mself[0m.args, [96mself[0m.kwds, [96mself[0m.func                            [31m│[0m
+[31m│[0m   [2m213 [0m[2m│   │   [0m[94mtry[0m:                                                           [31m│[0m
+[31m│[0m [31m❱ [0m214 [2m│   │   │   [0m[94mreturn[0m [94mawait[0m anext([96mself[0m.gen)                               [31m│[0m
+[31m│[0m   [2m215 [0m[2m│   │   [0m[1;4;94mexcept[0m[1;4m [0m[1;4;96mStopAsyncIteration[0m[1;4m:[0m                                     [31m│[0m
+[31m│[0m   [2m216 [0m[2m│   │   │   [0m[1;4;94mraise[0m[1;4m [0m[1;4;96mRuntimeError[0m[1;4m([0m[1;4;33m"[0m[1;4;33mgenerator didn[0m[1;4;33m'[0m[1;4;33mt yield[0m[1;4;33m"[0m[1;4m) [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;94mNone[0m     [31m│[0m
+[31m│[0m   [2m217 [0m                                                                       [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/core/[0m[1magent.py[0m:657 in _traced_completion          [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m654 [0m[2m│   │   │   │   [0mcall_options[[33m"[0m[33mmax_tokens[0m[33m"[0m] = request.max_tokens        [31m│[0m
+[31m│[0m   [2m655 [0m[2m│   │   │   [0m[94masync[0m [94mwith[0m AsyncExitStack() [94mas[0m stack:                      [31m│[0m
+[31m│[0m   [2m656 [0m[2m│   │   │   │   [0m[94mwith[0m span.activate():                                  [31m│[0m
+[31m│[0m [31m❱ [0m657 [2m│   │   │   │   │   [0mprovider, stream = [94mawait[0m                           [31m│[0m
+[31m│[0m       stack.enter_async_context(                                             [31m│[0m
+[31m│[0m   [2m658 [0m[2m│   │   │   │   │   │   [0mclient.open_stream([96mlist[0m(request.messages),     [31m│[0m
+[31m│[0m       spec=request.model, options=call_options)                              [31m│[0m
+[31m│[0m   [2m659 [0m[2m│   │   │   │   │   [0m)                                                  [31m│[0m
+[31m│[0m   [2m660 [0m[2m│   │   │   │   [0mevents = [94mawait[0m                                         [31m│[0m
+[31m│[0m       stack.enter_async_context(aclosing(_stream_events(stream, span, state, [31m│[0m
+[31m│[0m       text, calls)))                                                         [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/[0m[1mcontextlib.py[0m:668 in enter_async_context                           [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m665 [0m[2m│   │   │   [0m[94mraise[0m [96mTypeError[0m([33mf[0m[33m"[0m[33m'[0m[33m{[0m[96mcls[0m.[91m__module__[0m[33m}[0m[33m.[0m[33m{[0m[96mcls[0m.[91m__qualname__[0m[33m}[0m[33m'[0m[33m [0m   [31m│[0m
+[31m│[0m       [33mobject does [0m[33m"[0m                                                          [31m│[0m
+[31m│[0m   [2m666 [0m[2m│   │   │   │   │   │   │   [0m[33mf[0m[33m"[0m[33mnot support the asynchronous context [0m    [31m│[0m
+[31m│[0m       [33mmanager protocol[0m[33m"[0m                                                      [31m│[0m
+[31m│[0m   [2m667 [0m[2m│   │   │   │   │   │      [0m) [94mfrom[0m[90m [0m[94mNone[0m                                 [31m│[0m
+[31m│[0m [31m❱ [0m668 [2m│   │   [0mresult = [1;4;94mawait[0m[1;4m _enter(cm)[0m                                      [31m│[0m
+[31m│[0m   [2m669 [0m[2m│   │   [0m[96mself[0m._push_async_cm_exit(cm, _exit)                            [31m│[0m
+[31m│[0m   [2m670 [0m[2m│   │   [0m[94mreturn[0m result                                                  [31m│[0m
+[31m│[0m   [2m671 [0m                                                                       [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/[0m[1mcontextlib.py[0m:214 in __aenter__                                    [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m211 [0m[2m│   │   [0m[2m# they are only needed for recreation, which is not possible [0m  [31m│[0m
+[31m│[0m       [2manymore[0m                                                                [31m│[0m
+[31m│[0m   [2m212 [0m[2m│   │   [0m[94mdel[0m [96mself[0m.args, [96mself[0m.kwds, [96mself[0m.func                            [31m│[0m
+[31m│[0m   [2m213 [0m[2m│   │   [0m[94mtry[0m:                                                           [31m│[0m
+[31m│[0m [31m❱ [0m214 [2m│   │   │   [0m[94mreturn[0m [94mawait[0m anext([96mself[0m.gen)                               [31m│[0m
+[31m│[0m   [2m215 [0m[2m│   │   [0m[1;4;94mexcept[0m[1;4m [0m[1;4;96mStopAsyncIteration[0m[1;4m:[0m                                     [31m│[0m
+[31m│[0m   [2m216 [0m[2m│   │   │   [0m[1;4;94mraise[0m[1;4m [0m[1;4;96mRuntimeError[0m[1;4m([0m[1;4;33m"[0m[1;4;33mgenerator didn[0m[1;4;33m'[0m[1;4;33mt yield[0m[1;4;33m"[0m[1;4m) [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;94mNone[0m     [31m│[0m
+[31m│[0m   [2m217 [0m                                                                       [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/builtin/[0m[1mmodel.py[0m:170 in open_stream              [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m167 [0m[2m│   │   │   │   │   │   [0m[94mif[0m completion_error [95mis[0m [94mNone[0m:                   [31m│[0m
+[31m│[0m   [2m168 [0m[2m│   │   │   │   │   │   │   [0mcompletion_error = exc                     [31m│[0m
+[31m│[0m   [2m169 [0m[2m│   │   │   │   │   │   [0m[94mif[0m index == [96mlen[0m(candidates) - [94m1[0m:               [31m│[0m
+[31m│[0m [31m❱ [0m170 [2m│   │   │   │   │   │   │   [0m[1;4;94mraise[0m[1;4m completion_error [0m[1;4;94mfrom[0m[1;4;90m [0m[1;4;94mNone[0m           [31m│[0m
+[31m│[0m   [2m171 [0m[2m│   │   │   │   │   │   [0mlogger.warning(                                [31m│[0m
+[31m│[0m   [2m172 [0m[2m│   │   │   │   │   │   │   [0m[33m"[0m[33mmodel candidate failed; trying fallback [0m  [31m│[0m
+[31m│[0m       [33mmodel=[0m[33m{}[0m[33m error=[0m[33m{}[0m[33m"[0m,                                                    [31m│[0m
+[31m│[0m   [2m173 [0m[2m│   │   │   │   │   │   │   [0mcandidate.name,                            [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/bub/builtin/[0m[1mmodel.py[0m:162 in open_stream              [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m159 [0m[2m│   │   │   │   │   │   │   │   [0m[33m"[0m[33mgen_ai.provider.name[0m[33m"[0m:                [31m│[0m
+[31m│[0m       candidate.provider,                                                    [31m│[0m
+[31m│[0m   [2m160 [0m[2m│   │   │   │   │   │   │   │   [0m[33m"[0m[33mgen_ai.request.model[0m[33m"[0m:                [31m│[0m
+[31m│[0m       candidate.model_id,                                                    [31m│[0m
+[31m│[0m   [2m161 [0m[2m│   │   │   │   │   │   │   [0m})                                         [31m│[0m
+[31m│[0m [31m❱ [0m162 [2m│   │   │   │   │   │   [0mstream = [94mawait[0m stack.enter_async_context(      [31m│[0m
+[31m│[0m   [2m163 [0m[2m│   │   │   │   │   │   │   [0mchat_model.stream(messages,                [31m│[0m
+[31m│[0m       **[96mself[0m.chat_options(candidate.provider, options))                      [31m│[0m
+[31m│[0m   [2m164 [0m[2m│   │   │   │   │   │   [0m)                                              [31m│[0m
+[31m│[0m   [2m165 [0m[2m│   │   │   │   │   [0m[94mexcept[0m [96mException[0m [94mas[0m exc:                           [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/_temp/uv-python-dir/cpython-3.13.18-linux-x86_64-gnu/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/[0m[1mcontextlib.py[0m:668 in enter_async_context                           [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m665 [0m[2m│   │   │   [0m[94mraise[0m [96mTypeError[0m([33mf[0m[33m"[0m[33m'[0m[33m{[0m[96mcls[0m.[91m__module__[0m[33m}[0m[33m.[0m[33m{[0m[96mcls[0m.[91m__qualname__[0m[33m}[0m[33m'[0m[33m [0m   [31m│[0m
+[31m│[0m       [33mobject does [0m[33m"[0m                                                          [31m│[0m
+[31m│[0m   [2m666 [0m[2m│   │   │   │   │   │   │   [0m[33mf[0m[33m"[0m[33mnot support the asynchronous context [0m    [31m│[0m
+[31m│[0m       [33mmanager protocol[0m[33m"[0m                                                      [31m│[0m
+[31m│[0m   [2m667 [0m[2m│   │   │   │   │   │      [0m) [94mfrom[0m[90m [0m[94mNone[0m                                 [31m│[0m
+[31m│[0m [31m❱ [0m668 [2m│   │   [0mresult = [1;4;94mawait[0m[1;4m _enter(cm)[0m                                      [31m│[0m
+[31m│[0m   [2m669 [0m[2m│   │   [0m[96mself[0m._push_async_cm_exit(cm, _exit)                            [31m│[0m
+[31m│[0m   [2m670 [0m[2m│   │   [0m[94mreturn[0m result                                                  [31m│[0m
+[31m│[0m   [2m671 [0m                                                                       [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/republic/[0m[1m_models.py[0m:185 in __aenter__                [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m182 [0m[2m│   │   [0m[94mtry[0m:                                                           [31m│[0m
+[31m│[0m   [2m183 [0m[2m│   │   │   [0m[2m# Open the HTTP stream now, so its headers are available [0m  [31m│[0m
+[31m│[0m       [2monce entered.[0m                                                          [31m│[0m
+[31m│[0m   [2m184 [0m[2m│   │   │   [0m[94mwhile[0m [95mnot[0m [96mself[0m._opened:                                    [31m│[0m
+[31m│[0m [31m❱ [0m185 [2m│   │   │   │   [0m[96mself[0m._received.append([94mawait[0m anext([96mself[0m._events))       [31m│[0m
+[31m│[0m   [2m186 [0m[2m│   │   [0m[94mexcept[0m [96mStopAsyncIteration[0m:                                     [31m│[0m
+[31m│[0m   [2m187 [0m[2m│   │   │   [0m[94mpass[0m                                                       [31m│[0m
+[31m│[0m   [2m188 [0m[2m│   │   [0m[94mexcept[0m [96mBaseException[0m:                                          [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/republic/providers/[0m[1mbase.py[0m:97 in wrap                [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m 94 [0m[2m│   │   │   [0m[94mfor[0m middleware [95min[0m [96mreversed[0m([96mself[0m.middlewares):              [31m│[0m
+[31m│[0m   [2m 95 [0m[2m│   │   │   │   [0mevents = middleware(replace(call, events=events))      [31m│[0m
+[31m│[0m   [2m 96 [0m[2m│   │   │   │   [0mlayers.push_async_callback(events.aclose)              [31m│[0m
+[31m│[0m [31m❱ [0m 97 [2m│   │   │   [0m[94masync[0m [94mfor[0m event [95min[0m [1;4mevents[0m:                                 [31m│[0m
+[31m│[0m   [2m 98 [0m[2m│   │   │   │   [0m[94myield[0m event                                            [31m│[0m
+[31m│[0m   [2m 99 [0m[2m│   [0m                                                                   [31m│[0m
+[31m│[0m   [2m100 [0m[2m│   [0m[94masync[0m [94mdef[0m[90m [0m[92mrun[0m([96mself[0m, call: Call) -> Any:                            [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/republic/[0m[1m_models.py[0m:242 in _source                   [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m239 [0m[2m│   │   │   │   │   │   [0m[94mfor[0m delta [95min[0m parser.feed(event.event,          [31m│[0m
+[31m│[0m       event.data):                                                           [31m│[0m
+[31m│[0m   [2m240 [0m[2m│   │   │   │   │   │   │   [0m[94mfor[0m public_event [95min[0m builder.add(delta):    [31m│[0m
+[31m│[0m   [2m241 [0m[2m│   │   │   │   │   │   │   │   [0m[94myield[0m public_event                     [31m│[0m
+[31m│[0m [31m❱ [0m242 [2m│   │   │   │   │   [0m[1;4mparser.finish()[0m                                    [31m│[0m
+[31m│[0m   [2m243 [0m[2m│   │   │   │   │   [0m[94mfor[0m public_event [95min[0m builder.release_tool_calls():  [31m│[0m
+[31m│[0m   [2m244 [0m[2m│   │   │   │   │   │   [0m[94myield[0m public_event                             [31m│[0m
+[31m│[0m   [2m245 [0m[2m│   │   │   │   │   [0mresponse = [94mawait[0m model._finish([96mself[0m._new_messages, [31m│[0m
+[31m│[0m       builder, [96mself[0m._adapter, headers=[96mself[0m.headers)                          [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m [2m/home/runner/work/phistory/phistory/.phistory-cache/installs/bub/0.6.2/lib/p[0m [31m│[0m
+[31m│[0m [2mython3.13/site-packages/republic/formats/[0m[1m_base.py[0m:210 in finish              [31m│[0m
+[31m│[0m                                                                              [31m│[0m
+[31m│[0m   [2m207 [0m[2m│   [0m[94mdef[0m[90m [0m[92mfinish[0m([96mself[0m) -> [94mNone[0m:                                          [31m│[0m
+[31m│[0m   [2m208 [0m[2;90m│   │   [0m[33m"""Validate a clean EOF before finalizing the response or [0m     [31m│[0m
+[31m│[0m       [33mwriting history."""[0m                                                    [31m│[0m
+[31m│[0m   [2m209 [0m[2m│   │   [0m[94mif[0m [95mnot[0m [96mself[0m.completed:                                         [31m│[0m
+[31m│[0m [31m❱ [0m210 [2m│   │   │   [0m[1;4;94mraise[0m[1;4m StreamIncompleteError([0m[1;4;33m"[0m[1;4;33mStream ended without a [0m       [31m│[0m
+[31m│[0m       [1;4;33mcompletion signal[0m[1;4;33m"[0m[1;4m)[0m                                                    [31m│[0m
+[31m│[0m   [2m211 [0m                                                                       [31m│[0m
+[31m│[0m   [2m212 [0m                                                                       [31m│[0m
+[31m│[0m   [2m213 [0m[94mclass[0m[90m [0m[4;92mApiFormat[0m(ABC):                                                  [31m│[0m
+[31m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[1;91mStreamIncompleteError: [0mStream ended without a completion signal

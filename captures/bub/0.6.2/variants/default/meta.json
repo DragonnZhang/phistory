@@ -1,0 +1,61 @@
+{
+  "agent_id": "bub",
+  "agent": "Bub",
+  "package": "bub",
+  "package_extras": [
+    "app"
+  ],
+  "version": "0.6.2",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {}
+  },
+  "requested": {},
+  "observed": {
+    "model": "openrouter/free",
+    "tool_count": 18
+  },
+  "published_at": "2026-11-27T02:01:57.719930Z",
+  "tarball_url": "https://files.pythonhosted.org/packages/b7/a4/75327e121920a1d0dd24d16ad217a03b271b4669dcd012f2b2d176b28183/bub-0.6.2-py3-none-any.whl",
+  "binary_version": "bub 0.6.2",
+  "captured_at": "2026-11-27T11:21:31.260606+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "45989427323",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/45989427323"
+  },
+  "tap_client": "bub",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 3.129,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "bub",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "run",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "BUB_MAX_STEPS": "1"
+  }
+}
