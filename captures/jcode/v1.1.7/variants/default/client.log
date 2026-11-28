@@ -1,0 +1,36 @@
+stdout:
+[claude-tap] 'jcode' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] jcode target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:37275
+[claude-tap] CA cert: /tmp/phistory-home-e5x6nkao/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/jcode/v1.1.7/variants/default/.tap/2026-11-28/trace_105056.jsonl
+
+[claude-tap] launching jcode: jcode --no-update run --json Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:37275
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-e5x6nkao/.local/share/claude-tap/ca.pem
+{
+  "session_id": "session_camel_1795863056827_56ad299a696453f3",
+  "provider": "Claude",
+  "model": "claude-opus-5-5",
+  "text": "captured",
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cache_read_input_tokens": null,
+    "cache_creation_input_tokens": null
+  }
+}
+
+[claude-tap] jcode exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/jcode/v1.1.7/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    12
+  trace:        /home/runner/work/phistory/phistory/captures/jcode/v1.1.7/variants/default/.tap/2026-11-28/trace_105056.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/jcode/v1.1.7/variants/default/.tap/2026-11-28/trace_105056.log
+  view:         /home/runner/work/phistory/phistory/captures/jcode/v1.1.7/variants/default/.tap/2026-11-28/trace_105056.html
+  prompt:       /home/runner/work/phistory/phistory/captures/jcode/v1.1.7/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 

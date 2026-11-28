@@ -1,0 +1,22 @@
+stdout:
+[claude-tap] Qwen Code target: https://api.openai.com  (from Qwen Code config)  protocols: openai,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:45443
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/qwen-code/0.29.0/variants/default/.tap/2026-11-28/trace_104850.jsonl
+
+[claude-tap] launching Qwen Code: qwen --yolo --prompt Reply with one short sentence. --output-format text
+[claude-tap] OPENAI_BASE_URL=http://127.0.0.1:45443/v1
+captured
+
+[claude-tap] Qwen Code exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/qwen-code/0.29.0/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/qwen-code/0.29.0/variants/default/.tap/2026-11-28/trace_104850.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/qwen-code/0.29.0/variants/default/.tap/2026-11-28/trace_104850.log
+  view:         /home/runner/work/phistory/phistory/captures/qwen-code/0.29.0/variants/default/.tap/2026-11-28/trace_104850.html
+  prompt:       /home/runner/work/phistory/phistory/captures/qwen-code/0.29.0/variants/default/prompt.md
+
+stderr:
+Warning: running headless with --yolo / approval-mode=yolo and no sandbox. All tool calls (shell, write, edit) auto-execute at this process's privilege level. Configure tools.executionSandbox on Linux or a supported legacy sandbox via --sandbox / QWEN_SANDBOX, or set QWEN_CODE_SUPPRESS_YOLO_WARNING=1 to silence this notice.

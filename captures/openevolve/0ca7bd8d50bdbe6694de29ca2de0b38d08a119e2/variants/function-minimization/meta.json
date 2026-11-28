@@ -1,0 +1,79 @@
+{
+  "agent_id": "openevolve",
+  "agent": "OpenEvolve",
+  "package": "algorithmicsuperintelligence/openevolve",
+  "python_runtime": "3.12",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "version": "0ca7bd8d50bdbe6694de29ca2de0b38d08a119e2",
+  "variant": {
+    "id": "function-minimization",
+    "label": "Official function-minimization example",
+    "dimensions": {
+      "entry": "official example / native controller",
+      "iterations": "1",
+      "model": "native weighted Gemini ensemble"
+    }
+  },
+  "requested": {
+    "entry": "official example / native controller",
+    "iterations": "1",
+    "model": "native weighted Gemini ensemble"
+  },
+  "observed": {
+    "model": "gemini-2.5-flash-lite"
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/algorithmicsuperintelligence/openevolve/archive/0ca7bd8d50bdbe6694de29ca2de0b38d08a119e2.tar.gz",
+  "binary_version": "0ca7bd8d50bdbe6694de29ca2de0b38d08a119e2",
+  "captured_at": "2026-11-28T11:08:58.551585+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "46136784308",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/46136784308"
+  },
+  "tap_client": "openevolve-run",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 3.869,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "openevolve-run",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "$PHISTORY_INSTALL/source/openevolve-0ca7bd8d50bdbe6694de29ca2de0b38d08a119e2/examples/function_minimization/initial_program.py",
+    "$PHISTORY_INSTALL/source/openevolve-0ca7bd8d50bdbe6694de29ca2de0b38d08a119e2/examples/function_minimization/evaluator.py",
+    "--config",
+    "$PHISTORY_INSTALL/source/openevolve-0ca7bd8d50bdbe6694de29ca2de0b38d08a119e2/examples/function_minimization/config.yaml",
+    "--iterations",
+    "1",
+    "--output",
+    "$PHISTORY_HOME/evolution"
+  ]
+}

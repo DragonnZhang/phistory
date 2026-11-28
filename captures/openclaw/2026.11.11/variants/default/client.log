@@ -1,0 +1,804 @@
+stdout:
+[claude-tap] OpenClaw target: http://127.0.0.1:9/v1  (from OpenClaw config)  protocols: anthropic,openai,gemini,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:41163
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/openclaw/2026.11.11/variants/default/.tap/2026-11-28/trace_104928.jsonl
+
+[claude-tap] launching OpenClaw: openclaw agent --local --agent main --message Reply with one short sentence. --json --timeout 20
+[claude-tap] OPENCLAW_CONFIG_PATH=/tmp/tmpndxt0366.openclaw.json
+{
+  "payloads": [
+    {
+      "text": "captured",
+      "mediaUrl": null
+    }
+  ],
+  "meta": {
+    "durationMs": 2412,
+    "agentMeta": {
+      "sessionId": "5f0fd6bd-0925-4a3d-9b22-fa73aa25ab57",
+      "sessionFile": "agent:main:main",
+      "provider": "phistory",
+      "model": "phistory-dummy",
+      "contextTokens": 128000,
+      "contextTokensSource": "resolved",
+      "agentHarnessId": "openclaw",
+      "credentialSource": {
+        "kind": "direct",
+        "evidence": "provider-config",
+        "authorization": "declared"
+      },
+      "usage": {
+        "usageReport": {
+          "state": "available"
+        },
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 0,
+        "cost": {
+          "total": 0
+        }
+      },
+      "contextBudgetStatus": {
+        "schemaVersion": 1,
+        "source": "pre-prompt-estimate",
+        "updatedAt": 1795862977868,
+        "provider": "phistory",
+        "model": "phistory-dummy",
+        "route": "fits",
+        "shouldCompact": false,
+        "estimatedPromptTokens": 25834,
+        "contextTokenBudget": 128000,
+        "promptBudgetBeforeReserve": 108000,
+        "reserveTokens": 20000,
+        "effectiveReserveTokens": 20000,
+        "remainingPromptBudgetTokens": 82166,
+        "overflowTokens": 0,
+        "toolResultReducibleChars": 0,
+        "messageCount": 0,
+        "unwindowedMessageCount": 0,
+        "sessionId": "5f0fd6bd-0925-4a3d-9b22-fa73aa25ab57"
+      },
+      "codeModeEngaged": false,
+      "assistantTurns": 1,
+      "bridgeCalls": {
+        "search": 0,
+        "describe": 0,
+        "call": 0
+      },
+      "terminalReceipt": {
+        "runId": "dc5a820b-fb20-43b0-bd96-a5e36ca03c58",
+        "sessionId": "5f0fd6bd-0925-4a3d-9b22-fa73aa25ab57",
+        "turnId": "dc5a820b-fb20-43b0-bd96-a5e36ca03c58",
+        "requested": {
+          "provider": "phistory",
+          "model": "phistory-dummy"
+        },
+        "effective": {
+          "provider": "phistory",
+          "model": "phistory-dummy",
+          "responseModel": "phistory-dummy"
+        },
+        "successfulToolNames": [],
+        "rerouted": false,
+        "terminalDisposition": "visible"
+      }
+    },
+    "aborted": false,
+    "systemPromptReport": {
+      "source": "run",
+      "generatedAt": 1795862977286,
+      "sessionId": "5f0fd6bd-0925-4a3d-9b22-fa73aa25ab57",
+      "sessionKey": "agent:main:main",
+      "provider": "phistory",
+      "model": "phistory-dummy",
+      "workspaceDir": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace",
+      "bootstrapMaxChars": 20000,
+      "bootstrapTotalMaxChars": 60000,
+      "bootstrapTruncation": {
+        "warningMode": "always",
+        "warningShown": false,
+        "truncatedFiles": 0,
+        "nearLimitFiles": 0,
+        "totalNearLimit": false
+      },
+      "sandbox": {
+        "mode": "off",
+        "sandboxed": false
+      },
+      "systemPrompt": {
+        "chars": 60192,
+        "hash": "568057d425a4cb1cafe130a6fd5176da96850b9db0b34ce33a6a0c1657e23967",
+        "projectContextChars": 19307,
+        "nonProjectContextChars": 40885
+      },
+      "injectedWorkspaceFiles": [
+        {
+          "name": "AGENTS.md",
+          "path": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace/AGENTS.md",
+          "origin": {
+            "kind": "agent-workspace",
+            "rootPath": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace"
+          },
+          "missing": false,
+          "rawChars": 7200,
+          "injectedChars": 7200,
+          "truncated": false
+        },
+        {
+          "name": "SOUL.md",
+          "path": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace/SOUL.md",
+          "origin": {
+            "kind": "agent-workspace",
+            "rootPath": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace"
+          },
+          "missing": false,
+          "rawChars": 1526,
+          "injectedChars": 1526,
+          "truncated": false
+        },
+        {
+          "name": "IDENTITY.md",
+          "path": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace/IDENTITY.md",
+          "origin": {
+            "kind": "agent-workspace",
+            "rootPath": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace"
+          },
+          "missing": false,
+          "rawChars": 1453,
+          "injectedChars": 1453,
+          "truncated": false
+        },
+        {
+          "name": "USER.md",
+          "path": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace/USER.md",
+          "origin": {
+            "kind": "agent-workspace",
+            "rootPath": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace"
+          },
+          "missing": false,
+          "rawChars": 1076,
+          "injectedChars": 1076,
+          "truncated": false
+        },
+        {
+          "name": "BOOTSTRAP.md",
+          "path": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace/BOOTSTRAP.md",
+          "origin": {
+            "kind": "agent-workspace",
+            "rootPath": "/tmp/phistory-home-fwgkyhe3/.openclaw/workspace"
+          },
+          "missing": false,
+          "rawChars": 7475,
+          "injectedChars": 7475,
+          "truncated": false
+        }
+      ],
+      "skills": {
+        "promptChars": 9442,
+        "hash": "690fd4519d662eca98f724f671fd50015e7e97977de3b1e14a7139d9a02253ee",
+        "entries": [
+          {
+            "name": "add-model-provider",
+            "blockChars": 364
+          },
+          {
+            "name": "browser-automation",
+            "blockChars": 324
+          },
+          {
+            "name": "canvas",
+            "blockChars": 243
+          },
+          {
+            "name": "clawhub",
+            "blockChars": 387
+          },
+          {
+            "name": "cloud-image-bake",
+            "blockChars": 350
+          },
+          {
+            "name": "configure-channel",
+            "blockChars": 352
+          },
+          {
+            "name": "control-ui",
+            "blockChars": 403
+          },
+          {
+            "name": "create-blobster",
+            "blockChars": 355
+          },
+          {
+            "name": "create-template",
+            "blockChars": 308
+          },
+          {
+            "name": "creative-project",
+            "blockChars": 478
+          },
+          {
+            "name": "diagnose-gateway",
+            "blockChars": 344
+          },
+          {
+            "name": "diagram-maker",
+            "blockChars": 329
+          },
+          {
+            "name": "gh-issues",
+            "blockChars": 352
+          },
+          {
+            "name": "github",
+            "blockChars": 323
+          },
+          {
+            "name": "healthcheck",
+            "blockChars": 341
+          },
+          {
+            "name": "meme-maker",
+            "blockChars": 314
+          },
+          {
+            "name": "node-connect",
+            "blockChars": 398
+          },
+          {
+            "name": "node-inspect-debugger",
+            "blockChars": 340
+          },
+          {
+            "name": "notion",
+            "blockChars": 335
+          },
+          {
+            "name": "openai-whisper-api",
+            "blockChars": 338
+          },
+          {
+            "name": "python-debugpy",
+            "blockChars": 328
+          },
+          {
+            "name": "skill-creator",
+            "blockChars": 347
+          },
+          {
+            "name": "spike",
+            "blockChars": 314
+          },
+          {
+            "name": "tmux",
+            "blockChars": 332
+          },
+          {
+            "name": "visualize",
+            "blockChars": 345
+          },
+          {
+            "name": "weather",
+            "blockChars": 352
+          }
+        ]
+      },
+      "tools": {
+        "listChars": 0,
+        "schemaChars": 10758,
+        "entries": [
+          {
+            "name": "ls",
+            "summaryChars": 192,
+            "summaryHash": "90bdd7a772f66ad236d45f18e28ee873b8c795fe219804f2c19074a867423e20",
+            "schemaChars": 254,
+            "schemaHash": "ebe8d6a85b7011ec7e0d43a759b3b53b1ce96e682f54a64312b10e89260e9af9",
+            "propertiesCount": 3,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "read",
+            "summaryChars": 204,
+            "summaryHash": "9af395636d50f5922d62e70b91f9e16bcc5227d2976cb07f64f61a76d51a875a",
+            "schemaChars": 481,
+            "schemaHash": "b1b9b637dfe1dfade40f50c37cf840a298f1992b534cb9425b7470233a6b0cbb",
+            "propertiesCount": 5,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "edit",
+            "summaryChars": 130,
+            "summaryHash": "4149500b1f6501ec6450e4c048bdb6844764dd4a888a10846726cbbc7256152e",
+            "schemaChars": 501,
+            "schemaHash": "adf3140833ca927b84c66c989d6833fdcbd9de011dd2ffc59f9a2c4d3c25f127",
+            "propertiesCount": 2,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "write",
+            "summaryChars": 49,
+            "summaryHash": "f9ce3d8ac929a51498c03331b97c59bfaa2bb4d25580a5ddf0102e6a8e173aec",
+            "schemaChars": 191,
+            "schemaHash": "b61d2da23febf5fbda55e391526f36d283e9e9fb7f1a1dbadcf5c618a0632287",
+            "propertiesCount": 2,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "apply_patch",
+            "summaryChars": 71,
+            "summaryHash": "5c1173efe93d080a386a23216bc3e58db2e0033eb3ddea697eb2439938b7cae4",
+            "schemaChars": 153,
+            "schemaHash": "05521268363ff4f191472c90d69ef08a503ba9acf1d2febc50b3ee68db32ab65",
+            "propertiesCount": 1,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "exec",
+            "summaryChars": 1508,
+            "summaryHash": "4873fe23d89abef6948e4e45b0122038d572f267ff0805fb14d88c58cd888aff",
+            "schemaChars": 1943,
+            "schemaHash": "51a58f376092ad38f14604cbe82ba4804b82aaa43df3efb8d45cee5337c93956",
+            "propertiesCount": 14,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "process",
+            "summaryChars": 858,
+            "summaryHash": "6e7908736e1134f50f31d87d0700942bb5280a352906d9b62327135c80d63983",
+            "schemaChars": 1164,
+            "schemaHash": "6cf3281369349e15ea532e644c8ec7f94c96fa6a4e3287272c8cfe90b0960516",
+            "propertiesCount": 12,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "message",
+            "summaryChars": 306,
+            "summaryHash": "19c8b2c36bab3632aa2eae46d0ae639d4098e9e826cd8b6bc3885eeb9434a036",
+            "schemaChars": 3378,
+            "schemaHash": "ca912969828f96bbad231acf633c142bf3ad5445cb49c81bdfabaa2f1302882d",
+            "propertiesCount": 40,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "openclaw",
+            "summaryChars": 1038,
+            "summaryHash": "a360a39ffbe3a0994626f80e230fca93c08bf88af5d0d0de862b95995da73926",
+            "schemaChars": 196,
+            "schemaHash": "9956b2b6fde1ca6ca3d035b66217a09c717a6503aa4e59a2ce184dbf67849bd3",
+            "propertiesCount": 2,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "sessions_yield",
+            "summaryChars": 670,
+            "summaryHash": "7775d4bb7692b88eb863b0a8266815d4c5b95eb4cc37a031d09aec9f3a589fd0",
+            "schemaChars": 682,
+            "schemaHash": "cae7db7a0eacaa3c871725f74919a90b8422bd09a808d96d1dd2aa20ec7f3f88",
+            "propertiesCount": 3,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "tool_search",
+            "summaryChars": 619,
+            "summaryHash": "93425456cfb96e4a260904e96b82136b2b53d37a805cc45c7ed8c39b7db94c40",
+            "schemaChars": 1139,
+            "schemaHash": "0a78304973631f66103ff3f0c767433fdc00fb89d629bd5b12d1ada29940d382",
+            "propertiesCount": 3,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "tool_describe",
+            "summaryChars": 195,
+            "summaryHash": "315941ec801884bbab10e2c383a26d4ae3f0777c5afb566a550305f900669ca7",
+            "schemaChars": 466,
+            "schemaHash": "9462d46519dcafaf21e875401fe5fce3fa5fec8bcd201aaf004017fcb8f0343f",
+            "propertiesCount": 2,
+            "source": "openclaw",
+            "sourceName": "core"
+          },
+          {
+            "name": "dispatch_action",
+            "summaryChars": 224,
+            "summaryHash": "c59e06cc8e4a0ff016e69f0a753bb59dd09106ef05e44006bed6a5687eb2c48b",
+            "schemaChars": 210,
+            "schemaHash": "f48bfb0705c11b32ccbdfd456b791ce458604b1f51b1e31f61bc2d7b25ae07b9",
+            "propertiesCount": 2,
+            "source": "openclaw",
+            "sourceName": "core"
+          }
+        ],
+        "deferred": {
+          "entries": [
+            {
+              "name": "browser",
+              "source": "openclaw",
+              "sourceName": "browser",
+              "schemaChars": 4941
+            },
+            {
+              "name": "canvas",
+              "source": "openclaw",
+              "sourceName": "canvas",
+              "schemaChars": 398
+            },
+            {
+              "name": "agents_list",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 33
+            },
+            {
+              "name": "agents_wait",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 400
+            },
+            {
+              "name": "ask_user",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 2666
+            },
+            {
+              "name": "automations",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 11345
+            },
+            {
+              "name": "conversations_list",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 182
+            },
+            {
+              "name": "conversations_send",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 212
+            },
+            {
+              "name": "conversations_turn",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 274
+            },
+            {
+              "name": "create_goal",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 306
+            },
+            {
+              "name": "dashboard",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 2581
+            },
+            {
+              "name": "gateway",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 578
+            },
+            {
+              "name": "get_goal",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 33
+            },
+            {
+              "name": "image_generate",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 2924
+            },
+            {
+              "name": "mobile_ui",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 2042
+            },
+            {
+              "name": "nodes",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 2977
+            },
+            {
+              "name": "pdf",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 472
+            },
+            {
+              "name": "plugins",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 947
+            },
+            {
+              "name": "portal",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 543
+            },
+            {
+              "name": "presence",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 1053
+            },
+            {
+              "name": "progress_card",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 401
+            },
+            {
+              "name": "secrets",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 1211
+            },
+            {
+              "name": "session_status",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 356
+            },
+            {
+              "name": "sessions",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 4987
+            },
+            {
+              "name": "sessions_create",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 819
+            },
+            {
+              "name": "sessions_history",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 863
+            },
+            {
+              "name": "sessions_list",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 1297
+            },
+            {
+              "name": "sessions_search",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 526
+            },
+            {
+              "name": "sessions_send",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 649
+            },
+            {
+              "name": "sessions_spawn",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 7555
+            },
+            {
+              "name": "skills_read",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 138
+            },
+            {
+              "name": "skills_search",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 162
+            },
+            {
+              "name": "subagents",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 410
+            },
+            {
+              "name": "terminal",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 419
+            },
+            {
+              "name": "theme",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 4957
+            },
+            {
+              "name": "transcripts",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 1099
+            },
+            {
+              "name": "tts",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 264
+            },
+            {
+              "name": "update_goal",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 207
+            },
+            {
+              "name": "view_image",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 386
+            },
+            {
+              "name": "web_fetch",
+              "source": "openclaw",
+              "sourceName": "core",
+              "schemaChars": 317
+            },
+            {
+              "name": "deep_research",
+              "source": "openclaw",
+              "sourceName": "deep-research",
+              "schemaChars": 1771
+            },
+            {
+              "name": "dir_fetch",
+              "source": "openclaw",
+              "sourceName": "file-transfer",
+              "schemaChars": 639
+            },
+            {
+              "name": "dir_list",
+              "source": "openclaw",
+              "sourceName": "file-transfer",
+              "schemaChars": 724
+            },
+            {
+              "name": "file_fetch",
+              "source": "openclaw",
+              "sourceName": "file-transfer",
+              "schemaChars": 609
+            },
+            {
+              "name": "file_write",
+              "source": "openclaw",
+              "sourceName": "file-transfer",
+              "schemaChars": 1028
+            },
+            {
+              "name": "github_read",
+              "source": "openclaw",
+              "sourceName": "github",
+              "schemaChars": 321
+            },
+            {
+              "name": "github_search",
+              "source": "openclaw",
+              "sourceName": "github",
+              "schemaChars": 587
+            },
+            {
+              "name": "intent",
+              "source": "openclaw",
+              "sourceName": "memory-core",
+              "schemaChars": 641
+            },
+            {
+              "name": "memory_get",
+              "source": "openclaw",
+              "sourceName": "memory-core",
+              "schemaChars": 241
+            },
+            {
+              "name": "memory_search",
+              "source": "openclaw",
+              "sourceName": "memory-core",
+              "schemaChars": 250
+            },
+            {
+              "name": "node_inference",
+              "source": "openclaw",
+              "sourceName": "ollama",
+              "schemaChars": 646
+            },
+            {
+              "name": "skill_workshop",
+              "source": "openclaw",
+              "sourceName": "skill-workshop",
+              "schemaChars": 1062
+            },
+            {
+              "name": "talk_voice",
+              "source": "openclaw",
+              "sourceName": "talk-voice",
+              "schemaChars": 212
+            }
+          ],
+          "schemaChars": 70661
+        }
+      },
+      "currentTurn": {
+        "promptChars": 30,
+        "runtimeContextChars": 429,
+        "modelOnlyPromptChars": 0
+      }
+    },
+    "finalPromptText": "Reply with one short sentence.",
+    "finalAssistantVisibleText": "captured",
+    "finalAssistantRawText": "captured",
+    "replayInvalid": false,
+    "livenessState": "working",
+    "stopReason": "stop",
+    "completion": {
+      "stopReason": "stop",
+      "finishReason": "stop"
+    },
+    "terminalReply": {
+      "disposition": "visible",
+      "text": "captured"
+    },
+    "terminalReplyExpectation": "result-required",
+    "executionTrace": {
+      "winnerProvider": "phistory",
+      "winnerModel": "phistory-dummy",
+      "attempts": [
+        {
+          "provider": "phistory",
+          "model": "phistory-dummy",
+          "result": "success",
+          "stage": "assistant"
+        }
+      ],
+      "fallbackUsed": false,
+      "runner": "embedded"
+    },
+    "requestShaping": {
+      "thinking": "off"
+    },
+    "finalAssistantMessageRawText": "captured"
+  }
+}
+
+[claude-tap] OpenClaw exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/openclaw/2026.11.11/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/openclaw/2026.11.11/variants/default/.tap/2026-11-28/trace_104928.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/openclaw/2026.11.11/variants/default/.tap/2026-11-28/trace_104928.log
+  view:         /home/runner/work/phistory/phistory/captures/openclaw/2026.11.11/variants/default/.tap/2026-11-28/trace_104928.html
+  prompt:       /home/runner/work/phistory/phistory/captures/openclaw/2026.11.11/variants/default/prompt.md
+
+stderr:
+npm notice run npx
+npm notice run 'node' /home/runner/work/phistory/phistory/.phistory-cache/installs/openclaw/2026.11.11/node_modules/openclaw/openclaw.mjs agent --local --agent main --message Reply with one short sentence. --json --timeout 20
+[agents/agent-command] [agent] run dc5a820b-fb20-43b0-bd96-a5e36ca03c58 ended with stopReason=stop
+[state/agent-db] agent database clean-close receipt: written; agent=main

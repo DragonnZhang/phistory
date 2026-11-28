@@ -1,0 +1,58 @@
+stdout:
+[claude-tap] 'bun' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] bun target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] warning: 
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:38917
+[claude-tap] CA cert: /tmp/phistory-home-9amlvn6h/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/web3gpt/db1482ba90e0e673aea710514344229c631da72a/variants/builtin-agent-api/.tap/2026-11-28/trace_110825.jsonl
+
+[claude-tap] launching bun: bun run --cwd /tmp/phistory-home-9amlvn6h/source dev --hostname 127.0.0.1 --port 46943
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:38917
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-9amlvn6h/.local/share/claude-tap/ca.pem
+$ next dev --hostname "127.0.0.1" --port "46943"
+▲ Next.js 16.4.6 (Turbopack)
+- Local:         http://127.0.0.1:46943
+- Network:       http://127.0.0.1:46943
+✓ Ready in 194ms
+✓ Running next.config.ts took 30ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+⚠ Slow filesystem detected. The benchmark took 374ms. If /tmp/phistory-home-9amlvn6h/source/.next/dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+
+[2m2026-11-28T11:08:28.881Z[0m [33mWARN[0m [1m[Better Auth]:[0m Social provider github is missing clientId or clientSecret
+ GET /api/chat 405 in 538ms (next.js: 209ms, application-code: 329ms)
+rate limit check failed for chat:anon Error: Redis is not configured: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the legacy KV_REST_API_URL and KV_REST_API_TOKEN)
+    at resolveRedisCredentials (lib/redis.ts:25:9)
+    at createRedisClient (lib/redis.ts:40:8)
+    at Object.get (lib/redis.ts:56:16)
+    at hitRateLimit (lib/rate-limit.ts:62:31)
+    at POST (app/api/chat/route.ts:89:90)
+  23 |     }
+  24 |   }
+> 25 |   throw new Error(
+     |         ^
+  26 |     "Redis is not configured: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the legacy KV_REST_API_URL and KV_REST_API_TOKEN)"
+  27 |   )
+  28 | }
+ POST /api/chat 200 in 168ms (next.js: 0.9ms, application-code: 167ms)
+Native task returned after its captured request: native API /api/chat returned non-JSON (200, text/event-stream): b'data: {"type":"start","messageId":"vt0BnArUxrbEKkfZ"}\n\ndata: {"type":"start-step"}\n\ndata: {"type":"text-start","id":"msg_claude_tap_capture","providerMetadata":{"openai":{"itemId":"msg_claude_tap_capture"}}}\n\ndata: {"type":"text-delta","id":"msg_claude_tap_capture","delta":"captured"}\n\ndata: {"type":"text-end","id":"msg_claude_tap_capture","providerMetadata":{"openai":{"itemId":"msg_claude_tap_capture"}}}\n\ndata: {"type":"finish-step"}\n\ndata: {"type":"finish","finishReason":"stop"}\n\ndata: [DONE]\n\n'
+
+[claude-tap] shutting down bun... (Ctrl+C again to force)
+[?25h
+
+[claude-tap] bun exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/web3gpt/db1482ba90e0e673aea710514344229c631da72a/variants/builtin-agent-api/prompt.md
+
+[claude-tap] summary:
+  api_calls:    1
+  trace:        /home/runner/work/phistory/phistory/captures/web3gpt/db1482ba90e0e673aea710514344229c631da72a/variants/builtin-agent-api/.tap/2026-11-28/trace_110825.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/web3gpt/db1482ba90e0e673aea710514344229c631da72a/variants/builtin-agent-api/.tap/2026-11-28/trace_110825.log
+  view:         /home/runner/work/phistory/phistory/captures/web3gpt/db1482ba90e0e673aea710514344229c631da72a/variants/builtin-agent-api/.tap/2026-11-28/trace_110825.html
+  prompt:       /home/runner/work/phistory/phistory/captures/web3gpt/db1482ba90e0e673aea710514344229c631da72a/variants/builtin-agent-api/prompt.md
+
+stderr:

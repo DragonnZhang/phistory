@@ -1,0 +1,32 @@
+stdout:
+[claude-tap] Qoder CLI target: https://qoder.com  (auto: QODER_PERSONAL_ACCESS_TOKEN env var)  protocols: qoder
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:36801
+[claude-tap] CA cert: /tmp/phistory-home-e246s10_/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/qoder/1.1.100/variants/default/.tap/2026-11-28/trace_110926.jsonl
+
+[claude-tap] launching Qoder CLI: qodercli --print --no-session-persistence Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:36801
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-e246s10_/.local/share/claude-tap/ca.pem
+captured
+
+[claude-tap] Qoder CLI exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/qoder/1.1.100/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    2
+  trace:        /home/runner/work/phistory/phistory/captures/qoder/1.1.100/variants/default/.tap/2026-11-28/trace_110926.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/qoder/1.1.100/variants/default/.tap/2026-11-28/trace_110926.log
+  view:         /home/runner/work/phistory/phistory/captures/qoder/1.1.100/variants/default/.tap/2026-11-28/trace_110926.html
+  prompt:       /home/runner/work/phistory/phistory/captures/qoder/1.1.100/variants/default/prompt.md
+
+stderr:
+WARNING claude_tap: forward: TLS handshake timed out for api1.qoder.sh
+WARNING claude_tap: forward: TLS handshake timed out for api1.qoder.sh
+WARNING claude_tap: forward: TLS handshake timed out for api2.qoder.sh
+WARNING claude_tap: forward: TLS handshake timed out for api2.qoder.sh
+WARNING claude_tap: forward: TLS handshake timed out for api2.qoder.sh
+WARNING claude_tap: forward: TLS handshake timed out for api2.qoder.sh
+WARNING claude_tap: forward: TLS handshake timed out for api1.qoder.sh
+WARNING claude_tap: forward: TLS handshake timed out for api1.qoder.sh
+ERROR claude_tap: [Turn 0] upstream error: Cannot connect to host 203.107.1.1:443 ssl:default [None]

@@ -1,0 +1,66 @@
+{
+  "agent_id": "openinterpreter",
+  "agent": "OpenInterpreter",
+  "package": "openinterpreter/openinterpreter",
+  "package_layout": "bundle",
+  "version": "rust-v0.0.65",
+  "variant": {
+    "id": "default",
+    "label": "Default",
+    "dimensions": {
+      "transport": "native HTTP fallback after capture-only proxy refuses WebSocket with HTTP 426"
+    }
+  },
+  "requested": {
+    "transport": "native HTTP fallback after capture-only proxy refuses WebSocket with HTTP 426"
+  },
+  "observed": {
+    "model": "gpt-6.1-sol",
+    "tool_count": 13
+  },
+  "published_at": "2026-11-28T07:39:09Z",
+  "tarball_url": "https://github.com/openinterpreter/openinterpreter/releases/download/rust-v0.0.65/open-interpreter-package-x86_64-unknown-linux-musl.tar.gz",
+  "binary_version": "rust-v0.0.65",
+  "captured_at": "2026-11-28T10:59:39.695762+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "46136784308",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/46136784308"
+  },
+  "tap_client": "interpreter",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 6.116,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "interpreter",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "exec",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "--json",
+    "Reply with one short sentence."
+  ],
+  "capture_environment": {
+    "OPEN_INTERPRETER_NONINTERACTIVE": "1"
+  }
+}

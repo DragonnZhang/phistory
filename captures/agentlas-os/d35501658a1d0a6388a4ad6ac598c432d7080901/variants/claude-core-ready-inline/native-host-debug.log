@@ -1,0 +1,317 @@
+2026-11-28T11:02:09.794Z [DEBUG] MDM settings load completed in 1ms
+2026-11-28T11:02:09.795Z [DEBUG] Config file read as missing at start-up: looking again.
+2026-11-28T11:02:09.797Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-home-ajk5g6a8/.claude/settings.json
+2026-11-28T11:02:09.797Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /etc/claude-code/managed-settings.json
+2026-11-28T11:02:09.799Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-work-sy44eds0/.claude/settings.json
+2026-11-28T11:02:09.799Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-work-sy44eds0/.claude/settings.local.json
+2026-11-28T11:02:09.800Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /etc/claude-code/managed-settings.json
+2026-11-28T11:02:09.800Z [DEBUG] Cleared CA certificates cache
+2026-11-28T11:02:09.802Z [DEBUG] [init] configureGlobalMTLS starting
+2026-11-28T11:02:09.802Z [DEBUG] [init] configureGlobalMTLS complete
+2026-11-28T11:02:09.802Z [DEBUG] [init] configureGlobalAgents starting
+2026-11-28T11:02:09.802Z [DEBUG] CA certs: stores=bundled,system, extraCertsPath=/tmp/phistory-home-ajk5g6a8/.local/share/claude-tap/ca.pem
+2026-11-28T11:02:09.803Z [DEBUG] CA certs: Loaded 117 bundled root certificates
+2026-11-28T11:02:09.806Z [DEBUG] CA certs: Loaded 122 system CA certificates
+2026-11-28T11:02:09.807Z [DEBUG] CA certs: Dropped blocked certificate 40f6af0346a99aa1cd1d555a4e9cce62c7f9634603ee406615833dc8c8d00367 from system
+2026-11-28T11:02:09.807Z [DEBUG] CA certs: Dropped blocked certificate 125609aa301da0a249b97a8239cb6a34216f44dcac9f3954b14292f2e8c8608f from system
+2026-11-28T11:02:09.807Z [DEBUG] CA certs: Dropped blocked certificate bc4d809b15189d78db3e1d8cf4f9726a795da1643ca5f1358e1ddb0edc0d7eb3 from system
+2026-11-28T11:02:09.807Z [DEBUG] CA certs: Appended extra certificates from NODE_EXTRA_CA_CERTS (/tmp/phistory-home-ajk5g6a8/.local/share/claude-tap/ca.pem): all of them were already trusted from the CA store, so each is listed once
+2026-11-28T11:02:09.808Z [DEBUG] mTLS: Creating HTTPS agent with custom certificates
+2026-11-28T11:02:09.809Z [DEBUG] [init] configureGlobalAgents complete
+2026-11-28T11:02:09.811Z [DEBUG] Error log sink initialized
+2026-11-28T11:02:09.812Z [DEBUG] clearPluginCache: invalidating loadAllPlugins cache (preAction: --plugin-dir inline plugins)
+2026-11-28T11:02:09.818Z [ERROR] Failed to save config with lock: Error: ENOENT: no such file or directory, lstat '/tmp/phistory-home-ajk5g6a8/.claude/.claude.json'
+2026-11-28T11:02:09.822Z [DEBUG] Setting permissions for new file: 600
+2026-11-28T11:02:09.822Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.7cf76669def0
+2026-11-28T11:02:09.823Z [DEBUG] Temp file written successfully, size: 84 bytes
+2026-11-28T11:02:09.823Z [DEBUG] Created /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:09.824Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:09.824Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.3702c27004f0
+2026-11-28T11:02:09.824Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:09.824Z [DEBUG] Temp file written successfully, size: 167 bytes
+2026-11-28T11:02:09.824Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.3702c27004f0 to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:09.825Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:09.825Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:09.825Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.f67f0c115f65
+2026-11-28T11:02:09.825Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:09.826Z [DEBUG] Temp file written successfully, size: 203 bytes
+2026-11-28T11:02:09.826Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.f67f0c115f65 to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:09.826Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:09.827Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:09.827Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.fff719f01bdd
+2026-11-28T11:02:09.827Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:09.827Z [DEBUG] Temp file written successfully, size: 230 bytes
+2026-11-28T11:02:09.827Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.fff719f01bdd to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:09.827Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:09.828Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:09.828Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.ac775d5f4092
+2026-11-28T11:02:09.828Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:09.828Z [DEBUG] Temp file written successfully, size: 278 bytes
+2026-11-28T11:02:09.828Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.ac775d5f4092 to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:09.829Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:09.829Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:09.829Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.f22ecc0ef2fb
+2026-11-28T11:02:09.829Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:09.829Z [DEBUG] Temp file written successfully, size: 304 bytes
+2026-11-28T11:02:09.829Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.f22ecc0ef2fb to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:09.830Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:09.831Z [DEBUG] policyHelper: no helper configuration present at helper-pass time (remote managed settings eligible, no payload in cache); a payload landing later arms one only through a fetch cycle after preAction
+2026-11-28T11:02:09.839Z [DEBUG] [mcp-policy-cold-start] waiting on remote managed-settings load
+2026-11-28T11:02:09.840Z [DEBUG] installed_plugins.json doesn't exist, returning empty V2 object
+2026-11-28T11:02:09.840Z [DEBUG] --plugin-dir /tmp/phistory-home-ajk5g6a8/.agentlas/os-host-plugins/memory/claude/generations/362c36067432d5edbddf6232b11716cda5185853ef928808fc2b4b3f250b4432/plugin is one plugin: .claude-plugin at its top marks it
+2026-11-28T11:02:09.841Z [DEBUG] --plugin-dir /tmp/phistory-home-ajk5g6a8/.agentlas/os-host-plugins/core/claude/generations/8065cb3f10d5d9427d78e9587bba6783d221127f72846c973a0e9d95c784149b/plugin is one plugin: .mcp.json at its top marks it
+2026-11-28T11:02:09.841Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:09.842Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.2f3d3dc81f7b
+2026-11-28T11:02:09.844Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:09.845Z [DEBUG] Read hooks.json for plugin agentlas-os-memory (enabled=true): /tmp/phistory-home-ajk5g6a8/.agentlas/os-host-plugins/memory/claude/generations/362c36067432d5edbddf6232b11716cda5185853ef928808fc2b4b3f250b4432/plugin/hooks/hooks.json
+2026-11-28T11:02:09.845Z [DEBUG] Temp file written successfully, size: 384 bytes
+2026-11-28T11:02:09.845Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.2f3d3dc81f7b to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:09.845Z [DEBUG] Loaded inline plugin from path: agentlas-os-core
+2026-11-28T11:02:09.845Z [DEBUG] Loaded inline plugin from path: agentlas-os-memory
+2026-11-28T11:02:09.845Z [DEBUG] Loaded 2 directory-loaded plugins
+2026-11-28T11:02:09.846Z [DEBUG] Found 6 plugins (6 enabled, 0 disabled)
+2026-11-28T11:02:09.847Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:09.871Z [DEBUG] "Remote settings: Invalid response format - [\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"uuid\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"checksum\"\n    ],\n    \"message\": \"Invalid input: expected string, received undefined\"\n  },\n  {\n    \"expected\": \"record\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"settings\"\n    ],\n    \"message\": \"Invalid input: expected record, received undefined\"\n  }\n]"
+2026-11-28T11:02:09.871Z [DEBUG] Remote settings: Fetch failed (parse_error) and no cached settings
+2026-11-28T11:02:09.872Z [DEBUG] Programmatic settings change notification for policySettings
+2026-11-28T11:02:09.872Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /etc/claude-code/managed-settings.json
+2026-11-28T11:02:09.872Z [DEBUG] [mcp-policy-cold-start] waiting on the policy-limits verdict (compliance taints feed config ${VAR} expansion)
+2026-11-28T11:02:09.873Z [DEBUG] "Policy limits: Invalid response format - field=restrictions ct=json - [\n  {\n    \"expected\": \"record\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"restrictions\"\n    ],\n    \"message\": \"Invalid input: expected record, received undefined\"\n  }\n]"
+2026-11-28T11:02:09.874Z [DEBUG] Policy limits: Retry 1/5 after 601ms
+2026-11-28T11:02:10.476Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-home-ajk5g6a8/.claude/settings.json
+2026-11-28T11:02:10.476Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-work-sy44eds0/.claude/settings.json
+2026-11-28T11:02:10.476Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-work-sy44eds0/.claude/settings.local.json
+2026-11-28T11:02:10.481Z [DEBUG] "Policy limits: Invalid response format - field=restrictions ct=json - [\n  {\n    \"expected\": \"record\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"restrictions\"\n    ],\n    \"message\": \"Invalid input: expected record, received undefined\"\n  }\n]"
+2026-11-28T11:02:10.481Z [DEBUG] Policy limits: Retry 2/5 after 1012ms
+2026-11-28T11:02:11.498Z [DEBUG] "Policy limits: Invalid response format - field=restrictions ct=json - [\n  {\n    \"expected\": \"record\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"restrictions\"\n    ],\n    \"message\": \"Invalid input: expected record, received undefined\"\n  }\n]"
+2026-11-28T11:02:11.499Z [DEBUG] Policy limits: Retry 3/5 after 2463ms
+2026-11-28T11:02:13.967Z [DEBUG] "Policy limits: Invalid response format - field=restrictions ct=json - [\n  {\n    \"expected\": \"record\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"restrictions\"\n    ],\n    \"message\": \"Invalid input: expected record, received undefined\"\n  }\n]"
+2026-11-28T11:02:13.968Z [DEBUG] Policy limits: Retry 4/5 after 4090ms
+2026-11-28T11:02:14.873Z [DEBUG] [mcp-policy-cold-start] policy-limits verdict did not land within the cold-start budget; loading MCP configs without it
+2026-11-28T11:02:14.875Z [DEBUG] [Claude in Chrome] Disabled: OAuth token has no scope accepted by /api/oauth/validate (needs user:profile, user:office, or user:ccr_inference; env-var and setup-token sessions default to user:inference only)
+2026-11-28T11:02:14.875Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /etc/claude-code/managed-settings.json
+2026-11-28T11:02:14.878Z [DEBUG] [ToolSearch:optimistic] mode=standard, ENABLE_TOOL_SEARCH=false, result=false
+2026-11-28T11:02:14.879Z [DEBUG] [claudeai-mcp] Disabled: API-key auth precedence active
+2026-11-28T11:02:14.879Z [DEBUG] [STARTUP] Loading MCP configs...
+2026-11-28T11:02:14.881Z [DEBUG] [STARTUP] Running setup()...
+2026-11-28T11:02:14.887Z [DEBUG] Loading skills from: managed=/etc/claude-code/.claude/skills, user=/tmp/phistory-home-ajk5g6a8/.claude/skills, project=[]
+2026-11-28T11:02:14.889Z [DEBUG] Failed to stat directory /etc/claude-code/.claude/agents: ENOENT: no such file or directory, stat '/etc/claude-code/.claude/agents'
+2026-11-28T11:02:14.889Z [DEBUG] Failed to stat directory /tmp/phistory-home-ajk5g6a8/.claude/agents: ENOENT: no such file or directory, stat '/tmp/phistory-home-ajk5g6a8/.claude/agents'
+2026-11-28T11:02:14.890Z [DEBUG] Failed to stat directory /etc/claude-code/.claude/commands: ENOENT: no such file or directory, stat '/etc/claude-code/.claude/commands'
+2026-11-28T11:02:14.890Z [DEBUG] Failed to stat directory /tmp/phistory-home-ajk5g6a8/.claude/commands: ENOENT: no such file or directory, stat '/tmp/phistory-home-ajk5g6a8/.claude/commands'
+2026-11-28T11:02:14.890Z [DEBUG] Loaded 0 unique skills (0 unconditional, 0 conditional, managed: 0, user: 0, project: 0, additional: 0, legacy commands: 0)
+2026-11-28T11:02:14.891Z [INFO] [uds-messaging] Listening: /tmp/cc-socks/16922.sock
+2026-11-28T11:02:14.891Z [DEBUG] [uds-messaging] Inject messages (auth line optional here): { echo '{"type":"auth","token":"[REDACTED]"$CLAUDE_CODE_MESSAGING_TOKEN"'"}'; echo '{"type":"user","message":{"role":"user","content":"hello"}}'; } | socat - UNIX-CONNECT:/tmp/cc-socks/16922.sock
+2026-11-28T11:02:14.892Z [DEBUG] [uds-messaging] Connect when the data is ready (e.g. out=$(cmd); printf '%s\n' "$out" | nc -N -U "$CLAUDE_CODE_MESSAGING_SOCKET" — or the socat form above): a connection that sends no complete line within 30000 ms is closed
+2026-11-28T11:02:14.893Z [DEBUG] Error log sink initialized
+2026-11-28T11:02:14.896Z [DEBUG] Loading hooks from plugin: agentlas-os-memory
+2026-11-28T11:02:14.898Z [DEBUG] cc-plugin-sec-default@builtin not seated: no managed settings and not a Team or Enterprise organization (none)
+2026-11-28T11:02:14.899Z [DEBUG] [STARTUP] setup() completed in 18ms
+2026-11-28T11:02:14.899Z [DEBUG] Cleared mTLS configuration cache
+2026-11-28T11:02:14.903Z [DEBUG] [STARTUP] Loading commands and agents...
+2026-11-28T11:02:14.905Z [DEBUG] plugin cc-plugin-agents-md: no pluginConfigs["agents-md@builtin" or "cc-plugin-agents-md@builtin"].options in user, --settings or managed settings (project settings are not read); every option is its default
+2026-11-28T11:02:14.906Z [DEBUG] cc-plugin-telemetry: hooks telemetry for: anthropic, collector
+2026-11-28T11:02:14.906Z [DEBUG] hooks native host made (for the plugins the binary carries)
+2026-11-28T11:02:14.908Z [DEBUG] hooks module cc-plugin-agents-md@builtin loaded (native, environment 1, tier builtin); events: session.start,prompt.context,command.run,session.compact,prompt.submit,turn.start,turn.complete,agent.spawn,tool.call,prompt.mention
+2026-11-28T11:02:14.908Z [DEBUG] hooks module cc-plugin-telemetry@builtin loaded (native, environment 2, tier builtin); events: telemetry.*,telemetry.log,telemetry.mark,session.start,session.end,engine.create
+2026-11-28T11:02:14.908Z [DEBUG] hooks module cc-plugin-plugin-authoring@builtin loaded (native, environment 3, tier builtin); events: skill.prompt,tool.check,tool.call
+2026-11-28T11:02:14.909Z [DEBUG] hooks module cc-plugin-privacy@builtin loaded (native, environment 4, tier builtin); events: tool.check,session.identity
+2026-11-28T11:02:14.910Z [DEBUG] hooks module cc-plugin-telemetry@builtin engine.create settled in 0.7ms (native hop, next() included)
+2026-11-28T11:02:14.910Z [DEBUG] engine.create: no plugin-provided interfaces; $ built for cc-plugin-agents-md,cc-plugin-telemetry,cc-plugin-plugin-authoring,cc-plugin-privacy
+2026-11-28T11:02:14.911Z [DEBUG] plugin.register: cc-plugin-agents-md (builtin, cc-plugin-agents-md@builtin), judged by core alone: admitted
+2026-11-28T11:02:14.911Z [DEBUG] plugin.register: cc-plugin-telemetry (builtin, cc-plugin-telemetry@builtin), judged by core alone: admitted
+2026-11-28T11:02:14.911Z [DEBUG] plugin.register: cc-plugin-plugin-authoring (builtin, cc-plugin-plugin-authoring@builtin), judged by core alone: admitted
+2026-11-28T11:02:14.911Z [DEBUG] plugin.register: cc-plugin-privacy (builtin, cc-plugin-privacy@builtin), judged by core alone: admitted
+2026-11-28T11:02:14.913Z [DEBUG] getPluginSkills: Processing 6 enabled plugins
+2026-11-28T11:02:14.913Z [DEBUG] Checking plugin agentlas-os-core: skillsPath=exists, skillsPaths=0 paths
+2026-11-28T11:02:14.913Z [DEBUG] Attempting to load skills from plugin agentlas-os-core default skillsPath: /tmp/phistory-home-ajk5g6a8/.agentlas/os-host-plugins/core/claude/generations/8065cb3f10d5d9427d78e9587bba6783d221127f72846c973a0e9d95c784149b/plugin/skills
+2026-11-28T11:02:14.913Z [DEBUG] Checking plugin agentlas-os-memory: skillsPath=none, skillsPaths=0 paths
+2026-11-28T11:02:14.913Z [DEBUG] Checking plugin cc-plugin-agents-md: skillsPath=none, skillsPaths=0 paths
+2026-11-28T11:02:14.913Z [DEBUG] Checking plugin cc-plugin-telemetry: skillsPath=none, skillsPaths=0 paths
+2026-11-28T11:02:14.913Z [DEBUG] Checking plugin cc-plugin-privacy: skillsPath=none, skillsPaths=0 paths
+2026-11-28T11:02:14.913Z [DEBUG] Checking plugin cc-plugin-plugin-authoring: skillsPath=none, skillsPaths=0 paths
+2026-11-28T11:02:14.913Z [DEBUG] Total plugin workflows loaded: 0
+2026-11-28T11:02:14.913Z [DEBUG] Registered 3 hooks from 6 plugins
+2026-11-28T11:02:14.913Z [DEBUG] Total plugin agents loaded: 0
+2026-11-28T11:02:14.914Z [DEBUG] settings.read: the engine's merge was raised (the loaded plugins changed) in 0.6 ms; 0 keys answered otherwise than the files.
+2026-11-28T11:02:14.914Z [DEBUG] settings.read: the engine's merge is not raised again (the loaded plugins changed): neither the loaded plugins nor the settings changed.
+2026-11-28T11:02:14.915Z [DEBUG] memory index backfill: ENOENT: no such file or directory, scandir '/tmp/phistory-home-ajk5g6a8/.claude/projects/-tmp-phistory-work-sy44eds0/memory/'
+2026-11-28T11:02:14.916Z [DEBUG] $.session (cc-plugin-agents-md): no session bound; id, cwd and model answered from the process
+2026-11-28T11:02:14.918Z [DEBUG] Loaded 3 commands from plugin agentlas-os-core default directory
+2026-11-28T11:02:14.918Z [DEBUG] Total plugin commands loaded: 3
+2026-11-28T11:02:14.919Z [DEBUG] Loaded 5 skills from plugin agentlas-os-core default directory
+2026-11-28T11:02:14.919Z [DEBUG] Total plugin skills loaded: 5 (0 duplicate/user-owned entries skipped)
+2026-11-28T11:02:14.919Z [DEBUG] getSkills returning: 0 skill dir commands, 5 plugin skills, 31 bundled skills, 1 builtin plugin skills
+2026-11-28T11:02:14.923Z [DEBUG] [STARTUP] Commands and agents loaded in 20ms
+2026-11-28T11:02:14.925Z [DEBUG] [LSP MANAGER] initializeLspServerManager() called
+2026-11-28T11:02:14.925Z [DEBUG] [LSP MANAGER] Created manager instance, state=pending
+2026-11-28T11:02:14.925Z [DEBUG] [LSP MANAGER] Starting async initialization (generation 1)
+2026-11-28T11:02:14.925Z [DEBUG] Starting background startup prefetches
+2026-11-28T11:02:14.926Z [DEBUG] [Bootstrap] Fetching
+2026-11-28T11:02:14.927Z [DEBUG] [STARTUP] MCP configs resolved in 10ms (awaited at +48ms)
+2026-11-28T11:02:14.927Z [DEBUG] Artifacts MCP server not added: artifact_tool_off (login)
+2026-11-28T11:02:14.928Z [DEBUG] mcp runtime arm: v2 (source: default)
+2026-11-28T11:02:14.933Z [DEBUG] [MCP] early start-up round for 1 configured server(s), before the first turn needs them
+2026-11-28T11:02:14.937Z [DEBUG] Cleared mTLS configuration cache
+2026-11-28T11:02:14.937Z [DEBUG] [3P telemetry] Waiting for remote managed settings fetch before telemetry init
+2026-11-28T11:02:14.938Z [DEBUG] [3P telemetry] Remote managed settings fetch settled, initializing telemetry
+2026-11-28T11:02:14.938Z [DEBUG] Cleared mTLS configuration cache
+2026-11-28T11:02:14.939Z [DEBUG] Initialized versioned plugins system with 0 plugins
+2026-11-28T11:02:14.940Z [DEBUG] Fast mode unavailable: Fast mode is not available in the Agent SDK
+2026-11-28T11:02:14.942Z [DEBUG] [auto-mode] verifyAutoModeGateAccess: enabledState=enabled disabledBySettings=false model=claude-opus-5-5 modelSupported=true disableFastModeBreakerFires=false carouselAvailable=true canEnterAuto=true
+2026-11-28T11:02:14.943Z [DEBUG] Total LSP servers loaded: 0
+2026-11-28T11:02:14.943Z [DEBUG] [LSP SERVER MANAGER] getAllLspServers returned 0 server(s)
+2026-11-28T11:02:14.943Z [DEBUG] LSP manager initialized with 0 servers
+2026-11-28T11:02:14.943Z [DEBUG] LSP server manager initialized successfully
+2026-11-28T11:02:14.943Z [DEBUG] LSP notification handlers registered successfully for all 0 server(s)
+2026-11-28T11:02:14.945Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): CLAUDE.md, .claude/CLAUDE.md, CLAUDE.local.md found 0 of 2 directories
+2026-11-28T11:02:14.946Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": Starting connection with timeout of 30000ms
+2026-11-28T11:02:14.949Z [DEBUG] [Perfetto] initializePerfettoTracing called, env value: undefined
+2026-11-28T11:02:14.949Z [DEBUG] [3P telemetry] isTelemetryEnabled=false (CLAUDE_CODE_ENABLE_TELEMETRY=undefined)
+2026-11-28T11:02:14.950Z [DEBUG] [sessionRegistry] sweep declined by isRegistrySweepPermitted() — dead records are left in place (neither counted nor deleted)
+2026-11-28T11:02:14.952Z [DEBUG] $.fs.ancestors (cc-plugin-agents-md): AGENTS.md, .claude/AGENTS.md found 0 of 2 directories
+2026-11-28T11:02:14.952Z [DEBUG] hooks module cc-plugin-agents-md@builtin prompt.context settled in 36.6ms (native link, next() included)
+2026-11-28T11:02:14.958Z [DEBUG] [Bootstrap] Fetch ok
+2026-11-28T11:02:14.959Z [DEBUG] [Bootstrap] Cache updated, persisting to disk
+2026-11-28T11:02:14.960Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:14.960Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.047d39143c73
+2026-11-28T11:02:14.960Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/settings.json.tmp.16922.599beb122e2d
+2026-11-28T11:02:14.960Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:14.962Z [DEBUG] Temp file written successfully, size: 3 bytes
+2026-11-28T11:02:14.962Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/settings.json.tmp.16922.599beb122e2d to /tmp/phistory-home-ajk5g6a8/.claude/settings.json
+2026-11-28T11:02:14.962Z [DEBUG] Temp file written successfully, size: 801 bytes
+2026-11-28T11:02:14.962Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.047d39143c73 to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:14.962Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/settings.json written atomically
+2026-11-28T11:02:14.963Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-work-sy44eds0/.claude/settings.json
+2026-11-28T11:02:14.963Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-work-sy44eds0/.claude/settings.local.json
+2026-11-28T11:02:14.964Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /etc/claude-code/managed-settings.json
+2026-11-28T11:02:14.964Z [DEBUG] settings.read: the engine's merge was raised (the settings changed) in 0.1 ms; 0 keys answered otherwise than the files.
+2026-11-28T11:02:14.964Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:14.965Z [DEBUG] Org fast mode: disabled (preference)
+2026-11-28T11:02:15.263Z [DEBUG] Hooks: Checking first line for async: {}
+2026-11-28T11:02:15.263Z [DEBUG] Hooks: Parsed initial response: {}
+2026-11-28T11:02:15.263Z [DEBUG] Hooks: Initial response is not async, continuing normal processing
+2026-11-28T11:02:15.275Z [DEBUG] Hooks: SessionStart:startup [/usr/bin/python3 -B -c 'import os,sys; sys.path[:]=[p for p in sys.path if os.path.isabs(p) and not (os.path.exists(p) and os.path.exists(os.curdir) and os.path.samefile(p,os.curdir))]; import runpy; root=sys.argv.pop(1); os.environ["HEPHAESTUS_RUNTIME_BASE"]=sys.argv.pop(1); sys.path.insert(0,root); os.environ["HEPHAESTUS_RUNTIME_ROOT"]=root; os.environ["AGENTLAS_HOST_RUNTIME"]="standalone"; os.environ["PYTHONDONTWRITEBYTECODE"]="1"; runpy.run_module(sys.argv.pop(1),run_name="__main__")' /tmp/phistory-home-ajk5g6a8/.agentlas/os-runtime/.generations/1.2.100.3Ypate /tmp/phistory-home-ajk5g6a8/.agentlas/os-runtime agentlas_cloud.memory_hook --host claude --event SessionStart --memory-only] (plugin agentlas-os-memory@inline) finished with status 0 (333ms)
+2026-11-28T11:02:15.276Z [DEBUG] Successfully parsed and validated hook JSON output
+2026-11-28T11:02:15.276Z [DEBUG] "Hook SessionStart:startup (SessionStart) success:\n{}"
+2026-11-28T11:02:15.277Z [DEBUG] [3P telemetry] Event dropped (no event logger initialized): hook_execution_complete
+2026-11-28T11:02:15.536Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": Successfully connected (transport: stdio) in 592ms
+2026-11-28T11:02:15.537Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": Connection established with capabilities: {"hasTools":true,"hasPrompts":false,"hasResources":false,"hasResourceSubscribe":false,"serverVersion":{"name":"hephaestus-network","version":"1.2.100"},"protocolEra":"legacy","negotiatedProtocolVersion":"2025-11-25"}
+2026-11-28T11:02:15.537Z [DEBUG] [MCP] Server "plugin:agentlas-os-core:hephaestus-network" connected with subscribe=false
+2026-11-28T11:02:15.553Z [ERROR] MCP server "plugin:agentlas-os-core:hephaestus-network" Skipping tool "workforce.validate_selection": its input schema uses top-level anyOf, which the Anthropic API does not accept. Other tools from this server remain available.
+2026-11-28T11:02:15.553Z [ERROR] MCP server "plugin:agentlas-os-core:hephaestus-network" Skipping tool "workforce.prepare_execution": its input schema uses top-level anyOf, which the Anthropic API does not accept. Other tools from this server remain available.
+2026-11-28T11:02:15.557Z [DEBUG] [servedCatalog] off (not_claude_ai_auth)
+2026-11-28T11:02:15.569Z [DEBUG] Settings changed from policySettings, updating app state
+2026-11-28T11:02:15.569Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /etc/claude-code/managed-settings.json
+2026-11-28T11:02:15.570Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-work-sy44eds0/.claude/settings.json
+2026-11-28T11:02:15.570Z [DEBUG] Broken symlink or missing file encountered for settings.json at path: /tmp/phistory-work-sy44eds0/.claude/settings.local.json
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all allow rules for destination 'userSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all deny rules for destination 'userSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all ask rules for destination 'userSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all allow rules for destination 'projectSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all deny rules for destination 'projectSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all ask rules for destination 'projectSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all allow rules for destination 'localSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all deny rules for destination 'localSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all ask rules for destination 'localSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all allow rules for destination 'flagSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all deny rules for destination 'flagSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all ask rules for destination 'flagSettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all allow rules for destination 'policySettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all deny rules for destination 'policySettings' with 0 rule(s): []
+2026-11-28T11:02:15.570Z [DEBUG] Replacing all ask rules for destination 'policySettings' with 0 rule(s): []
+2026-11-28T11:02:15.574Z [DEBUG] [print.ts] MCP task sidecar restore skipped: tasks gate off after the flag settle
+2026-11-28T11:02:15.582Z [DEBUG] [ScheduledTasks] scheduler start() — enabled=false, hasTasks=false
+2026-11-28T11:02:15.584Z [DEBUG] session.start: raised (surface none, not interactive)
+2026-11-28T11:02:15.586Z [DEBUG] getSkills returning: 0 skill dir commands, 5 plugin skills, 31 bundled skills, 1 builtin plugin skills
+2026-11-28T11:02:15.586Z [DEBUG] Total plugin workflows loaded: 0
+2026-11-28T11:02:15.588Z [DEBUG] hooks module cc-plugin-telemetry@builtin session.start settled in 3.0ms (native link, next() included)
+2026-11-28T11:02:15.589Z [DEBUG] hooks module cc-plugin-agents-md@builtin session.start settled in 4.2ms (native link, next() included)
+2026-11-28T11:02:15.599Z [DEBUG] hooks module cc-plugin-telemetry@builtin (native): telemetry.log nested in cc-plugin-agents-md
+2026-11-28T11:02:15.600Z [DEBUG] hooks module cc-plugin-telemetry@builtin telemetry.log settled in 1.0ms (native link, next() included)
+2026-11-28T11:02:15.600Z [DEBUG] cc-plugin-telemetry (builtin) answered telemetry.log without next() in 1.2ms; nothing beneath it ran for this dispatch
+2026-11-28T11:02:15.601Z [DEBUG] hooks module cc-plugin-telemetry@builtin (native): telemetry.log nested in cc-plugin-agents-md
+2026-11-28T11:02:15.601Z [DEBUG] hooks module cc-plugin-telemetry@builtin (native): telemetry.mark nested in cc-plugin-agents-md
+2026-11-28T11:02:15.601Z [DEBUG] hooks module cc-plugin-telemetry@builtin telemetry.log settled in 0.3ms (native link, next() included)
+2026-11-28T11:02:15.601Z [DEBUG] hooks module cc-plugin-telemetry@builtin telemetry.mark settled in 0.2ms (native link, next() included)
+2026-11-28T11:02:15.601Z [DEBUG] cc-plugin-telemetry (builtin) answered telemetry.mark without next() in 0.3ms; nothing beneath it ran for this dispatch
+2026-11-28T11:02:15.606Z [DEBUG] Failed to stat directory /etc/claude-code/.claude/output-styles: ENOENT: no such file or directory, stat '/etc/claude-code/.claude/output-styles'
+2026-11-28T11:02:15.606Z [DEBUG] Failed to stat directory /tmp/phistory-home-ajk5g6a8/.claude/output-styles: ENOENT: no such file or directory, stat '/tmp/phistory-home-ajk5g6a8/.claude/output-styles'
+2026-11-28T11:02:15.606Z [DEBUG] Total plugin output styles loaded: 0
+2026-11-28T11:02:15.607Z [DEBUG] act_dont_rederive_arm_active source=growthbook
+2026-11-28T11:02:15.616Z [DEBUG] installPluginsForHeadless: starting
+2026-11-28T11:02:15.616Z [DEBUG] installPluginsForHeadless: no marketplaces declared
+2026-11-28T11:02:15.618Z [DEBUG] Watching /tmp/phistory-work-sy44eds0 for /tmp/phistory-work-sy44eds0/.claude to appear
+2026-11-28T11:02:15.618Z [DEBUG] Watching for changes in setting files /tmp/phistory-home-ajk5g6a8/.claude/settings.json...
+2026-11-28T11:02:15.618Z [DEBUG] installed_plugins.json doesn't exist, returning empty V2 object
+2026-11-28T11:02:15.619Z [DEBUG] $.store.set (cc-plugin-agents-md@builtin): usage-rows-queued
+2026-11-28T11:02:15.620Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:15.620Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.41ded237fedc
+2026-11-28T11:02:15.620Z [DEBUG] $.fs.read (cc-plugin-telemetry): /sys/hypervisor/uuid failed: ENOENT: no such file or directory, open '/sys/hypervisor/uuid'
+2026-11-28T11:02:15.621Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:15.627Z [DEBUG] Temp file written successfully, size: 922 bytes
+2026-11-28T11:02:15.627Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.41ded237fedc to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:15.628Z [ERROR] Failed to fetch MCP registry: GET /api/directory/server-urls answered status 200, not 200 with a list of URLs
+2026-11-28T11:02:15.632Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:15.643Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:15.643Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.f3e09c57ff7a
+2026-11-28T11:02:15.643Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:15.644Z [DEBUG] Temp file written successfully, size: 1742 bytes
+2026-11-28T11:02:15.644Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.f3e09c57ff7a to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:15.644Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically
+2026-11-28T11:02:15.925Z [DEBUG] [fs.watch probe] verdict: delivers
+2026-11-28T11:02:15.972Z [DEBUG] Hooks: Checking first line for async: {}
+2026-11-28T11:02:15.972Z [DEBUG] Hooks: Parsed initial response: {}
+2026-11-28T11:02:15.972Z [DEBUG] Hooks: Initial response is not async, continuing normal processing
+2026-11-28T11:02:15.985Z [DEBUG] Hooks: UserPromptSubmit [/usr/bin/python3 -B -c 'import os,sys; sys.path[:]=[p for p in sys.path if os.path.isabs(p) and not (os.path.exists(p) and os.path.exists(os.curdir) and os.path.samefile(p,os.curdir))]; import runpy; root=sys.argv.pop(1); os.environ["HEPHAESTUS_RUNTIME_BASE"]=sys.argv.pop(1); sys.path.insert(0,root); os.environ["HEPHAESTUS_RUNTIME_ROOT"]=root; os.environ["AGENTLAS_HOST_RUNTIME"]="standalone"; os.environ["PYTHONDONTWRITEBYTECODE"]="1"; runpy.run_module(sys.argv.pop(1),run_name="__main__")' /tmp/phistory-home-ajk5g6a8/.agentlas/os-runtime/.generations/1.2.100.3Ypate /tmp/phistory-home-ajk5g6a8/.agentlas/os-runtime agentlas_cloud.memory_hook --host claude --event UserPromptSubmit --memory-only] (plugin agentlas-os-memory@inline) finished with status 0 (371ms)
+2026-11-28T11:02:15.985Z [DEBUG] Successfully parsed and validated hook JSON output
+2026-11-28T11:02:15.985Z [DEBUG] "Hook UserPromptSubmit (UserPromptSubmit) success:\n{}"
+2026-11-28T11:02:15.991Z [DEBUG] LSP Diagnostics: getLSPDiagnosticAttachments called
+2026-11-28T11:02:15.991Z [DEBUG] LSP Diagnostics: Checking registry - 0 pending
+2026-11-28T11:02:15.991Z [DEBUG] Hooks: checkForNewResponses returning 0 responses, 0 hooks still pending
+2026-11-28T11:02:15.994Z [DEBUG] Sending 21 skills via attachment (initial)
+2026-11-28T11:02:16.003Z [DEBUG] Fast mode unavailable: Fast mode is not available in the Agent SDK
+2026-11-28T11:02:16.003Z [DEBUG] [session-notices] advertise=false mode=default flag=false(fallback) pollChannel=false ownEventsOnly=false remote=false remoteEnv=false nonInteractive=true
+2026-11-28T11:02:16.003Z [WARN] read_file as_written is not served: no answer yet from /api/claude_code/policy_limits (no_policy_answer)
+2026-11-28T11:02:16.005Z [DEBUG] [engine] turn 1 start
+2026-11-28T11:02:16.008Z [DEBUG] hooks module cc-plugin-agents-md@builtin turn.start settled in 2.5ms (native link, next() included)
+2026-11-28T11:02:16.008Z [DEBUG] hooks module cc-plugin-agents-md@builtin prompt.submit settled in 395.1ms (native link, next() included)
+2026-11-28T11:02:16.009Z [DEBUG] autocompact: tokens=[REDACTED] level=ok effectiveWindow=980000
+2026-11-28T11:02:16.023Z [DEBUG] attribution header x-anthropic-billing-header: cc_version=2.1.332.0bd; cc_entrypoint=sdk-cli; cch=00000; cc_turn_origin=sdk; cc_prompt_index=0; cc_turn_index=1;
+2026-11-28T11:02:16.023Z [DEBUG] Fast mode unavailable: Fast mode is not available in the Agent SDK
+2026-11-28T11:02:16.026Z [DEBUG] Fast mode unavailable: Fast mode is not available in the Agent SDK
+2026-11-28T11:02:16.027Z [DEBUG] [API:timing] dispatching to firstParty model=claude-opus-5-5
+2026-11-28T11:02:16.029Z [DEBUG] [API REQUEST] /v1/messages x-client-request-id=c921971a-d2ac-4bf5-8abc-c9136138e353 source=sdk
+2026-11-28T11:02:16.037Z [DEBUG] Stream started - received first chunk
+2026-11-28T11:02:16.037Z [DEBUG] [API:timing] first byte after 11ms
+2026-11-28T11:02:16.062Z [DEBUG] [uds-messaging] Shutting down
+2026-11-28T11:02:16.063Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": Sending SIGINT to MCP server process
+2026-11-28T11:02:16.064Z [DEBUG] LSP server manager shut down successfully
+2026-11-28T11:02:16.071Z [DEBUG] Hooks: Stop [/usr/bin/python3 -B -c 'import os,sys; sys.path[:]=[p for p in sys.path if os.path.isabs(p) and not (os.path.exists(p) and os.path.exists(os.curdir) and os.path.samefile(p,os.curdir))]; import runpy; root=sys.argv.pop(1); os.environ["HEPHAESTUS_RUNTIME_BASE"]=sys.argv.pop(1); sys.path.insert(0,root); os.environ["HEPHAESTUS_RUNTIME_ROOT"]=root; os.environ["AGENTLAS_HOST_RUNTIME"]="standalone"; os.environ["PYTHONDONTWRITEBYTECODE"]="1"; runpy.run_module(sys.argv.pop(1),run_name="__main__")' /tmp/phistory-home-ajk5g6a8/.agentlas/os-runtime/.generations/1.2.100.3Ypate /tmp/phistory-home-ajk5g6a8/.agentlas/os-runtime agentlas_cloud.memory_hook --host claude --event Stop --memory-only] (plugin agentlas-os-memory@inline) cancelled (20ms)
+2026-11-28T11:02:16.071Z [DEBUG] Hook Stop (Stop) cancelled:
+2026-11-28T11:02:16.074Z [DEBUG] [engine] turn 1 end (turns=2 usage in=0 out=0 cost=$0.0000 api=19ms stop=end_turn resultLen=0)
+2026-11-28T11:02:16.074Z [DEBUG] Fast mode unavailable: Fast mode is not available in the Agent SDK
+2026-11-28T11:02:16.076Z [DEBUG] hooks module cc-plugin-agents-md@builtin turn.complete settled in 0.2ms (native link, next() included)
+2026-11-28T11:02:16.078Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": Sending SIGINT to MCP server process
+2026-11-28T11:02:16.079Z [DEBUG] [Anthropic telemetry] Failed to check metrics opt-out status: metrics_enabled response missing metrics_logging_enabled
+2026-11-28T11:02:16.079Z [DEBUG] [Anthropic telemetry] BigQuery metrics export failed (metrics opt-out check failed; skipping export). This is Anthropic's own telemetry pipeline, not your OTel collector; further failures are counted and summarised at shutdown.
+2026-11-28T11:02:16.079Z [DEBUG] [Anthropic telemetry] BigQuery metrics export: 1 failure(s) this session (last: metrics opt-out check failed; skipping export)
+2026-11-28T11:02:16.079Z [DEBUG] [Anthropic telemetry] BigQuery metrics exporter flush complete
+2026-11-28T11:02:16.079Z [DEBUG] [Anthropic telemetry] BigQuery metrics exporter flush complete
+2026-11-28T11:02:16.079Z [DEBUG] [Anthropic telemetry] BigQuery metrics exporter shutdown complete
+2026-11-28T11:02:16.082Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": UNKNOWN connection closed after 0s (cleanly)
+2026-11-28T11:02:16.083Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": Cleared connection cache for reconnection
+2026-11-28T11:02:16.113Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": MCP server process exited cleanly
+2026-11-28T11:02:16.128Z [DEBUG] MCP server "plugin:agentlas-os-core:hephaestus-network": MCP server process exited cleanly
+2026-11-28T11:02:16.172Z [DEBUG] $.session (cc-plugin-telemetry): no session bound; id, cwd and model answered from the process
+2026-11-28T11:02:16.172Z [DEBUG] $.session (cc-plugin-telemetry): no session bound; id, cwd and model answered from the process
+2026-11-28T11:02:16.173Z [DEBUG] $.http.fetch (cc-plugin-telemetry): POST https://api.anthropic.com/api/event_logging/v2/batch
+2026-11-28T11:02:16.175Z [DEBUG] $.http.fetch (cc-plugin-telemetry): 200 in 2ms, 439 chars
+2026-11-28T11:02:16.175Z [DEBUG] [cc-plugin-telemetry] $.ui.log (to debug): telemetry: sent 3 row(s)
+2026-11-28T11:02:16.175Z [DEBUG] hooks module cc-plugin-telemetry@builtin session.end settled in 4.2ms (native link, next() included)
+2026-11-28T11:02:16.186Z [DEBUG] Preserving file permissions: 100600
+2026-11-28T11:02:16.186Z [DEBUG] Writing to temp file: /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.c6ff0419a6c8
+2026-11-28T11:02:16.186Z [DEBUG] Applied original permissions to temp file
+2026-11-28T11:02:16.186Z [DEBUG] Temp file written successfully, size: 1742 bytes
+2026-11-28T11:02:16.186Z [DEBUG] Renaming /tmp/phistory-home-ajk5g6a8/.claude/.claude.json.tmp.16922.c6ff0419a6c8 to /tmp/phistory-home-ajk5g6a8/.claude/.claude.json
+2026-11-28T11:02:16.187Z [DEBUG] File /tmp/phistory-home-ajk5g6a8/.claude/.claude.json written atomically

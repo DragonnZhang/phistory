@@ -1,0 +1,112 @@
+{
+  "agent_id": "agentlas-os",
+  "agent": "Agentlas OS",
+  "package": "agentlas-ai/Agentlas-OS",
+  "source_runtime": {
+    "project": ".",
+    "state": "readonly",
+    "extra_requirements": [],
+    "dependency_groups": [],
+    "requirement_files": [],
+    "python_dependencies": [],
+    "workspace_package": null,
+    "build_commands": []
+  },
+  "bootstrap": {
+    "arguments": [
+      "-c",
+      "\nimport json\nimport os\nimport subprocess\nfrom pathlib import Path\nsource = Path(os.environ[\"PHISTORY_SOURCE_ROOT\"])\ninstalled = subprocess.run([\"bash\", str(source / \"scripts/install-all-runtimes.sh\")], cwd=source)\nif installed.returncode not in (0, 1):\n    raise RuntimeError(\"native Agentlas installer failed\")\nlauncher = Path(os.environ[\"PHISTORY_HOME\"]) / \".agentlas/os-bin/agentlas-os\"\nsubprocess.run([str(launcher), \"features\", \"status\"], check=True)\nstatus = json.loads(subprocess.check_output([str(launcher), \"host\", \"status\", \"claude\"], text=True))\nprint(\"Native Agentlas pre-session host status:\", json.dumps(status), flush=True)\n"
+    ],
+    "environment": {}
+  },
+  "version": "d35501658a1d0a6388a4ad6ac598c432d7080901",
+  "variant": {
+    "id": "claude-core-ready-inline",
+    "label": "Native core / complete inline MCP tools after startup",
+    "dimensions": {
+      "entry": "native remote-release installer and host session claude",
+      "host": "actual Claude Code / host_runtime provenance",
+      "activation": "/agentlas-os-core:agentlas native skill body required",
+      "features": "native optional defaults; memory retained",
+      "tool_loading": "native MCP startup wait and inline schemas; no tool registration suppressed",
+      "scope": "standalone core activation; no desktop/One workflow claim"
+    }
+  },
+  "requested": {
+    "entry": "native remote-release installer and host session claude",
+    "host": "actual Claude Code / host_runtime provenance",
+    "activation": "/agentlas-os-core:agentlas native skill body required",
+    "features": "native optional defaults; memory retained",
+    "tool_loading": "native MCP startup wait and inline schemas; no tool registration suppressed",
+    "scope": "standalone core activation; no desktop/One workflow claim"
+  },
+  "observed": {
+    "model": "claude-opus-5-5",
+    "tool_count": 53
+  },
+  "host_runtime": {
+    "package": "@anthropic-ai/claude-code",
+    "version": "2.1.332",
+    "executable": "claude",
+    "version_output": "2.1.332 (Claude Code)"
+  },
+  "capture_selection": {
+    "minimum_tools": 1,
+    "required_system_text": [],
+    "required_user_text": [
+      "# Agentlas Core & Unified Command System",
+      "Single entry point for every Agentlas subsystem and capability."
+    ],
+    "required_tool_name_fragments": [
+      "agentlas_tool_search",
+      "hephaestus_search",
+      "preflight_work_order"
+    ]
+  },
+  "published_at": null,
+  "tarball_url": "https://github.com/agentlas-ai/Agentlas-OS/archive/d35501658a1d0a6388a4ad6ac598c432d7080901.tar.gz",
+  "binary_version": "d35501658a1d0a6388a4ad6ac598c432d7080901",
+  "captured_at": "2026-11-28T11:02:16.568229+00:00",
+  "capture_host": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "runner": "github-actions",
+    "workflow": "Capture prompts",
+    "run_id": "46136784308",
+    "run_attempt": "1",
+    "job": "capture",
+    "run_url": "https://github.com/DragonnZhang/phistory/actions/runs/46136784308"
+  },
+  "tap_client": "python",
+  "target": "claude-tap capture-only",
+  "client_exit_code": 0,
+  "client_log": "client.log",
+  "duration_seconds": 28.828,
+  "command": [
+    "python",
+    "-m",
+    "claude_tap",
+    "run",
+    "python",
+    "--no-yolo",
+    "--export-prompt",
+    "prompt.md",
+    "--no-live",
+    "--no-open",
+    "--no-update-check",
+    "--output-dir",
+    ".tap",
+    "--mode",
+    "forward",
+    "--",
+    "-c",
+    "\nimport os\nimport subprocess\nfrom pathlib import Path\nprint(\"Native host provenance:\", os.environ[\"PHISTORY_NATIVE_HOST\"], flush=True)\nlauncher = str(Path(os.environ[\"PHISTORY_HOME\"]) / \".agentlas/os-bin/agentlas-os\")\nsubprocess.run([launcher, \"host\", \"status\", \"claude\"], check=False)\nos.execv(launcher, [launcher, \"host\", \"session\", \"claude\", \"--\", \"-p\", \"/agentlas-os-core:agentlas Reply with one short sentence.\", \"--verbose\", \"--output-format\", \"stream-json\", \"--debug-file\", str(Path(os.environ[\"PHISTORY_CAPTURE_ARTIFACT_DIR\"]) / \"native-host-debug.log\")])\n"
+  ],
+  "capture_environment": {
+    "HEPHAESTUS_AUTO_UPDATE": "0",
+    "HEPHAESTUS_UPDATE_CHECK": "0",
+    "ENABLE_TOOL_SEARCH": "false",
+    "MCP_CONNECTION_NONBLOCKING": "0",
+    "MCP_CONNECT_TIMEOUT_MS": "60000"
+  }
+}

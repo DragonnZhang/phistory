@@ -1,0 +1,31 @@
+stdout:
+[claude-tap] 'interpreter' is not a built-in client; running in generic forward-proxy mode with native HTTP protocol detection
+[claude-tap] interpreter target: https://api.anthropic.com  (default)  protocols: anthropic,openai,gemini,ollama,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 forward proxy on http://127.0.0.1:37407
+[claude-tap] CA cert: /tmp/phistory-home-1b4liv8j/.local/share/claude-tap/ca.pem
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/openinterpreter/rust-v0.0.65/variants/default/.tap/2026-11-28/trace_105939.jsonl
+
+[claude-tap] launching interpreter: interpreter exec --skip-git-repo-check --ephemeral --json Reply with one short sentence.
+[claude-tap] HTTPS_PROXY=http://127.0.0.1:37407
+[claude-tap] NODE_EXTRA_CA_CERTS=/tmp/phistory-home-1b4liv8j/.local/share/claude-tap/ca.pem
+{"type":"thread.started","thread_id":"01a221cf-8b66-7608-81a3-add4ed38650b"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"captured"}}
+{"type":"turn.completed","usage":{"input_tokens":0,"cached_input_tokens":0,"cache_write_input_tokens":0,"output_tokens":0,"reasoning_output_tokens":0}}
+
+[claude-tap] interpreter exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/openinterpreter/rust-v0.0.65/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    3
+  trace:        /home/runner/work/phistory/phistory/captures/openinterpreter/rust-v0.0.65/variants/default/.tap/2026-11-28/trace_105939.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/openinterpreter/rust-v0.0.65/variants/default/.tap/2026-11-28/trace_105939.log
+  view:         /home/runner/work/phistory/phistory/captures/openinterpreter/rust-v0.0.65/variants/default/.tap/2026-11-28/trace_105939.html
+  prompt:       /home/runner/work/phistory/phistory/captures/openinterpreter/rust-v0.0.65/variants/default/prompt.md
+
+stderr:
+[claude-tap] warning: 
+WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir "/tmp" (codex_home: AbsolutePathBuf("/tmp/phistory-home-1b4liv8j/.openinterpreter"))
+Reading additional input from stdin...
+2026-11-28T10:59:39.601857Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: wss://api.openai.com/v1/responses

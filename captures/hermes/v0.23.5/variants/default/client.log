@@ -1,0 +1,27 @@
+stdout:
+[claude-tap] Hermes Agent target: https://api.openai.com  (auto: OPENAI_API_KEY env var)  protocols: anthropic,openai,gemini,passthrough
+[claude-tap] capture-only: exporting prompt without calling upstream
+[claude-tap] v0.2.0 listening on http://127.0.0.1:41129
+[claude-tap] trace: /home/runner/work/phistory/phistory/captures/hermes/v0.23.5/variants/default/.tap/2026-11-28/trace_104959.jsonl
+
+[claude-tap] launching Hermes Agent: hermes chat -q Reply with one short sentence. --yolo -Q --provider openrouter --model phistory-dummy
+[claude-tap] OPENAI_BASE_URL=http://127.0.0.1:41129/v1
+[claude-tap] ANTHROPIC_BASE_URL=http://127.0.0.1:41129
+[claude-tap] GOOGLE_GEMINI_BASE_URL=http://127.0.0.1:41129
+[claude-tap] OPENROUTER_BASE_URL=http://127.0.0.1:41129/v1
+[claude-tap] CUSTOM_BASE_URL=http://127.0.0.1:41129/v1
+captured
+
+[claude-tap] Hermes Agent exited with code 0
+exported prompt snapshot to /home/runner/work/phistory/phistory/captures/hermes/v0.23.5/variants/default/prompt.md
+
+[claude-tap] summary:
+  api_calls:    19
+  trace:        /home/runner/work/phistory/phistory/captures/hermes/v0.23.5/variants/default/.tap/2026-11-28/trace_104959.jsonl
+  log:          /home/runner/work/phistory/phistory/captures/hermes/v0.23.5/variants/default/.tap/2026-11-28/trace_104959.log
+  view:         /home/runner/work/phistory/phistory/captures/hermes/v0.23.5/variants/default/.tap/2026-11-28/trace_104959.html
+  prompt:       /home/runner/work/phistory/phistory/captures/hermes/v0.23.5/variants/default/prompt.md
+
+stderr:
+
+session_id: local-e72f2aef715162cea7a787d193b991cbbd12b08ebcfa6448da2624396d09121e
